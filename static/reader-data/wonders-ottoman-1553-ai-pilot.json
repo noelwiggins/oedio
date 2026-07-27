@@ -1,151 +1,135 @@
 {
-  "job_name": "Wonders Ottoman 1553 — pilot v3 (pp 8-23)",
-  "completed_at": "2026-07-27T15:39:40.350613",
+  "job_name": "Wonders Ottoman 1553 — pilot v4 b64 (pp 8-23)",
+  "completed_at": "2026-07-27T15:49:30.446766",
   "segment_count": 16,
   "results": [
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0008/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-8",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0008/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-8 was empty — no content was provided for translation. This may indicate a blank page, a missing scan, a separator leaf, or an OCR/extraction failure in the source document.",
+      "_label": "page-8"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Missing Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0009/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-9",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0009/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-9 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, a purely decorative or illuminated page with no text, or a transmission error in the source data.",
+      "_label": "page-9"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0010/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-10",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0010/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-10 is empty. No content was provided for translation. This may indicate a blank page, an unphotographed folio, a page with only an illustration and no text, or a data extraction failure from the manuscript image.",
+      "_label": "page-10"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Missing Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0011/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-11",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0011/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-11 was submitted empty. No content was provided for translation. This may indicate a blank page, a scanning/digitization gap, or an omission in the source file. Please verify the manuscript image for this folio.",
+      "_label": "page-11"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0012/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-12",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0012/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-12 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, or an OCR failure for this folio.",
+      "_label": "page-12"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Missing Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0013/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-13",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0013/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-13 was submitted as empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a placeholder in the manuscript digitization workflow.",
+      "_label": "page-13"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0014/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-14",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0014/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-14 is empty. No content was provided for translation. This may indicate a blank page, a full-page miniature with no text, a decorative folio, or a data-capture gap in the digitization process.",
+      "_label": "page-14"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Missing Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0015/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-15",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0015/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-15 was supplied as empty. No content was available to translate. This may indicate a blank page, a failed OCR capture, an unpainted/unscribed folio, or a transmission error in the source data.",
+      "_label": "page-15"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0016/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-16",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0016/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-16 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a deliberately blank folio in the manuscript.",
+      "_label": "page-16"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Missing Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0017/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-17",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0017/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-17 was submitted empty. No content was provided for translation. This may indicate a blank page, a scanning gap, a failed OCR extraction, or a missing folio in the manuscript record.",
+      "_label": "page-17"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Unrecovered Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0018/full/pct:50.0/0/default.jpg]",
+      "translation": "[No source text was provided for this segment. The page appears to be blank, missing, or the text was not captured in the source input.]",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-18",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0018/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text field for page-18 is empty. No text was supplied for translation. This may indicate a blank manuscript page, a missing scan, a damaged/illegible folio, or a data capture error. Recommend reviewing the original manuscript image for this page.",
+      "_label": "page-18"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0019/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-19",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0019/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-19 was provided as empty. No content is present to translate. This may indicate a blank page, an unphotographed folio, a binding or flyleaf page, or a scanning/OCR omission in the manuscript digitization workflow.",
+      "_label": "page-19"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0020/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-20",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0020/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-20 is empty. No content was provided for translation. This may indicate a blank page, an unphotographed folio, a binding gap, or a data-capture omission in the digitization pipeline.",
+      "_label": "page-20"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0021/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-21",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0021/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-21 was submitted entirely empty. No content was available for translation. This may indicate a blank page, an unphotographed folio, a scanning gap, or an OCR failure. The page should be reviewed against the physical manuscript or digital facsimile to determine whether content is present.",
+      "_label": "page-21"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Missing Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0022/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-22",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0022/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-22 was provided as empty. No content is available to translate. This may indicate a blank page, a scanning gap, a deliberately blank folio, or a data extraction failure in the source document pipeline.",
+      "_label": "page-22"
     },
     {
-      "title_inferred": "[SEGMENT FAILED]",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0023/full/pct:50.0/0/default.jpg]",
+      "translation": "",
       "entities_mentioned": [],
-      "translator_notes": null,
-      "_label": "page-23",
-      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0023/full/pct:50.0/0/default.jpg"
+      "translator_notes": "The source text for page-23 was provided as empty. No content is present to translate. This may indicate a blank page, a fully illegible page, an OCR failure, or a missing scan in the manuscript digitization workflow.",
+      "_label": "page-23"
     }
   ]
 }
