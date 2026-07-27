@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}About — oedio.com{% endblock %}
+
+{% block extra_head %}
+<style>
+  .about-wrap { max-width:720px; margin:0 auto; padding:32px 24px 48px; }
+  .about-wrap h1 { font-family:Georgia, serif; font-size:26px; font-weight:600;
+    color:var(--md-sys-color-on-surface); margin:0 0 16px; }
+  .about-wrap h2 { font-family:Georgia, serif; font-size:18px; font-weight:600;
+    color:var(--md-sys-color-on-surface); margin:28px 0 8px; }
+  .about-wrap p { color:var(--md-sys-color-on-surface-variant); font-size:14.5px; line-height:1.75; }
+  .about-wrap a { color:var(--md-sys-color-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-wrap">
+  <h1>What is a megabook?</h1>
+  <p>A single great work rarely lives in a single book. <em>The Odyssey</em> exists as ancient
+     Greek, as dozens of competing translations, as illustrated printings, commentaries, and
+     retellings &mdash; scattered across libraries and scanning projects all over the internet.
+     A <strong>megabook</strong> gathers those editions back into one volume, so you can move
+     between a translator's prose, another's verse, the original language, and the illustrator's
+     plates without leaving the reading chair.</p>
+
+  <h2>Only free works</h2>
+  <p>Everything here was published before 1929 and is in the public domain in the United States.
+     No paywalls, no licenses, no exceptions.</p>
+
+  <h2>The reader keeps the artifact in view</h2>
+  <p>Every page of transcribed text sits beside the original scanned page it came from. Optical
+     character recognition of old type is imperfect &mdash; when a word looks garbled, the source
+     is right there to check. Some editions (ancient Greek, plate books) are presented as pure
+     facsimiles, page by page.</p>
+
+  <h2>Sources</h2>
+  <p>The current shelf is drawn from the
+     <a href="https://www.loc.gov/collections/selected-digitized-books/" target="_blank" rel="noopener">
+     Library of Congress digitized books collection</a>. Internet Archive and Google Books
+     ingestion follow the same data contract and are next.</p>
+</div>
+{% endblock %}

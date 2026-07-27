@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Library — oedio.com{% endblock %}
+
+{% block extra_head %}
+<style>
+  .shelf-intro { max-width:820px; margin:0 auto; padding:28px 24px 8px; }
+  .shelf-intro h1 { font-family:Georgia, serif; font-size:26px; font-weight:600;
+    color:var(--md-sys-color-on-surface); margin:0 0 8px; }
+  .shelf-intro p { color:var(--md-sys-color-on-surface-variant); font-size:14px; line-height:1.65; margin:0; }
+
+  /* Horizontally scrollable shelf. Each megabook is a fat spine whose width
+     scales with how many component editions it contains -- a megabook IS
+     several books bound together, so it should look thicker than one book. */
+  .shelf-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; padding:32px 0 8px; }
+  .shelf-row { display:flex; align-items:flex-end; gap:14px; padding:0 32px 0;
+    min-width:min-content; }
+  .mega-spine { flex:0 0 auto; height:240px; border-radius:5px 10px 10px 5px; cursor:pointer;
+    position:relative; display:flex; align-items:center; justify-content:center; padding:16px 8px;
+    text-decoration:none;
+    box-shadow: 3px 3px 10px rgba(0,0,0,.55), inset 0 0 24px rgba(0,0,0,.35);
+    transition: transform var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard); }
+  .mega-spine:hover { transform: translateY(-8px); }
+  .mega-spine::before { content:''; position:absolute; inset:7px; border:1px solid rgba(212,175,90,.55);
+    border-radius:3px; pointer-events:none; }
+  .mega-spine .spine-title { color:rgba(255,255,255,.94); font-size:15px; font-weight:600; line-height:1.3;
+    writing-mode:vertical-rl; text-orientation:mixed; text-align:center; max-height:200px; overflow:hidden;
+    font-family: Georgia, 'Times New Roman', serif; letter-spacing:.04em; }
+  .mega-spine .spine-count { position:absolute; bottom:10px; left:0; right:0; text-align:center;
+    color:rgba(212,175,90,.9); font-size:10px; font-weight:700; writing-mode:horizontal-tb; }
+  .shelf-board { height:12px; background:linear-gradient(#4a3521,#33241a); border-radius:2px;
+    box-shadow:0 4px 6px rgba(0,0,0,.45); margin:0 16px; }
+  .shelf-note { color:var(--md-sys-color-on-surface-variant); font-size:12px; line-height:1.55;
+    padding:16px 32px 8px; max-width:820px; }
+
+  .coming-spine { opacity:.35; pointer-events:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shelf-intro">
+  <h1>The megabook library</h1>
+  <p>Each volume on this shelf is a <strong>megabook</strong>: one work, compiled from multiple
+     digitized editions across the open internet &mdash; original languages, competing translations,
+     illustrated printings, commentaries &mdash; every one published before 1929 and free of copyright.
+     Pull one off the shelf.</p>
+</div>
+
+<div class="shelf-scroll">
+  <div class="shelf-row">
+    {% for mb in megabooks %}
+    <a class="mega-spine" href="/book/{{ mb.slug }}"
+       style="width:{{ 56 + mb.components|length * 14 }}px; background:{{ mb.spine_color }};">
+      <span class="spine-title">{{ mb.title }}</span>
+      <span class="spine-count">{{ mb.components|length }} EDS.</span>
+    </a>
+    {% endfor %}
+    <div class="mega-spine coming-spine" style="width:70px; background:#3a3a4a;">
+      <span class="spine-title">Coming&hellip;</span>
+    </div>
+  </div>
+</div>
+<div class="shelf-board"></div>
+
+<p class="shelf-note">Spine thickness reflects how many editions are bound into each megabook.
+   Everything opens in the split-panel reader: transcribed text beside the original scanned page,
+   so you can always verify the words against the artifact itself.</p>
+{% endblock %}

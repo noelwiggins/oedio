@@ -1,0 +1,73 @@
+{
+  "megabooks": [
+    {
+      "slug": "odyssey",
+      "title": "The Odyssey",
+      "author": "Homer",
+      "spine_color": "linear-gradient(160deg,#6d2f2a,#4a1e1a)",
+      "description": "Homer's epic of return, compiled here from six pre-1929 printings digitized by the Library of Congress: the classic Butcher & Lang prose translation, a Victorian verse rendering, the ancient Greek of the Phaeacian books, John Flaxman's celebrated illustrated edition, a scholarly companion, and a children's retelling. One work, many doors in.",
+      "components": [
+        {
+          "slug": "butcher-lang-1921",
+          "role": "Translations",
+          "title": "The Odyssey of Homer (prose)",
+          "contributor": "Trans. S. H. Butcher & Andrew Lang",
+          "year": 1921,
+          "loc_item": "24021029",
+          "note": "The standard prose translation of its era \u2014 the version most English readers of the early 20th century knew.",
+          "facsimile": false
+        },
+        {
+          "slug": "norgate-1863",
+          "role": "Translations",
+          "title": "The Odyssey (verse)",
+          "contributor": "Trans. Thomas Starling Norgate",
+          "year": 1863,
+          "loc_item": "10000284",
+          "note": "A Victorian rendering in dramatic blank verse \u2014 read it against Butcher & Lang to feel how much a translator's choices shape the poem.",
+          "facsimile": false
+        },
+        {
+          "slug": "phaeacian-greek-1880",
+          "role": "Original Greek",
+          "title": "The Ph\u00e6acian Episode (Books VI\u2013VIII, XIII)",
+          "contributor": "Ed. Augustus C. Merriam",
+          "year": 1880,
+          "loc_item": "24016674",
+          "note": "The ancient Greek text of the Phaeacian books with 19th-century scholarly apparatus. Presented as page facsimiles \u2014 OCR does not survive polytonic Greek.",
+          "facsimile": true
+        },
+        {
+          "slug": "flaxman-1853",
+          "role": "Illustrated Editions",
+          "title": "The Odyssey, with Flaxman's Designs",
+          "contributor": "Trans. T. A. Buckley \u00b7 Ill. John Flaxman",
+          "year": 1853,
+          "loc_item": "12034441",
+          "note": "John Flaxman's neoclassical outline engravings \u2014 among the most influential Homer illustrations ever made. Browse as facsimile plates.",
+          "facsimile": true
+        },
+        {
+          "slug": "collins-1870",
+          "role": "Commentary & Companions",
+          "title": "Homer: The Odyssey (Ancient Classics for English Readers)",
+          "contributor": "W. Lucas Collins",
+          "year": 1870,
+          "loc_item": "unk82041774",
+          "note": "A compact Victorian companion \u2014 plot, composition, and context in 156 pages. A good first door into the epic.",
+          "facsimile": false
+        },
+        {
+          "slug": "childrens-1912",
+          "role": "Retellings",
+          "title": "The Children's Odyssey",
+          "contributor": "Told from Homer in simple language",
+          "year": 1912,
+          "loc_item": "12024027",
+          "note": "The epic retold for young readers \u2014 a reminder that every generation rebuilds Homer for itself.",
+          "facsimile": false
+        }
+      ]
+    }
+  ]
+}

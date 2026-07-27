@@ -1,0 +1,1033 @@
+{% extends "base.html" %}
+{% block title %}{{ book_title }} — {{ mega_title }} — oedio.com{% endblock %}
+
+{% block extra_head %}
+<style>
+  body { padding-top: 56px; overflow-x: hidden; }
+
+  /* --- Progress bar --- */
+  #reader-progress-track { position:fixed; top:56px; left:0; right:0; height:3px;
+    background:var(--md-sys-color-surface-container-high); z-index:80; }
+  #reader-progress-fill { height:100%; width:0%; background:var(--md-sys-color-primary);
+    transition:width .1s linear; }
+
+  /* Fixed-height app shell: header + layout together never exceed the viewport,
+     so the outer page itself can't scroll. That's what keeps the search box
+     (inside .reader-header) persistently in view on desktop -- previously the
+     header sat in normal document flow above a full-viewport-height layout,
+     so the whole window scrolled and carried the header (and search controls)
+     off the top whenever a search result jumped the text panel. */
+  .reader-app { display:flex; flex-direction:column; height: calc(100vh - 56px); overflow:hidden; }
+  .reader-header { flex:none; }
+  .reader-layout { display:flex; flex:1; min-height:0; }
+  .reader-image-panel { width:45%; background:#000; overflow-y:auto; scroll-behavior:auto; }
+  .reader-image-block { display:flex; align-items:center; justify-content:center; padding:20px 16px; }
+  .reader-image-block img { max-width:100%; max-height:calc(100vh - 100px); object-fit:contain;
+    box-shadow: 0 4px 24px rgba(0,0,0,.5); cursor:zoom-in; }
+  .reader-image-block.reader-image-current img { box-shadow: 0 0 0 2px var(--md-sys-color-primary), 0 4px 24px rgba(0,0,0,.5); }
+  .reader-text-panel-wrap { position:relative; width:55%; height:100%; }
+  .reader-text-panel { width:100%; overflow-y:auto; height:100%;
+    padding: 24px 32px calc(24px + env(safe-area-inset-bottom)); }
+
+  /* Find-on-page style minimap: a thin strip of orange bands next to the text
+     panel's scrollbar marking every search-match location in the document,
+     so results are visible at a glance even while scrolled far away from them --
+     mirroring Chrome's native in-page "Find" scrollbar bands. Purely visual
+     (pointer-events:none) so it never blocks the real scrollbar underneath. */
+  .reader-search-minimap { position:absolute; top:0; right:1px; width:5px; height:100%;
+    pointer-events:none; z-index:5; }
+  .reader-search-minimap .reader-minimap-band { position:absolute; left:0; width:100%; height:3px;
+    background:#ff9800; border-radius:1px; }
+  .reader-search-minimap .reader-minimap-band.active { background:#ff3d00; height:4px; width:9px; left:-2px; }
+
+  .reader-page-block { margin-bottom:40px; padding-bottom:32px; border-bottom:1px solid var(--md-sys-color-outline-variant); }
+  .reader-page-block:last-child { border-bottom:none; }
+  .reader-page-number { color:var(--md-sys-color-primary); font-size:11px; font-weight:700;
+    letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; }
+  .reader-page-text { font-size:15px; line-height:1.7; white-space:pre-wrap; font-family: Georgia, serif; }
+
+  /* Inline illustration indicator -- shown on pages whose OCR text is
+     unusually short relative to the book's average, a heuristic for
+     "this is probably a plate/illustration, not a text page." Gives a
+     small clickable preview directly in the scrollable text rather than
+     making people discover illustrations only by opening the full scan. */
+  .reader-illustration-thumb { margin-top:12px; padding:10px; border:1px dashed var(--md-sys-color-outline-variant);
+    border-radius:8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;
+    color:var(--md-sys-color-on-surface-variant); font-size:12px; text-align:center; }
+  .reader-illustration-thumb img { max-width:220px; max-height:220px; object-fit:contain; border-radius:4px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .reader-illustration-thumb .material-symbols-outlined { font-size:16px; vertical-align:middle; }
+  .reader-illustration-thumb:hover { border-color:var(--md-sys-color-primary); color:var(--md-sys-color-primary); }
+
+  /* Possibly-garbled OCR text: subtle dotted underline, not intrusive --
+     just enough to suggest checking the source image at that spot. This
+     is a heuristic guess, not a real confidence score, so it's kept quiet
+     rather than alarming. */
+  .reader-maybe-garbled { border-bottom: 1px dotted var(--md-sys-color-tertiary); cursor:help; }
+
+  /* Sepia reading mode -- affects only the text panel, a classic e-reader comfort option */
+  .reader-text-panel.sepia { background:#f4ecd8; color:#3b2f22; }
+  .reader-text-panel.sepia .reader-page-block { border-bottom-color:#d8cba8; }
+  .reader-text-panel.sepia .reader-page-number { color:#8a5a2a; }
+  .reader-text-panel.sepia mark.reader-hit { background:#f0a030; color:#3b2f22; }
+  .reader-text-panel.sepia mark.reader-hit.reader-hit-active { background:#c8500a; color:#fff; }
+
+  /* Font-size steps, cycled by the Aa button */
+  .reader-text-panel.fs-small .reader-page-text { font-size:13px; }
+  .reader-text-panel.fs-medium .reader-page-text { font-size:15px; }
+  .reader-text-panel.fs-large .reader-page-text { font-size:18px; }
+  .reader-text-panel.fs-xlarge .reader-page-text { font-size:21px; }
+
+  .reader-header { padding: 12px 32px 8px; display:flex; justify-content:space-between;
+    align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .reader-header .book-title { font-size:20px; font-weight:500; }
+  .reader-header .book-meta { color:var(--md-sys-color-on-surface-variant); font-size:12px; margin-top:4px; }
+  .reader-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  .reader-search-box { display:flex; align-items:center; gap:6px; background:var(--md-sys-color-surface-container);
+    border-radius:20px; padding:6px 12px; border:1px solid var(--md-sys-color-outline-variant); }
+  .reader-search-box input { background:none; border:none; outline:none; color:var(--md-sys-color-on-surface);
+    font-size:13px; width:150px; }
+  .reader-search-box .material-symbols-outlined { font-size:18px; color:var(--md-sys-color-on-surface-variant); }
+  .reader-search-count { font-size:11px; color:var(--md-sys-color-on-surface-variant); white-space:nowrap; }
+
+  .reader-icon-btn { background:var(--md-sys-color-surface-container); border:1px solid var(--md-sys-color-outline-variant);
+    color:var(--md-sys-color-on-surface); width:36px; height:36px; border-radius:50%; display:flex;
+    align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:700; }
+  .reader-icon-btn:hover { background:var(--md-sys-color-surface-container-high); }
+  .reader-icon-btn.active { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+
+  .reader-more-menu { display:none; position:absolute; top:44px; left:0; z-index:50; min-width:200px;
+    background:var(--md-sys-color-surface-container-highest); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.5);
+    padding:6px; flex-direction:column; }
+  .reader-more-menu.open { display:flex; }
+  .reader-more-menu button { display:flex; align-items:center; gap:10px; background:none; border:none;
+    color:var(--md-sys-color-on-surface); padding:10px 12px; border-radius:6px; font-size:13px; text-align:left; cursor:pointer; }
+  .reader-more-menu button:hover { background:rgba(255,255,255,.08); }
+  .reader-more-menu .material-symbols-outlined { font-size:18px; }
+
+  /* Print stylesheet: hide all UI chrome, show only the book text cleanly */
+  @media print {
+    .top-app-bar, .nav-drawer, .nav-scrim, #reader-progress-track, .reader-header,
+    .reader-image-panel, #reader-zoom-overlay, #reader-toast, #reader-cite-popup,
+    .reader-illustration-thumb, footer.site-footer { display:none !important; }
+    .reader-text-panel-wrap, .reader-text-panel { width:100% !important; height:auto !important; overflow:visible !important; }
+    .reader-page-block { break-inside: avoid; }
+    body { padding-top:0 !important; }
+  }
+
+  .reader-lang-toggle { display:flex; background:var(--md-sys-color-surface-container);
+    border-radius:20px; padding:3px; gap:2px; }
+  .reader-lang-toggle button { background:none; border:none; color:var(--md-sys-color-on-surface-variant);
+    padding:7px 14px; border-radius:16px; font-size:12px; font-weight:600; cursor:pointer; }
+  .reader-lang-toggle button.active { background:var(--md-sys-color-secondary-container);
+    color:var(--md-sys-color-on-secondary-container); }
+
+  .reader-jump-select { background:var(--md-sys-color-surface-container); color:var(--md-sys-color-on-surface);
+    border:1px solid var(--md-sys-color-outline-variant); border-radius:18px; padding:6px 12px; font-size:13px; }
+
+  /* Orange matches the browser's native "Find on page" convention, so results
+     read as familiar rather than a bespoke color choice. */
+  mark.reader-hit { background:#ffb74d; color:#3b2000; border-radius:2px; }
+  mark.reader-hit.reader-hit-active { background:#ff6d00; color:#fff; }
+
+  #reader-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--md-sys-color-surface-container-highest); color:var(--md-sys-color-on-surface);
+    padding:10px 20px; border-radius:20px; font-size:13px; z-index:1100; opacity:0; pointer-events:none;
+    transition:opacity .25s; box-shadow:0 2px 8px rgba(0,0,0,.4); max-width:80vw; text-align:center; }
+  #reader-toast.show { opacity:1; }
+
+  /* Cite-this-passage popup, appears near a text selection */
+  #reader-cite-popup { position:absolute; display:none; z-index:200; background:var(--md-sys-color-surface-container-highest);
+    border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.5); padding:4px; }
+  #reader-cite-popup button { background:none; border:none; color:var(--md-sys-color-primary); font-size:12px;
+    font-weight:600; padding:8px 12px; cursor:pointer; white-space:nowrap; }
+  #reader-cite-popup button:hover { text-decoration:underline; }
+
+  /* Thumbnail grid page browser -- visual way to jump around a long
+     document, same idea as Internet Archive's grid-view icon. */
+  #reader-grid-overlay { display:none; position:fixed; inset:0; z-index:900; background:var(--md-sys-color-background);
+    flex-direction:column; }
+  #reader-grid-overlay.open { display:flex; }
+  #reader-grid-header { display:flex; justify-content:space-between; align-items:center; padding:14px 20px;
+    border-bottom:1px solid var(--md-sys-color-outline-variant); font-size:15px; font-weight:500; }
+  #reader-grid-header button { background:var(--md-sys-color-surface-container); border:none; color:var(--md-sys-color-on-surface);
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #reader-grid-content { flex:1; overflow-y:auto; padding:16px; display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap:12px; }
+  .reader-grid-thumb { cursor:pointer; text-align:center; }
+  .reader-grid-thumb img { width:100%; height:150px; object-fit:cover; border-radius:4px; border:2px solid transparent;
+    box-shadow:0 1px 4px rgba(0,0,0,.4); }
+  .reader-grid-thumb:hover img { border-color:var(--md-sys-color-primary); }
+  .reader-grid-thumb span { display:block; font-size:11px; color:var(--md-sys-color-on-surface-variant); margin-top:4px; }
+
+  /* Full-image zoom modal (desktop click + mobile long-press both use this) */
+  #reader-zoom-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92);
+    align-items:center; justify-content:center; }
+  #reader-zoom-overlay img { max-width:95vw; max-height:95vh; object-fit:contain;
+    -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  #reader-zoom-page-label { position:absolute; top:16px; left:50%; transform:translateX(-50%);
+    color:rgba(255,255,255,.85); font-size:12px; background:rgba(0,0,0,.5); padding:4px 12px; border-radius:12px; }
+
+  /* Bottom navigation bar for the zoomed image view -- explicit tap targets
+     rather than relying on gestures alone, since gesture-only nav (tap
+     zones especially) was unreliable and collided with the browser's own
+     long-press-to-save-image menu. */
+  #reader-zoom-nav { position:fixed; bottom:0; left:0; right:0; z-index:1001; display:none;
+    justify-content:space-between; align-items:center; padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(0,0,0,.75); }
+  #reader-zoom-nav button { background:rgba(255,255,255,.12); border:none; color:#fff;
+    border-radius:24px; padding:10px 16px; display:flex; align-items:center; gap:4px;
+    font-size:13px; font-weight:600; }
+  #reader-zoom-nav button:active { background:rgba(255,255,255,.24); }
+
+  @media (max-width: 800px) {
+    /* Mobile: text-only by default (full width, full immersion). The scanned
+       original is reachable via long-press anywhere on the text, showing it
+       as a full overlay -- toggled off via the bottom nav's "Text view"
+       button, the back button, or another long-press. No always-visible
+       image panel on mobile; screen space is too tight for it to stay
+       useful, unlike desktop. */
+    .reader-app { height:auto; overflow:visible; }
+    .reader-layout { flex-direction: column; height: auto; }
+    .reader-image-panel { display: none; }
+    .reader-text-panel-wrap { width:100%; height:auto; }
+    .reader-text-panel { width:100%; height:auto; overflow-y:visible; padding: 16px 20px calc(16px + env(safe-area-inset-bottom)); }
+    .reader-header { padding: 10px 16px 6px; }
+    .reader-search-box input { width:90px; }
+    #reader-zoom-overlay.open #reader-zoom-nav { display: flex; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="reader-progress-track"><div id="reader-progress-fill"></div></div>
+
+<div class="reader-app">
+<div class="reader-header">
+  <div>
+    <div class="book-title">{{ book_title }}</div>
+    <div class="book-meta">
+      <a href="/book/{{ mega_slug }}">&larr; {{ mega_title }}</a> ·
+      {{ book_author }} · {{ book_year }} · Public domain{{ ", facsimile" if facsimile else ", full text" }} ·
+      <a href="{{ book_source_url }}" target="_blank" rel="noopener">View at Library of Congress</a>
+      · <span id="reader-page-indicator">Page — of —</span>
+    </div>
+  </div>
+  <div class="reader-toolbar">
+    <select class="reader-jump-select" id="reader-edition-select" title="Switch edition"
+      onchange="if(this.value) window.location = this.value;">
+      {% for s in siblings %}
+      <option value="{{ s.url }}" {{ 'selected' if s.slug == slug else '' }}>{{ s.label }}</option>
+      {% endfor %}
+    </select>
+    <div class="reader-search-box">
+      <span class="material-symbols-outlined">search</span>
+      <input type="text" id="reader-search-input" placeholder="Search this book..." />
+      <span class="reader-search-count" id="reader-search-count"></span>
+    </div>
+    <button class="reader-icon-btn" id="reader-search-prev" title="Previous match" aria-label="Previous match">
+      <span class="material-symbols-outlined" style="font-size:18px;">expand_less</span>
+    </button>
+    <button class="reader-icon-btn" id="reader-search-next" title="Next match" aria-label="Next match">
+      <span class="material-symbols-outlined" style="font-size:18px;">expand_more</span>
+    </button>
+{% if is_translated %}
+    <div class="reader-lang-toggle" id="reader-lang-toggle">
+      <button class="active" data-lang="translation">English</button>
+      <button data-lang="original">Original (Français)</button>
+    </div>
+{% endif %}
+    <select class="reader-jump-select" id="reader-jump-select">
+      <option value="">Jump to page…</option>
+    </select>
+    <button class="reader-icon-btn" id="reader-grid-btn" title="Page thumbnail grid" aria-label="Thumbnail grid view">
+      <span class="material-symbols-outlined" style="font-size:18px;">grid_view</span>
+    </button>
+    <button class="reader-icon-btn" id="reader-view-scan-btn" title="View original scanned page" aria-label="View scan">
+      <span class="material-symbols-outlined" style="font-size:18px;">image</span>
+    </button>
+    <button class="reader-icon-btn" id="reader-tts-btn" title="Read this page aloud" aria-label="Read aloud">
+      <span class="material-symbols-outlined" style="font-size:18px;">headphones</span>
+    </button>
+    <button class="reader-icon-btn" id="reader-font-btn" title="Text size">Aa</button>
+    <button class="reader-icon-btn" id="reader-sepia-btn" title="Sepia reading mode" aria-label="Sepia mode">
+      <span class="material-symbols-outlined" style="font-size:18px;">tonality</span>
+    </button>
+    <div style="position:relative;">
+      <button class="reader-icon-btn" id="reader-more-btn" title="More options" aria-label="More options">
+        <span class="material-symbols-outlined" style="font-size:18px;">more_vert</span>
+      </button>
+      <div class="reader-more-menu" id="reader-more-menu">
+        <button id="reader-bookmark-btn"><span class="material-symbols-outlined">bookmark_border</span> Bookmark this page</button>
+        <button id="reader-print-btn"><span class="material-symbols-outlined">print</span> Print to PDF</button>
+        <button id="reader-share-btn"><span class="material-symbols-outlined">share</span> Share</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="reader-layout">
+  <div class="reader-image-panel" id="reader-image-panel">
+    <!-- Image blocks injected by JS, lazily, in lockstep with the text panel -->
+    <div id="reader-image-load-sentinel" style="height:1px;"></div>
+  </div>
+  <div class="reader-text-panel-wrap">
+    <div class="reader-search-minimap" id="reader-search-minimap"></div>
+    <div class="reader-text-panel fs-medium" id="reader-text-panel">
+      <!-- Page blocks injected by JS, lazily -->
+      <div id="reader-load-sentinel" style="height:1px;"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /.reader-app -->
+
+<div id="reader-cite-popup"><button id="reader-cite-btn">Cite this passage</button></div>
+
+<div id="reader-grid-overlay">
+  <div id="reader-grid-header">
+    <span>All pages</span>
+    <button id="reader-grid-close" aria-label="Close grid view"><span class="material-symbols-outlined">close</span></button>
+  </div>
+  <div id="reader-grid-content"></div>
+</div>
+<div id="reader-toast"></div>
+
+<div id="reader-zoom-overlay">
+  <img id="reader-zoom-img" src="" alt="Zoomed page" draggable="false" />
+  <div id="reader-zoom-page-label"></div>
+  <div style="position:absolute; top:16px; right:16px;">
+    <button class="reader-icon-btn" id="reader-zoom-more-btn" title="More options" aria-label="More options"
+      style="background:rgba(0,0,0,.5); border-color:rgba(255,255,255,.2); color:#fff;">
+      <span class="material-symbols-outlined" style="font-size:18px;">more_vert</span>
+    </button>
+    <div class="reader-more-menu" id="reader-zoom-more-menu" style="right:0; left:auto;">
+      <button id="reader-zoom-bookmark-btn"><span class="material-symbols-outlined">bookmark_border</span> Bookmark this page</button>
+      <button id="reader-zoom-print-btn"><span class="material-symbols-outlined">print</span> Print to PDF</button>
+      <button id="reader-zoom-share-btn"><span class="material-symbols-outlined">share</span> Share</button>
+    </div>
+  </div>
+  <div id="reader-zoom-nav">
+    <button id="reader-zoom-prev" aria-label="Previous page"><span class="material-symbols-outlined">chevron_left</span></button>
+    <button id="reader-zoom-exit" aria-label="Close, return to text"><span class="material-symbols-outlined">close</span> Text view</button>
+    <button id="reader-zoom-next" aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const BOOK_SLUG = {{ slug|tojson }};
+const FACSIMILE = {{ facsimile|tojson }};
+const BOOK_TITLE = {{ book_title|tojson }};
+const BOOK_AUTHOR = {{ book_author|tojson }};
+const BOOK_YEAR = {{ book_year|tojson }};
+const RESUME_COOKIE = 'reader_pos_' + BOOK_SLUG;
+const PAGE_BATCH_SIZE = 40; // lazily render this many page-blocks at a time
+
+let allPages = [];
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+let avgTextLength = 200; // recalculated once real page data loads; used for illustration detection
+let renderedCount = 0;
+const panel = document.getElementById('reader-text-panel');
+const imagePanel = document.getElementById('reader-image-panel');
+const imageSentinel = document.getElementById('reader-image-load-sentinel');
+let syncingScroll = false; // guards against feedback loops in the two-way scroll sync below
+const sentinel = document.getElementById('reader-load-sentinel');
+const jumpSelect = document.getElementById('reader-jump-select');
+const pageIndicator = document.getElementById('reader-page-indicator');
+const progressFill = document.getElementById('reader-progress-fill');
+
+function getCookie(name) {
+  const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return m ? m.pop() : null;
+}
+function setCookie(name, value) {
+  document.cookie = name + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
+}
+
+function flagPossiblyGarbled(text) {
+  // Heuristic OCR-quality flag: no real confidence score is available from
+  // plain OCR text, so this looks for words with patterns that are common
+  // OCR-garbling artifacts (old typefaces, broken long-s, smudged print) --
+  // internal mixed-case oddities (bAckwards, aBnormal caps), long runs of
+  // non-alphanumeric junk, or single-letter "words" surrounded by real
+  // text. Flagged spans get a subtle dotted underline, not intrusive, just
+  // enough to suggest "maybe check the source image here."
+  const words = text.split(/(\s+)/);
+  return words.map(w => {
+    const trimmed = w.trim();
+    if (!trimmed) return w;
+    const isJunk = /[^a-zA-Z0-9.,;:'"\-()]{2,}/.test(trimmed) ||
+      (/[a-z][A-Z]/.test(trimmed) && /[A-Z][a-z]/.test(trimmed) && trimmed.length > 3) ||
+      (trimmed.length === 1 && /[^aAI.,;:]/.test(trimmed));
+    if (isJunk) {
+      return `<span class="reader-maybe-garbled" title="This may be an OCR error -- check the source image">${escapeHtml(w)}</span>`;
+    }
+    return escapeHtml(w);
+  }).join('');
+}
+
+let currentLang = 'translation'; // for dual-language books; 'translation' or 'original'
+
+function renderBlock(p) {
+  if (FACSIMILE) {
+    const block = document.createElement('div');
+    block.className = 'reader-page-block';
+    block.dataset.image = p.image;
+    block.dataset.page = p.page;
+    block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div>` +
+      `<img class="reader-facsimile-img" src="${p.image}" alt="Page ${p.page}" loading="lazy"
+        style="width:100%; border-radius:6px; cursor:zoom-in; box-shadow:0 2px 8px rgba(0,0,0,.4);" />`;
+    block.querySelector('img').addEventListener('click', () => {
+      zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+      showZoomPage(zoomCurrentIdx);
+      zoomOverlay.style.display = 'flex';
+      history.pushState({ readerZoom: true }, '');
+      zoomOpenedViaHistory = true;
+    });
+    return block;
+  }
+  if (!p.text || p.text.trim().length < 3) return null;
+  const block = document.createElement('div');
+  block.className = 'reader-page-block';
+  block.dataset.image = p.image;
+  block.dataset.page = p.page;
+  block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div><div class="reader-page-text"></div>`;
+  const textToShow = (currentLang === 'translation' && p.translation) ? p.translation : p.text;
+  block.querySelector('.reader-page-text').innerHTML = flagPossiblyGarbled(textToShow);
+  if (p.translation) block.dataset.hasTranslation = 'true';
+
+  // Illustration detection: pages with unusually little OCR text relative
+  // to the book's typical page are probably a plate/illustration rather
+  // than a text page (a full-page image OCRs to almost nothing). There's
+  // no way to detect this with certainty without real image analysis, so
+  // this is a heuristic -- but a genuinely useful one, since it lets us
+  // surface likely illustrations directly in the scrollable text instead
+  // of leaving people to discover them only by opening the full scan.
+  if (p.text.trim().length < avgTextLength * 0.15 && p.text.trim().length < 200) {
+    const thumb = document.createElement('div');
+    thumb.className = 'reader-illustration-thumb';
+    thumb.innerHTML = `<img src="${p.image}" alt="Illustration on page ${p.page}" loading="lazy" />` +
+      `<span class="material-symbols-outlined">image</span> Illustration on this page -- tap to view full size`;
+    thumb.addEventListener('click', () => {
+      zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+      showZoomPage(zoomCurrentIdx);
+      zoomOverlay.style.display = 'flex';
+      history.pushState({ readerZoom: true }, '');
+      zoomOpenedViaHistory = true;
+    });
+    block.appendChild(thumb);
+  }
+  return block;
+}
+
+function renderImageBlock(p) {
+  // Mirrors renderBlock() one-to-one per page so the image column and text
+  // column always have matching block counts/order -- that's what keeps the
+  // proportional scroll sync between the two panels meaningful.
+  const block = document.createElement('div');
+  block.className = 'reader-image-block';
+  block.dataset.page = p.page;
+  block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
+  block.addEventListener('click', () => {
+    zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+    showZoomPage(zoomCurrentIdx);
+    zoomOverlay.style.display = 'flex';
+    history.pushState({ readerZoom: true }, '');
+    zoomOpenedViaHistory = true;
+  });
+  return block;
+}
+
+function rerenderAllPagesForLangSwitch() {
+  const rendered = Array.from(panel.querySelectorAll('.reader-page-block'));
+  rendered.forEach(block => {
+    const pageNum = parseInt(block.dataset.page, 10);
+    const p = allPages.find(pg => pg.page === pageNum);
+    if (!p) return;
+    const textToShow = (currentLang === 'translation' && p.translation) ? p.translation : p.text;
+    block.querySelector('.reader-page-text').innerHTML = flagPossiblyGarbled(textToShow);
+  });
+}
+
+const langToggle = document.getElementById('reader-lang-toggle');
+if (langToggle) {
+  langToggle.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      langToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLang = btn.dataset.lang;
+      rerenderAllPagesForLangSwitch();
+    });
+  });
+}
+
+let currentImageBlock = null;
+const imgObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const pageNum = entry.target.dataset.page;
+      pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
+      setCookie(RESUME_COOKIE, pageNum);
+      updateProgress();
+      // Highlight the matching image block so it's clear which scan corresponds
+      // to what's currently in view on the text side, even though the image
+      // panel now scrolls independently rather than swapping a single image.
+      if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
+      const imgBlock = imagePanel.querySelector(`.reader-image-block[data-page="${pageNum}"]`);
+      if (imgBlock) { imgBlock.classList.add('reader-image-current'); currentImageBlock = imgBlock; }
+    }
+  });
+}, { root: null, threshold: 0.5 });
+
+function renderNextBatch() {
+  const slice = allPages.slice(renderedCount, renderedCount + PAGE_BATCH_SIZE);
+  slice.forEach(p => {
+    const block = renderBlock(p);
+    if (block) {
+      panel.insertBefore(block, sentinel);
+      imgObserver.observe(block);
+      imagePanel.insertBefore(renderImageBlock(p), imageSentinel);
+    }
+  });
+  renderedCount += slice.length;
+  if (renderedCount >= allPages.length) {
+    loadMoreObserver.disconnect();
+  }
+}
+
+function renderUpTo(pageNum) {
+  // Used by jump-to-page: ensure all batches up to the target page exist in the DOM
+  while (renderedCount < allPages.length && allPages[renderedCount - 1] && allPages[renderedCount - 1].page < pageNum) {
+    renderNextBatch();
+  }
+  while (renderedCount < pageNum && renderedCount < allPages.length) {
+    renderNextBatch();
+  }
+}
+
+const loadMoreObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) renderNextBatch(); });
+}, { rootMargin: '800px' });
+
+function updateProgress() {
+  const scrollable = panel.scrollHeight - panel.clientHeight;
+  const pct = scrollable > 0 ? (panel.scrollTop / scrollable) * 100 : 0;
+  progressFill.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+panel.addEventListener('scroll', updateProgress);
+
+// Two-way proportional scroll sync: the image column now scrolls independently
+// (infinite scroll, same as the text column) instead of swapping one sticky
+// image, so keep the two roughly aligned by scroll fraction rather than
+// pixel position -- page images and page text blocks are rarely the same
+// height, so fraction-of-total-height is the only mapping that stays sane
+// across the whole book. The syncingScroll flag + requestAnimationFrame
+// stops the two listeners from bouncing off each other in a feedback loop.
+function scrollFraction(el) {
+  const max = el.scrollHeight - el.clientHeight;
+  return max > 0 ? el.scrollTop / max : 0;
+}
+function applyScrollFraction(el, frac) {
+  const max = el.scrollHeight - el.clientHeight;
+  el.scrollTop = frac * max;
+}
+panel.addEventListener('scroll', () => {
+  if (syncingScroll) return;
+  syncingScroll = true;
+  requestAnimationFrame(() => {
+    applyScrollFraction(imagePanel, scrollFraction(panel));
+    syncingScroll = false;
+  });
+});
+imagePanel.addEventListener('scroll', () => {
+  if (syncingScroll) return;
+  syncingScroll = true;
+  requestAnimationFrame(() => {
+    applyScrollFraction(panel, scrollFraction(imagePanel));
+    syncingScroll = false;
+  });
+});
+
+fetch('{{ data_url }}')
+  .then(r => r.json())
+  .then(pages => {
+    allPages = FACSIMILE
+      ? pages.filter(p => p.image)
+      : pages.filter(p => p.text && p.text.trim().length >= 3);
+    if (!allPages.length) throw new Error('empty');
+    avgTextLength = allPages.reduce((sum, p) => sum + p.text.trim().length, 0) / allPages.length;
+
+    // Chapter/heading detection heuristic: a line that's short, in caps,
+    // and either starts with "CHAPTER" or sits alone near the top of an
+    // otherwise-normal text page is probably a chapter heading. There's no
+    // real structural markup in plain OCR text, so this is a heuristic,
+    // not a guarantee -- but it beats a flat, undifferentiated page list
+    // for anything longer than ~50 pages.
+    const chapters = [];
+    const HEADING_RE = /^(CHAPTER\s+[IVXLC\d]+\.?\s*[-—]?\s*.{0,60})$/im;
+    allPages.forEach(p => {
+      const firstLines = p.text.split('\n').slice(0, 6).join('\n');
+      const m = firstLines.match(HEADING_RE);
+      if (m) chapters.push({ page: p.page, label: m[1].trim().replace(/\s+/g, ' ') });
+    });
+
+    // Populate jump-to-page dropdown -- chapters grouped first (if any were
+    // found) with a divider, then the full flat page list below.
+    if (chapters.length) {
+      const grp = document.createElement('optgroup');
+      grp.label = 'Chapters';
+      chapters.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.page;
+        opt.textContent = c.label.length > 45 ? c.label.slice(0, 45) + '…' : c.label;
+        grp.appendChild(opt);
+      });
+      jumpSelect.appendChild(grp);
+      const pagesGrp = document.createElement('optgroup');
+      pagesGrp.label = 'All pages';
+      allPages.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.page;
+        opt.textContent = 'Page ' + p.page;
+        pagesGrp.appendChild(opt);
+      });
+      jumpSelect.appendChild(pagesGrp);
+    } else {
+      allPages.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.page;
+        opt.textContent = 'Page ' + p.page;
+        jumpSelect.appendChild(opt);
+      });
+    }
+
+    refreshBookmarksInJumpMenu();
+    loadMoreObserver.observe(sentinel);
+    renderNextBatch();
+
+    // Resume where the reader left off (cookie) takes priority since it reflects
+    // this reader's own progress; otherwise, if this book has a known relevant
+    // passage (start_page), jump there instead of defaulting to page 1 -- some
+    // of these books are 900+ pages with only one page actually relevant.
+    const resumePage = getCookie(RESUME_COOKIE);
+    const START_PAGE = {{ (start_page or 0)|tojson }};
+    const jumpTarget = resumePage || (START_PAGE > 1 ? String(START_PAGE) : null);
+    if (jumpTarget) {
+      renderUpTo(parseInt(jumpTarget, 10) + PAGE_BATCH_SIZE);
+      setTimeout(() => {
+        const target = panel.querySelector(`.reader-page-block[data-page="${jumpTarget}"]`);
+        if (target) target.scrollIntoView({ block: 'start' });
+      }, 50);
+    }
+
+    // --- In-book search ---
+    const searchInput = document.getElementById('reader-search-input');
+    const searchCount = document.getElementById('reader-search-count');
+    const searchMinimap = document.getElementById('reader-search-minimap');
+    let hits = [];
+    let activeHit = -1;
+    let minimapBands = [];
+
+    function clearHighlights() {
+      panel.querySelectorAll('mark.reader-hit').forEach(m => {
+        const parent = m.parentNode;
+        parent.replaceChild(document.createTextNode(m.textContent), m);
+        parent.normalize();
+      });
+    }
+    // Find-on-page style minimap: one orange band per match, positioned by
+    // fraction of total scroll height, so all matches are visible at a
+    // glance next to the scrollbar -- same idea as Chrome's native Find bands.
+    function renderMinimap() {
+      searchMinimap.innerHTML = '';
+      minimapBands = [];
+      if (!hits.length) return;
+      const total = panel.scrollHeight;
+      const panelTop = panel.getBoundingClientRect().top;
+      hits.forEach((hit) => {
+        const top = hit.getBoundingClientRect().top - panelTop + panel.scrollTop;
+        const pct = Math.min(100, Math.max(0, (top / total) * 100));
+        const band = document.createElement('div');
+        band.className = 'reader-minimap-band';
+        band.style.top = pct + '%';
+        searchMinimap.appendChild(band);
+        minimapBands.push(band);
+      });
+    }
+    function updateActiveBand() {
+      minimapBands.forEach((b, i) => b.classList.toggle('active', i === activeHit));
+    }
+    function runSearch(query) {
+      clearHighlights();
+      hits = []; activeHit = -1;
+      searchMinimap.innerHTML = ''; minimapBands = [];
+      if (!query || query.trim().length < 2) { searchCount.textContent = ''; return; }
+      // Search requires all pages to be rendered to find matches anywhere in the book
+      renderUpTo(allPages[allPages.length - 1].page);
+      const q = query.trim().toLowerCase();
+      panel.querySelectorAll('.reader-page-text').forEach(textEl => {
+        const text = textEl.textContent;
+        const lower = text.toLowerCase();
+        let idx = 0, positions = [];
+        while ((idx = lower.indexOf(q, idx)) !== -1) { positions.push(idx); idx += q.length; }
+        if (!positions.length) return;
+        let html = '', last = 0;
+        positions.forEach(pos => {
+          html += escapeHtml(text.slice(last, pos)) + '<mark class="reader-hit">' +
+            escapeHtml(text.slice(pos, pos + q.length)) + '</mark>';
+          last = pos + q.length;
+        });
+        html += escapeHtml(text.slice(last));
+        textEl.innerHTML = html;
+      });
+      hits = Array.from(panel.querySelectorAll('mark.reader-hit'));
+      searchCount.textContent = hits.length ? `1 / ${hits.length}` : 'No matches';
+      renderMinimap();
+      if (hits.length) jumpToHit(0);
+    }
+    function jumpToHit(i) {
+      if (!hits.length) return;
+      if (activeHit >= 0) hits[activeHit].classList.remove('reader-hit-active');
+      activeHit = (i + hits.length) % hits.length;
+      hits[activeHit].classList.add('reader-hit-active');
+      hits[activeHit].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      searchCount.textContent = `${activeHit + 1} / ${hits.length}`;
+      updateActiveBand();
+    }
+    let searchDebounce;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => runSearch(e.target.value), 300);
+    });
+    searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') jumpToHit(activeHit + 1); });
+    document.getElementById('reader-search-prev').addEventListener('click', () => jumpToHit(activeHit - 1));
+    document.getElementById('reader-search-next').addEventListener('click', () => jumpToHit(activeHit + 1));
+
+    // --- Jump to page ---
+    jumpSelect.addEventListener('change', () => {
+      const target = parseInt(jumpSelect.value, 10);
+      if (!target) return;
+      renderUpTo(target);
+      setTimeout(() => {
+        const el = panel.querySelector(`.reader-page-block[data-page="${target}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 30);
+    });
+
+    // --- Keyboard navigation: up/down arrows move one page at a time ---
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement === searchInput) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const blocks = Array.from(panel.querySelectorAll('.reader-page-block'));
+        const mid = panel.scrollTop + panel.clientHeight / 2;
+        let idx = blocks.findIndex(b => b.offsetTop > mid);
+        if (idx === -1) idx = blocks.length - 1;
+        const nextIdx = e.key === 'ArrowDown' ? idx : Math.max(0, idx - 2);
+        if (blocks[nextIdx]) blocks[nextIdx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    // --- Cite this passage: appears on text selection within the reader ---
+    const citePopup = document.getElementById('reader-cite-popup');
+    const citeBtn = document.getElementById('reader-cite-btn');
+    let selectedQuote = '', selectedPage = '';
+    document.addEventListener('mouseup', () => {
+      const sel = window.getSelection();
+      const text = sel.toString().trim();
+      if (text.length > 4 && panel.contains(sel.anchorNode)) {
+        let node = sel.anchorNode;
+        while (node && !node.classList?.contains('reader-page-block')) node = node.parentElement;
+        selectedQuote = text;
+        selectedPage = node ? node.dataset.page : '?';
+        const range = sel.getRangeAt(0).getBoundingClientRect();
+        citePopup.style.top = (window.scrollY + range.top - 44) + 'px';
+        citePopup.style.left = (window.scrollX + range.left) + 'px';
+        citePopup.style.display = 'block';
+      } else {
+        citePopup.style.display = 'none';
+      }
+    });
+    citeBtn.addEventListener('click', async () => {
+      const citation = `"${selectedQuote}" -- ${BOOK_AUTHOR}, ${BOOK_TITLE} (${BOOK_YEAR}), p. ${selectedPage}.`;
+      try {
+        await navigator.clipboard.writeText(citation);
+        showToast('Citation copied to clipboard');
+      } catch (e) { showToast('Could not copy citation'); }
+      citePopup.style.display = 'none';
+    });
+  })
+  .catch(err => {
+    panel.textContent = 'Could not load book text.';
+  });
+
+// --- Toast helper ---
+function showToast(msg) {
+  const t = document.getElementById('reader-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// --- More-options menus (bookmark / print / share), one for the text
+// view header, one for the zoomed image view -- same three actions,
+// wired to whichever page is currently in view in each context.
+const BOOKMARKS_COOKIE = 'reader_bookmarks_' + BOOK_SLUG;
+function getBookmarks() {
+  const raw = getCookie(BOOKMARKS_COOKIE);
+  return raw ? raw.split(',').map(n => parseInt(n, 10)).filter(n => !isNaN(n)) : [];
+}
+function toggleBookmark(pageNum) {
+  let marks = getBookmarks();
+  if (marks.includes(pageNum)) {
+    marks = marks.filter(n => n !== pageNum);
+    showToast('Bookmark removed');
+  } else {
+    marks.push(pageNum);
+    showToast('Page ' + pageNum + ' bookmarked');
+  }
+  setCookie(BOOKMARKS_COOKIE, marks.join(','));
+  refreshBookmarksInJumpMenu();
+}
+function refreshBookmarksInJumpMenu() {
+  const existing = jumpSelect.querySelector('optgroup[label="Bookmarks"]');
+  if (existing) existing.remove();
+  const marks = getBookmarks();
+  if (!marks.length) return;
+  const grp = document.createElement('optgroup');
+  grp.label = 'Bookmarks';
+  marks.sort((a, b) => a - b).forEach(pg => {
+    const opt = document.createElement('option');
+    opt.value = pg;
+    opt.textContent = '★ Page ' + pg;
+    grp.appendChild(opt);
+  });
+  jumpSelect.insertBefore(grp, jumpSelect.firstChild.nextSibling);
+}
+
+function doShare() {
+  const shareData = {
+    title: BOOK_TITLE,
+    text: 'Read "' + BOOK_TITLE + '" (' + BOOK_YEAR + ') -- full text and original scans, free to read.',
+    url: window.location.href,
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => showToast('Link copied to clipboard'))
+      .catch(() => showToast('Could not copy link'));
+  }
+}
+function doPrint() { window.print(); }
+
+// Text-view menu
+const moreBtn = document.getElementById('reader-more-btn');
+const moreMenu = document.getElementById('reader-more-menu');
+moreBtn.addEventListener('click', (e) => { e.stopPropagation(); moreMenu.classList.toggle('open'); });
+document.getElementById('reader-bookmark-btn').addEventListener('click', () => {
+  const pageNum = parseInt(pageIndicator.textContent.match(/Page (\d+)/)?.[1] || allPages[0].page, 10);
+  toggleBookmark(pageNum);
+  moreMenu.classList.remove('open');
+});
+document.getElementById('reader-print-btn').addEventListener('click', () => { doPrint(); moreMenu.classList.remove('open'); });
+document.getElementById('reader-share-btn').addEventListener('click', () => { doShare(); moreMenu.classList.remove('open'); });
+
+// Zoom-view menu (same three actions, bound to whichever page is showing in zoom)
+const zoomMoreBtn = document.getElementById('reader-zoom-more-btn');
+const zoomMoreMenu = document.getElementById('reader-zoom-more-menu');
+zoomMoreBtn.addEventListener('click', (e) => { e.stopPropagation(); zoomMoreMenu.classList.toggle('open'); });
+document.getElementById('reader-zoom-bookmark-btn').addEventListener('click', () => {
+  toggleBookmark(allPages[zoomCurrentIdx].page);
+  zoomMoreMenu.classList.remove('open');
+});
+document.getElementById('reader-zoom-print-btn').addEventListener('click', () => { doPrint(); zoomMoreMenu.classList.remove('open'); });
+document.getElementById('reader-zoom-share-btn').addEventListener('click', () => { doShare(); zoomMoreMenu.classList.remove('open'); });
+
+document.addEventListener('click', () => {
+  moreMenu.classList.remove('open');
+  zoomMoreMenu.classList.remove('open');
+});
+
+// --- Font size cycling ---
+const FONT_SIZES = ['fs-small', 'fs-medium', 'fs-large', 'fs-xlarge'];
+let fontIdx = 1;
+document.getElementById('reader-font-btn').addEventListener('click', () => {
+  panel.classList.remove(FONT_SIZES[fontIdx]);
+  fontIdx = (fontIdx + 1) % FONT_SIZES.length;
+  panel.classList.add(FONT_SIZES[fontIdx]);
+});
+
+// --- Sepia toggle ---
+document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
+  panel.classList.toggle('sepia');
+  e.currentTarget.classList.toggle('active');
+});
+
+// --- Thumbnail grid page browser ---
+const gridOverlay = document.getElementById('reader-grid-overlay');
+document.getElementById('reader-view-scan-btn').addEventListener('click', () => {
+  zoomCurrentIdx = currentPageIdx();
+  showZoomPage(zoomCurrentIdx);
+  zoomOverlay.style.display = 'flex';
+  history.pushState({ readerZoom: true }, '');
+  zoomOpenedViaHistory = true;
+});
+
+const gridContent = document.getElementById('reader-grid-content');
+let gridBuilt = false;
+document.getElementById('reader-grid-btn').addEventListener('click', () => {
+  if (!gridBuilt && allPages.length) {
+    allPages.forEach(p => {
+      const thumb = document.createElement('div');
+      thumb.className = 'reader-grid-thumb';
+      thumb.innerHTML = `<img src="${p.image}" alt="Page ${p.page}" loading="lazy" />` +
+        `<span>Page ${p.page}</span>`;
+      thumb.addEventListener('click', () => {
+        renderUpTo(p.page);
+        setTimeout(() => {
+          const target = panel.querySelector(`.reader-page-block[data-page="${p.page}"]`);
+          if (target) target.scrollIntoView({ block: 'start' });
+        }, 30);
+        gridOverlay.classList.remove('open');
+      });
+      gridContent.appendChild(thumb);
+    });
+    gridBuilt = true;
+  }
+  gridOverlay.classList.add('open');
+});
+document.getElementById('reader-grid-close').addEventListener('click', () => gridOverlay.classList.remove('open'));
+
+// --- Read aloud (browser Speech Synthesis, no external service needed) ---
+const ttsBtn = document.getElementById('reader-tts-btn');
+let ttsUtterance = null;
+function stopReadAloud() {
+  speechSynthesis.cancel();
+  ttsBtn.classList.remove('active');
+  ttsUtterance = null;
+}
+ttsBtn.addEventListener('click', () => {
+  if (speechSynthesis.speaking) { stopReadAloud(); return; }
+  const pageNum = parseInt(pageIndicator.textContent.match(/Page (\d+)/)?.[1] || allPages[0].page, 10);
+  const currentPage = allPages.find(p => p.page === pageNum) || allPages[0];
+  ttsUtterance = new SpeechSynthesisUtterance(currentPage.text);
+  ttsUtterance.rate = 0.95;
+  ttsUtterance.onend = () => ttsBtn.classList.remove('active');
+  speechSynthesis.speak(ttsUtterance);
+  ttsBtn.classList.add('active');
+});
+// Stop reading if the reader navigates away mid-speech, so it doesn't
+// keep narrating a page that's no longer on screen.
+['popstate'].forEach(evt => window.addEventListener(evt, () => { if (speechSynthesis.speaking) stopReadAloud(); }));
+
+// --- Image zoom: click on desktop, long-press on mobile ---
+// Uses the History API so the device/browser back button closes the
+// overlay (restoring the underlying reading view) instead of navigating
+// away from the page entirely -- the overlay is app-level UI state, not
+// a real navigation destination.
+const zoomOverlay = document.getElementById('reader-zoom-overlay');
+const zoomImg = document.getElementById('reader-zoom-img');
+const zoomPageLabel = document.getElementById('reader-zoom-page-label');
+let zoomCurrentIdx = 0;
+let zoomOpenedViaHistory = false;
+
+function currentPageIdx() {
+  const pageNum = parseInt(pageIndicator.textContent.match(/Page (\d+)/)?.[1] || allPages[0].page, 10);
+  const idx = allPages.findIndex(p => p.page === pageNum);
+  return idx === -1 ? 0 : idx;
+}
+
+function showZoomPage(idx) {
+  idx = Math.max(0, Math.min(allPages.length - 1, idx));
+  zoomCurrentIdx = idx;
+  zoomImg.src = allPages[idx].image;
+  zoomPageLabel.textContent = 'Page ' + allPages[idx].page + ' of ' + allPages[allPages.length - 1].page;
+}
+
+function openZoom() {
+  zoomCurrentIdx = currentPageIdx();
+  showZoomPage(zoomCurrentIdx);
+  zoomOverlay.style.display = 'flex';
+  history.pushState({ readerZoom: true }, '');
+  zoomOpenedViaHistory = true;
+}
+function closeZoom(fromPopstate) {
+  zoomOverlay.style.display = 'none';
+  // Sync the main reading view to wherever the reader flipped to in zoom mode
+  renderUpTo(allPages[zoomCurrentIdx].page);
+  setTimeout(() => {
+    const target = panel.querySelector(`.reader-page-block[data-page="${allPages[zoomCurrentIdx].page}"]`);
+    if (target) target.scrollIntoView({ block: 'start' });
+  }, 30);
+  if (zoomOpenedViaHistory && !fromPopstate) {
+    history.back(); // pop our pushed state so back-history stays clean
+  }
+  zoomOpenedViaHistory = false;
+}
+window.addEventListener('popstate', (e) => {
+  if (zoomOverlay.style.display === 'flex') {
+    closeZoom(true);
+  }
+});
+
+const isMobile = window.matchMedia('(max-width: 800px)').matches;
+if (!isMobile) {
+  // Per-image click-to-zoom is now bound individually in renderImageBlock(),
+  // since the image panel holds a scrolling column of blocks rather than one image.
+  zoomOverlay.addEventListener('click', (e) => { if (e.target === zoomOverlay) closeZoom(); });
+} else {
+  // Long-press anywhere on the text panel reveals the current page's original
+  // scan full-screen (or, for dual-language books, toggles Translation <-> Original
+  // text instead -- long-press is repurposed per-book since showing the source-
+  // language text serves the same "verify against the source" role as the scan
+  // does for single-language books). Prevent the browser's native long-press
+  // "save image" menu from appearing over our own image -- that dialog was
+  // intercepting the gesture instead of our overlay opening.
+  zoomImg.addEventListener('contextmenu', (e) => e.preventDefault());
+  zoomImg.style.webkitTouchCallout = 'none';
+
+  let pressTimer = null;
+  panel.addEventListener('touchstart', () => {
+    pressTimer = setTimeout(() => {
+      if (langToggle) {
+        const other = currentLang === 'translation' ? 'original' : 'translation';
+        langToggle.querySelector(`button[data-lang="${other}"]`)?.click();
+      } else if (zoomOverlay.style.display !== 'flex') {
+        openZoom();
+      }
+    }, 500);
+  });
+  ['touchend', 'touchmove', 'touchcancel'].forEach(evt =>
+    panel.addEventListener(evt, () => clearTimeout(pressTimer))
+  );
+
+  // Page-flipping within the mobile zoom view: swipe left/right only --
+  // tapping was removed since it made accidental page turns too easy and
+  // conflicted with tapping to dismiss. Use the bottom nav bar buttons
+  // (prev/next/exit) for tap-based control instead.
+  let touchStartX = null;
+  zoomImg.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  zoomImg.addEventListener('touchend', (e) => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) {
+      showZoomPage(zoomCurrentIdx + (dx < 0 ? 1 : -1));
+    }
+    touchStartX = null;
+  });
+}
+
+// Bottom nav bar: explicit tap targets for prev/next/exit, available on
+// both mobile and desktop whenever the zoom overlay is open.
+document.getElementById('reader-zoom-prev').addEventListener('click', () => showZoomPage(zoomCurrentIdx - 1));
+document.getElementById('reader-zoom-next').addEventListener('click', () => showZoomPage(zoomCurrentIdx + 1));
+document.getElementById('reader-zoom-exit').addEventListener('click', () => closeZoom());
+</script>
+{% endblock %}
