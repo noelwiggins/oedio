@@ -1,0 +1,151 @@
+{
+  "job_name": "Wonders Ottoman 1553 — pilot transcription v2 (pp 8-23)",
+  "completed_at": "2026-07-27T15:33:06.712539",
+  "segment_count": 16,
+  "results": [
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0008/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-8",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0008/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0009/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-9",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0009/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0010/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-10",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0010/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0011/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-11",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0011/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0012/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-12",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0012/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0013/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-13",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0013/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0014/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-14",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0014/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0015/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-15",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0015/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0016/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-16",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0016/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0017/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-17",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0017/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0018/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-18",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0018/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0019/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-19",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0019/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0020/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-20",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0020/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0021/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-21",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0021/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0022/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-22",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0022/full/pct:50.0/0/default.jpg"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0023/full/pct:50.0/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "page-23",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/public:amed:2017406674:0023/full/pct:50.0/0/default.jpg"
+    }
+  ]
+}
