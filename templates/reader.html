@@ -201,6 +201,8 @@
     font-size:13px; font-weight:600; }
   #reader-zoom-nav button:active { background:rgba(255,255,255,.24); }
 
+  #reader-zoom-overlay.open #reader-zoom-nav { display: flex; }
+
   @media (max-width: 800px) {
     /* Mobile: text-only by default (full width, full immersion). The scanned
        original is reachable via long-press anywhere on the text, showing it
@@ -405,8 +407,8 @@ function renderBlock(p) {
         style="width:100%; border-radius:6px; cursor:zoom-in; box-shadow:0 2px 8px rgba(0,0,0,.4);" />`;
     block.querySelector('img').addEventListener('click', () => {
       zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+      openZoomOverlay();
       showZoomPage(zoomCurrentIdx);
-      zoomOverlay.style.display = 'flex';
       history.pushState({ readerZoom: true }, '');
       zoomOpenedViaHistory = true;
     });
@@ -436,8 +438,8 @@ function renderBlock(p) {
       `<span class="material-symbols-outlined">image</span> Illustration on this page -- tap to view full size`;
     thumb.addEventListener('click', () => {
       zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+      openZoomOverlay();
       showZoomPage(zoomCurrentIdx);
-      zoomOverlay.style.display = 'flex';
       history.pushState({ readerZoom: true }, '');
       zoomOpenedViaHistory = true;
     });
@@ -456,8 +458,8 @@ function renderImageBlock(p) {
   block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
   block.addEventListener('click', () => {
     zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+    openZoomOverlay();
     showZoomPage(zoomCurrentIdx);
-    zoomOverlay.style.display = 'flex';
     history.pushState({ readerZoom: true }, '');
     zoomOpenedViaHistory = true;
   });
@@ -894,8 +896,8 @@ document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
 const gridOverlay = document.getElementById('reader-grid-overlay');
 document.getElementById('reader-view-scan-btn').addEventListener('click', () => {
   zoomCurrentIdx = currentPageIdx();
+  openZoomOverlay();
   showZoomPage(zoomCurrentIdx);
-  zoomOverlay.style.display = 'flex';
   history.pushState({ readerZoom: true }, '');
   zoomOpenedViaHistory = true;
 });
@@ -990,7 +992,13 @@ function currentPageIdx() {
   return idx === -1 ? 0 : idx;
 }
 
+function openZoomOverlay() {
+  buildZoomStream();
+  zoomOverlay.style.display = 'block';
+  zoomOverlay.classList.add('open');
+}
 function showZoomPage(idx, smooth) {
+  buildZoomStream();
   idx = Math.max(0, Math.min(allPages.length - 1, idx));
   zoomCurrentIdx = idx;
   const el = zoomScroll.querySelector('.zoom-page[data-idx="' + idx + '"]');
@@ -999,8 +1007,7 @@ function showZoomPage(idx, smooth) {
 }
 
 function openZoom() {
-  buildZoomStream();
-  zoomOverlay.style.display = 'block';
+  openZoomOverlay();
   zoomCurrentIdx = currentPageIdx();
   showZoomPage(zoomCurrentIdx);
   history.pushState({ readerZoom: true }, '');
@@ -1008,6 +1015,7 @@ function openZoom() {
 }
 function closeZoom(fromPopstate) {
   zoomOverlay.style.display = 'none';
+  zoomOverlay.classList.remove('open');
   // Sync the main reading view to wherever the reader flipped to in zoom mode
   renderUpTo(allPages[zoomCurrentIdx].page);
   setTimeout(() => {
