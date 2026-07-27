@@ -3,10 +3,13 @@
 **Read this file at the start of any new session on this repo, before starting new work.**
 Durable record of in-progress/incomplete work — survives session interruptions.
 
-Last updated: 2026-07-26
+Last updated: 2026-07-27
 
 ## In progress / known incomplete
-*(Nothing incomplete — initial prototype build just completed.)*
+- **Cloudflare DNS for oedio.com must be added manually** (API DNS writes broken account-wide,
+  error 7003 — known issue, see memory): dash.cloudflare.com → oedio.com → DNS →
+  CNAME | name `@` | target `ar9h7ehp.up.railway.app` | proxied ON.
+  Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
 - Initial build: megabook library shelf, megabook detail page, split-panel reader
