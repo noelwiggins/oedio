@@ -1,6 +1,6 @@
 {
-  "job_name": "Wonders Ottoman 1553 — pilot v4 b64 (pp 8-23)",
-  "completed_at": "2026-07-27T15:49:30.446766",
+  "job_name": "Wonders Ottoman 1553 — pilot v5 text pages (pp 26-41)",
+  "completed_at": "2026-07-27T15:55:27.398853",
   "segment_count": 16,
   "results": [
     {
@@ -8,128 +8,128 @@
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-8 was empty — no content was provided for translation. This may indicate a blank page, a missing scan, a separator leaf, or an OCR/extraction failure in the source document.",
-      "_label": "page-8"
+      "translator_notes": "The source text for page-26 was submitted empty. No content was provided for translation. This may indicate a blank page, an unphotographed folio, a page with only an illuminated miniature and no text, or a data extraction failure from the manuscript image.",
+      "_label": "page-26"
+    },
+    {
+      "title_inferred": "Blank or Empty Page",
+      "original_text": "",
+      "translation": "",
+      "entities_mentioned": [],
+      "translator_notes": "The source text for page-27 is empty. No content was provided for translation. This may indicate a blank page, an unphotographed folio, a binding page, or a digitization gap in the manuscript record.",
+      "_label": "page-27"
+    },
+    {
+      "title_inferred": "Blank or Empty Page",
+      "original_text": "",
+      "translation": "",
+      "entities_mentioned": [],
+      "translator_notes": "The source text for page-28 was submitted empty. No content was available for translation. This may indicate a blank page, a failed scan, an omitted folio, or a transcription gap in the source document.",
+      "_label": "page-28"
     },
     {
       "title_inferred": "Blank or Missing Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-9 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, a purely decorative or illuminated page with no text, or a transmission error in the source data.",
-      "_label": "page-9"
+      "translator_notes": "The source text for page-29 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a page containing only an illuminated miniature with no textual content in the manuscript.",
+      "_label": "page-29"
     },
     {
       "title_inferred": "Blank or Empty Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-10 is empty. No content was provided for translation. This may indicate a blank page, an unphotographed folio, a page with only an illustration and no text, or a data extraction failure from the manuscript image.",
-      "_label": "page-10"
+      "translator_notes": "The source text for page-30 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or an intentional gap in the manuscript (such as a decorative or transitional page).",
+      "_label": "page-30"
     },
     {
       "title_inferred": "Blank or Missing Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-11 was submitted empty. No content was provided for translation. This may indicate a blank page, a scanning/digitization gap, or an omission in the source file. Please verify the manuscript image for this folio.",
-      "_label": "page-11"
-    },
-    {
-      "title_inferred": "Blank or Empty Page",
-      "original_text": "",
-      "translation": "",
-      "entities_mentioned": [],
-      "translator_notes": "The source text for page-12 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, or an OCR failure for this folio.",
-      "_label": "page-12"
+      "translator_notes": "The source text for page-31 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a decorative/non-textual page (e.g., a full-page miniature or illuminated border) in the manuscript.",
+      "_label": "page-31"
     },
     {
       "title_inferred": "Blank or Missing Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-13 was submitted as empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a placeholder in the manuscript digitization workflow.",
-      "_label": "page-13"
+      "translator_notes": "The source text for page-32 was submitted as empty. No content was provided for translation. This may indicate a blank page, a failed OCR scan, an unphotographed leaf, or a lacuna in the digitization of the manuscript. No translation or entity extraction is possible.",
+      "_label": "page-32"
+    },
+    {
+      "title_inferred": "Empty Page or Missing Text",
+      "original_text": "",
+      "translation": "",
+      "entities_mentioned": [],
+      "translator_notes": "The source text for page-33 is empty — no Arabic-script content was provided in the segment. This may indicate a blank page, a missing OCR capture, an illumination-only folio (miniature without text), or a data extraction error. No translation is possible. Recommend re-scanning or re-extracting this folio.",
+      "_label": "page-33"
     },
     {
       "title_inferred": "Blank or Empty Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-14 is empty. No content was provided for translation. This may indicate a blank page, a full-page miniature with no text, a decorative folio, or a data-capture gap in the digitization process.",
-      "_label": "page-14"
+      "translator_notes": "The source text for page-34 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a deliberately blank leaf in the manuscript.",
+      "_label": "page-34"
+    },
+    {
+      "title_inferred": "Blank or Empty Page",
+      "original_text": "",
+      "translation": "[No text present on this page segment.]",
+      "entities_mentioned": [],
+      "translator_notes": "The source text for page-35 is empty. This may represent a blank page, an illustration-only page (miniature without accompanying text), a decorative folio, or a scanning/OCR gap in the manuscript. In illuminated Ajaib al-makhluqat manuscripts, such pages often contain full-page miniatures or decorative borders without text. No translation is possible.",
+      "_label": "page-35"
     },
     {
       "title_inferred": "Blank or Missing Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-15 was supplied as empty. No content was available to translate. This may indicate a blank page, a failed OCR capture, an unpainted/unscribed folio, or a transmission error in the source data.",
-      "_label": "page-15"
+      "translator_notes": "The source text for page-36 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a deliberately blank folio in the manuscript.",
+      "_label": "page-36"
     },
     {
       "title_inferred": "Blank or Empty Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-16 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a deliberately blank folio in the manuscript.",
-      "_label": "page-16"
+      "translator_notes": "The source text for page-37 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a page containing only an illuminated miniature with no textual content.",
+      "_label": "page-37"
+    },
+    {
+      "title_inferred": "Blank or Empty Page",
+      "original_text": "",
+      "translation": "",
+      "entities_mentioned": [],
+      "translator_notes": "The source text for page-38 was provided as empty. No content is present to translate. This may indicate a blank page, an unphotographed folio, a binding page, or an OCR/digitization gap in the manuscript source.",
+      "_label": "page-38"
     },
     {
       "title_inferred": "Blank or Missing Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-17 was submitted empty. No content was provided for translation. This may indicate a blank page, a scanning gap, a failed OCR extraction, or a missing folio in the manuscript record.",
-      "_label": "page-17"
+      "translator_notes": "The source text for page-39 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a decorative/illuminated page with no extractable text in the source document.",
+      "_label": "page-39"
     },
     {
-      "title_inferred": "Blank or Unrecovered Page",
+      "title_inferred": "Blank or Empty Page",
       "original_text": "",
-      "translation": "[No source text was provided for this segment. The page appears to be blank, missing, or the text was not captured in the source input.]",
+      "translation": "[No text present on this page]",
       "entities_mentioned": [],
-      "translator_notes": "The source text field for page-18 is empty. No text was supplied for translation. This may indicate a blank manuscript page, a missing scan, a damaged/illegible folio, or a data capture error. Recommend reviewing the original manuscript image for this page.",
-      "_label": "page-18"
+      "translator_notes": "The source text for page-40 is empty. This may correspond to a blank page, a full-page miniature with no accompanying text, a decorative illumination, or a scanning/transcription gap in the manuscript. No translatable content was provided.",
+      "_label": "page-40"
     },
     {
       "title_inferred": "Blank or Empty Page",
       "original_text": "",
       "translation": "",
       "entities_mentioned": [],
-      "translator_notes": "The source text for page-19 was provided as empty. No content is present to translate. This may indicate a blank page, an unphotographed folio, a binding or flyleaf page, or a scanning/OCR omission in the manuscript digitization workflow.",
-      "_label": "page-19"
-    },
-    {
-      "title_inferred": "Blank or Empty Page",
-      "original_text": "",
-      "translation": "",
-      "entities_mentioned": [],
-      "translator_notes": "The source text for page-20 is empty. No content was provided for translation. This may indicate a blank page, an unphotographed folio, a binding gap, or a data-capture omission in the digitization pipeline.",
-      "_label": "page-20"
-    },
-    {
-      "title_inferred": "Blank or Empty Page",
-      "original_text": "",
-      "translation": "",
-      "entities_mentioned": [],
-      "translator_notes": "The source text for page-21 was submitted entirely empty. No content was available for translation. This may indicate a blank page, an unphotographed folio, a scanning gap, or an OCR failure. The page should be reviewed against the physical manuscript or digital facsimile to determine whether content is present.",
-      "_label": "page-21"
-    },
-    {
-      "title_inferred": "Blank or Missing Page",
-      "original_text": "",
-      "translation": "",
-      "entities_mentioned": [],
-      "translator_notes": "The source text for page-22 was provided as empty. No content is available to translate. This may indicate a blank page, a scanning gap, a deliberately blank folio, or a data extraction failure in the source document pipeline.",
-      "_label": "page-22"
-    },
-    {
-      "title_inferred": "Blank or Empty Page",
-      "original_text": "",
-      "translation": "",
-      "entities_mentioned": [],
-      "translator_notes": "The source text for page-23 was provided as empty. No content is present to translate. This may indicate a blank page, a fully illegible page, an OCR failure, or a missing scan in the manuscript digitization workflow.",
-      "_label": "page-23"
+      "translator_notes": "The source text for page-41 is empty. No content was provided for translation. This may indicate a blank page, a missing scan, an OCR failure, or a deliberately blank folio in the manuscript.",
+      "_label": "page-41"
     }
   ]
 }
