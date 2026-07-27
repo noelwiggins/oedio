@@ -20,6 +20,10 @@ Last updated: 2026-07-27 (2)
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Layer cycle button is now the primary mobile navigation (layered reader: cycles enabled
+  text layers + Source scans with tissue-paper crossfade + scroll anchoring; standard reader:
+  text <-> source with overlay fade). Long-press removed everywhere (conflicted with text
+  selection / browser image menus). Navigation model: layer controls + cycle button + scroll.
 - Layered Reader shipped at /book/odyssey/layers: book-aligned layer stack (B&L + Norgate
   translations toggleable, side-by-side on desktop / stacked mobile), inline page pills opening
   source scans, Flaxman filmstrip per book (proportional page mapping), Greek facsimile cards on

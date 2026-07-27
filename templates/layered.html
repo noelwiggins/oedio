@@ -128,6 +128,26 @@
     .layer-sheet .grabber { display: none; }
   }
 
+  /* ---- Layer cycle button: the primary one-thumb navigation. Press to
+     shift the whole reading surface to the next selected layer; layers
+     overlap like tissue paper for a beat mid-transition. ---- */
+  .cycle-btn { position: fixed; right: 16px; bottom: calc(20px + env(safe-area-inset-bottom));
+    z-index: 870; display: flex; align-items: center; gap: 8px; border: none; cursor: pointer;
+    padding: 14px 18px; border-radius: 20px;
+    background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+    box-shadow: 0 5px 16px rgba(0,0,0,.55); font-size: 13px; font-weight: 700;
+    transition: transform .12s; }
+  .cycle-btn:active { transform: scale(.94); }
+  .cycle-btn .material-symbols-outlined { font-size: 20px; }
+  body.has-audio .cycle-btn { bottom: calc(84px + env(safe-area-inset-bottom)); }
+
+  .layer-grid { position: relative; }
+  .tissue-in { position: absolute; inset: 0 0 auto 0; opacity: 0; pointer-events: none; }
+  .tissue-fading-out { transition: opacity .55s ease; opacity: .32 !important; }
+  .tissue-fading-in { transition: opacity .55s ease; opacity: .92 !important; }
+  .src-block .src-page-img { width: 100%; border-radius: 8px; margin: 0 0 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.45); cursor: zoom-in; display: block; }
+
   /* ---- Mini audio player ---- */
   .mini-player { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
     z-index: 860; background: var(--md-sys-color-surface-container-high); border-radius: 18px;
@@ -210,6 +230,11 @@
     <span class="m3-switch"><input type="checkbox" data-layer="au" checked><span class="track"></span><span class="thumb"></span></span>
   </label>
 </div>
+
+<button class="cycle-btn" id="cycle-btn" style="display:none">
+  <span class="material-symbols-outlined">layers</span>
+  <span id="cycle-label">Layer</span>
+</button>
 
 <div class="mini-player" id="mini-player">
   <button class="mp-icon-btn" id="mp-toggle"><span class="material-symbols-outlined" id="mp-toggle-ic">pause</span></button>
@@ -340,26 +365,7 @@ function fillSection(sec) {
     auWrap.appendChild(audioChip('\u0395\u039B', bk.audio.greek[0], 'Book ' + ROMANS[b-1] + ' \u00b7 Ancient Greek (LibriVox)'));
   }
 
-  // --- text layers ---
-  var want = [];
-  if (layers.bl) want.push('bl');
-  if (layers.ng) want.push('ng');
-  grid.className = 'layer-grid' + (want.length > 1 ? ' two-col' : '');
-  var loads = want.map(function(k){ return loadEdition(EDITION_META[k].slug); });
-  Promise.all(loads).then(function() {
-    grid.innerHTML = '';
-    want.forEach(function(k) {
-      var m = EDITION_META[k];
-      var range = bk.editions[m.slug];
-      var block = document.createElement('div');
-      block.className = 'trans-block';
-      block.style.setProperty('--tb-color', m.color);
-      block.innerHTML = '<div class="tb-chip"><span class="layer-dot" style="background:' + m.color + '"></span>' + m.label + '</div>' +
-        '<div class="tb-text">' + textForRange(m.slug, range) + '</div>';
-      grid.appendChild(block);
-    });
-    if (!want.length) grid.innerHTML = '<div class="trans-block" style="--tb-color:var(--md-sys-color-outline)"><div class="tb-text" style="opacity:.6">No text layer enabled \u2014 open the layers panel to choose a translation.</div></div>';
-  });
+  renderGrid(grid, bk);
 
   // --- extras: filmstrip + greek card ---
   extras.innerHTML = '';
@@ -393,6 +399,152 @@ function fillSection(sec) {
   }
 }
 
+/* ---------------- layer rendering + cycle engine ---------------- */
+var CYCLE_MODE = window.matchMedia('(max-width: 899px)').matches;
+var cycleIdx = 0;          // position within cycleSet()
+var lastTextLayer = null;  // which edition's scans the Source layer shows
+
+function enabledTextLayers() {
+  var w = [];
+  if (layers.bl) w.push('bl');
+  if (layers.ng) w.push('ng');
+  return w;
+}
+function cycleSet() {
+  var s = enabledTextLayers().slice();
+  if (s.length) s.push('src'); // the scanned source is always the final layer
+  return s;
+}
+function activeCycleKey() {
+  var s = cycleSet();
+  if (!s.length) return null;
+  return s[Math.min(cycleIdx, s.length - 1)];
+}
+
+function buildTextBlock(k, bk) {
+  var m = EDITION_META[k];
+  var range = bk.editions[m.slug];
+  var block = document.createElement('div');
+  block.className = 'trans-block';
+  block.style.setProperty('--tb-color', m.color);
+  block.innerHTML = '<div class="tb-chip"><span class="layer-dot" style="background:' + m.color + '"></span>' + m.label + '</div>' +
+    '<div class="tb-text">' + textForRange(m.slug, range) + '</div>';
+  return block;
+}
+function buildSourceBlock(bk) {
+  var k = lastTextLayer || enabledTextLayers()[0] || 'bl';
+  var m = EDITION_META[k];
+  var range = bk.editions[m.slug];
+  var block = document.createElement('div');
+  block.className = 'trans-block src-block';
+  block.style.setProperty('--tb-color', 'var(--md-sys-color-tertiary)');
+  var imgs = '';
+  for (var pg = range[0]; pg <= range[1]; pg++) {
+    var p = editionPages[m.slug][pg];
+    if (p && p.image) imgs += '<img class="src-page-img" loading="lazy" src="' + p.image + '" data-slug="' + m.slug + '" data-page="' + pg + '" alt="Page ' + pg + '">';
+  }
+  block.innerHTML = '<div class="tb-chip"><span class="material-symbols-outlined" style="font-size:14px">history_edu</span>Source scans \u00b7 ' + m.label + '</div>' + imgs;
+  return block;
+}
+
+function renderGrid(grid, bk, overrideKey) {
+  if (!CYCLE_MODE) {
+    // Desktop: side-by-side stack, unchanged
+    var want = enabledTextLayers();
+    grid.className = 'layer-grid' + (want.length > 1 ? ' two-col' : '');
+    Promise.all(want.map(function(k){ return loadEdition(EDITION_META[k].slug); })).then(function() {
+      grid.innerHTML = '';
+      want.forEach(function(k) { grid.appendChild(buildTextBlock(k, bk)); });
+      if (!want.length) grid.innerHTML = '<div class="trans-block" style="--tb-color:var(--md-sys-color-outline)"><div class="tb-text" style="opacity:.6">No text layer enabled \u2014 open the layers panel to choose a translation.</div></div>';
+    });
+    return;
+  }
+  // Mobile: one layer occupies the surface; the cycle button shifts it
+  var key = overrideKey || activeCycleKey();
+  grid.className = 'layer-grid';
+  if (!key) { grid.innerHTML = '<div class="trans-block" style="--tb-color:var(--md-sys-color-outline)"><div class="tb-text" style="opacity:.6">No layers enabled \u2014 open the layers panel.</div></div>'; return; }
+  var slug = key === 'src' ? EDITION_META[lastTextLayer || enabledTextLayers()[0] || 'bl'].slug : EDITION_META[key].slug;
+  loadEdition(slug).then(function() {
+    grid.innerHTML = '';
+    grid.appendChild(key === 'src' ? buildSourceBlock(bk) : buildTextBlock(key, bk));
+  });
+}
+
+function cycleLabelText(key) {
+  if (key === 'src') return 'Source';
+  return key === 'bl' ? 'Butcher & Lang' : 'Norgate';
+}
+function updateCycleBtn() {
+  var btn = document.getElementById('cycle-btn');
+  var s = cycleSet();
+  if (!CYCLE_MODE || s.length < 2) { btn.style.display = 'none'; return; }
+  btn.style.display = 'flex';
+  document.getElementById('cycle-label').textContent = cycleLabelText(activeCycleKey());
+}
+
+function currentBookSection() {
+  var best = null, bestTop = -1e9;
+  root.querySelectorAll('.book-section').forEach(function(s) {
+    var top = s.getBoundingClientRect().top;
+    if (top < window.innerHeight * 0.45 && top > bestTop) { best = s; bestTop = top; }
+  });
+  return best || root.querySelector('.book-section');
+}
+
+var cycling = false;
+function cycleLayer() {
+  var s = cycleSet();
+  if (s.length < 2 || cycling) return;
+  cycling = true;
+  var fromKey = s[Math.min(cycleIdx, s.length - 1)];
+  if (fromKey !== 'src') lastTextLayer = fromKey;
+  cycleIdx = (cycleIdx + 1) % s.length;
+  var toKey = s[cycleIdx];
+  updateCycleBtn();
+  if (navigator.vibrate) navigator.vibrate(8);
+
+  var anchor = currentBookSection();
+  var anchorTop = anchor ? anchor.getBoundingClientRect().top : 0;
+
+  // Tissue-paper transition on the section in view; others swap quietly
+  var sections = Array.prototype.slice.call(root.querySelectorAll('.book-section'));
+  sections.forEach(function(sec) {
+    var grid = sec.querySelector('[data-grid]');
+    var r = sec.getBoundingClientRect();
+    var visible = r.bottom > -200 && r.top < window.innerHeight + 200;
+    var b = parseInt(sec.dataset.book, 10);
+    var bk = alignment.books[b - 1];
+    if (!grid.childElementCount) { sec.dataset.stale = '1'; return; }
+    if (!visible) { renderGrid(grid, bk); return; }
+    // build incoming as translucent tissue over the outgoing
+    var slug = toKey === 'src' ? EDITION_META[lastTextLayer || enabledTextLayers()[0] || 'bl'].slug : EDITION_META[toKey].slug;
+    loadEdition(slug).then(function() {
+      var incoming = toKey === 'src' ? buildSourceBlock(bk) : buildTextBlock(toKey, bk);
+      incoming.classList.add('tissue-in');
+      grid.appendChild(incoming);
+      var outgoing = Array.prototype.slice.call(grid.children).filter(function(c){ return c !== incoming; });
+      requestAnimationFrame(function() {
+        incoming.classList.add('tissue-fading-in');
+        outgoing.forEach(function(o){ o.classList.add('tissue-fading-out'); });
+      });
+      setTimeout(function() {
+        grid.innerHTML = '';
+        incoming.classList.remove('tissue-in','tissue-fading-in');
+        incoming.style.opacity = '';
+        grid.appendChild(incoming);
+        // hold the reader's place: keep the anchored book where it was
+        if (sec === anchor) {
+          var newTop = sec.getBoundingClientRect().top;
+          window.scrollBy(0, newTop - anchorTop);
+        }
+        cycling = false;
+      }, 620);
+    });
+  });
+  setTimeout(function(){ cycling = false; }, 900); // safety release
+}
+document.getElementById('cycle-btn').addEventListener('click', cycleLayer);
+
 /* ---------------- audio ---------------- */
 var audio = document.getElementById('bg-audio');
 var mp = document.getElementById('mini-player');
@@ -412,6 +564,7 @@ function audioChip(label, url, title) {
     btn.classList.add('playing');
     mpTitle.textContent = title;
     mp.classList.add('on');
+    document.body.classList.add('has-audio');
   });
   return btn;
 }
@@ -430,7 +583,7 @@ document.getElementById('mp-toggle').addEventListener('click', function() {
   if (audio.paused) audio.play(); else audio.pause();
 });
 document.getElementById('mp-close').addEventListener('click', function() {
-  audio.pause(); audio.removeAttribute('src'); mp.classList.remove('on');
+  audio.pause(); audio.removeAttribute('src'); mp.classList.remove('on'); document.body.classList.remove('has-audio');
 });
 document.getElementById('mp-bar').addEventListener('click', function(e) {
   if (!audio.duration) return;
@@ -454,6 +607,7 @@ sheet.querySelectorAll('input[data-layer]').forEach(function(inp) {
   inp.checked = !!layers[inp.dataset.layer];
   inp.addEventListener('change', function() {
     layers[this.dataset.layer] = this.checked; saveLayers();
+    cycleIdx = 0; updateCycleBtn();
     root.querySelectorAll('.book-section').forEach(function(s) {
       var r = s.getBoundingClientRect();
       if (r.bottom > -800 && r.top < window.innerHeight + 800) fillSection(s);
@@ -473,38 +627,7 @@ document.getElementById('fs-cycle').addEventListener('click', function() {
 });
 applyFsz();
 
-/* --- long-press any passage to see the original scanned page beneath it ---
-   The plentyfish gesture: hold the text, the source layer surfaces; release,
-   tap close or use back to return. No toggling required. */
-var lpTimer = null, lpMoved = false, lpXY = null;
-document.addEventListener('touchstart', function(e) {
-  var blk = e.target.closest('.tb-text');
-  if (!blk) return;
-  lpMoved = false; lpXY = e.touches[0];
-  var touchY = e.touches[0].clientY;
-  lpTimer = setTimeout(function() {
-    lpTimer = null;
-    // find the nearest page pill at or above the press point
-    var pills = blk.querySelectorAll('.page-pill');
-    var best = pills[0];
-    pills.forEach(function(p) { if (p.getBoundingClientRect().top <= touchY + 12) best = p; });
-    if (best) {
-      if (navigator.vibrate) navigator.vibrate(12);
-      best.click();
-    }
-  }, 480);
-}, { passive: true });
-document.addEventListener('touchmove', function(e) {
-  if (!lpTimer || !lpXY) return;
-  var t2 = e.touches[0];
-  if (Math.abs(t2.clientX - lpXY.clientX) > 10 || Math.abs(t2.clientY - lpXY.clientY) > 10) {
-    clearTimeout(lpTimer); lpTimer = null;
-  }
-}, { passive: true });
-document.addEventListener('touchend', function() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } });
-document.addEventListener('contextmenu', function(e) {
-  if (e.target.closest('.tb-text')) e.preventDefault();
-});
+
 // refill stale sections when scrolled back
 var staleObs = new IntersectionObserver(function(entries) {
   entries.forEach(function(en) {
@@ -587,6 +710,7 @@ fetch('/static/reader-data/odyssey-alignment.json')
     alignment = a;
     buildRail();
     buildSections();
+    updateCycleBtn();
     root.querySelectorAll('.book-section').forEach(function(s){ staleObs.observe(s); });
   });
 </script>

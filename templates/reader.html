@@ -169,7 +169,20 @@
   .reader-grid-thumb span { display:block; font-size:11px; color:var(--md-sys-color-on-surface-variant); margin-top:4px; }
 
   /* Full-image zoom modal (desktop click + mobile long-press both use this) */
-  #reader-zoom-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92); }
+  #reader-zoom-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92);
+    opacity:0; transition: opacity .55s ease; }
+  #reader-zoom-overlay.open { opacity:1; }
+  .layer-toggle-btn { display:none; }
+  @media (max-width: 800px) {
+    .layer-toggle-btn { position:fixed; right:16px; bottom:calc(20px + env(safe-area-inset-bottom));
+      z-index:960; display:flex; align-items:center; gap:8px; border:none; cursor:pointer;
+      padding:14px 18px; border-radius:20px; background:var(--md-sys-color-primary);
+      color:var(--md-sys-color-on-primary); box-shadow:0 5px 16px rgba(0,0,0,.55);
+      font-size:13px; font-weight:700; }
+    .layer-toggle-btn:active { transform:scale(.94); }
+    .layer-toggle-btn .material-symbols-outlined { font-size:20px; }
+    #reader-zoom-overlay.open ~ .layer-toggle-btn { display:none; }
+  }
   /* Continuous page stream: pages flow as one infinite scroll instead of
      one-at-a-time transitions; snap keeps a page comfortably framed. */
   #reader-zoom-scroll { position:absolute; inset:0 0 62px 0; overflow-y:auto;
@@ -335,6 +348,9 @@
     <button id="reader-zoom-next" aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></button>
   </div>
 </div>
+<button class="layer-toggle-btn" id="reader-layer-btn">
+  <span class="material-symbols-outlined">layers</span> Source
+</button>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -995,6 +1011,7 @@ function currentPageIdx() {
 function openZoomOverlay() {
   buildZoomStream();
   zoomOverlay.style.display = 'block';
+  void zoomOverlay.offsetHeight; // reflow so the fade actually animates
   zoomOverlay.classList.add('open');
 }
 function showZoomPage(idx, smooth) {
@@ -1046,25 +1063,21 @@ if (!isMobile) {
   // does for single-language books). Prevent the browser's native long-press
   // "save image" menu from appearing over our own image -- that dialog was
   // intercepting the gesture instead of our overlay opening.
-  let pressTimer = null;
-  panel.addEventListener('touchstart', () => {
-    pressTimer = setTimeout(() => {
-      if (langToggle) {
-        const other = currentLang === 'translation' ? 'original' : 'translation';
-        langToggle.querySelector(`button[data-lang="${other}"]`)?.click();
-      } else if (zoomOverlay.style.display !== 'block') {
-        openZoom();
-      }
-    }, 500);
+  // Layer button replaces long-press (which fought text selection and the
+  // browser's own image context menus). One easy thumb target: press to
+  // shift to the source-scan layer; the overlay fades in over the text like
+  // tissue paper. For dual-language books it steps text -> original -> scan.
+  const layerBtn = document.getElementById('reader-layer-btn');
+  if (layerBtn) layerBtn.addEventListener('click', () => {
+    if (langToggle && currentLang === 'translation') {
+      langToggle.querySelector('button[data-lang="original"]')?.click();
+      return;
+    }
+    if (langToggle && currentLang === 'original') {
+      langToggle.querySelector('button[data-lang="translation"]')?.click();
+    }
+    if (zoomOverlay.style.display !== 'block') openZoom();
   });
-  ['touchend', 'touchmove', 'touchcancel'].forEach(evt =>
-    panel.addEventListener(evt, () => clearTimeout(pressTimer))
-  );
-
-  // Page-flipping within the mobile zoom view: swipe left/right only --
-  // tapping was removed since it made accidental page turns too easy and
-  // conflicted with tapping to dismiss. Use the bottom nav bar buttons
-  // (prev/next/exit) for tap-based control instead.
 }
 
 // Bottom nav bar: explicit tap targets for prev/next/exit, available on
