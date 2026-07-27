@@ -32,10 +32,14 @@ def main(item_id, slug, start=1, end=None):
     if end: files = files[start-1:end]
     pages = []
     for i, page_files in enumerate(files, start=start):
-        img = next((f["url"] for f in page_files
-                    if f.get("mimetype") == "image/jpeg" and "/pct:50" in f.get("url", "")), None)
-        if not img:
-            img = next((f["url"] for f in page_files if f.get("mimetype") == "image/jpeg"), "")
+        jpegs = [f["url"] for f in page_files if f.get("mimetype") == "image/jpeg" and f.get("url")]
+        def res_score(u):
+            m = re.search(r"pct:([\d.]+)", u)
+            if m: return float(m.group(1))
+            return 100.0 if "/full/full/" in u else 50.0
+        # prefer ~50% (reader-friendly); else the largest available derivative
+        img = next((u for u in jpegs if "/pct:50" in u), None) or \
+              (max(jpegs, key=res_score) if jpegs else "")
         alto = next((f["url"] for f in page_files
                      if f.get("mimetype") == "text/xml" and f.get("url", "").endswith(".alto.xml")), None)
         pages.append({"page": i, "image": img, "_alto": alto})

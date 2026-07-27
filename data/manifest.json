@@ -1,73 +1,278 @@
 {
-  "megabooks": [
+ "megabooks": [
+  {
+   "slug": "odyssey",
+   "title": "The Odyssey",
+   "author": "Homer",
+   "spine_color": "linear-gradient(160deg,#6d2f2a,#4a1e1a)",
+   "description": "Homer's epic of return, compiled here from six pre-1929 printings digitized by the Library of Congress: the classic Butcher & Lang prose translation, a Victorian verse rendering, the ancient Greek of the Phaeacian books, John Flaxman's celebrated illustrated edition, a scholarly companion, and a children's retelling. One work, many doors in.",
+   "components": [
     {
-      "slug": "odyssey",
-      "title": "The Odyssey",
-      "author": "Homer",
-      "spine_color": "linear-gradient(160deg,#6d2f2a,#4a1e1a)",
-      "description": "Homer's epic of return, compiled here from six pre-1929 printings digitized by the Library of Congress: the classic Butcher & Lang prose translation, a Victorian verse rendering, the ancient Greek of the Phaeacian books, John Flaxman's celebrated illustrated edition, a scholarly companion, and a children's retelling. One work, many doors in.",
-      "components": [
-        {
-          "slug": "butcher-lang-1921",
-          "role": "Translations",
-          "title": "The Odyssey of Homer (prose)",
-          "contributor": "Trans. S. H. Butcher & Andrew Lang",
-          "year": 1921,
-          "loc_item": "24021029",
-          "note": "The standard prose translation of its era \u2014 the version most English readers of the early 20th century knew.",
-          "facsimile": false
-        },
-        {
-          "slug": "norgate-1863",
-          "role": "Translations",
-          "title": "The Odyssey (verse)",
-          "contributor": "Trans. Thomas Starling Norgate",
-          "year": 1863,
-          "loc_item": "10000284",
-          "note": "A Victorian rendering in dramatic blank verse \u2014 read it against Butcher & Lang to feel how much a translator's choices shape the poem.",
-          "facsimile": false
-        },
-        {
-          "slug": "phaeacian-greek-1880",
-          "role": "Original Greek",
-          "title": "The Ph\u00e6acian Episode (Books VI\u2013VIII, XIII)",
-          "contributor": "Ed. Augustus C. Merriam",
-          "year": 1880,
-          "loc_item": "24016674",
-          "note": "The ancient Greek text of the Phaeacian books with 19th-century scholarly apparatus. Presented as page facsimiles \u2014 OCR does not survive polytonic Greek.",
-          "facsimile": true
-        },
-        {
-          "slug": "flaxman-1853",
-          "role": "Illustrated Editions",
-          "title": "The Odyssey, with Flaxman's Designs",
-          "contributor": "Trans. T. A. Buckley \u00b7 Ill. John Flaxman",
-          "year": 1853,
-          "loc_item": "12034441",
-          "note": "John Flaxman's neoclassical outline engravings \u2014 among the most influential Homer illustrations ever made. Browse as facsimile plates.",
-          "facsimile": true
-        },
-        {
-          "slug": "collins-1870",
-          "role": "Commentary & Companions",
-          "title": "Homer: The Odyssey (Ancient Classics for English Readers)",
-          "contributor": "W. Lucas Collins",
-          "year": 1870,
-          "loc_item": "unk82041774",
-          "note": "A compact Victorian companion \u2014 plot, composition, and context in 156 pages. A good first door into the epic.",
-          "facsimile": false
-        },
-        {
-          "slug": "childrens-1912",
-          "role": "Retellings",
-          "title": "The Children's Odyssey",
-          "contributor": "Told from Homer in simple language",
-          "year": 1912,
-          "loc_item": "12024027",
-          "note": "The epic retold for young readers \u2014 a reminder that every generation rebuilds Homer for itself.",
-          "facsimile": false
-        }
-      ]
+     "slug": "butcher-lang-1921",
+     "role": "Translations",
+     "title": "The Odyssey of Homer (prose)",
+     "contributor": "Trans. S. H. Butcher & Andrew Lang",
+     "year": 1921,
+     "loc_item": "24021029",
+     "note": "The standard prose translation of its era — the version most English readers of the early 20th century knew.",
+     "facsimile": false
+    },
+    {
+     "slug": "norgate-1863",
+     "role": "Translations",
+     "title": "The Odyssey (verse)",
+     "contributor": "Trans. Thomas Starling Norgate",
+     "year": 1863,
+     "loc_item": "10000284",
+     "note": "A Victorian rendering in dramatic blank verse — read it against Butcher & Lang to feel how much a translator's choices shape the poem.",
+     "facsimile": false
+    },
+    {
+     "slug": "phaeacian-greek-1880",
+     "role": "Original Greek",
+     "title": "The Phæacian Episode (Books VI–VIII, XIII)",
+     "contributor": "Ed. Augustus C. Merriam",
+     "year": 1880,
+     "loc_item": "24016674",
+     "note": "The ancient Greek text of the Phaeacian books with 19th-century scholarly apparatus. Presented as page facsimiles — OCR does not survive polytonic Greek.",
+     "facsimile": true
+    },
+    {
+     "slug": "flaxman-1853",
+     "role": "Illustrated Editions",
+     "title": "The Odyssey, with Flaxman's Designs",
+     "contributor": "Trans. T. A. Buckley · Ill. John Flaxman",
+     "year": 1853,
+     "loc_item": "12034441",
+     "note": "John Flaxman's neoclassical outline engravings — among the most influential Homer illustrations ever made. Browse as facsimile plates.",
+     "facsimile": true
+    },
+    {
+     "slug": "collins-1870",
+     "role": "Commentary & Companions",
+     "title": "Homer: The Odyssey (Ancient Classics for English Readers)",
+     "contributor": "W. Lucas Collins",
+     "year": 1870,
+     "loc_item": "unk82041774",
+     "note": "A compact Victorian companion — plot, composition, and context in 156 pages. A good first door into the epic.",
+     "facsimile": false
+    },
+    {
+     "slug": "childrens-1912",
+     "role": "Retellings",
+     "title": "The Children's Odyssey",
+     "contributor": "Told from Homer in simple language",
+     "year": 1912,
+     "loc_item": "12024027",
+     "note": "The epic retold for young readers — a reminder that every generation rebuilds Homer for itself.",
+     "facsimile": false
     }
-  ]
+   ]
+  },
+  {
+   "slug": "bible",
+   "title": "The Bible",
+   "author": "",
+   "spine_color": "linear-gradient(160deg,#1e2d4f,#101a30)",
+   "description": "Scripture as a megabook: the King James text beside a monumental Victorian variorum apparatus, Gustave Doré's complete engravings, and the Greek New Testament of Westcott & Hort — the critical edition that changed biblical scholarship. Four doors into the most-printed book on earth.",
+   "components": [
+    {
+     "slug": "kjv-1837",
+     "role": "Translations",
+     "title": "The Holy Bible, King James Version",
+     "contributor": "Authorized Version · printed 1837",
+     "year": 1837,
+     "loc_item": "33004908",
+     "note": "The 1611 Authorized Version as the 19th century read it — the base text of English-speaking scripture.",
+     "facsimile": false
+    },
+    {
+     "slug": "variorum-1898",
+     "role": "Commentary & Companions",
+     "title": "The Variorum Teacher's Bible",
+     "contributor": "Eyre & Spottiswoode",
+     "year": 1898,
+     "loc_item": "04018062",
+     "note": "Nearly 2,000 pages: the KJV with variant readings and renderings from dozens of scholars compiled verse by verse — a megabook avant la lettre.",
+     "facsimile": false
+    },
+    {
+     "slug": "dore-gallery-1890",
+     "role": "Illustrated Editions",
+     "title": "The Doré Bible Gallery",
+     "contributor": "Gustave Doré",
+     "year": 1890,
+     "loc_item": "10002262",
+     "note": "Doré's celebrated engravings with facing descriptions — the images that fixed the Bible's look in the popular imagination.",
+     "facsimile": false
+    },
+    {
+     "slug": "greek-nt-1881",
+     "role": "Original Languages",
+     "title": "The New Testament in the Original Greek",
+     "contributor": "Westcott & Hort",
+     "year": 1881,
+     "loc_item": "26007331",
+     "note": "The landmark 1881 critical Greek text, built from the oldest manuscripts.",
+     "facsimile": false
+    }
+   ]
+  },
+  {
+   "slug": "paradise-lost",
+   "title": "Paradise Lost",
+   "author": "John Milton",
+   "spine_color": "linear-gradient(160deg,#3d1f4f,#241230)",
+   "description": "Milton's epic of the Fall in three printings across half a century — read the poem plain, annotated, and in the company of his complete poetical works.",
+   "components": [
+    {
+     "slug": "paradise-lost-1852",
+     "role": "Editions",
+     "title": "Paradise Lost: A Poem in Twelve Books",
+     "contributor": "John Milton · printed 1852",
+     "year": 1852,
+     "loc_item": "40023524",
+     "note": "A clean mid-century reading text of the twelve books.",
+     "facsimile": false
+    },
+    {
+     "slug": "paradise-lost-1868",
+     "role": "Editions",
+     "title": "The Paradise Lost",
+     "contributor": "John Milton · printed 1868",
+     "year": 1868,
+     "loc_item": "43043153",
+     "note": "A fuller apparatus edition — useful against the 1852 for how editors dressed the poem.",
+     "facsimile": false
+    },
+    {
+     "slug": "milton-works-1881",
+     "role": "Commentary & Companions",
+     "title": "The Poetical Works of John Milton",
+     "contributor": "1881 collected edition",
+     "year": 1881,
+     "loc_item": "29024989",
+     "note": "The epic in context: Paradise Regained, Samson Agonistes, and the shorter poems alongside.",
+     "facsimile": false
+    }
+   ]
+  },
+  {
+   "slug": "arabian-nights",
+   "title": "The Arabian Nights",
+   "author": "",
+   "spine_color": "linear-gradient(160deg,#7a4a1e,#4a2c10)",
+   "description": "The Thousand and One Nights in three early-20th-century printings — tale against tale across editions, including a hundred-illustration edition from 1924.",
+   "components": [
+    {
+     "slug": "arabian-nights-1910",
+     "role": "Editions",
+     "title": "The Arabian Nights",
+     "contributor": "1910 edition",
+     "year": 1910,
+     "loc_item": "10024207",
+     "note": "An Edwardian reading edition of the Nights.",
+     "facsimile": false
+    },
+    {
+     "slug": "arabian-nights-1915",
+     "role": "Editions",
+     "title": "The Arabian Nights' Entertainments",
+     "contributor": "1915 edition",
+     "year": 1915,
+     "loc_item": "15010078",
+     "note": "The Nights under their classic English title.",
+     "facsimile": false
+    },
+    {
+     "slug": "arabian-nights-1924",
+     "role": "Illustrated Editions",
+     "title": "The Arabian Nights, with One Hundred Illustrations",
+     "contributor": "1924 illustrated edition",
+     "year": 1924,
+     "loc_item": "25003030",
+     "note": "A hundred plates woven through the tales — compare its choices against the plain texts.",
+     "facsimile": false
+    }
+   ]
+  },
+  {
+   "slug": "leaves-of-grass",
+   "title": "Leaves of Grass",
+   "author": "Walt Whitman",
+   "spine_color": "linear-gradient(160deg,#2c5030,#17301c)",
+   "description": "One poem, growing. Whitman revised Leaves of Grass his whole life — this megabook shelves three printings spanning a quarter century, so the layers are not translations but time itself.",
+   "components": [
+    {
+     "slug": "leaves-1897",
+     "role": "Editions Through Time",
+     "title": "Leaves of Grass (1897)",
+     "contributor": "Walt Whitman",
+     "year": 1897,
+     "loc_item": "04019708",
+     "note": "Printed just after Whitman's death — the 'deathbed' arrangement he authorized.",
+     "facsimile": false
+    },
+    {
+     "slug": "leaves-1900",
+     "role": "Editions Through Time",
+     "title": "Leaves of Grass (1900)",
+     "contributor": "Walt Whitman",
+     "year": 1900,
+     "loc_item": "39024996",
+     "note": "A turn-of-the-century printing of the completed book.",
+     "facsimile": false
+    },
+    {
+     "slug": "leaves-1921",
+     "role": "Editions Through Time",
+     "title": "Leaves of Grass (1921)",
+     "contributor": "Walt Whitman",
+     "year": 1921,
+     "loc_item": "33003724",
+     "note": "The poem as the modernists inherited it.",
+     "facsimile": false
+    }
+   ]
+  },
+  {
+   "slug": "book-of-wonders",
+   "title": "Acâibü'l-Mahlûkât · The Book of Wonders",
+   "author": "Zakariyyā al-Qazwīnī",
+   "spine_color": "linear-gradient(160deg,#8a6a1e,#523d0e)",
+   "description": "Qazwīnī's 13th-century cosmography — angels, constellations, seas, beasts, and marvels — travelled the Islamic world in translation. Here it is as illuminated manuscript in Ottoman Turkish (1553) and Persian (1565), and as a 19th-century Persian lithograph: the same wonders, three traditions, presented as full-page facsimiles of some of the most beautiful books LOC holds.",
+   "components": [
+    {
+     "slug": "wonders-ottoman-1553",
+     "role": "Ottoman Turkish",
+     "title": "ʻAjāʾib al-makhlūqāt — Ottoman Turkish manuscript",
+     "contributor": "Illuminated manuscript",
+     "year": 1553,
+     "loc_item": "2017406674",
+     "note": "The Ottoman Turkish translation, copied 1553 — miniatures and illumination throughout.",
+     "facsimile": true
+    },
+    {
+     "slug": "wonders-persian-1565",
+     "role": "Persian",
+     "title": "ʻAjāʾib al-makhlūqāt — Persian manuscript",
+     "contributor": "Illuminated manuscript",
+     "year": 1565,
+     "loc_item": "2017454465",
+     "note": "A 713-page Persian manuscript of the Wonders, richly illustrated.",
+     "facsimile": true
+    },
+    {
+     "slug": "wonders-persian-1866",
+     "role": "Persian",
+     "title": "ʻAjāʾib al-makhlūqāt — Persian lithograph",
+     "contributor": "Printed Tehran-tradition lithograph",
+     "year": 1866,
+     "loc_item": "2016397313",
+     "note": "The Wonders in print: a 19th-century lithographed edition with drawn illustrations.",
+     "facsimile": true
+    }
+   ]
+  }
+ ]
 }

@@ -3,9 +3,17 @@
 **Read this file at the start of any new session on this repo, before starting new work.**
 Durable record of in-progress/incomplete work — survives session interruptions.
 
-Last updated: 2026-07-27
+Last updated: 2026-07-27 (2)
 
 ## In progress / known incomplete
+- R1 megabook-builder (anchor/asset schema, accounts, "add to my megabook", saved personal
+  megabooks) — designed, not started. Then R2 tips rail (Met/AIC/Rijks CC0 + DPLA/NYPL APIs),
+  R3 store/gifting, R4 print (flatten-to-PDF + Lulu).
+- Turkish classics research (resolved): Dede Korkut (mss in Dresden/Vatican, EN trans. post-1929),
+  Sahname-i Selim Han (Topkapi), Husn u Ask (EN trans. 2005) — none possible copyright-free from
+  LOC. Delivered instead: Book of Wonders megabook (Ottoman 1553 + Persian 1565 mss + 1866
+  lithograph, all facsimile). Gibb's History of Ottoman Poetry (LOC 05036360, 1900-09) is the
+  PD path to Ottoman poetry excerpts in English for a future megabook.
 - **Cloudflare DNS for oedio.com must be added manually** (ONLY remaining item) (API DNS writes broken account-wide,
   error 7003 — known issue, see memory): dash.cloudflare.com → oedio.com → DNS →
   CNAME | name `@` | target `ar9h7ehp.up.railway.app` | proxied ON.
