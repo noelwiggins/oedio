@@ -26,11 +26,12 @@ def alto_text(xml_bytes):
         out.append(" ".join(w for w in words if w))
     return "\n".join(out).strip()
 
-def main(item_id, slug):
+def main(item_id, slug, start=1, end=None):
     d = json.loads(get(f"https://www.loc.gov/item/{item_id}/?fo=json"))
     files = d["resources"][0]["files"]
+    if end: files = files[start-1:end]
     pages = []
-    for i, page_files in enumerate(files, start=1):
+    for i, page_files in enumerate(files, start=start):
         img = next((f["url"] for f in page_files
                     if f.get("mimetype") == "image/jpeg" and "/pct:50" in f.get("url", "")), None)
         if not img:
@@ -51,7 +52,7 @@ def main(item_id, slug):
                 pass
         p["text"] = ""
 
-    with ThreadPoolExecutor(max_workers=40) as ex:
+    with ThreadPoolExecutor(max_workers=64) as ex:
         list(ex.map(fetch_text, pages))
 
     for p in pages:
@@ -59,10 +60,14 @@ def main(item_id, slug):
     out = [{"page": p["page"], "text": p["text"], "image": p["image"]} for p in pages]
     os.makedirs("static/reader-data", exist_ok=True)
     path = f"static/reader-data/{slug}.json"
+    if start > 1 and os.path.exists(path):
+        prev = json.load(open(path))
+        out = [p for p in prev if p["page"] < start] + out
     with open(path, "w") as f:
         json.dump(out, f, ensure_ascii=False)
     n_text = sum(1 for p in out if len(p["text"]) > 40)
     print(f"{slug}: {len(out)} pages, {n_text} with substantive text -> {path}")
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    a = sys.argv
+    main(a[1], a[2], int(a[3]) if len(a) > 3 else 1, int(a[4]) if len(a) > 4 else None)
