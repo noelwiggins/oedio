@@ -7,9 +7,21 @@
   body { padding-top: 60px; }
 
   /* ---- Book chip rail (sticky nav) ---- */
-  .chip-rail { position: sticky; top: 60px; z-index: 700; background: var(--md-sys-color-surface);
-    display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
-    padding: 10px 16px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+  .rail-bar { position: sticky; top: 60px; z-index: 700; background: var(--md-sys-color-surface);
+    display: flex; align-items: center; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+  .chip-rail { flex: 1; min-width: 0; display: flex; gap: 8px; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; padding: 10px 12px 10px 16px; }
+  .rail-controls { flex: 0 0 auto; display: flex; gap: 6px; padding: 0 12px 0 6px;
+    border-left: 1px solid var(--md-sys-color-outline-variant); }
+  .rail-btn { width: 40px; height: 40px; border: none; border-radius: 12px; cursor: pointer;
+    background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface);
+    display: flex; align-items: center; justify-content: center; }
+  .rail-btn.active { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+  .rail-btn .material-symbols-outlined { font-size: 20px; }
+  .rail-btn .fs-glyph { font-family: Georgia, serif; font-weight: 700; font-size: 15px; }
+  .fsz-1 .trans-block .tb-text { font-size: 17.5px; }
+  .fsz-2 .trans-block .tb-text { font-size: 20px; line-height: 1.8; }
+  .tb-text { -webkit-touch-callout: none; }
   .chip-rail::-webkit-scrollbar { display: none; }
   .book-chip { flex: 0 0 auto; padding: 7px 14px; border-radius: 16px; font-size: 13px; font-weight: 600;
     cursor: pointer; border: 1px solid var(--md-sys-color-outline-variant);
@@ -148,7 +160,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="chip-rail" id="chip-rail"></div>
+<div class="rail-bar">
+  <div class="chip-rail" id="chip-rail"></div>
+  <div class="rail-controls">
+    <button class="rail-btn" id="fs-cycle" title="Text size"><span class="fs-glyph">Aa</span></button>
+    <button class="rail-btn" id="layers-open" title="Layers"><span class="material-symbols-outlined">stacks</span></button>
+  </div>
+</div>
 
 <div class="layers-flow">
   <p class="flow-intro"><strong style="color:var(--md-sys-color-on-surface)">{{ mb.title }}, layered.</strong>
@@ -158,9 +176,6 @@
   <div id="books-root"></div>
 </div>
 
-<button class="layer-fab" id="layer-fab" aria-label="Layers">
-  <span class="material-symbols-outlined">stacks</span>
-</button>
 <div class="sheet-scrim" id="sheet-scrim"></div>
 <div class="layer-sheet" id="layer-sheet">
   <div class="grabber"></div>
@@ -186,11 +201,6 @@
   <label class="layer-row"><span class="material-symbols-outlined">headphones</span>
     <span class="lr-label">Audiobook buttons<span class="lr-sub">English narration &middot; Greek recitation (LibriVox)</span></span>
     <span class="m3-switch"><input type="checkbox" data-layer="au" checked><span class="track"></span><span class="thumb"></span></span>
-  </label>
-  <div class="sheet-title">Reading</div>
-  <label class="layer-row"><span class="material-symbols-outlined">format_size</span>
-    <span class="lr-label">Larger text</span>
-    <span class="m3-switch"><input type="checkbox" data-layer="fs"><span class="track"></span><span class="thumb"></span></span>
   </label>
 </div>
 
@@ -429,7 +439,7 @@ function openSheet(open) {
   scrim.classList.toggle('open', open);
   if (open && window.innerWidth < 1180) { history.pushState({ sheet: true }, ''); }
 }
-document.getElementById('layer-fab').addEventListener('click', function(){ openSheet(true); });
+document.getElementById('layers-open').addEventListener('click', function(){ openSheet(!sheet.classList.contains('open')); });
 scrim.addEventListener('click', function(){ openSheet(false); });
 if (window.innerWidth >= 1180) sheet.classList.add('open');
 
@@ -437,9 +447,6 @@ sheet.querySelectorAll('input[data-layer]').forEach(function(inp) {
   inp.checked = !!layers[inp.dataset.layer];
   inp.addEventListener('change', function() {
     layers[this.dataset.layer] = this.checked; saveLayers();
-    if (this.dataset.layer === 'fs') {
-      document.body.classList.toggle('fs-large', this.checked); return;
-    }
     root.querySelectorAll('.book-section').forEach(function(s) {
       var r = s.getBoundingClientRect();
       if (r.bottom > -800 && r.top < window.innerHeight + 800) fillSection(s);
@@ -447,7 +454,50 @@ sheet.querySelectorAll('input[data-layer]').forEach(function(inp) {
     });
   });
 });
-if (layers.fs) document.body.classList.add('fs-large');
+/* --- persistent text-size cycle: normal / large / larger --- */
+var fsz = layers.fsz || 0;
+function applyFsz() {
+  document.body.classList.remove('fsz-1','fsz-2');
+  if (fsz) document.body.classList.add('fsz-' + fsz);
+  document.getElementById('fs-cycle').classList.toggle('active', fsz > 0);
+}
+document.getElementById('fs-cycle').addEventListener('click', function() {
+  fsz = (fsz + 1) % 3; layers.fsz = fsz; saveLayers(); applyFsz();
+});
+applyFsz();
+
+/* --- long-press any passage to see the original scanned page beneath it ---
+   The plentyfish gesture: hold the text, the source layer surfaces; release,
+   tap close or use back to return. No toggling required. */
+var lpTimer = null, lpMoved = false, lpXY = null;
+document.addEventListener('touchstart', function(e) {
+  var blk = e.target.closest('.tb-text');
+  if (!blk) return;
+  lpMoved = false; lpXY = e.touches[0];
+  var touchY = e.touches[0].clientY;
+  lpTimer = setTimeout(function() {
+    lpTimer = null;
+    // find the nearest page pill at or above the press point
+    var pills = blk.querySelectorAll('.page-pill');
+    var best = pills[0];
+    pills.forEach(function(p) { if (p.getBoundingClientRect().top <= touchY + 12) best = p; });
+    if (best) {
+      if (navigator.vibrate) navigator.vibrate(12);
+      best.click();
+    }
+  }, 480);
+}, { passive: true });
+document.addEventListener('touchmove', function(e) {
+  if (!lpTimer || !lpXY) return;
+  var t2 = e.touches[0];
+  if (Math.abs(t2.clientX - lpXY.clientX) > 10 || Math.abs(t2.clientY - lpXY.clientY) > 10) {
+    clearTimeout(lpTimer); lpTimer = null;
+  }
+}, { passive: true });
+document.addEventListener('touchend', function() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } });
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.closest('.tb-text')) e.preventDefault();
+});
 // refill stale sections when scrolled back
 var staleObs = new IntersectionObserver(function(entries) {
   entries.forEach(function(en) {

@@ -3,6 +3,13 @@
 
 {% block extra_head %}
 <style>
+  /* Persistent controls: toolbar stays pinned under the app bar while reading */
+  #reader-toolbar-sticky { position: sticky; top: 60px; z-index: 750;
+    background: var(--md-sys-color-surface); padding: 8px 0;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    margin: 0 -4px; padding-left: 4px; padding-right: 4px; }
+</style>
+<style>
   body { padding-top: 56px; overflow-x: hidden; }
 
   /* --- Progress bar --- */
@@ -214,7 +221,7 @@
       · <span id="reader-page-indicator">Page — of —</span>
     </div>
   </div>
-  <div class="reader-toolbar">
+  <div class="reader-toolbar" id="reader-toolbar-sticky">
     <select class="reader-jump-select" id="reader-edition-select" title="Switch edition"
       onchange="if(this.value) window.location = this.value;">
       {% for s in siblings %}
