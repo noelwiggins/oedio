@@ -40,7 +40,26 @@
     display:inline-block; margin:6px 0 2px; }
   .reader-header { flex:none; }
   .reader-layout { display:flex; flex:1; min-height:0; }
-  .reader-image-panel { width:45%; background:#000; overflow-y:auto; scroll-behavior:auto; }
+  .reader-image-panel { width:45%; background:#000; overflow-y:auto; scroll-behavior:auto; position:relative; }
+  /* Panel-layer pickers: shown only for books with AI-forged sibling layers
+     (facsimile + transcription + translation share pagination, so either
+     panel can independently hold any of the three -- like map layers, but
+     the "map" here is a single page). */
+  .panel-picker-bar { position:sticky; top:0; z-index:60; display:flex; align-items:center; gap:8px;
+    padding:8px 10px; background:rgba(10,10,10,.82); backdrop-filter:blur(6px); }
+  .reader-text-panel-wrap .panel-picker-bar { background:var(--md-sys-color-surface-container-low);
+    border-bottom:1px solid var(--md-sys-color-outline-variant); }
+  .panel-picker-bar .material-symbols-outlined { font-size:16px; color:rgba(255,255,255,.55); flex:0 0 auto; }
+  .reader-text-panel-wrap .panel-picker-bar .material-symbols-outlined { color:var(--md-sys-color-on-surface-variant); }
+  .panel-picker-bar select { flex:1; min-width:0; background:rgba(255,255,255,.08); color:#fff;
+    border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:6px 8px; font-size:12.5px;
+    font-family:Roboto, sans-serif; }
+  .reader-text-panel-wrap .panel-picker-bar select { background:var(--md-sys-color-surface-container-high);
+    color:var(--md-sys-color-on-surface); border-color:var(--md-sys-color-outline-variant); }
+  .reader-simple-text-block { padding:0 18px 22px; font-family:Georgia, serif; font-size:14.5px;
+    line-height:1.7; color:#e8e8e8; white-space:pre-wrap; border-bottom:1px solid rgba(255,255,255,.08); }
+  .reader-simple-text-block .reader-page-number { font-family:Roboto,sans-serif; font-size:10.5px;
+    font-weight:700; letter-spacing:.06em; color:rgba(255,255,255,.45); margin:16px 0 6px; }
   .reader-image-block { display:flex; align-items:center; justify-content:center; padding:20px 16px; }
   .reader-image-block img { max-width:100%; max-height:calc(100vh - 100px); object-fit:contain;
     box-shadow: 0 4px 24px rgba(0,0,0,.5); cursor:zoom-in; }
@@ -251,7 +270,7 @@
 {% block content %}
 <div id="reader-progress-track"><div id="reader-progress-fill"></div></div>
 
-<div class="reader-app{{ " facsimile-app" if facsimile else "" }}">
+<div class="reader-app{{ " facsimile-app" if facsimile and not panel_group else "" }}">
 <div class="reader-header">
   <div>
     <div class="book-title">{{ book_title }}</div>
@@ -321,10 +340,30 @@
 
 <div class="reader-layout">
   <div class="reader-image-panel" id="reader-image-panel">
+    {% if panel_group and panel_group|length > 1 %}
+    <div class="panel-picker-bar">
+      <span class="material-symbols-outlined">layers</span>
+      <select id="left-panel-select">
+        {% for g in panel_group %}
+        <option value="{{ g.slug }}" {{ 'selected' if left_default and g.slug == left_default.slug else '' }}>{{ g.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
     <!-- Image blocks injected by JS, lazily, in lockstep with the text panel -->
     <div id="reader-image-load-sentinel" style="height:1px;"></div>
   </div>
   <div class="reader-text-panel-wrap">
+    {% if panel_group and panel_group|length > 1 %}
+    <div class="panel-picker-bar">
+      <span class="material-symbols-outlined">layers</span>
+      <select id="right-panel-select">
+        {% for g in panel_group %}
+        <option value="{{ g.slug }}" {{ 'selected' if g.slug == slug else '' }}>{{ g.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
     <div class="reader-search-minimap" id="reader-search-minimap"></div>
     <div class="reader-text-panel fs-medium" id="reader-text-panel">
       <!-- Page blocks injected by JS, lazily -->
@@ -373,7 +412,8 @@
 {% block extra_scripts %}
 <script>
 const BOOK_SLUG = {{ slug|tojson }};
-const FACSIMILE = {{ facsimile|tojson }};
+let FACSIMILE = {{ facsimile|tojson }};
+const PANEL_GROUP = {{ (panel_group or [])|tojson }};
 const BOOK_TITLE = {{ book_title|tojson }};
 const BOOK_AUTHOR = {{ book_author|tojson }};
 const BOOK_YEAR = {{ book_year|tojson }};
@@ -547,7 +587,7 @@ function renderNextBatch() {
     if (block) {
       panel.insertBefore(block, sentinel);
       imgObserver.observe(block);
-      imagePanel.insertBefore(renderImageBlock(p), imageSentinel);
+      if (!PANEL_GROUP.length) imagePanel.insertBefore(renderImageBlock(p), imageSentinel);
     }
   });
   renderedCount += slice.length;
@@ -608,6 +648,91 @@ imagePanel.addEventListener('scroll', () => {
     syncingScroll = false;
   });
 });
+
+/* ---------------- panel-layer slot system ----------------
+   For books with AI-forged sibling layers (raw scan + transcription +
+   translation, all sharing pagination since they're derived from the same
+   page images), either panel can independently show any of the three --
+   like toggling map layers over the same terrain. The right panel IS the
+   book's normal reading pipeline (search, TTS, bookmarks, jump-to-page all
+   stay wired to it); switching its layer just refetches and rebuilds that
+   pipeline against a different dataset. The left panel is a simpler,
+   read-only companion -- it doesn't need its own search/TTS, just a synced
+   view of whichever layer you pick. */
+const layerCache = {};
+async function fetchLayerData(slug) {
+  if (!layerCache[slug]) {
+    const r = await fetch('/static/reader-data/' + slug + '.json');
+    layerCache[slug] = await r.json();
+  }
+  return layerCache[slug];
+}
+function groupEntry(slug) { return PANEL_GROUP.find(g => g.slug === slug); }
+
+function buildLeftImageBlock(p) {
+  const block = document.createElement('div');
+  block.className = 'reader-image-block';
+  block.dataset.page = p.page;
+  block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
+  block.addEventListener('click', () => {
+    const idx = allPages.findIndex(pg => pg.page === p.page);
+    if (idx < 0) return;
+    zoomCurrentIdx = idx;
+    openZoomOverlay();
+    showZoomPage(zoomCurrentIdx);
+    history.pushState({ readerZoom: true }, '');
+    zoomOpenedViaHistory = true;
+  });
+  return block;
+}
+function buildLeftTextBlock(p) {
+  if (!p.text || !p.text.trim() || p.text.trim() === '\u2014') return null;
+  const block = document.createElement('div');
+  block.className = 'reader-simple-text-block';
+  block.dataset.page = p.page;
+  block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div>` + escapeHtml(p.text.trim());
+  return block;
+}
+
+let leftSlotSlug = null;
+async function setLeftSlot(slug) {
+  leftSlotSlug = slug;
+  const entry = groupEntry(slug);
+  const pages = await fetchLayerData(slug);
+  imagePanel.querySelectorAll('.reader-image-block, .reader-simple-text-block').forEach(el => el.remove());
+  const frag = document.createDocumentFragment();
+  pages.forEach(p => {
+    const block = entry.kind === 'image' ? buildLeftImageBlock(p) : buildLeftTextBlock(p);
+    if (block) frag.appendChild(block);
+  });
+  imagePanel.insertBefore(frag, imageSentinel);
+  imagePanel.scrollTop = 0;
+}
+
+async function setRightSlot(slug) {
+  const entry = groupEntry(slug);
+  const pages = await fetchLayerData(slug);
+  panel.querySelectorAll('.reader-page-block').forEach(el => el.remove());
+  loadMoreObserver.disconnect();
+  FACSIMILE = entry.kind === 'image';
+  allPages = FACSIMILE ? pages.filter(p => p.image) : pages.filter(p => p.text && p.text.trim().length >= 3 && p.text.trim() !== '\u2014');
+  renderedCount = 0;
+  panel.scrollTop = 0;
+  renderNextBatch();
+  if (renderedCount < allPages.length) loadMoreObserver.observe(sentinel);
+  const rightSel = document.getElementById('right-panel-select');
+  if (rightSel) rightSel.value = slug;
+}
+
+const leftSelect = document.getElementById('left-panel-select');
+const rightSelect = document.getElementById('right-panel-select');
+if (leftSelect) {
+  leftSelect.addEventListener('change', () => setLeftSlot(leftSelect.value));
+  setLeftSlot(leftSelect.value);
+}
+if (rightSelect) {
+  rightSelect.addEventListener('change', () => setRightSlot(rightSelect.value));
+}
 
 fetch('{{ data_url }}')
   .then(r => r.json())

@@ -39,6 +39,36 @@ for _mb in MEGABOOKS:
 
 
 # ---------------------------------------------------------------------------
+# Panel groups: when a facsimile component has AI-forged sibling layers
+# (a "-transcription" and/or "-english" derived from its own page images,
+# via scripts/forge_translate.py), all three share identical pagination and
+# identical source images. That makes them swappable independently in the
+# reader's two panels -- like map layers, but for a single page rather than
+# a whole book. PANEL_GROUPS maps every member slug to the same group list,
+# so the dropdowns show the same set of choices no matter which one you
+# opened. Books without derived layers (the vast majority) get an empty
+# group and the reader behaves exactly as before -- no dropdowns rendered.
+# ---------------------------------------------------------------------------
+PANEL_GROUPS = {}
+for _mb in MEGABOOKS:
+    _slugs = {c["slug"] for c in _mb["components"]}
+    for _c in _mb["components"]:
+        _base = _c["slug"]
+        _tr, _en = f"{_base}-transcription", f"{_base}-english"
+        if _tr in _slugs or _en in _slugs:
+            _group = [{"slug": _base, "kind": "image", "label": "Original scan"}]
+            if _tr in _slugs:
+                _tr_c = next(x for x in _mb["components"] if x["slug"] == _tr)
+                _group.append({"slug": _tr, "kind": "text", "label": _tr_c["title"]})
+            if _en in _slugs:
+                _en_c = next(x for x in _mb["components"] if x["slug"] == _en)
+                _group.append({"slug": _en, "kind": "text", "label": _en_c["title"]})
+            for _member in [_base, _tr, _en]:
+                if _member in _slugs:
+                    PANEL_GROUPS[_member] = _group
+
+
+# ---------------------------------------------------------------------------
 # Optional Postgres catalog. The manifest is the source of truth; the DB
 # mirrors it so future features (reading progress, user shelves, corrections)
 # have somewhere to live. App runs fine with no DATABASE_URL.
@@ -134,6 +164,23 @@ def reader(mega_slug, comp_slug):
                  "label": f"{c['title']} ({c['year']})",
                  "url": f"/book/{mega_slug}/read/{c['slug']}"}
                 for c in mb["components"]]
+
+    panel_group = PANEL_GROUPS.get(comp_slug)
+    left_default = None
+    if panel_group:
+        # Default the left (secondary) panel to whatever ISN'T already the
+        # primary layer you opened, so the two panels never start on the
+        # same content. Opening a text layer -> left defaults to the
+        # original scan (today's existing appearance, unchanged). Opening
+        # the raw facsimile itself -> left defaults to the English layer
+        # if one exists, since "let me see the translation" is exactly the
+        # gap this feature closes.
+        others = [g for g in panel_group if g["slug"] != comp_slug]
+        english_opt = next((g for g in others if g["slug"].endswith("-english")), None)
+        image_opt = next((g for g in others if g["kind"] == "image"), None)
+        left_default = (image_opt or others[0]) if comp["facsimile"] else (english_opt or (others[0] if others else None))
+        left_default = left_default or (others[0] if others else None)
+
     return render_template(
         "reader.html", now=datetime.utcnow(),
         slug=comp_slug,
@@ -148,6 +195,8 @@ def reader(mega_slug, comp_slug):
         original_label=comp.get("original_label"),
         start_page=None,
         siblings=siblings,
+        panel_group=panel_group,
+        left_default=left_default,
         data_url=f"/static/reader-data/{comp.get('data_slug', comp_slug)}.json",
     )
 

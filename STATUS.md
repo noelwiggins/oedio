@@ -33,6 +33,18 @@ Last updated: 2026-07-27 (2)
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Independent left/right panel layer pickers for AI-forged page-aligned trios (facsimile +
+  transcription + translation share identical pagination/images, so either reader panel can
+  hold any of the three -- like map layers over one page). Right panel is the book's full
+  reading pipeline (search/TTS/bookmarks/jump-to-page all stay wired, just rebuilt against
+  whichever layer is picked); left panel is a lighter synced companion. Backend: PANEL_GROUPS
+  in app.py auto-detects <slug>+"-transcription"/"-english" siblings, zero effect on books
+  without them (verified 0 picker divs on Bible/Odyssey vs 2 on Wonders Ottoman trio).
+  Smart defaults: opening the transcription page now defaults left panel to English
+  automatically (the exact gap reported); opening the raw facsimile now shows the
+  transcription on the left instead of being hidden entirely.
+  Reusable for future forge_translate.py runs on other manuscripts -- the picker appears
+  automatically once -transcription/-english siblings exist in the manifest, no template work.
 - Layer cycle button is now the primary mobile navigation (layered reader: cycles enabled
   text layers + Source scans with tissue-paper crossfade + scroll anchoring; standard reader:
   text <-> source with overlay fade). Long-press removed everywhere (conflicted with text
