@@ -169,10 +169,23 @@
   .reader-grid-thumb span { display:block; font-size:11px; color:var(--md-sys-color-on-surface-variant); margin-top:4px; }
 
   /* Full-image zoom modal (desktop click + mobile long-press both use this) */
-  #reader-zoom-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92);
-    align-items:center; justify-content:center; }
-  #reader-zoom-overlay img { max-width:95vw; max-height:95vh; object-fit:contain;
-    -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  #reader-zoom-overlay { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.92); }
+  /* Continuous page stream: pages flow as one infinite scroll instead of
+     one-at-a-time transitions; snap keeps a page comfortably framed. */
+  #reader-zoom-scroll { position:absolute; inset:0 0 62px 0; overflow-y:auto;
+    -webkit-overflow-scrolling:touch; scroll-snap-type: y proximity;
+    display:grid; grid-template-columns: 1fr; gap:14px; padding:14px 8px 20px; }
+  #reader-zoom-scroll .zoom-page { scroll-snap-align:start; display:flex; flex-direction:column;
+    align-items:center; }
+  #reader-zoom-scroll .zoom-page img { width:100%; max-width:820px; height:auto; object-fit:contain;
+    border-radius:4px; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  #reader-zoom-scroll .zoom-page .zp-num { color:rgba(255,255,255,.55); font-size:11px; margin-top:5px; }
+  /* Side-by-side spreads whenever the viewport is wide enough (landscape
+     phones, tablets, desktop): pages pair up like an open book. */
+  @media (min-width: 700px) {
+    #reader-zoom-scroll { grid-template-columns: 1fr 1fr; gap:12px; padding:14px 12px 20px; }
+    #reader-zoom-scroll .zoom-page img { max-width:100%; }
+  }
   #reader-zoom-page-label { position:absolute; top:16px; left:50%; transform:translateX(-50%);
     color:rgba(255,255,255,.85); font-size:12px; background:rgba(0,0,0,.5); padding:4px 12px; border-radius:12px; }
 
@@ -301,7 +314,7 @@
 <div id="reader-toast"></div>
 
 <div id="reader-zoom-overlay">
-  <img id="reader-zoom-img" src="" alt="Zoomed page" draggable="false" />
+  <div id="reader-zoom-scroll"></div>
   <div id="reader-zoom-page-label"></div>
   <div style="position:absolute; top:16px; right:16px;">
     <button class="reader-icon-btn" id="reader-zoom-more-btn" title="More options" aria-label="More options"
@@ -940,10 +953,36 @@ ttsBtn.addEventListener('click', () => {
 // away from the page entirely -- the overlay is app-level UI state, not
 // a real navigation destination.
 const zoomOverlay = document.getElementById('reader-zoom-overlay');
-const zoomImg = document.getElementById('reader-zoom-img');
+const zoomScroll = document.getElementById('reader-zoom-scroll');
 const zoomPageLabel = document.getElementById('reader-zoom-page-label');
 let zoomCurrentIdx = 0;
 let zoomOpenedViaHistory = false;
+let zoomStreamBuilt = false;
+let zoomSpy = null;
+
+function buildZoomStream() {
+  if (zoomStreamBuilt) return;
+  zoomStreamBuilt = true;
+  const frag = document.createDocumentFragment();
+  allPages.forEach((p, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'zoom-page'; wrap.dataset.idx = idx;
+    wrap.innerHTML = `<img loading="lazy" src="${p.image}" alt="Page ${p.page}" draggable="false">` +
+                     `<div class="zp-num">p. ${p.page}</div>`;
+    wrap.querySelector('img').addEventListener('contextmenu', e => e.preventDefault());
+    frag.appendChild(wrap);
+  });
+  zoomScroll.appendChild(frag);
+  zoomSpy = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        zoomCurrentIdx = parseInt(en.target.dataset.idx, 10);
+        zoomPageLabel.textContent = 'Page ' + allPages[zoomCurrentIdx].page + ' of ' + allPages[allPages.length - 1].page;
+      }
+    });
+  }, { root: zoomScroll, rootMargin: '-45% 0px -45% 0px' });
+  zoomScroll.querySelectorAll('.zoom-page').forEach(z => zoomSpy.observe(z));
+}
 
 function currentPageIdx() {
   const pageNum = parseInt(pageIndicator.textContent.match(/Page (\d+)/)?.[1] || allPages[0].page, 10);
@@ -951,17 +990,19 @@ function currentPageIdx() {
   return idx === -1 ? 0 : idx;
 }
 
-function showZoomPage(idx) {
+function showZoomPage(idx, smooth) {
   idx = Math.max(0, Math.min(allPages.length - 1, idx));
   zoomCurrentIdx = idx;
-  zoomImg.src = allPages[idx].image;
+  const el = zoomScroll.querySelector('.zoom-page[data-idx="' + idx + '"]');
+  if (el) el.scrollIntoView({ block: 'start', behavior: smooth ? 'smooth' : 'auto' });
   zoomPageLabel.textContent = 'Page ' + allPages[idx].page + ' of ' + allPages[allPages.length - 1].page;
 }
 
 function openZoom() {
+  buildZoomStream();
+  zoomOverlay.style.display = 'block';
   zoomCurrentIdx = currentPageIdx();
   showZoomPage(zoomCurrentIdx);
-  zoomOverlay.style.display = 'flex';
   history.pushState({ readerZoom: true }, '');
   zoomOpenedViaHistory = true;
 }
@@ -979,7 +1020,7 @@ function closeZoom(fromPopstate) {
   zoomOpenedViaHistory = false;
 }
 window.addEventListener('popstate', (e) => {
-  if (zoomOverlay.style.display === 'flex') {
+  if (zoomOverlay.style.display === 'block') {
     closeZoom(true);
   }
 });
@@ -997,16 +1038,13 @@ if (!isMobile) {
   // does for single-language books). Prevent the browser's native long-press
   // "save image" menu from appearing over our own image -- that dialog was
   // intercepting the gesture instead of our overlay opening.
-  zoomImg.addEventListener('contextmenu', (e) => e.preventDefault());
-  zoomImg.style.webkitTouchCallout = 'none';
-
   let pressTimer = null;
   panel.addEventListener('touchstart', () => {
     pressTimer = setTimeout(() => {
       if (langToggle) {
         const other = currentLang === 'translation' ? 'original' : 'translation';
         langToggle.querySelector(`button[data-lang="${other}"]`)?.click();
-      } else if (zoomOverlay.style.display !== 'flex') {
+      } else if (zoomOverlay.style.display !== 'block') {
         openZoom();
       }
     }, 500);
@@ -1019,22 +1057,12 @@ if (!isMobile) {
   // tapping was removed since it made accidental page turns too easy and
   // conflicted with tapping to dismiss. Use the bottom nav bar buttons
   // (prev/next/exit) for tap-based control instead.
-  let touchStartX = null;
-  zoomImg.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
-  zoomImg.addEventListener('touchend', (e) => {
-    if (touchStartX === null) return;
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) {
-      showZoomPage(zoomCurrentIdx + (dx < 0 ? 1 : -1));
-    }
-    touchStartX = null;
-  });
 }
 
 // Bottom nav bar: explicit tap targets for prev/next/exit, available on
 // both mobile and desktop whenever the zoom overlay is open.
-document.getElementById('reader-zoom-prev').addEventListener('click', () => showZoomPage(zoomCurrentIdx - 1));
-document.getElementById('reader-zoom-next').addEventListener('click', () => showZoomPage(zoomCurrentIdx + 1));
+document.getElementById('reader-zoom-prev').addEventListener('click', () => showZoomPage(zoomCurrentIdx - 1, true));
+document.getElementById('reader-zoom-next').addEventListener('click', () => showZoomPage(zoomCurrentIdx + 1, true));
 document.getElementById('reader-zoom-exit').addEventListener('click', () => closeZoom());
 </script>
 {% endblock %}
