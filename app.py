@@ -144,10 +144,11 @@ def reader(mega_slug, comp_slug):
         book_year=comp["year"],
         book_source_url=f"https://www.loc.gov/item/{comp['loc_item']}/",
         facsimile=comp["facsimile"],
-        is_translated=False,
+        is_translated=comp.get("translated", False),
+        original_label=comp.get("original_label"),
         start_page=None,
         siblings=siblings,
-        data_url=f"/static/reader-data/{comp_slug}.json",
+        data_url=f"/static/reader-data/{comp.get('data_slug', comp_slug)}.json",
     )
 
 

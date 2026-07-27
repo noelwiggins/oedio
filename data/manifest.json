@@ -243,6 +243,19 @@
    "description": "Qazwīnī's 13th-century cosmography — angels, constellations, seas, beasts, and marvels — travelled the Islamic world in translation. Here it is as illuminated manuscript in Ottoman Turkish (1553) and Persian (1565), and as a 19th-century Persian lithograph: the same wonders, three traditions, presented as full-page facsimiles of some of the most beautiful books LOC holds.",
    "components": [
     {
+     "slug": "wonders-ottoman-ai",
+     "data_slug": "wonders-ottoman-1553-ai",
+     "role": "AI Transcription & Translation",
+     "title": "ʻAjāʾib al-makhlūqāt — Ottoman text & English translation",
+     "contributor": "Transcribed & translated by Claude · 2026",
+     "year": 2026,
+     "loc_item": "2017406674",
+     "note": "A first-ever open rendering: the 1553 Ottoman Turkish manuscript transcribed page by page into scrollable text and translated into English, beside the original scans. Machine-made and imperfect — the source is always one layer away for checking. Transcription in progress; pages appear as the Forge completes them.",
+     "facsimile": false,
+     "translated": true,
+     "original_label": "Ottoman Turkish"
+    },
+    {
      "slug": "wonders-ottoman-1553",
      "role": "Ottoman Turkish",
      "title": "ʻAjāʾib al-makhlūqāt — Ottoman Turkish manuscript",

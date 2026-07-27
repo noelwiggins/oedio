@@ -287,7 +287,7 @@
 {% if is_translated %}
     <div class="reader-lang-toggle" id="reader-lang-toggle">
       <button class="active" data-lang="translation">English</button>
-      <button data-lang="original">Original (Français)</button>
+      <button data-lang="original">Original ({{ original_label or "source language" }})</button>
     </div>
 {% endif %}
     <select class="reader-jump-select" id="reader-jump-select">
