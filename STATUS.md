@@ -6,6 +6,14 @@ Durable record of in-progress/incomplete work — survives session interruptions
 Last updated: 2026-07-27 (2)
 
 ## In progress / known incomplete
+- Wonders manuscript forge run: pages 1-82 done (66 text pages). Resume with repeated chunks of
+  ~15 pages (outer tool timeout is tight; each page ~15-25s at 4 workers):
+  `ANTHROPIC_API_KEY=$(railway var or /home/claude/.anthropic_key) python3 scripts/forge_translate.py wonders-ottoman-1553 83 97 "Ottoman Turkish"`
+  then 98-112, etc. to 314. Checkpoints every 10 pages; script skips done pages, so re-running any
+  range is safe. Refinement queued: tighten prompt to suppress occasional meta-preamble in English
+  ("This is a preface page... The text reads:") — translation should start directly.
+- Reinvent-no-wheels additions queued: Wustenfeld's 1849 Arabic critical edition of Qazwini and
+  Ethe's 1868 partial German translation (both PD) as further layers; check archive.org/LOC.
 - R1 megabook-builder (anchor/asset schema, accounts, "add to my megabook", saved personal
   megabooks) — designed, not started. Then R2 tips rail (Met/AIC/Rijks CC0 + DPLA/NYPL APIs),
   R3 store/gifting, R4 print (flatten-to-PDF + Lulu).
