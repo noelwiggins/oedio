@@ -6,12 +6,14 @@ Durable record of in-progress/incomplete work — survives session interruptions
 Last updated: 2026-07-27
 
 ## In progress / known incomplete
-- **Cloudflare DNS for oedio.com must be added manually** (API DNS writes broken account-wide,
+- **Cloudflare DNS for oedio.com must be added manually** (ONLY remaining item) (API DNS writes broken account-wide,
   error 7003 — known issue, see memory): dash.cloudflare.com → oedio.com → DNS →
   CNAME | name `@` | target `ar9h7ehp.up.railway.app` | proxied ON.
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Postgres catalog mirror now seeding (psycopg[binary] 3.2.4 + postgresql+psycopg:// URI +
+  RAILPACK_DEPLOY_APT_PACKAGES=libpq-dev env var — same fix chain as jack-wellness).
 - Initial build: megabook library shelf, megabook detail page, split-panel reader
   (ported from plentyfish, canonical pattern), facsimile mode for no-OCR editions,
   edition-switcher dropdown inside the reader.
