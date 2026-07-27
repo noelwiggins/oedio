@@ -12,6 +12,18 @@ Last updated: 2026-07-27
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Layered Reader shipped at /book/odyssey/layers: book-aligned layer stack (B&L + Norgate
+  translations toggleable, side-by-side on desktop / stacked mobile), inline page pills opening
+  source scans, Flaxman filmstrip per book (proportional page mapping), Greek facsimile cards on
+  Books VI-VIII & XIII, streaming audio layers (LibriVox English narration + ancient Greek
+  recitation, per book, persistent mini-player), MD3 bottom sheet layer control (FAB on mobile,
+  docked panel desktop), Book I-XXIV chip rail with scroll-spy, lazy section rendering,
+  History-API-managed overlays, localStorage layer persistence.
+  Alignment data: static/reader-data/odyssey-alignment.json (B&L via detected BOOK headings,
+  all 24 exact; Norgate/Flaxman via canonical-line-count proportional mapping, validated +/-2pp).
+- Known future work for layered mode: passage/line-level alignment (currently book-level),
+  user-added illustration layers from external sources (needs accounts/storage), Collins &
+  Children's editions not yet in layered view (chapter structures don't map to Books).
 - Postgres catalog mirror now seeding (psycopg[binary] 3.2.4 + postgresql+psycopg:// URI +
   RAILPACK_DEPLOY_APT_PACKAGES=libpq-dev env var — same fix chain as jack-wellness).
 - Initial build: megabook library shelf, megabook detail page, split-panel reader

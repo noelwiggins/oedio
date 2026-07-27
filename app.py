@@ -151,6 +151,15 @@ def reader(mega_slug, comp_slug):
     )
 
 
+@app.route("/book/<mega_slug>/layers")
+def layered_reader(mega_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb or mega_slug != "odyssey":  # layered mode ships per-work as alignment data exists
+        abort(404)
+    return render_template("layered.html", now=datetime.utcnow(), mb=mb,
+                           active_page="library")
+
+
 @app.route("/about")
 def about():
     return render_template("about.html", now=datetime.utcnow(), active_page="about")

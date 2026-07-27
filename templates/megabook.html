@@ -2,6 +2,7 @@
 {% block title %}{{ mb.title }} — oedio.com{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
 <style>
   .mb-wrap { max-width:900px; margin:0 auto; padding:28px 24px 40px; }
   .mb-head h1 { font-family:Georgia, serif; font-size:30px; font-weight:600; margin:0 0 4px;
@@ -37,6 +38,18 @@
     <div class="byline">{{ mb.author }} &middot; {{ mb.components|length }} editions bound into this megabook</div>
     <p class="desc">{{ mb.description }}</p>
   </div>
+
+  {% if mb.slug == 'odyssey' %}
+  <a class="comp-card" href="/book/{{ mb.slug }}/layers" style="margin-top:22px; display:flex; gap:16px; align-items:center;
+     border-color: var(--md-sys-color-primary); background: var(--md-sys-color-surface-container-high);">
+    <span class="material-symbols-outlined" style="font-size:34px; color:var(--md-sys-color-primary);">stacks</span>
+    <div>
+      <div class="c-title">Open the Layered Reader</div>
+      <div class="c-note">All editions as toggleable layers over one scroll &mdash; parallel translations, source scans,
+        Flaxman engravings, and streaming audio (English narration &amp; ancient Greek recitation), aligned book by book.</div>
+    </div>
+  </a>
+  {% endif %}
 
   {% for role, comps in grouped %}
   <div class="role-label">{{ role }}</div>
