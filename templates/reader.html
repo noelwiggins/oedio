@@ -25,6 +25,19 @@
      so the whole window scrolled and carried the header (and search controls)
      off the top whenever a search result jumped the text panel. */
   .reader-app { display:flex; flex-direction:column; height: calc(100vh - 56px); overflow:hidden; }
+  /* Facsimile books: the page images ARE the text flow, so the desktop's
+     synced image side-panel would just duplicate them. Hide it and let the
+     facsimile breathe across the full width as side-by-side spreads. */
+  .reader-app.facsimile-app .reader-image-panel { display:none; }
+  .reader-app.facsimile-app .reader-text-panel-wrap { width:100%; }
+  @media (min-width: 900px) {
+    .reader-app.facsimile-app .reader-text-panel { display:grid; grid-template-columns:1fr 1fr;
+      gap:0 18px; align-content:start; padding-left:4vw; padding-right:4vw; }
+    .reader-app.facsimile-app .reader-text-panel > *:not(.reader-page-block) { grid-column:1 / -1; }
+  }
+  .facsimile-note { font-size:12px; color:var(--md-sys-color-on-surface-variant);
+    background:var(--md-sys-color-surface-container); border-radius:10px; padding:8px 14px;
+    display:inline-block; margin:6px 0 2px; }
   .reader-header { flex:none; }
   .reader-layout { display:flex; flex:1; min-height:0; }
   .reader-image-panel { width:45%; background:#000; overflow-y:auto; scroll-behavior:auto; }
@@ -238,7 +251,7 @@
 {% block content %}
 <div id="reader-progress-track"><div id="reader-progress-fill"></div></div>
 
-<div class="reader-app">
+<div class="reader-app{{ " facsimile-app" if facsimile else "" }}">
 <div class="reader-header">
   <div>
     <div class="book-title">{{ book_title }}</div>
@@ -248,6 +261,10 @@
       <a href="{{ book_source_url }}" target="_blank" rel="noopener">View at Library of Congress</a>
       · <span id="reader-page-indicator">Page — of —</span>
     </div>
+    {% if facsimile %}
+    <div class="facsimile-note">Presented as facsimile &mdash; no public-domain translation of this work exists yet.
+      The scans themselves are the layer; use the other editions on the megabook page for related traditions.</div>
+    {% endif %}
   </div>
   <div class="reader-toolbar" id="reader-toolbar-sticky">
     <select class="reader-jump-select" id="reader-edition-select" title="Switch edition"
