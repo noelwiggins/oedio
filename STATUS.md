@@ -33,6 +33,14 @@ Last updated: 2026-07-27 (2)
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Mobile layer-cycle button rebuilt as a 3-way pill (was a broken binary toggle that only ever
+  reached the text side): tap cycles through every entry in a panel_group with a tissue-paper
+  crossfade (DOM clone of the outgoing view fades out over the freshly-swapped-in content,
+  reusing the desktop setRightSlot() plumbing so search/TTS/bookmarks stay correctly wired
+  after each cycle). Falls back gracefully: dual-language books still cycle
+  translation<->original with the same tissue effect; plain facsimile books (no group) keep
+  the original tap-to-open-scan behavior. Button label shows the current layer name and
+  updates live.
 - Independent left/right panel layer pickers for AI-forged page-aligned trios (facsimile +
   transcription + translation share identical pagination/images, so either reader panel can
   hold any of the three -- like map layers over one page). Right panel is the book's full

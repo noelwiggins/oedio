@@ -207,10 +207,17 @@
   .layer-toggle-btn { display:none; }
   @media (max-width: 800px) {
     .layer-toggle-btn { position:fixed; right:16px; bottom:calc(20px + env(safe-area-inset-bottom));
-      z-index:960; display:flex; align-items:center; gap:8px; border:none; cursor:pointer;
+      z-index:960; align-items:center; gap:8px; border:none; cursor:pointer;
       padding:14px 18px; border-radius:20px; background:var(--md-sys-color-primary);
       color:var(--md-sys-color-on-primary); box-shadow:0 5px 16px rgba(0,0,0,.55);
-      font-size:13px; font-weight:700; }
+      font-size:13px; font-weight:700; max-width:62vw; }
+    .layer-toggle-btn:active { transform:scale(.94); }
+    .layer-toggle-btn span#reader-layer-btn-label { overflow:hidden; text-overflow:ellipsis;
+      white-space:nowrap; }
+    .reader-text-panel-wrap { position: relative; } /* anchors the tissue clone overlay */
+    .tissue-clone-overlay { position:absolute; inset:0; overflow:hidden; pointer-events:none;
+      z-index:50; background:var(--md-sys-color-surface); opacity:1;
+      transition:opacity .55s ease; }
     .layer-toggle-btn:active { transform:scale(.94); }
     .layer-toggle-btn .material-symbols-outlined { font-size:20px; }
     #reader-zoom-overlay.open ~ .layer-toggle-btn { display:none; }
@@ -404,8 +411,8 @@
     <button id="reader-zoom-next" aria-label="Next page"><span class="material-symbols-outlined">chevron_right</span></button>
   </div>
 </div>
-<button class="layer-toggle-btn" id="reader-layer-btn">
-  <span class="material-symbols-outlined">layers</span> Source
+<button class="layer-toggle-btn" id="reader-layer-btn" style="display:none">
+  <span class="material-symbols-outlined">layers</span> <span id="reader-layer-btn-label">Source</span>
 </button>
 {% endblock %}
 
@@ -1209,17 +1216,70 @@ if (!isMobile) {
   // browser's own image context menus). One easy thumb target: press to
   // shift to the source-scan layer; the overlay fades in over the text like
   // tissue paper. For dual-language books it steps text -> original -> scan.
+  // Layer cycle button: the primary mobile navigation for switching what
+  // the single visible panel shows. Three cases, in priority order:
+  //  A) a panel_group exists (facsimile + AI transcription + AI translation,
+  //     all page-aligned) -> cycles through every layer in the group
+  //  B) a dual-language book (translation/original baked into one file) ->
+  //     cycles those two
+  //  C) plain facsimile-only book -> single tap opens the scan stream
+  // A tissue-paper crossfade (a cloned snapshot of the outgoing view,
+  // fading out over the incoming one) makes the swap feel like lifting one
+  // transparency off another instead of a hard cut.
   const layerBtn = document.getElementById('reader-layer-btn');
-  if (layerBtn) layerBtn.addEventListener('click', () => {
-    if (langToggle && currentLang === 'translation') {
-      langToggle.querySelector('button[data-lang="original"]')?.click();
-      return;
-    }
-    if (langToggle && currentLang === 'original') {
-      langToggle.querySelector('button[data-lang="translation"]')?.click();
-    }
-    if (zoomOverlay.style.display !== 'block') openZoom();
-  });
+  const layerBtnLabel = document.getElementById('reader-layer-btn-label');
+  const textPanelWrap = document.querySelector('.reader-text-panel-wrap');
+  let currentRightSlug = BOOK_SLUG;
+  let cyclingReader = false;
+
+  function tissueSnapshotAndSwap(afterSwap) {
+    if (cyclingReader) return;
+    cyclingReader = true;
+    const clone = panel.cloneNode(true);
+    clone.className = 'tissue-clone-overlay';
+    clone.removeAttribute('id');
+    textPanelWrap.appendChild(clone);
+    if (navigator.vibrate) navigator.vibrate(8);
+    Promise.resolve(afterSwap()).then(() => {
+      requestAnimationFrame(() => { clone.style.opacity = '0'; });
+      setTimeout(() => { clone.remove(); cyclingReader = false; }, 600);
+    });
+  }
+
+  function shortLabel(entry) {
+    if (entry.kind === 'image') return 'Scan';
+    return entry.label.replace(/^.*?\u2014\s*/, '').replace(/\s*\(AI [a-z]+\)/i, m => m).trim() || entry.label;
+  }
+
+  if (layerBtn && PANEL_GROUP.length > 1) {
+    layerBtn.style.display = 'flex';
+    layerBtnLabel.textContent = shortLabel(groupEntry(currentRightSlug) || PANEL_GROUP[0]);
+    layerBtn.addEventListener('click', () => {
+      const idx = PANEL_GROUP.findIndex(g => g.slug === currentRightSlug);
+      const next = PANEL_GROUP[(idx + 1) % PANEL_GROUP.length];
+      tissueSnapshotAndSwap(async () => {
+        await setRightSlot(next.slug);
+        currentRightSlug = next.slug;
+        layerBtnLabel.textContent = shortLabel(next);
+      });
+    });
+  } else if (layerBtn && langToggle) {
+    layerBtn.style.display = 'flex';
+    layerBtnLabel.textContent = currentLang === 'translation' ? 'Original' : 'Translation';
+    layerBtn.addEventListener('click', () => {
+      tissueSnapshotAndSwap(() => {
+        const nextLang = currentLang === 'translation' ? 'original' : 'translation';
+        langToggle.querySelector(`button[data-lang="${nextLang}"]`)?.click();
+        layerBtnLabel.textContent = nextLang === 'translation' ? 'Original' : 'Translation';
+      });
+    });
+  } else if (layerBtn && FACSIMILE) {
+    layerBtn.style.display = 'flex';
+    layerBtnLabel.textContent = 'Source';
+    layerBtn.addEventListener('click', () => {
+      if (zoomOverlay.style.display !== 'block') openZoom();
+    });
+  }
 }
 
 // Bottom nav bar: explicit tap targets for prev/next/exit, available on
