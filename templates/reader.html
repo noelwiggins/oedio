@@ -216,8 +216,17 @@
       white-space:nowrap; }
     .reader-text-panel-wrap { position: relative; } /* anchors the tissue clone overlay */
     .tissue-clone-overlay { position:absolute; inset:0; overflow:hidden; pointer-events:none;
-      z-index:50; background:var(--md-sys-color-surface); opacity:1;
-      transition:opacity .55s ease; }
+      z-index:50; background:var(--md-sys-color-surface); opacity:1; }
+    /* Slow, held crossfade: the outgoing layer drops to a translucent
+       mid-point and STAYS there for a beat -- long enough to register that
+       two layers are genuinely stacked -- before finishing its dissolve. */
+    @keyframes tissue-dissolve {
+      0%   { opacity: 1; }
+      30%  { opacity: .42; }
+      68%  { opacity: .42; }
+      100% { opacity: 0; }
+    }
+    .tissue-clone-overlay.tissue-run { animation: tissue-dissolve 1300ms cubic-bezier(.3,0,.2,1) forwards; }
     .layer-toggle-btn:active { transform:scale(.94); }
     .layer-toggle-btn .material-symbols-outlined { font-size:20px; }
     #reader-zoom-overlay.open ~ .layer-toggle-btn { display:none; }
@@ -1273,8 +1282,11 @@ if (!isMobile) {
     textPanelWrap.appendChild(clone);
     if (navigator.vibrate) navigator.vibrate(8);
     Promise.resolve(afterSwap()).then(() => {
-      requestAnimationFrame(() => { clone.style.opacity = '0'; });
-      setTimeout(() => { clone.remove(); cyclingReader = false; }, 600);
+      // The new layer is already underneath, fully rendered -- starting the
+      // dissolve now is what lets it show through the held translucent
+      // midpoint above, rather than popping in after the old view is gone.
+      requestAnimationFrame(() => { clone.classList.add('tissue-run'); });
+      setTimeout(() => { clone.remove(); cyclingReader = false; }, 1350);
     });
   }
 

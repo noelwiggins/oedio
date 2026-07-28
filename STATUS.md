@@ -33,6 +33,12 @@ Last updated: 2026-07-27 (2)
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Slowed the layer-cycle crossfade in both readers so the "tissue paper" overlap is clearly
+  perceptible rather than a quick cut. reader.html (Wonders manuscript): keyframe dissolve,
+  1300ms, with the outgoing layer settling at 42% opacity and HOLDING there for ~500ms before
+  finishing the fade -- long enough to register two stacked layers. layered.html (Odyssey):
+  matching two-phase crossfade (rise/settle at partial opacity, then resolve to final), total
+  ~1150ms. Cleanup timeouts extended to match in both.
 - Fixed layer desync bug: switching layers (via desktop dropdowns or the mobile cycle button)
   was resetting scroll to page 1 every time instead of landing on the page you were just
   reading, so Ottoman/English/Scan drifted apart after any swap. Now tracks currentPageNum

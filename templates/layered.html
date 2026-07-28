@@ -538,10 +538,10 @@ function cycleLayer() {
           window.scrollBy(0, newTop - anchorTop);
         }
         cycling = false;
-      }, 620);
+      }, 1150);
     });
   });
-  setTimeout(function(){ cycling = false; }, 900); // safety release
+  setTimeout(function(){ cycling = false; }, 1300); // safety release
 }
 document.getElementById('cycle-btn').addEventListener('click', cycleLayer);
 
