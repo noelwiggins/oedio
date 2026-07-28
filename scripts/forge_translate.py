@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
-"""oedio manuscript forge: HTR + AI translation for handwritten manuscripts.
+"""oedio manuscript/facsimile forge: HTR + AI translation for any page-image
+component, hand-written or printed, in any script or language.
 
 Takes an existing facsimile component ({slug}.json with page images) and
-produces two derived layers in the standard [{page, text, image}] contract:
-  {slug}-transcription.json  -- the original-language text, transcribed
-  {slug}-english.json        -- an AI English translation
+produces one or two derived layers in the standard [{page, text, image}]
+contract:
+  {slug}-transcription.json  -- transcribed text in its original script
+  {slug}-english.json        -- an AI English translation (skipped if the
+                                 source is already English -- use --no-translation)
 
-Usage: python3 forge_translate.py <slug> <start_page> <end_page> [lang_name]
+Usage:
+  python3 forge_translate.py <slug> <start_page> <end_page> <lang> [description] [--no-translation]
+
+<lang> is used in the prompt (e.g. "Ottoman Turkish", "Persian", "Ancient Greek", "English").
+[description] optionally overrides the default work description sentence.
 Resumable: merges into existing output files, skipping already-done pages.
 """
 import base64, json, os, sys, time
@@ -18,15 +25,24 @@ API_KEY = os.environ.get("ANTHROPIC_API_KEY") or open(
 MODEL = "claude-sonnet-4-6"
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-PROMPT = """This is a page from a 16th-century {lang} manuscript of Qazwini's 'Aja'ib al-makhluqat (The Wonders of Creation), written in Arabic script (nesih book hand). 
+PROMPT_TRANSLATE = """This is a page from {description}, in {lang}.
 
-1. Transcribe ALL visible manuscript text on the page exactly as written, in Arabic script, preserving line order. Include marginalia only if clearly part of the text tradition (ignore modern pencil shelf-marks, stamps, or catalog numbers).
+1. Transcribe ALL visible text on the page exactly as written, in its original script, preserving line order. Include marginalia only if clearly part of the text tradition (ignore modern pencil shelf-marks, stamps, catalog numbers, or library annotations).
 2. Then translate the transcribed text into clear, readable English. Preserve the flavor of the original without archaism.
 
-If the page contains no manuscript text (binding, blank leaf, cover, ruler/color chart), respond with exactly: NO_TEXT
+If the page contains no body text (binding, blank leaf, cover, plate with no caption, ruler/color chart), respond with exactly: NO_TEXT
 
 Otherwise respond ONLY with JSON in this exact shape, no markdown fences:
 {{"transcription": "...", "english": "..."}}"""
+
+PROMPT_NO_TRANSLATE = """This is a page from {description}, printed in {lang}.
+
+Transcribe ALL visible body text on the page exactly as written (this is a clean OCR pass -- correct only obvious scanning artifacts, not wording). Include captions under illustrations but not modern library stamps or shelf-marks.
+
+If the page contains no body text (binding, blank leaf, cover, or a plate with no caption), respond with exactly: NO_TEXT
+
+Otherwise respond ONLY with JSON in this exact shape, no markdown fences:
+{{"transcription": "..."}}"""
 
 
 def fetch_image_b64(url):
@@ -35,14 +51,16 @@ def fetch_image_b64(url):
     return base64.b64encode(data).decode()
 
 
-def call_claude(img_b64, lang):
+def call_claude(img_b64, lang, description, want_translation):
+    prompt = (PROMPT_TRANSLATE if want_translation else PROMPT_NO_TRANSLATE).format(
+        lang=lang, description=description)
     body = json.dumps({
         "model": MODEL,
         "max_tokens": 4000,
         "messages": [{"role": "user", "content": [
             {"type": "image", "source": {"type": "base64",
              "media_type": "image/jpeg", "data": img_b64}},
-            {"type": "text", "text": PROMPT.format(lang=lang)}
+            {"type": "text", "text": prompt}
         ]}]
     }).encode()
     req = urllib.request.Request("https://api.anthropic.com/v1/messages",
@@ -54,7 +72,7 @@ def call_claude(img_b64, lang):
         try:
             resp = json.loads(urllib.request.urlopen(req, timeout=180).read())
             return "".join(b.get("text", "") for b in resp.get("content", []))
-        except Exception as e:
+        except Exception:
             if attempt == 3:
                 return None
             time.sleep(20 * (attempt + 1))
@@ -67,14 +85,15 @@ def load_layer(path, source_pages):
             for p in source_pages}
 
 
-def main(slug, start, end, lang="Ottoman Turkish"):
+def main(slug, start, end, lang, description=None, want_translation=True):
     src_path = f"{BASE}/static/reader-data/{slug}.json"
     source = json.load(open(src_path))
     by_page = {p["page"]: p for p in source}
+    description = description or "a rare, digitized public-domain book"
     t_path = f"{BASE}/static/reader-data/{slug}-transcription.json"
-    e_path = f"{BASE}/static/reader-data/{slug}-english.json"
+    e_path = f"{BASE}/static/reader-data/{slug}-english.json" if want_translation else None
     t_layer = load_layer(t_path, source)
-    e_layer = load_layer(e_path, source)
+    e_layer = load_layer(e_path, source) if want_translation else None
 
     todo = [pg for pg in range(start, end + 1)
             if pg in by_page and not t_layer[pg]["text"]]
@@ -83,16 +102,16 @@ def main(slug, start, end, lang="Ottoman Turkish"):
     def work(pg):
         try:
             img = fetch_image_b64(by_page[pg]["image"])
-            out = call_claude(img, lang)
+            out = call_claude(img, lang, description, want_translation)
             if out is None:
                 return pg, None, None
             out = out.strip()
             if out.startswith("NO_TEXT") or out == "":
-                return pg, "\u2014", "\u2014"  # em-dash marks a checked non-text page
+                return pg, "\u2014", "\u2014"
             out = out.strip("`").replace("json\n", "", 1) if out.startswith("`") else out
             d = json.loads(out)
-            return pg, d.get("transcription", ""), d.get("english", "")
-        except Exception as ex:
+            return pg, d.get("transcription", ""), (d.get("english", "") if want_translation else None)
+        except Exception:
             return pg, None, None
 
     done = 0
@@ -100,22 +119,28 @@ def main(slug, start, end, lang="Ottoman Turkish"):
         for pg, tr, en in ex.map(work, todo):
             if tr is not None:
                 t_layer[pg]["text"] = tr
-                e_layer[pg]["text"] = en
+                if want_translation:
+                    e_layer[pg]["text"] = en
                 done += 1
-            if done % 10 == 0:  # checkpoint
+            if done % 10 == 0:
                 json.dump(sorted(t_layer.values(), key=lambda p: p["page"]),
                           open(t_path, "w"), ensure_ascii=False)
-                json.dump(sorted(e_layer.values(), key=lambda p: p["page"]),
-                          open(e_path, "w"), ensure_ascii=False)
+                if want_translation:
+                    json.dump(sorted(e_layer.values(), key=lambda p: p["page"]),
+                              open(e_path, "w"), ensure_ascii=False)
 
     json.dump(sorted(t_layer.values(), key=lambda p: p["page"]),
               open(t_path, "w"), ensure_ascii=False)
-    json.dump(sorted(e_layer.values(), key=lambda p: p["page"]),
-              open(e_path, "w"), ensure_ascii=False)
+    if want_translation:
+        json.dump(sorted(e_layer.values(), key=lambda p: p["page"]),
+                  open(e_path, "w"), ensure_ascii=False)
     n_t = sum(1 for p in t_layer.values() if p["text"] and p["text"] != "\u2014")
     print(f"done: {done} new; layer now has {n_t} transcribed pages -> {t_path}")
 
 
 if __name__ == "__main__":
     a = sys.argv
-    main(a[1], int(a[2]), int(a[3]), a[4] if len(a) > 4 else "Ottoman Turkish")
+    no_translate = "--no-translation" in a
+    a = [x for x in a if x != "--no-translation"]
+    desc = a[5] if len(a) > 5 else None
+    main(a[1], int(a[2]), int(a[3]), a[4], desc, not no_translate)
