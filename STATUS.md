@@ -33,6 +33,28 @@ Last updated: 2026-07-27 (2)
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Shortened the layer-cycle crossfade (~half a beat) in both readers: reader.html 1300ms -> 900ms,
+  layered.html two-phase ~1150ms -> ~740ms. Held-overlap midpoint kept in both, just tighter.
+- Fixed the real cause of "top controls disappearing on scroll" -- reader.html's header/toolbar
+  used position:sticky, but mobile switches the WHOLE reader from internal split-panel scrolling
+  to plain body-level scrolling (a fundamentally different scroll context), and sticky was
+  silently failing to persist across that switch on-device. Replaced with position:fixed on
+  mobile (immune to that failure mode) plus a small JS pass that measures the header's actual
+  rendered height once (it varies: longer titles, the facsimile note, etc.) and feeds that back
+  in as reserved space via a CSS variable, so content never starts hidden underneath it. This
+  fix applies automatically to EVERY book that uses reader.html (Bible, Odyssey editions, Paradise
+  Lost, Arabian Nights, Leaves of Grass, Wonders -- all of them), not just the Ottoman manuscript,
+  satisfying "same framework to all readers" for this specific issue.
+  layered.html's Book-chip rail was NOT touched -- it never switches scroll models between
+  desktop/mobile (always body-level), so it doesn't share this bug class; left as the
+  already-working sticky implementation.
+- Note on "same framework to all readers" more broadly: the layer-picker/cycle mechanism itself
+  (not just the animation/header fixes) only *activates* where a panel_group exists, i.e. where
+  a facsimile has AI-forged transcription+translation siblings. Right now that's only the Ottoman
+  Wonders manuscript. Extending the AI-transcription/translation treatment to other facsimile-only
+  books (Persian Wonders mss, Flaxman, Doré, Greek Phaeacian) is a separate, larger undertaking
+  (a forge_translate.py run per book, real API cost/time) -- not done this session, flagged here
+  so it's an explicit future decision rather than assumed-done.
 - Slowed the layer-cycle crossfade in both readers so the "tissue paper" overlap is clearly
   perceptible rather than a quick cut. reader.html (Wonders manuscript): keyframe dissolve,
   1300ms, with the outgoing layer settling at 42% opacity and HOLDING there for ~500ms before

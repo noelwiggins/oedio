@@ -143,8 +143,14 @@
 
   .layer-grid { position: relative; }
   .tissue-in { position: absolute; inset: 0 0 auto 0; opacity: 0; pointer-events: none; }
-  .tissue-fading-out { transition: opacity .55s ease; opacity: .32 !important; }
-  .tissue-fading-in { transition: opacity .55s ease; opacity: .92 !important; }
+  /* Two-phase crossfade with a held overlap: outgoing settles at a visible
+     translucency (both layers genuinely on screen together) before
+     finishing its fade, so the swap reads as lifting one transparency off
+     another rather than a quick cut. */
+  .tissue-fading-out-hold { transition: opacity 370ms ease; opacity: .45 !important; }
+  .tissue-fading-out { transition: opacity 370ms ease; opacity: 0 !important; }
+  .tissue-fading-in-hold { transition: opacity 370ms ease; opacity: .55 !important; }
+  .tissue-fading-in { transition: opacity 370ms ease; opacity: .92 !important; }
   .src-block .src-page-img { width: 100%; border-radius: 8px; margin: 0 0 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,.45); cursor: zoom-in; display: block; }
 
@@ -523,13 +529,21 @@ function cycleLayer() {
       incoming.classList.add('tissue-in');
       grid.appendChild(incoming);
       var outgoing = Array.prototype.slice.call(grid.children).filter(function(c){ return c !== incoming; });
+      // Phase 1: incoming rises partway, outgoing settles at a held
+      // translucency -- both fully visible together.
       requestAnimationFrame(function() {
-        incoming.classList.add('tissue-fading-in');
-        outgoing.forEach(function(o){ o.classList.add('tissue-fading-out'); });
+        incoming.classList.add('tissue-fading-in-hold');
+        outgoing.forEach(function(o){ o.classList.add('tissue-fading-out-hold'); });
       });
+      // Phase 2: outgoing finishes dissolving, incoming reaches full strength.
+      setTimeout(function() {
+        incoming.classList.remove('tissue-fading-in-hold');
+        incoming.classList.add('tissue-fading-in');
+        outgoing.forEach(function(o){ o.classList.remove('tissue-fading-out-hold'); o.classList.add('tissue-fading-out'); });
+      }, 370);
       setTimeout(function() {
         grid.innerHTML = '';
-        incoming.classList.remove('tissue-in','tissue-fading-in');
+        incoming.classList.remove('tissue-in','tissue-fading-in','tissue-fading-in-hold');
         incoming.style.opacity = '';
         grid.appendChild(incoming);
         // hold the reader's place: keep the anchored book where it was
@@ -538,10 +552,10 @@ function cycleLayer() {
           window.scrollBy(0, newTop - anchorTop);
         }
         cycling = false;
-      }, 1150);
+      }, 770);
     });
   });
-  setTimeout(function(){ cycling = false; }, 1300); // safety release
+  setTimeout(function(){ cycling = false; }, 900); // safety release
 }
 document.getElementById('cycle-btn').addEventListener('click', cycleLayer);
 

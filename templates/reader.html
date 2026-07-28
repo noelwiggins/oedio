@@ -222,11 +222,11 @@
        two layers are genuinely stacked -- before finishing its dissolve. */
     @keyframes tissue-dissolve {
       0%   { opacity: 1; }
-      30%  { opacity: .42; }
-      68%  { opacity: .42; }
+      28%  { opacity: .42; }
+      60%  { opacity: .42; }
       100% { opacity: 0; }
     }
-    .tissue-clone-overlay.tissue-run { animation: tissue-dissolve 1300ms cubic-bezier(.3,0,.2,1) forwards; }
+    .tissue-clone-overlay.tissue-run { animation: tissue-dissolve 900ms cubic-bezier(.3,0,.2,1) forwards; }
     .layer-toggle-btn:active { transform:scale(.94); }
     .layer-toggle-btn .material-symbols-outlined { font-size:20px; }
     #reader-zoom-overlay.open ~ .layer-toggle-btn { display:none; }
@@ -276,7 +276,12 @@
     .reader-image-panel { display: none; }
     .reader-text-panel-wrap { width:100%; height:auto; }
     .reader-text-panel { width:100%; height:auto; overflow-y:visible; padding: 16px 20px calc(16px + env(safe-area-inset-bottom)); }
-    .reader-header { padding: 10px 16px 6px; }
+    .reader-header { position: fixed; top: 60px; left: 0; right: 0; z-index: 780;
+      padding: 10px 16px 6px; flex-wrap: wrap; row-gap: 4px;
+      background: var(--md-sys-color-surface);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      max-height: 42vh; overflow-y: auto; }
+    .reader-layout { margin-top: var(--reader-mobile-header-h, 96px); }
     .reader-search-box input { width:90px; }
     #reader-zoom-overlay.open #reader-zoom-nav { display: flex; }
   }
@@ -1267,6 +1272,25 @@ if (!isMobile) {
   // A tissue-paper crossfade (a cloned snapshot of the outgoing view,
   // fading out over the incoming one) makes the swap feel like lifting one
   // transparency off another instead of a hard cut.
+  // Mobile: the header (title + full toolbar) is pinned via CSS position:fixed
+  // rather than sticky, since sticky was silently failing to persist through
+  // the mobile layout's switch to body-level scrolling on some browsers --
+  // fixed is immune to that class of bug. Its height varies per book (a
+  // longer title, or the facsimile note), so measure it once rendered and
+  // feed that back in as reserved space via a CSS variable, instead of
+  // guessing a fixed number that would either leave a gap or clip content.
+  function pinMobileHeaderSpace() {
+    if (!window.matchMedia('(max-width: 800px)').matches) {
+      document.documentElement.style.removeProperty('--reader-mobile-header-h');
+      return;
+    }
+    const h = document.querySelector('.reader-header');
+    if (h) document.documentElement.style.setProperty('--reader-mobile-header-h', h.offsetHeight + 'px');
+  }
+  pinMobileHeaderSpace();
+  window.addEventListener('resize', pinMobileHeaderSpace);
+  window.addEventListener('orientationchange', () => setTimeout(pinMobileHeaderSpace, 200));
+
   const layerBtn = document.getElementById('reader-layer-btn');
   const layerBtnLabel = document.getElementById('reader-layer-btn-label');
   const textPanelWrap = document.querySelector('.reader-text-panel-wrap');
@@ -1286,7 +1310,7 @@ if (!isMobile) {
       // dissolve now is what lets it show through the held translucent
       // midpoint above, rather than popping in after the old view is gone.
       requestAnimationFrame(() => { clone.classList.add('tissue-run'); });
-      setTimeout(() => { clone.remove(); cyclingReader = false; }, 1350);
+      setTimeout(() => { clone.remove(); cyclingReader = false; }, 950);
     });
   }
 
