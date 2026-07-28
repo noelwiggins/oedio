@@ -66,6 +66,16 @@
      "loc_item": "12024027",
      "note": "The epic retold for young readers — a reminder that every generation rebuilds Homer for itself.",
      "facsimile": false
+    },
+    {
+     "slug": "flaxman-1853-transcription",
+     "role": "Illustrated Editions",
+     "title": "The Odyssey, with Flaxman's Designs — full text (AI transcription)",
+     "contributor": "Trans. T. A. Buckley — transcribed from scans by Claude (AI)",
+     "year": 1853,
+     "loc_item": "12034441",
+     "note": "The complete Buckley translation transcribed from the printed page images, all 402 pages, alongside the source scans and Flaxman's plates. Unverified.",
+     "facsimile": false
     }
    ]
   },
