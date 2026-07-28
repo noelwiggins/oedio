@@ -33,6 +33,13 @@ Last updated: 2026-07-27 (2)
   Zone ID: 0a8eea69e8135d1f0777c681665c32f6. Custom domain already attached on Railway side.
 
 ## Recently completed (this session)
+- Fixed layer desync bug: switching layers (via desktop dropdowns or the mobile cycle button)
+  was resetting scroll to page 1 every time instead of landing on the page you were just
+  reading, so Ottoman/English/Scan drifted apart after any swap. Now tracks currentPageNum
+  live (updated by the existing page-visibility observer), renders enough batches to reach
+  that page in the newly-loaded layer, and scrolls straight to it (or the nearest page that
+  has content, since blanks/covers are legitimately absent from some layers). Switching the
+  right panel now also re-syncs the left panel to the same page automatically.
 - Mobile layer-cycle button rebuilt as a 3-way pill (was a broken binary toggle that only ever
   reached the text side): tap cycles through every entry in a panel_group with a tissue-paper
   crossfade (DOM clone of the outgoing view fades out over the freshly-swapped-in content,

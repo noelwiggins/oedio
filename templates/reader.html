@@ -435,6 +435,7 @@ function escapeHtml(s) {
 }
 let avgTextLength = 200; // recalculated once real page data loads; used for illustration detection
 let renderedCount = 0;
+let currentPageNum = 1; // kept in sync by imgObserver; used to keep layer swaps on the same page
 const panel = document.getElementById('reader-text-panel');
 const imagePanel = document.getElementById('reader-image-panel');
 const imageSentinel = document.getElementById('reader-image-load-sentinel');
@@ -574,6 +575,7 @@ const imgObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const pageNum = entry.target.dataset.page;
+      currentPageNum = parseInt(pageNum, 10);
       pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
       setCookie(RESUME_COOKIE, pageNum);
       updateProgress();
@@ -601,6 +603,16 @@ function renderNextBatch() {
   if (renderedCount >= allPages.length) {
     loadMoreObserver.disconnect();
   }
+}
+
+function findNearestBlock(container, selector, targetPage) {
+  let best = null, bestDiff = Infinity;
+  container.querySelectorAll(selector).forEach(b => {
+    const p = parseInt(b.dataset.page, 10);
+    const diff = Math.abs(p - targetPage);
+    if (diff < bestDiff) { bestDiff = diff; best = b; }
+  });
+  return best;
 }
 
 function renderUpTo(pageNum) {
@@ -706,6 +718,7 @@ async function setLeftSlot(slug) {
   leftSlotSlug = slug;
   const entry = groupEntry(slug);
   const pages = await fetchLayerData(slug);
+  const targetPage = currentPageNum;
   imagePanel.querySelectorAll('.reader-image-block, .reader-simple-text-block').forEach(el => el.remove());
   const frag = document.createDocumentFragment();
   pages.forEach(p => {
@@ -713,22 +726,41 @@ async function setLeftSlot(slug) {
     if (block) frag.appendChild(block);
   });
   imagePanel.insertBefore(frag, imageSentinel);
-  imagePanel.scrollTop = 0;
+  // Land on the same page you were reading in whatever layer was showing
+  // before -- these three layers are the same book, so switching should
+  // feel like flipping a transparency over the same spot, not restarting.
+  const sel = '.reader-image-block, .reader-simple-text-block';
+  const landing = imagePanel.querySelector(`[data-page="${targetPage}"]`) || findNearestBlock(imagePanel, sel, targetPage);
+  if (landing) landing.scrollIntoView({ block: 'start' }); else imagePanel.scrollTop = 0;
 }
 
 async function setRightSlot(slug) {
   const entry = groupEntry(slug);
   const pages = await fetchLayerData(slug);
+  const targetPage = currentPageNum;
   panel.querySelectorAll('.reader-page-block').forEach(el => el.remove());
   loadMoreObserver.disconnect();
   FACSIMILE = entry.kind === 'image';
   allPages = FACSIMILE ? pages.filter(p => p.image) : pages.filter(p => p.text && p.text.trim().length >= 3 && p.text.trim() !== '\u2014');
   renderedCount = 0;
-  panel.scrollTop = 0;
-  renderNextBatch();
+  // Render every batch needed to reach the page you were just on (not just
+  // the first batch), then jump straight there -- this is what keeps all
+  // three layers "in sync" when cycling between them.
+  renderUpTo(targetPage);
+  if (!renderedCount) renderNextBatch();
+  const landing = panel.querySelector(`.reader-page-block[data-page="${targetPage}"]`) || findNearestBlock(panel, '.reader-page-block', targetPage);
+  if (landing) {
+    landing.scrollIntoView({ block: 'start' });
+    currentPageNum = parseInt(landing.dataset.page, 10);
+    pageIndicator.textContent = `Page ${currentPageNum} of ${allPages[allPages.length - 1].page}`;
+  } else {
+    panel.scrollTop = 0;
+  }
   if (renderedCount < allPages.length) loadMoreObserver.observe(sentinel);
   const rightSel = document.getElementById('right-panel-select');
   if (rightSel) rightSel.value = slug;
+  // Keep the companion panel pointed at the same page too, if one is active.
+  if (leftSelect && leftSelect.value) setLeftSlot(leftSelect.value);
 }
 
 const leftSelect = document.getElementById('left-panel-select');
