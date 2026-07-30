@@ -18,7 +18,7 @@ Resumable: merges into existing output files, skipping already-done pages.
 """
 import base64, json, os, re, sys, time
 import urllib.request
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY") or open(
     os.path.expanduser("~/.anthropic_key")).read().strip()
@@ -68,14 +68,14 @@ def call_claude(img_b64, lang, description, want_translation):
             "x-api-key": API_KEY,
             "anthropic-version": "2023-06-01",
             "content-type": "application/json"})
-    for attempt in range(4):
+    for attempt in range(3):
         try:
-            resp = json.loads(urllib.request.urlopen(req, timeout=180).read())
+            resp = json.loads(urllib.request.urlopen(req, timeout=90).read())
             return "".join(b.get("text", "") for b in resp.get("content", []))
         except Exception:
-            if attempt == 3:
+            if attempt == 2:
                 return None
-            time.sleep(20 * (attempt + 1))
+            time.sleep(10 * (attempt + 1))
 
 
 def load_layer(path, source_pages):
@@ -125,14 +125,18 @@ def main(slug, start, end, lang, description=None, want_translation=True):
             return pg, None, None
 
     done = 0
+    processed = 0
     with ThreadPoolExecutor(max_workers=4) as ex:
-        for pg, tr, en in ex.map(work, todo):
+        futures = {ex.submit(work, pg): pg for pg in todo}
+        for fut in as_completed(futures):
+            pg, tr, en = fut.result()
+            processed += 1
             if tr is not None:
                 t_layer[pg]["text"] = tr
                 if want_translation:
                     e_layer[pg]["text"] = en
                 done += 1
-            if done % 10 == 0:
+            if processed % 5 == 0:
                 json.dump(sorted(t_layer.values(), key=lambda p: p["page"]),
                           open(t_path, "w"), ensure_ascii=False)
                 if want_translation:
