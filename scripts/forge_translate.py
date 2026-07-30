@@ -116,7 +116,11 @@ def main(slug, start, end, lang, description=None, want_translation=True):
                 if not m:
                     raise
                 d = json.loads(m.group())
-            return pg, d.get("transcription", ""), (d.get("english", "") if want_translation else None)
+            tr = d.get("transcription", "")
+            en = d.get("english", "") if want_translation else None
+            if tr.strip() == "NO_TEXT":
+                tr, en = "\u2014", ("\u2014" if want_translation else None)
+            return pg, tr, en
         except Exception:
             return pg, None, None
 
