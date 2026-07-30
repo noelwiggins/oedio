@@ -16,7 +16,7 @@ Usage:
 [description] optionally overrides the default work description sentence.
 Resumable: merges into existing output files, skipping already-done pages.
 """
-import base64, json, os, sys, time
+import base64, json, os, re, sys, time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -27,21 +27,21 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROMPT_TRANSLATE = """This is a page from {description}, in {lang}.
 
-1. Transcribe ALL visible text on the page exactly as written, in its original script, preserving line order. Include marginalia only if clearly part of the text tradition (ignore modern pencil shelf-marks, stamps, catalog numbers, or library annotations).
+1. Transcribe ALL visible text on the page exactly as written, in its original script, preserving line order. Include marginalia only if clearly part of the text tradition (ignore modern pencil shelf-marks, stamps, catalog numbers, or library annotations). If the page is damaged or partly illegible, transcribe whatever is legible and mark unreadable portions as [illegible] -- do not add any commentary about the damage.
 2. Then translate the transcribed text into clear, readable English. Preserve the flavor of the original without archaism.
 
 If the page contains no body text (binding, blank leaf, cover, plate with no caption, ruler/color chart), respond with exactly: NO_TEXT
 
-Otherwise respond ONLY with JSON in this exact shape, no markdown fences:
+Respond ONLY with the JSON object below and nothing else -- no markdown fences, no preamble, no explanation of the page's condition, before or after:
 {{"transcription": "...", "english": "..."}}"""
 
 PROMPT_NO_TRANSLATE = """This is a page from {description}, printed in {lang}.
 
-Transcribe ALL visible body text on the page exactly as written (this is a clean OCR pass -- correct only obvious scanning artifacts, not wording). Include captions under illustrations but not modern library stamps or shelf-marks.
+Transcribe ALL visible body text on the page exactly as written (this is a clean OCR pass -- correct only obvious scanning artifacts, not wording). Include captions under illustrations but not modern library stamps or shelf-marks. If the page is damaged or partly illegible, transcribe whatever is legible and mark unreadable portions as [illegible] -- do not add any commentary about the damage.
 
 If the page contains no body text (binding, blank leaf, cover, or a plate with no caption), respond with exactly: NO_TEXT
 
-Otherwise respond ONLY with JSON in this exact shape, no markdown fences:
+Respond ONLY with the JSON object below and nothing else -- no markdown fences, no preamble, no explanation of the page's condition, before or after:
 {{"transcription": "..."}}"""
 
 
@@ -109,7 +109,13 @@ def main(slug, start, end, lang, description=None, want_translation=True):
             if out.startswith("NO_TEXT") or out == "":
                 return pg, "\u2014", "\u2014"
             out = out.strip("`").replace("json\n", "", 1) if out.startswith("`") else out
-            d = json.loads(out)
+            try:
+                d = json.loads(out)
+            except Exception:
+                m = re.search(r"\{.*\}", out, re.DOTALL)
+                if not m:
+                    raise
+                d = json.loads(m.group())
             return pg, d.get("transcription", ""), (d.get("english", "") if want_translation else None)
         except Exception:
             return pg, None, None
