@@ -125,6 +125,16 @@
      "loc_item": "26007331",
      "note": "The landmark 1881 critical Greek text, built from the oldest manuscripts.",
      "facsimile": false
+    },
+    {
+     "slug": "dore-gallery-1890-transcription",
+     "role": "Illustrated Editions",
+     "title": "The Doré Bible Gallery — full captions (AI transcription)",
+     "contributor": "Gustave Doré — transcribed from scans by Claude (AI)",
+     "year": 1890,
+     "loc_item": "10002262",
+     "note": "A far more complete transcription than the original OCR pass (208 of 424 pages carry real caption/description text; the rest are correctly identified as plates or blanks). Three pages were blocked by AI content filtering and are marked as such rather than silently skipped. Unverified.",
+     "facsimile": false
     }
    ]
   },
