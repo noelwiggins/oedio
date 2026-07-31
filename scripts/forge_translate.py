@@ -32,8 +32,11 @@ PROMPT_TRANSLATE = """This is a page from {description}, in {lang}.
 
 If the page contains no body text (binding, blank leaf, cover, plate with no caption, ruler/color chart), respond with exactly: NO_TEXT
 
-Respond ONLY with the JSON object below and nothing else -- no markdown fences, no preamble, no explanation of the page's condition, before or after:
-{{"transcription": "...", "english": "..."}}"""
+Otherwise respond using EXACTLY this plain-text format and nothing else -- no markdown fences, no preamble, no explanation of the page's condition, before or after. Do not use JSON. Reproduce quotation marks in the text normally, verbatim:
+===TRANSCRIPTION===
+(the transcribed text goes here)
+===ENGLISH===
+(the English translation goes here)"""
 
 PROMPT_NO_TRANSLATE = """This is a page from {description}, printed in {lang}.
 
@@ -41,8 +44,9 @@ Transcribe ALL visible body text on the page exactly as written (this is a clean
 
 If the page contains no body text (binding, blank leaf, cover, or a plate with no caption), respond with exactly: NO_TEXT
 
-Respond ONLY with the JSON object below and nothing else -- no markdown fences, no preamble, no explanation of the page's condition, before or after:
-{{"transcription": "..."}}"""
+Otherwise respond using EXACTLY this plain-text format and nothing else -- no markdown fences, no preamble, no explanation of the page's condition, before or after. Do not use JSON. Reproduce quotation marks in the text normally, verbatim:
+===TRANSCRIPTION===
+(the transcribed text goes here)"""
 
 
 def fetch_image_b64(url):
@@ -108,16 +112,30 @@ def main(slug, start, end, lang, description=None, want_translation=True):
             out = out.strip()
             if out.startswith("NO_TEXT") or out == "":
                 return pg, "\u2014", "\u2014"
-            out = out.strip("`").replace("json\n", "", 1) if out.startswith("`") else out
-            try:
-                d = json.loads(out)
-            except Exception:
-                m = re.search(r"\{.*\}", out, re.DOTALL)
-                if not m:
-                    raise
-                d = json.loads(m.group())
-            tr = d.get("transcription", "")
-            en = d.get("english", "") if want_translation else None
+            out = out.strip("`")
+            if out.startswith("json\n"):
+                out = out[5:]
+            if "===TRANSCRIPTION===" in out:
+                tr_part = out.split("===TRANSCRIPTION===", 1)[1]
+                if "===ENGLISH===" in tr_part:
+                    tr, en_part = tr_part.split("===ENGLISH===", 1)
+                    en = en_part.strip()
+                else:
+                    tr, en = tr_part, ""
+                tr = tr.strip()
+            else:
+                # Fallback for legacy/malformed JSON-ish responses
+                try:
+                    d = json.loads(out)
+                except Exception:
+                    m = re.search(r"\{.*\}", out, re.DOTALL)
+                    if not m:
+                        raise
+                    d = json.loads(m.group())
+                tr = d.get("transcription", "")
+                en = d.get("english", "") if want_translation else None
+            if not want_translation:
+                en = None
             if tr.strip() == "NO_TEXT":
                 tr, en = "\u2014", ("\u2014" if want_translation else None)
             return pg, tr, en
