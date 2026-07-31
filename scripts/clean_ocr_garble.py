@@ -87,9 +87,20 @@ def clean_text(text):
     # page itself is catalog-stamp/binding noise that happened to spell a
     # few short real words by coincidence -- clear it entirely.
     total_tokens = sum(len(l.split()) for l in kept)
-    longest_line = max((len(l.split()) for l in kept), default=0)
-    if kept and total_tokens <= 8 and longest_line < 4:
-        return ''
+    # A real title page, index, or heading is made mostly of substantive
+    # words (SAMSON, AGONISTES, PRONUNCIATION, Achilles -- real dictionary
+    # words or proper nouns, 4+ letters). Garbage that happens to survive
+    # per-line filtering is mostly trivial filler (if, a, an, weld, 4, -)
+    # with almost nothing substantive in it. This only applies to short
+    # pages -- real narrative pages have hundreds of tokens and never
+    # reach this fallback at all.
+    def is_substantive(tok):
+        bare = tok.strip('.,;:!?"()[]{}\u2018\u2019')
+        return len(bare) >= 4 and token_plausible(tok)
+    if kept and total_tokens <= 40:
+        subst = sum(1 for l in kept for t in l.split() if is_substantive(t))
+        if subst / total_tokens < 0.3:
+            return ''
     return '\n'.join(kept).strip()
 
 # Books whose OCR is substantially NOT English (transliterated ancient Greek,
