@@ -26,8 +26,14 @@ SECTION_MAP = {s["slug"]: s for s in SECTIONS}
 
 
 def _page_count(slug):
+    """Count pages without loading the whole file into memory.
+    For small files (< 2MB) do exact count; for large files estimate from file size."""
     path = os.path.join(BASE_DIR, "static", "reader-data", f"{slug}.json")
     try:
+        file_size = os.path.getsize(path)
+        if file_size > 2_000_000:
+            # Large file: estimate from size (avg ~5KB per page for scanned text)
+            return int(file_size / 5000)
         with open(path) as fh:
             return len(json.load(fh))
     except Exception:
