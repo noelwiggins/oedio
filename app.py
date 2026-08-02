@@ -42,10 +42,11 @@ def _page_count(slug):
         return 0
 
 
-# Annotate page counts once at startup so templates can show them.
+# Page counts computed lazily per-request in megabook_page() to avoid startup I/O.
+# Set to 0 here so templates that reference c["pages"] don't KeyError.
 for _mb in MEGABOOKS:
     for _c in _mb["components"]:
-        _c["pages"] = _page_count(_c["slug"])
+        _c["pages"] = 0
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +171,10 @@ def megabook_page(mega_slug):
             grouped[c["role"]] = []
             order.append(c["role"])
         grouped[c["role"]].append(c)
+    # Compute page counts lazily here (not at startup) to avoid I/O delays
+    for c in mb["components"]:
+        if c["pages"] == 0:
+            c["pages"] = _page_count(c.get("data_slug", c["slug"]))
     return render_template("megabook.html", now=datetime.utcnow(), mb=mb,
                            grouped=[(r, grouped[r]) for r in order],
                            active_page="library")
