@@ -152,7 +152,8 @@ def section_page(section_slug):
     if not section:
         from flask import abort; abort(404)
     mbs = [mb for mb in MEGABOOKS if mb.get("section") == section_slug]
-    return render_template("section.html", section=section, megabooks=mbs)
+    from datetime import datetime
+    return render_template("section.html", section=section, megabooks=mbs, now=datetime.utcnow(), active_page="library")
 
 
 @app.route("/book/<mega_slug>")
