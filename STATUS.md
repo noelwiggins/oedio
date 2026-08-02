@@ -15,46 +15,51 @@ synchronized facsimile + translation layers.
 - Natural Sciences / Plant Medicine (5 megabooks, 33 botanical manuscript components)
 - Travel & Exploration (Caribbean Travellers — 5 books)
 - History & Society (Caribbean primary documents — 4 books)
-- Cartography (7 historical Caribbean maps with DZI deep-zoom)
+- Cartography (7 historical Caribbean maps)
 
-**Total:** 14 megabooks, 76 components
+**Total:** 14 megabooks, 76 components registered
 
-## Imported content
+**Reader-data coverage: 76/76 components have data files (100%)**
 
-### From Plantacopia (noelwiggins/materia-medica-americana)
-Reader-data copied to static/reader-data/:
-- balds-leechbook.json (279 pages, BL IIIF)
-- leechdoms-anglo-saxon.json (546 pages, IA)
-- erbario-italian.json (46 pages, IA)
-- matthioli-dioscorides-1544.json (448 pages, IA)
-- dongui-vol-01.json through dongui-vol-25.json (all 25 volumes)
-- dongui-alignment.json
+## All content now present
 
-### From PlentyFish (noelwiggins/plentyfish)
-Reader-data copied to static/reader-data/:
-- coleridge-1826.json
-- down-islands-1887.json
-- emancipation-1838.json
-- french-colonies-1867.json
-- gossip-caribbees-1893.json
-- pinkerton-1811.json
-- sailing-directions-1868.json
-- trinidad-1866.json
-- west-indies-1911.json
+### Literature
+- Odyssey: 7 editions (Butcher-Lang 1921, Norgate 1863, Collins 1870, Childrens 1912,
+  Phaeacian Greek 1880, Flaxman plates 1853, Doré Gallery 1890)
+- Bible: KJV 1837, Variorum 1898, Doré Bible, Greek NT 1881
+- Paradise Lost: 3 editions (1852, 1868 Doré, Milton Works 1881)
+- Arabian Nights: 3 editions (1910, 1915, 1924 illustrated)
+- Leaves of Grass: 3 editions (1897, 1900, 1921)
+- Book of Wonders: Ottoman 1553 + transcription + English; Persian 1565 + layers; Persian 1866
 
-## In progress
+### Natural Sciences / Plant Medicine
+All 33 botanical components now have reader-data:
+- Ancient: Ebers Papyrus, Dioscorides, Charaka Samhita, Bencao Gangmu, Bencao Jing,
+  Badianus Manuscript, Cobo Historia
+- Asian: Dongui Bogam (corpus + 25-vol manuscript, 1423 pages), Tibetan Gyushi,
+  Canon of Avicenna, Kampo, Yamato Honzo, Honzo Wamyo, Persian/Avestan
+- African: West African, South African, East African
+- Americas: North American, Amazonian, Maya, Philippine, Australian
+- European: Bald's Leechbook (279pp BL IIIF), Leechdoms Anglo-Saxon (546pp),
+  Erbario Italian (202pp), Matthioli 1544 (448pp), Welsh Myddfai, Norse,
+  Russian Travnik, Commission E, AHP, WHO Monographs
 
-**Forge job #225** — Matthioli 1544 Italian botanical translation (47 segments)
-Status: running. Output: static/data/matthioli_1544_b01.json
-After completion: rebuild corpus shards in Plantacopia to include Matthioli translations.
+### Caribbean Travel & History
+- Travel: Coleridge 1826, Down the Islands 1887, Gossip of the Caribbees 1893,
+  Trinidad 1866, West Indies 1911
+- History: Emancipation 1838, French Colonies 1867, Sailing Directions 1868, Pinkerton 1811
+
+### Cartography
+7 historical maps: Roggeveen 1675, Blaeu 1634, Thornton 1680, Coronelli 1690,
+Schenk 1710, Bellin 1758, Lopez 1781
 
 ## Pending — needs implementation
 
-1. **section.html template** — landing page for each section (literature/natural-science/travel/etc)
-   needs: section header, megabook grid, component count
-2. **index.html update** — Oedio homepage needs section navigation cards
-3. **reader.html** — already handles facsimile + translation layers (full-featured)
-4. **Matthioli English translation** — after Forge #225 completes, add english layer to reader
-5. **Cartography section** — DZI maps from PlentyFish need a dedicated map viewer
-   (existing /historical-maps viewer in PlentyFish is the reference)
+1. **section.html template** — landing page for each section
+2. **index.html update** — section navigation cards on homepage  
+3. **Matthioli English translation** — Forge job pending (47 segments)
+4. **Deeper Dongui-bogam / dongui-bogam-ms pages** — currently show corpus text;
+   could link to the 1,423 scan pages in static/reader-data/dongui-vol-*.json
+5. **Cartography viewer** — maps currently have 1-page stubs; 
+   full DZI deep-zoom viewer needed (reference: PlentyFish /historical-maps)
 6. **PlentyFish redirect** — plentyfish.ai should surface Oedio travel/cartography sections
