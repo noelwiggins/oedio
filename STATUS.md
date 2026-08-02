@@ -2,29 +2,53 @@
 
 Last updated: 2026-08-02
 
-## Live site
-- URL: oedio.com
-- 14 megabooks, 76 components, 100% reader-data coverage
-- 5 sections: Literature, Natural Sciences, Travel, Cartography, History
+## 🚨 ACTION REQUIRED: Manual Railway Redeploy
 
-## What was completed this session
-- [x] 76/76 manifest components now have reader-data files
-- [x] 29 botanical corpus books built from Plantacopia corpus segments
-- [x] 7 Caribbean cartography map stubs pushed
-- [x] balds-leechbook-ms (279pp) and leechdoms-cockayne (546pp) copied from Plantacopia
-- [x] section.html template: section landing page with megabook grid cards
-- [x] index.html rebuilt: 5 section navigation cards + full spine shelf below
-- [x] app.py syntax error fixed (library() route)
-- [x] Matthioli 1544 corpus (30 clean segments) added to Plantacopia corpus
+Railway auto-deploy is not picking up GitHub commits for this repo.
+The live site (oedio.com) is running OLD code with only 6 megabooks.
 
-## Pending
-1. Deploy verification — confirm Railway redeploys cleanly after app.py fix
-2. Cartography section — maps have 1-page stubs; DZI deep-zoom viewer needed
-   (reference: PlentyFish /historical-maps viewer)
-3. Deeper Dongui-bogam reader — could expose the 1,423 scan pages from dongui-vol-*.json
-   via the standard reader rather than the corpus-text stub
-4. Matthioli English translation layer — could be added as second reader panel
-   once Forge job produces full English output (currently Italian only)
-5. PlentyFish redirect — plentyfish.ai should link to Oedio travel/cartography sections
+**To deploy the new code:**
+1. Go to railway.app → oedio project
+2. Click the web service → Deployments
+3. Click "Redeploy" on the latest deployment, or trigger a new deployment
 
-<!-- deploy trigger 2026-08-02T22:34:29.959234 -->
+All code changes are committed and ready. Once Railway redeploys:
+- Homepage will show 5 section navigation cards + all 14 megabook spines
+- /section/<slug> routes will work
+- All 76 components have reader-data
+
+## Code state (all committed to GitHub main)
+
+- app.py: section_page() route added, _page_count() fast version (skips >500KB files), syntax OK
+- templates/index.html: 5 section cards + spine shelf
+- templates/section.html: megabook grid for each section
+- data/manifest.json: 14 megabooks, 76 components, 5 sections
+- static/reader-data/: 76 JSON files present (100% coverage)
+- Procfile: gunicorn --timeout 120 --preload --workers 1
+
+## Content state
+
+**14 megabooks, 76 components, 100% reader-data coverage**
+
+### Literature (6 megabooks)
+Odyssey (7 eds), Bible (4 eds), Paradise Lost (3 eds), Arabian Nights (3 eds),
+Leaves of Grass (3 eds), Book of Wonders (7 eds)
+
+### Natural Sciences (5 megabooks)
+Ancient & Classical (7 books), Asian Botanical (8 books), African (3 books),
+Americas (5 books), European (10 books)
+
+### Travel & Exploration (1 megabook)
+Caribbean Travellers (5 books)
+
+### Cartography (1 megabook)
+7 historical Caribbean maps
+
+### History & Society (1 megabook)
+4 Caribbean primary documents
+
+## Pending (post-redeploy)
+1. Cartography maps — 1-page stubs; DZI deep-zoom viewer needed
+2. Deeper Dongui-bogam reader — could expose 1,423 scan pages
+3. Matthioli English translation layer
+4. PlentyFish → Oedio redirect for travel/cartography content
