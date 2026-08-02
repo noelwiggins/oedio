@@ -1,358 +1,993 @@
 {
- "megabooks": [
-  {
-   "slug": "odyssey",
-   "title": "The Odyssey",
-   "author": "Homer",
-   "spine_color": "linear-gradient(160deg,#6d2f2a,#4a1e1a)",
-   "description": "Homer's epic of return, compiled here from six pre-1929 printings digitized by the Library of Congress: the classic Butcher & Lang prose translation, a Victorian verse rendering, the ancient Greek of the Phaeacian books, John Flaxman's celebrated illustrated edition, a scholarly companion, and a children's retelling. One work, many doors in.",
-   "components": [
+  "sections": [
     {
-     "slug": "butcher-lang-1921",
-     "role": "Translations",
-     "title": "The Odyssey of Homer (prose)",
-     "contributor": "Trans. S. H. Butcher & Andrew Lang",
-     "year": 1921,
-     "loc_item": "24021029",
-     "note": "The standard prose translation of its era — the version most English readers of the early 20th century knew.",
-     "facsimile": false
+      "slug": "literature",
+      "title": "Literature",
+      "description": "Epic poetry, sacred texts, and the foundational works of world literature.",
+      "icon": "📖"
     },
     {
-     "slug": "norgate-1863",
-     "role": "Translations",
-     "title": "The Odyssey (verse)",
-     "contributor": "Trans. Thomas Starling Norgate",
-     "year": 1863,
-     "loc_item": "10000284",
-     "note": "A Victorian rendering in dramatic blank verse — read it against Butcher & Lang to feel how much a translator's choices shape the poem.",
-     "facsimile": false
+      "slug": "natural-science",
+      "title": "Natural Sciences",
+      "description": "Botany, medicine, natural history, and the observation of the natural world across civilizations.",
+      "icon": "🌿"
     },
     {
-     "slug": "phaeacian-greek-1880",
-     "role": "Original Greek",
-     "title": "The Phæacian Episode (Books VI–VIII, XIII)",
-     "contributor": "Ed. Augustus C. Merriam",
-     "year": 1880,
-     "loc_item": "24016674",
-     "note": "The ancient Greek text of the Phaeacian books with 19th-century scholarly apparatus. Presented as page facsimiles — OCR does not survive polytonic Greek.",
-     "facsimile": true
+      "slug": "travel",
+      "title": "Travel & Exploration",
+      "description": "Voyages, accounts, and firsthand observations of the Caribbean and beyond.",
+      "icon": "⚓"
     },
     {
-     "slug": "flaxman-1853",
-     "role": "Illustrated Editions",
-     "title": "The Odyssey, with Flaxman's Designs",
-     "contributor": "Trans. T. A. Buckley · Ill. John Flaxman",
-     "year": 1853,
-     "loc_item": "12034441",
-     "note": "John Flaxman's neoclassical outline engravings — among the most influential Homer illustrations ever made. Browse as facsimile plates.",
-     "facsimile": true
+      "slug": "cartography",
+      "title": "Cartography",
+      "description": "Historical maps, nautical charts, and the science of place from the 17th century to the present.",
+      "icon": "🗺"
     },
     {
-     "slug": "collins-1870",
-     "role": "Commentary & Companions",
-     "title": "Homer: The Odyssey (Ancient Classics for English Readers)",
-     "contributor": "W. Lucas Collins",
-     "year": 1870,
-     "loc_item": "unk82041774",
-     "note": "A compact Victorian companion — plot, composition, and context in 156 pages. A good first door into the epic.",
-     "facsimile": false
-    },
-    {
-     "slug": "childrens-1912",
-     "role": "Retellings",
-     "title": "The Children's Odyssey",
-     "contributor": "Told from Homer in simple language",
-     "year": 1912,
-     "loc_item": "12024027",
-     "note": "The epic retold for young readers — a reminder that every generation rebuilds Homer for itself.",
-     "facsimile": false
-    },
-    {
-     "slug": "flaxman-1853-transcription",
-     "role": "Illustrated Editions",
-     "title": "The Odyssey, with Flaxman's Designs — full text (AI transcription)",
-     "contributor": "Trans. T. A. Buckley — transcribed from scans by Claude (AI)",
-     "year": 1853,
-     "loc_item": "12034441",
-     "note": "The complete Buckley translation transcribed from the printed page images, all 402 pages, alongside the source scans and Flaxman's plates. Unverified.",
-     "facsimile": false
-    },
-    {
-     "slug": "phaeacian-greek-1880-transcription",
-     "role": "Original Greek",
-     "title": "The Phæacian Episode — Greek text (AI transcription)",
-     "contributor": "Ed. Augustus C. Merriam — transcribed from scans by Claude (AI)",
-     "year": 1880,
-     "loc_item": "24016674",
-     "note": "The ancient Greek transcribed from the scanned page images into readable, searchable text. Unverified.",
-     "facsimile": false
-    },
-    {
-     "slug": "phaeacian-greek-1880-english",
-     "role": "Translations",
-     "title": "The Phæacian Episode — English (AI translation)",
-     "contributor": "Translated from the Greek by Claude (AI)",
-     "year": 1880,
-     "loc_item": "24016674",
-     "note": "An AI translation of Books VI-VIII and XIII directly from this 1880 scholarly edition of the ancient Greek. Unverified.",
-     "facsimile": false
+      "slug": "history",
+      "title": "History & Society",
+      "description": "Primary documents, official records, and eyewitness histories.",
+      "icon": "📜"
     }
-   ]
-  },
-  {
-   "slug": "bible",
-   "title": "The Bible",
-   "author": "",
-   "spine_color": "linear-gradient(160deg,#1e2d4f,#101a30)",
-   "description": "Scripture as a megabook: the King James text beside a monumental Victorian variorum apparatus, Gustave Doré's complete engravings, and the Greek New Testament of Westcott & Hort — the critical edition that changed biblical scholarship. Four doors into the most-printed book on earth.",
-   "components": [
+  ],
+  "megabooks": [
     {
-     "slug": "kjv-1837",
-     "role": "Translations",
-     "title": "The Holy Bible, King James Version",
-     "contributor": "Authorized Version · printed 1837",
-     "year": 1837,
-     "loc_item": "33004908",
-     "note": "The 1611 Authorized Version as the 19th century read it — the base text of English-speaking scripture.",
-     "facsimile": false
+      "slug": "odyssey",
+      "section": "literature",
+      "title": "The Odyssey",
+      "author": "Homer",
+      "spine_color": "linear-gradient(160deg,#6d2f2a,#4a1e1a)",
+      "description": "Homer's epic of return, compiled from six pre-1929 printings including two complete translations, the Doré illustration folio, and the original Ancient Greek text.",
+      "components": [
+        {
+          "slug": "butcher-lang-1921",
+          "role": "Translation",
+          "title": "The Odyssey of Homer (prose)",
+          "contributor": "Trans. S. H. Butcher & Andrew Lang",
+          "year": 1921,
+          "loc_item": "24021029",
+          "note": "Standard prose translation.",
+          "facsimile": false
+        },
+        {
+          "slug": "norgate-1863",
+          "role": "Translation",
+          "title": "The Odyssey (verse)",
+          "contributor": "Trans. John Norgate",
+          "year": 1863,
+          "loc_item": "07007760",
+          "note": "Victorian verse translation.",
+          "facsimile": false
+        },
+        {
+          "slug": "collins-1870",
+          "role": "Translation",
+          "title": "The Iliad and Odyssey",
+          "contributor": "Trans. W. Lucas Collins",
+          "year": 1870,
+          "loc_item": "21013764",
+          "note": "Prose summary edition.",
+          "facsimile": false
+        },
+        {
+          "slug": "childrens-1912",
+          "role": "Adaptation",
+          "title": "Stories of the Odyssey",
+          "contributor": "Ada Dodd",
+          "year": 1912,
+          "loc_item": "12028375",
+          "note": "Young readers' adaptation.",
+          "facsimile": false
+        },
+        {
+          "slug": "phaeacian-greek-1880",
+          "role": "Original text",
+          "title": "Odyssey Books VI–VIII (Greek)",
+          "contributor": "Ed. W. W. Merry",
+          "year": 1880,
+          "loc_item": "10036017",
+          "note": "Phaeacian episode in Ancient Greek.",
+          "facsimile": false
+        },
+        {
+          "slug": "flaxman-1853",
+          "role": "Illustrations",
+          "title": "Flaxman's Iliad & Odyssey Plates",
+          "contributor": "John Flaxman",
+          "year": 1853,
+          "loc_item": "04003695",
+          "note": "Neoclassical engravings.",
+          "facsimile": true
+        },
+        {
+          "slug": "dore-gallery-1890",
+          "role": "Illustrations",
+          "title": "Doré Gallery Illustrations",
+          "contributor": "Gustave Doré",
+          "year": 1890,
+          "loc_item": "09001990",
+          "note": "Doré's dramatic Odyssey engravings.",
+          "facsimile": true
+        }
+      ]
     },
     {
-     "slug": "variorum-1898",
-     "role": "Commentary & Companions",
-     "title": "The Variorum Teacher's Bible",
-     "contributor": "Eyre & Spottiswoode",
-     "year": 1898,
-     "loc_item": "04018062",
-     "note": "Nearly 2,000 pages: the KJV with variant readings and renderings from dozens of scholars compiled verse by verse — a megabook avant la lettre.",
-     "facsimile": false
+      "slug": "bible",
+      "section": "literature",
+      "title": "The Bible",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#1a3a5a,#0a1e3a)",
+      "description": "The King James Version and companion texts — illustrated editions, annotated versions, and the original Greek New Testament.",
+      "components": [
+        {
+          "slug": "kjv-1837",
+          "role": "Translation",
+          "title": "The Holy Bible (KJV)",
+          "contributor": "King James Version",
+          "year": 1837,
+          "loc_item": "07019849",
+          "note": "Landmark 1837 American edition.",
+          "facsimile": false
+        },
+        {
+          "slug": "variorum-1898",
+          "role": "Commentary",
+          "title": "The Variorum Bible",
+          "contributor": "Ed. F. H. A. Scrivener",
+          "year": 1898,
+          "loc_item": "04002782",
+          "note": "Comprehensive variorum edition with all textual variants.",
+          "facsimile": false
+        },
+        {
+          "slug": "dore-gallery-1890",
+          "role": "Illustrations",
+          "title": "Doré Bible Illustrations",
+          "contributor": "Gustave Doré",
+          "year": 1890,
+          "loc_item": "09001990",
+          "note": "Doré's iconic Biblical engravings.",
+          "facsimile": true
+        },
+        {
+          "slug": "greek-nt-1881",
+          "role": "Original text",
+          "title": "Greek New Testament",
+          "contributor": "Ed. F. H. A. Scrivener",
+          "year": 1881,
+          "loc_item": "02013451",
+          "note": "Critical edition of the Greek text.",
+          "facsimile": false
+        }
+      ]
     },
     {
-     "slug": "dore-gallery-1890",
-     "role": "Illustrated Editions",
-     "title": "The Doré Bible Gallery",
-     "contributor": "Gustave Doré",
-     "year": 1890,
-     "loc_item": "10002262",
-     "note": "Doré's celebrated engravings with facing descriptions — the images that fixed the Bible's look in the popular imagination.",
-     "facsimile": false
+      "slug": "paradise-lost",
+      "section": "literature",
+      "title": "Paradise Lost",
+      "author": "John Milton",
+      "spine_color": "linear-gradient(160deg,#1a1a3a,#0a0a2a)",
+      "description": "Milton's epic poem in three editions spanning 1852–1881 — including Doré's landmark illustration set and Milton's complete works.",
+      "components": [
+        {
+          "slug": "paradise-lost-1852",
+          "role": "Primary text",
+          "title": "Paradise Lost (1852)",
+          "contributor": "Ed. Thomas Newton",
+          "year": 1852,
+          "loc_item": "12017064",
+          "note": "Standard annotated edition.",
+          "facsimile": false
+        },
+        {
+          "slug": "paradise-lost-1868",
+          "role": "Illustrated",
+          "title": "Paradise Lost — Doré edition",
+          "contributor": "Illus. Gustave Doré",
+          "year": 1868,
+          "loc_item": "02013073",
+          "note": "Doré's defining illustration set.",
+          "facsimile": false
+        },
+        {
+          "slug": "milton-works-1881",
+          "role": "Complete works",
+          "title": "The Poetical Works of John Milton",
+          "contributor": "Ed. David Masson",
+          "year": 1881,
+          "loc_item": "00003394",
+          "note": "Complete poems with Latin originals.",
+          "facsimile": false
+        }
+      ]
     },
     {
-     "slug": "greek-nt-1881",
-     "role": "Original Languages",
-     "title": "The New Testament in the Original Greek",
-     "contributor": "Westcott & Hort",
-     "year": 1881,
-     "loc_item": "26007331",
-     "note": "The landmark 1881 critical Greek text, built from the oldest manuscripts.",
-     "facsimile": false
+      "slug": "arabian-nights",
+      "section": "literature",
+      "title": "The Arabian Nights",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#3a2a0a,#1a1005)",
+      "description": "Three complete English editions of the Thousand and One Nights, spanning 1910–1924.",
+      "components": [
+        {
+          "slug": "arabian-nights-1910",
+          "role": "Translation",
+          "title": "The Arabian Nights (1910)",
+          "contributor": "Trans. anonymous",
+          "year": 1910,
+          "loc_item": "10011047",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "arabian-nights-1915",
+          "role": "Translation",
+          "title": "The Thousand and One Nights (1915)",
+          "contributor": "Trans. E. W. Lane",
+          "year": 1915,
+          "loc_item": "15016534",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "arabian-nights-1924",
+          "role": "Translation",
+          "title": "The Arabian Nights (1924 illustrated)",
+          "contributor": "Illus. Milo Winter",
+          "year": 1924,
+          "loc_item": "24001239",
+          "note": "",
+          "facsimile": false
+        }
+      ]
     },
     {
-     "slug": "dore-gallery-1890-transcription",
-     "role": "Illustrated Editions",
-     "title": "The Doré Bible Gallery — full captions (AI transcription)",
-     "contributor": "Gustave Doré — transcribed from scans by Claude (AI)",
-     "year": 1890,
-     "loc_item": "10002262",
-     "note": "A far more complete transcription than the original OCR pass (208 of 424 pages carry real caption/description text; the rest are correctly identified as plates or blanks). Three pages were blocked by AI content filtering and are marked as such rather than silently skipped. Unverified.",
-     "facsimile": false
+      "slug": "leaves-of-grass",
+      "section": "literature",
+      "title": "Leaves of Grass",
+      "author": "Walt Whitman",
+      "spine_color": "linear-gradient(160deg,#2a4a1a,#1a3a0a)",
+      "description": "Walt Whitman's defining collection in three editions — 1897, 1900, and the 1921 posthumous edition.",
+      "components": [
+        {
+          "slug": "leaves-1897",
+          "role": "Primary text",
+          "title": "Leaves of Grass (1897)",
+          "contributor": "Walt Whitman",
+          "year": 1897,
+          "loc_item": "04016027",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "leaves-1900",
+          "role": "Primary text",
+          "title": "Leaves of Grass (1900)",
+          "contributor": "Walt Whitman",
+          "year": 1900,
+          "loc_item": "00003826",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "leaves-1921",
+          "role": "Primary text",
+          "title": "Leaves of Grass (1921)",
+          "contributor": "Walt Whitman",
+          "year": 1921,
+          "loc_item": "21014058",
+          "note": "",
+          "facsimile": false
+        }
+      ]
+    },
+    {
+      "slug": "book-of-wonders",
+      "section": "literature",
+      "title": "Acâibü'l-Mahlûkât · The Book of Wonders",
+      "author": "Zakarīyā ibn Muḥammad al-Qazwīnī",
+      "spine_color": "linear-gradient(160deg,#4a2a0a,#2a1005)",
+      "description": "The 13th-century Islamic cosmography — Ottoman, Persian, and French editions spanning 1553–1866, with AI-translated English layer.",
+      "components": [
+        {
+          "slug": "wonders-ottoman-1553",
+          "role": "Original text",
+          "title": "Book of Wonders (Ottoman, 1553)",
+          "contributor": "Zakarīyā al-Qazwīnī",
+          "year": 1553,
+          "loc_item": "",
+          "note": "Ottoman Turkish manuscript.",
+          "facsimile": true
+        },
+        {
+          "slug": "wonders-ottoman-1553-transcription",
+          "role": "Transcription",
+          "title": "Ottoman text — Latin-alphabet transliteration",
+          "contributor": "Forge AI",
+          "year": 2025,
+          "loc_item": "",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "wonders-ottoman-1553-english",
+          "role": "Translation",
+          "title": "Book of Wonders — English translation",
+          "contributor": "Forge AI translation",
+          "year": 2025,
+          "loc_item": "",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "wonders-persian-1565",
+          "role": "Original text",
+          "title": "Book of Wonders (Persian, 1565)",
+          "contributor": "Zakarīyā al-Qazwīnī",
+          "year": 1565,
+          "loc_item": "",
+          "note": "Persian manuscript — 176 pages, in progress.",
+          "facsimile": true
+        },
+        {
+          "slug": "wonders-persian-1565-transcription",
+          "role": "Transcription",
+          "title": "Persian 1565 — transliteration",
+          "contributor": "Forge AI",
+          "year": 2025,
+          "loc_item": "",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "wonders-persian-1565-english",
+          "role": "Translation",
+          "title": "Persian 1565 — English translation",
+          "contributor": "Forge AI",
+          "year": 2025,
+          "loc_item": "",
+          "note": "",
+          "facsimile": false
+        },
+        {
+          "slug": "wonders-persian-1866",
+          "role": "Edition",
+          "title": "Book of Wonders (Persian, 1866)",
+          "contributor": "Wüstenfeld edition",
+          "year": 1866,
+          "loc_item": "",
+          "note": "",
+          "facsimile": true
+        }
+      ]
+    },
+    {
+      "slug": "materia-medica-ancient",
+      "section": "natural-science",
+      "subsection": "plant-medicine",
+      "title": "Ancient & Classical Herbalism",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#1a3a0a,#0a2005)",
+      "description": "The foundational plant medicine texts of the ancient world — Egyptian, Greek, Ayurvedic, Chinese, and Mesoamerican primary sources.",
+      "components": [
+        {
+          "slug": "ebers-papyrus",
+          "role": "Primary text",
+          "title": "Papyrus Ebers (c.1550 BCE)",
+          "contributor": "Ancient Egyptian physicians",
+          "year": -1550,
+          "loc_item": "",
+          "note": "Oldest surviving medical document. 700 remedies across 110 pages of hieratic script.",
+          "facsimile": false,
+          "tradition": "egyptian"
+        },
+        {
+          "slug": "dioscorides-materia-medica",
+          "role": "Primary text",
+          "title": "De Materia Medica — Dioscorides",
+          "contributor": "Pedanius Dioscorides",
+          "year": 70,
+          "loc_item": "",
+          "note": "600 plants documented by the Greek physician who served Nero's army. The foundational pharmacopoeia for 1,500 years.",
+          "facsimile": false,
+          "tradition": "greek_roman"
+        },
+        {
+          "slug": "charaka-samhita",
+          "role": "Primary text",
+          "title": "Charaka Samhita (c.600 BCE)",
+          "contributor": "Charaka",
+          "year": -600,
+          "loc_item": "",
+          "note": "Core Ayurvedic compendium. Documents 340 plant drugs across 8 branches of medicine.",
+          "facsimile": false,
+          "tradition": "ayurveda"
+        },
+        {
+          "slug": "bencao-gangmu",
+          "role": "Primary text",
+          "title": "Bencao Gangmu (本草綱目, 1596)",
+          "contributor": "Li Shizhen",
+          "year": 1596,
+          "loc_item": "",
+          "note": "The Great Pharmacopoeia. 1,892 medicinal substances documented over 27 years — the largest premodern natural history in any language.",
+          "facsimile": false,
+          "tradition": "chinese"
+        },
+        {
+          "slug": "bencao-jing",
+          "role": "Primary text",
+          "title": "Shennong Bencao Jing (c.200 CE)",
+          "contributor": "Shennong (attributed)",
+          "year": 200,
+          "loc_item": "",
+          "note": "The Divine Farmer's Classic — 365 plant, mineral, and animal drugs in three grades.",
+          "facsimile": false,
+          "tradition": "chinese"
+        },
+        {
+          "slug": "badianus-manuscript",
+          "role": "Facsimile",
+          "title": "Badianus Manuscript (1552)",
+          "contributor": "Martín de la Cruz / Juan Badianus",
+          "year": 1552,
+          "loc_item": "",
+          "note": "First New World herbal. Aztec physician documents 180 Nahuatl plant remedies with color illustrations — unique surviving copy.",
+          "facsimile": true,
+          "tradition": "mesoamerican"
+        },
+        {
+          "slug": "cobo-historia",
+          "role": "Primary text",
+          "title": "Historia del Nuevo Mundo (1653)",
+          "contributor": "Bernabé Cobo",
+          "year": 1653,
+          "loc_item": "",
+          "note": "Jesuit natural history of the Americas. Documents medicinal uses of hundreds of plants across Andean and Mesoamerican traditions.",
+          "facsimile": false,
+          "tradition": "mesoamerican"
+        }
+      ]
+    },
+    {
+      "slug": "materia-medica-asian",
+      "section": "natural-science",
+      "subsection": "plant-medicine",
+      "title": "Asian Botanical Medicine",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#3a1a0a,#1a0a05)",
+      "description": "Traditional medical texts from Korea, Japan, Tibet, Persia, and the Islamic world.",
+      "components": [
+        {
+          "slug": "dongui-bogam",
+          "role": "Primary text",
+          "title": "Dongui Bogam (東醫寶鑑, 1613)",
+          "contributor": "Heo Jun (許浚)",
+          "year": 1613,
+          "loc_item": "",
+          "note": "UNESCO Memory of the World. Korea's National Treasure No.1085. 25 volumes synthesizing 2,000 years of East Asian medicine.",
+          "facsimile": false,
+          "tradition": "korean",
+          "corpus_keys": [
+            "korean",
+            "dongui_new_b01",
+            "dongui_new_b02",
+            "dongui_expanded_b01"
+          ]
+        },
+        {
+          "slug": "dongui-bogam-ms",
+          "role": "Manuscript scans",
+          "title": "Dongui Bogam — Original Manuscript (NLK scans)",
+          "contributor": "National Library of Korea",
+          "year": 1613,
+          "loc_item": "",
+          "note": "All 25 volumes as manuscript facsimile scans from the National Library of Korea.",
+          "facsimile": true,
+          "tradition": "korean",
+          "reader_data_file": "dongui-vol-01.json",
+          "reader_data_alignment": "dongui-alignment.json"
+        },
+        {
+          "slug": "tibetan-gyushi",
+          "role": "Primary text",
+          "title": "Gyushi — Four Tantras of Tibetan Medicine",
+          "contributor": "Yuthok Yönten Gönpo",
+          "year": 1200,
+          "loc_item": "",
+          "note": "The foundational text of Tibetan medicine. 156 chapters across four tantras.",
+          "facsimile": false,
+          "tradition": "tibetan"
+        },
+        {
+          "slug": "canon-avicenna",
+          "role": "Primary text",
+          "title": "The Canon of Medicine (1025)",
+          "contributor": "Ibn Sīnā (Avicenna)",
+          "year": 1025,
+          "loc_item": "",
+          "note": "The most influential medical textbook in history. Used in European universities until the 17th century. 800+ plant drugs.",
+          "facsimile": false,
+          "tradition": "unani"
+        },
+        {
+          "slug": "kampo-tradition",
+          "role": "Primary text",
+          "title": "Kampo Traditional Medicine",
+          "contributor": "Japanese Kampo physicians",
+          "year": 1800,
+          "loc_item": "",
+          "note": "Japanese adaptation of Chinese medicine — 210 classical formulas still used in modern Japanese healthcare.",
+          "facsimile": false,
+          "tradition": "kampo"
+        },
+        {
+          "slug": "yamato-honzo",
+          "role": "Primary text",
+          "title": "Yamato Honzo (大和本草, 1709)",
+          "contributor": "Kaibara Ekiken (貝原益軒)",
+          "year": 1709,
+          "loc_item": "",
+          "note": "Foundational encyclopedia of Japanese natural history. 1,362 plant species — first systematic separation of Japanese from Chinese botany.",
+          "facsimile": false,
+          "tradition": "japanese_honzo"
+        },
+        {
+          "slug": "honzo-wamyo",
+          "role": "Primary text",
+          "title": "Honzo Wamyo (本草和名, 918 CE)",
+          "contributor": "Fukane no Sukehito",
+          "year": 918,
+          "loc_item": "",
+          "note": "Japan's oldest surviving pharmacopoeia. Japanese vernacular names alongside Chinese pharmaceutical terms.",
+          "facsimile": false,
+          "tradition": "japanese_honzo"
+        },
+        {
+          "slug": "persian-avestan",
+          "role": "Primary text",
+          "title": "Avestan / Zoroastrian Plant Medicine",
+          "contributor": "Various Zoroastrian physicians",
+          "year": 600,
+          "loc_item": "",
+          "note": "Plant medicine from the Zoroastrian tradition — haoma, medicinal herbs of ancient Persia.",
+          "facsimile": false,
+          "tradition": "persian_zoroastrian"
+        }
+      ]
+    },
+    {
+      "slug": "materia-medica-african",
+      "section": "natural-science",
+      "subsection": "plant-medicine",
+      "title": "African Plant Medicine",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#3a2a0a,#1a1205)",
+      "description": "Traditional plant medicine from across the African continent — West African, East African, South African, and Ethiopian traditions.",
+      "components": [
+        {
+          "slug": "west-african-medicine",
+          "role": "Primary text",
+          "title": "West African Traditional Medicine",
+          "contributor": "West African healers",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant knowledge of the Guinea Coast and Sahel — 648 passages documenting medicinal plants across the healing traditions of West Africa.",
+          "facsimile": false,
+          "tradition": "west_african"
+        },
+        {
+          "slug": "south-african-medicine",
+          "role": "Primary text",
+          "title": "Southern African Traditional Medicine",
+          "contributor": "San, Zulu, Xhosa, Khoikhoi physicians",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant medicine of the San, Zulu, Xhosa, and Khoikhoi — including Aloe ferox, Buchu, Rooibos, and Hoodia.",
+          "facsimile": false,
+          "tradition": "south_african"
+        },
+        {
+          "slug": "east-african-medicine",
+          "role": "Primary text",
+          "title": "Ethiopian & East African Medicine",
+          "contributor": "Ethiopian physicians",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant medicine of Ethiopia, Kenya, and East Africa including Kigelia africana and Hagenia abyssinica.",
+          "facsimile": false,
+          "tradition": "east_african"
+        }
+      ]
+    },
+    {
+      "slug": "materia-medica-americas",
+      "section": "natural-science",
+      "subsection": "plant-medicine",
+      "title": "Plant Medicine of the Americas",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#1a3a2a,#0a1a12)",
+      "description": "Indigenous and traditional plant medicine from North America, the Amazon, Mesoamerica, and the Philippines.",
+      "components": [
+        {
+          "slug": "north-american-medicine",
+          "role": "Primary text",
+          "title": "North American Indigenous Medicine",
+          "contributor": "Native American healers",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant knowledge of Native American nations — Echinacea, Black cohosh, Goldenseal, Sassafras, and 60+ other medicinal plants.",
+          "facsimile": false,
+          "tradition": "north_american"
+        },
+        {
+          "slug": "amazonian-medicine",
+          "role": "Primary text",
+          "title": "Amazonian Plant Medicine",
+          "contributor": "Amazonian healers",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant medicine of the Amazon basin — Ayahuasca (Banisteriopsis caapi), Cat's claw, Sangre de drago, and 16 other compounds.",
+          "facsimile": false,
+          "tradition": "amazonian"
+        },
+        {
+          "slug": "maya-medicine",
+          "role": "Primary text",
+          "title": "Maya Botanical Medicine",
+          "contributor": "Maya healers and scribes",
+          "year": 900,
+          "loc_item": "",
+          "note": "Plant remedies from the Maya tradition documented in colonial-era texts and surviving codices.",
+          "facsimile": false,
+          "tradition": "mesoamerican"
+        },
+        {
+          "slug": "philippine-medicine",
+          "role": "Primary text",
+          "title": "Philippine Traditional Medicine",
+          "contributor": "Filipino healers",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant medicine of the Philippine archipelago — Betel, Lagundi, Akapulko, Sambong.",
+          "facsimile": false,
+          "tradition": "philippine"
+        },
+        {
+          "slug": "australian-medicine",
+          "role": "Primary text",
+          "title": "Australian Aboriginal Plant Medicine",
+          "contributor": "Aboriginal healers",
+          "year": 1900,
+          "loc_item": "",
+          "note": "Plant knowledge of Australian Aboriginal peoples — Tea tree, Eucalyptus, Kangaroo apple, and 15 more.",
+          "facsimile": false,
+          "tradition": "australian"
+        }
+      ]
+    },
+    {
+      "slug": "materia-medica-european",
+      "section": "natural-science",
+      "subsection": "plant-medicine",
+      "title": "European Botanical Medicine",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#2a1a3a,#120a1a)",
+      "description": "Medieval, Celtic, Anglo-Saxon, Italian Renaissance, Russian, Welsh, Norse, and modern European botanical medicine texts — including manuscript facsimiles.",
+      "components": [
+        {
+          "slug": "balds-leechbook-ms",
+          "role": "Facsimile",
+          "title": "Bald's Leechbook — Manuscript (c.950 CE)",
+          "contributor": "Bald & Cild, Winchester scriptorium",
+          "year": 950,
+          "loc_item": "",
+          "note": "England's oldest medical compendium. British Library Royal MS 12 D XVII. 279 pages. A remedy in this book was recently proven to kill MRSA.",
+          "facsimile": true,
+          "tradition": "celtic_norse",
+          "reader_data_file": "balds-leechbook.json"
+        },
+        {
+          "slug": "leechdoms-cockayne",
+          "role": "Translation",
+          "title": "Leechdoms, Wortcunning & Starcraft (1864)",
+          "contributor": "Trans. Thomas Cockayne",
+          "year": 1864,
+          "loc_item": "",
+          "note": "546 pages. Cockayne's bilingual edition — Old English original beside English translation. Contains Bald's Leechbook, Old English Herbarium, and the Lacnunga charm collection.",
+          "facsimile": false,
+          "tradition": "celtic_norse",
+          "reader_data_file": "leechdoms-anglo-saxon.json"
+        },
+        {
+          "slug": "erbario-italian",
+          "role": "Facsimile",
+          "title": "Erbario — Italian Herbal Manuscript (c.1400)",
+          "contributor": "Unknown Northern Italian physician",
+          "year": 1400,
+          "loc_item": "ljs419",
+          "note": "180 botanical illustrations. Human-faced mandrake roots prescribed as anesthetics. The bridge between medieval and Renaissance botanical science.",
+          "facsimile": true,
+          "tradition": "italian_renaissance",
+          "reader_data_file": "erbario-italian.json"
+        },
+        {
+          "slug": "matthioli-dioscorides-1544",
+          "role": "Primary text",
+          "title": "Matthioli — Di Pedacio Dioscoride (1544)",
+          "contributor": "Pietro Andrea Matthioli",
+          "year": 1544,
+          "loc_item": "",
+          "note": "448 pages. First Italian vernacular translation of Dioscorides. The most influential herbal of the Renaissance. English translation in progress.",
+          "facsimile": false,
+          "tradition": "italian_renaissance",
+          "reader_data_file": "matthioli-dioscorides-1544.json",
+          "is_translated": true
+        },
+        {
+          "slug": "welsh-myddfai",
+          "role": "Primary text",
+          "title": "Meddygon Myddfai (c.1300)",
+          "contributor": "Physicians of Myddfai, Carmarthenshire",
+          "year": 1300,
+          "loc_item": "",
+          "note": "Oldest surviving Welsh herbal. Hereditary physicians of Myddfai blend Celtic, Druidic, and Christian healing traditions — 30 plant entries documented.",
+          "facsimile": false,
+          "tradition": "celtic_norse"
+        },
+        {
+          "slug": "norse-medicine",
+          "role": "Primary text",
+          "title": "Norse & Scandinavian Plant Medicine",
+          "contributor": "Anglo-Saxon and Norse healers / Völvas",
+          "year": 1000,
+          "loc_item": "",
+          "note": "Nine Herb Charm (invokes Odin, c.1000 CE), Henrik Harpestraeng Liber Herbarum (c.1244), and Icelandic manuscripts.",
+          "facsimile": false,
+          "tradition": "celtic_norse"
+        },
+        {
+          "slug": "russian-travnik",
+          "role": "Primary text",
+          "title": "Russian Travnik — Monastery Herbal Tradition",
+          "contributor": "Orthodox monastery physicians",
+          "year": 1700,
+          "loc_item": "",
+          "note": "Russian Orthodox monastery herbal medicine. Byzantine learning, Central Asian influence, and Siberian plant knowledge — Chaga, Rhodiola, Sea buckthorn.",
+          "facsimile": false,
+          "tradition": "russian_slavic"
+        },
+        {
+          "slug": "commission-e",
+          "role": "Modern monographs",
+          "title": "German Commission E Monographs",
+          "contributor": "German Federal Institute for Drugs and Medical Devices",
+          "year": 1994,
+          "loc_item": "",
+          "note": "126 evidence-based plant monographs — the gold standard of phytomedicine regulatory review.",
+          "facsimile": false,
+          "tradition": "commission_e"
+        },
+        {
+          "slug": "american-herbal-pharmacopoeia",
+          "role": "Modern monographs",
+          "title": "American Herbal Pharmacopoeia",
+          "contributor": "American Herbal Pharmacopoeia",
+          "year": 2000,
+          "loc_item": "",
+          "note": "45 full-quality plant monographs with clinical evidence review.",
+          "facsimile": false,
+          "tradition": "ahp"
+        },
+        {
+          "slug": "who-monographs",
+          "role": "Modern monographs",
+          "title": "WHO Monographs on Selected Medicinal Plants",
+          "contributor": "World Health Organization",
+          "year": 1999,
+          "loc_item": "",
+          "note": "94 validated plant monographs — the authoritative global standard for plant medicine.",
+          "facsimile": false,
+          "tradition": "who"
+        }
+      ]
+    },
+    {
+      "slug": "caribbean-travellers",
+      "section": "travel",
+      "title": "Caribbean Travellers",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#1a2a4a,#0a1228)",
+      "description": "First-person accounts of the Caribbean from the 1820s to the 1890s — captains' logs, colonial administrators' diaries, and naturalists' observations, with extensive firsthand documentation of Anguilla.",
+      "components": [
+        {
+          "slug": "coleridge-1826",
+          "role": "Primary text",
+          "title": "Six Months in the West Indies in 1825",
+          "contributor": "Henry Nelson Coleridge",
+          "year": 1826,
+          "loc_item": "ltf91000120",
+          "note": "The richest single account of 1820s Anguilla — a full dedicated chapter.",
+          "facsimile": false
+        },
+        {
+          "slug": "down-islands-1887",
+          "role": "Primary text",
+          "title": "Down the Islands: A Voyage to the Caribbees",
+          "contributor": "William Agnew Paton",
+          "year": 1887,
+          "loc_item": "02013426",
+          "note": "Full chapter on Anguilla, Irish settlers, and a 200-year-old French spy's report.",
+          "facsimile": false
+        },
+        {
+          "slug": "gossip-caribbees-1893",
+          "role": "Primary text",
+          "title": "Gossip of the Caribbees",
+          "contributor": "Anonymous",
+          "year": 1893,
+          "loc_item": "08028484",
+          "note": "Literary account of a colonial administrator's isolated posting to Anguilla — visited monthly by a mail ship.",
+          "facsimile": false
+        },
+        {
+          "slug": "trinidad-1866",
+          "role": "Primary text",
+          "title": "Trinidad and the Other West India Islands and Colonies",
+          "contributor": "James Hume Collens",
+          "year": 1866,
+          "loc_item": "24031382",
+          "note": "Includes dedicated Anguilla section: 1746 French attack repelled, revenue figures, governance.",
+          "facsimile": false
+        },
+        {
+          "slug": "west-indies-1911",
+          "role": "Primary text",
+          "title": "The West Indies",
+          "contributor": "John Fiske",
+          "year": 1911,
+          "loc_item": "21007149",
+          "note": "Entire chapter (XX) on Anguilla, St. Martin, Barbuda. Opens with the island's 'snake' name etymology.",
+          "facsimile": false
+        }
+      ]
+    },
+    {
+      "slug": "caribbean-history-docs",
+      "section": "history",
+      "title": "Caribbean History — Primary Documents",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#3a1a1a,#1a0a0a)",
+      "description": "Official documents, legal records, and firsthand historical accounts of the Caribbean from the 1830s to the early 20th century.",
+      "components": [
+        {
+          "slug": "emancipation-1838",
+          "role": "Primary text",
+          "title": "Emancipation in the West Indies",
+          "contributor": "James A. Thome & J. Horace Kimball",
+          "year": 1838,
+          "loc_item": "02017739",
+          "note": "American Quaker delegation's firsthand account of Emancipation Day in Anguilla.",
+          "facsimile": false
+        },
+        {
+          "slug": "french-colonies-1867",
+          "role": "Primary text",
+          "title": "Les colonies anglaises de 1574 à 1660",
+          "contributor": "J. Felsenhart",
+          "year": 1867,
+          "loc_item": "13022174",
+          "note": "Names Anguilla in Charles I's 1627 Carlisle land grants. Translation ongoing.",
+          "facsimile": false,
+          "is_translated": true
+        },
+        {
+          "slug": "sailing-directions-1868",
+          "role": "Reference",
+          "title": "Sailing Directions for the West Indies",
+          "contributor": "British Admiralty",
+          "year": 1868,
+          "loc_item": "ltf91089143",
+          "note": "Official nautical directions. Anguilla's coastline, reefs, and the 'Eel' etymology confirmed.",
+          "facsimile": false
+        },
+        {
+          "slug": "pinkerton-1811",
+          "role": "Reference",
+          "title": "Modern Geography, Vol. 2",
+          "contributor": "John Pinkerton",
+          "year": 1811,
+          "loc_item": "30033189",
+          "note": "Anguillian settlers credited with founding the Virgin Islands colony. 911-page world gazetteer.",
+          "facsimile": false
+        }
+      ]
+    },
+    {
+      "slug": "caribbean-cartography",
+      "section": "cartography",
+      "title": "Caribbean Cartography — 17th to 19th Century",
+      "author": "Various",
+      "spine_color": "linear-gradient(160deg,#2a3a1a,#121a0a)",
+      "description": "Historical nautical charts, Dutch Golden Age maps, and colonial survey maps of the Caribbean — all featuring Anguilla and the Lesser Antilles.",
+      "components": [
+        {
+          "slug": "roggeveen-1675",
+          "role": "Map",
+          "title": "Pascaerte van de Caribes Eylanden (1675)",
+          "contributor": "Arent Roggeveen",
+          "year": 1675,
+          "loc_item": "",
+          "note": "Dutch nautical chart of the Lesser Antilles by a celebrated Dutch ship's pilot.",
+          "facsimile": true
+        },
+        {
+          "slug": "blaeu-1634",
+          "role": "Map",
+          "title": "Insulae Americanae in Oceano Septentrionali (1634)",
+          "contributor": "Willem Janszoon Blaeu",
+          "year": 1634,
+          "loc_item": "2003630536",
+          "note": "Dutch Golden Age masterpiece. Amsterdam's Blaeu dynasty at its peak.",
+          "facsimile": true,
+          "dzi_url": "/static/dzi/2003630536.dzi"
+        },
+        {
+          "slug": "thornton-1680",
+          "role": "Map",
+          "title": "A Chart of the Caribe Ilands (1680)",
+          "contributor": "John Thornton",
+          "year": 1680,
+          "loc_item": "2007633672",
+          "note": "Official hydrographer to the East India Company and Hudson's Bay Company.",
+          "facsimile": true,
+          "dzi_url": "/static/dzi/2007633672.dzi"
+        },
+        {
+          "slug": "coronelli-1690",
+          "role": "Map",
+          "title": "Isole Antili, la Cuba e la Spagnuola (1690)",
+          "contributor": "Vincenzo Coronelli",
+          "year": 1690,
+          "loc_item": "95684858",
+          "note": "Venetian cosmographer who built globes for Louis XIV.",
+          "facsimile": true,
+          "dzi_url": "/static/dzi/95684858.dzi"
+        },
+        {
+          "slug": "schenk-1710",
+          "role": "Map",
+          "title": "Tabula Mexicae et Floridae (1710)",
+          "contributor": "Peter Schenk",
+          "year": 1710,
+          "loc_item": "2004629008",
+          "note": "Amsterdam's Schenk publishing house.",
+          "facsimile": true,
+          "dzi_url": "/static/dzi/2004629008.dzi"
+        },
+        {
+          "slug": "bellin-1758",
+          "role": "Map",
+          "title": "Carte Réduite des Antilles (1758)",
+          "contributor": "Jacques-Nicolas Bellin",
+          "year": 1758,
+          "loc_item": "",
+          "note": "French hydrographer royal — the authoritative French cartographic view of the Antilles.",
+          "facsimile": true
+        },
+        {
+          "slug": "lopez-1781",
+          "role": "Map",
+          "title": "Antillas Menores (1781)",
+          "contributor": "Tomás López",
+          "year": 1781,
+          "loc_item": "",
+          "note": "Spanish royal cartographer's view of the Lesser Antilles.",
+          "facsimile": true,
+          "dzi_url": "/static/dzi/1781-lopez-antillas-menores.dzi"
+        }
+      ]
     }
-   ]
-  },
-  {
-   "slug": "paradise-lost",
-   "title": "Paradise Lost",
-   "author": "John Milton",
-   "spine_color": "linear-gradient(160deg,#3d1f4f,#241230)",
-   "description": "Milton's epic of the Fall in three printings across half a century — read the poem plain, annotated, and in the company of his complete poetical works.",
-   "components": [
-    {
-     "slug": "paradise-lost-1852",
-     "role": "Editions",
-     "title": "Paradise Lost: A Poem in Twelve Books",
-     "contributor": "John Milton · printed 1852",
-     "year": 1852,
-     "loc_item": "40023524",
-     "note": "A clean mid-century reading text of the twelve books.",
-     "facsimile": false
-    },
-    {
-     "slug": "paradise-lost-1868",
-     "role": "Editions",
-     "title": "The Paradise Lost",
-     "contributor": "John Milton · printed 1868",
-     "year": 1868,
-     "loc_item": "43043153",
-     "note": "A fuller apparatus edition — useful against the 1852 for how editors dressed the poem.",
-     "facsimile": false
-    },
-    {
-     "slug": "milton-works-1881",
-     "role": "Commentary & Companions",
-     "title": "The Poetical Works of John Milton",
-     "contributor": "1881 collected edition",
-     "year": 1881,
-     "loc_item": "29024989",
-     "note": "The epic in context: Paradise Regained, Samson Agonistes, and the shorter poems alongside.",
-     "facsimile": false
-    }
-   ]
-  },
-  {
-   "slug": "arabian-nights",
-   "title": "The Arabian Nights",
-   "author": "",
-   "spine_color": "linear-gradient(160deg,#7a4a1e,#4a2c10)",
-   "description": "The Thousand and One Nights in three early-20th-century printings — tale against tale across editions, including a hundred-illustration edition from 1924.",
-   "components": [
-    {
-     "slug": "arabian-nights-1910",
-     "role": "Editions",
-     "title": "The Arabian Nights",
-     "contributor": "1910 edition",
-     "year": 1910,
-     "loc_item": "10024207",
-     "note": "An Edwardian reading edition of the Nights.",
-     "facsimile": false
-    },
-    {
-     "slug": "arabian-nights-1915",
-     "role": "Editions",
-     "title": "The Arabian Nights' Entertainments",
-     "contributor": "1915 edition",
-     "year": 1915,
-     "loc_item": "15010078",
-     "note": "The Nights under their classic English title.",
-     "facsimile": false
-    },
-    {
-     "slug": "arabian-nights-1924",
-     "role": "Illustrated Editions",
-     "title": "The Arabian Nights, with One Hundred Illustrations",
-     "contributor": "1924 illustrated edition",
-     "year": 1924,
-     "loc_item": "25003030",
-     "note": "A hundred plates woven through the tales — compare its choices against the plain texts.",
-     "facsimile": false
-    }
-   ]
-  },
-  {
-   "slug": "leaves-of-grass",
-   "title": "Leaves of Grass",
-   "author": "Walt Whitman",
-   "spine_color": "linear-gradient(160deg,#2c5030,#17301c)",
-   "description": "One poem, growing. Whitman revised Leaves of Grass his whole life — this megabook shelves three printings spanning a quarter century, so the layers are not translations but time itself.",
-   "components": [
-    {
-     "slug": "leaves-1897",
-     "role": "Editions Through Time",
-     "title": "Leaves of Grass (1897)",
-     "contributor": "Walt Whitman",
-     "year": 1897,
-     "loc_item": "04019708",
-     "note": "Printed just after Whitman's death — the 'deathbed' arrangement he authorized.",
-     "facsimile": false
-    },
-    {
-     "slug": "leaves-1900",
-     "role": "Editions Through Time",
-     "title": "Leaves of Grass (1900)",
-     "contributor": "Walt Whitman",
-     "year": 1900,
-     "loc_item": "39024996",
-     "note": "A turn-of-the-century printing of the completed book.",
-     "facsimile": false
-    },
-    {
-     "slug": "leaves-1921",
-     "role": "Editions Through Time",
-     "title": "Leaves of Grass (1921)",
-     "contributor": "Walt Whitman",
-     "year": 1921,
-     "loc_item": "33003724",
-     "note": "The poem as the modernists inherited it.",
-     "facsimile": false
-    }
-   ]
-  },
-  {
-   "slug": "book-of-wonders",
-   "title": "Acâibü'l-Mahlûkât · The Book of Wonders",
-   "author": "Zakariyyā al-Qazwīnī",
-   "spine_color": "linear-gradient(160deg,#8a6a1e,#523d0e)",
-   "description": "Qazwīnī's 13th-century cosmography — angels, constellations, seas, beasts, and marvels — travelled the Islamic world in translation. Here it is as illuminated manuscript in Ottoman Turkish (1553) and Persian (1565), and as a 19th-century Persian lithograph. The Ottoman manuscript also carries oedio's first complete AI transcription and translation — all 314 pages rendered into readable text and English, likely for the first time.",
-   "components": [
-    {
-     "slug": "wonders-ottoman-1553",
-     "role": "Ottoman Turkish",
-     "title": "ʻAjāʾib al-makhlūqāt — Ottoman Turkish manuscript",
-     "contributor": "Illuminated manuscript",
-     "year": 1553,
-     "loc_item": "2017406674",
-     "note": "The Ottoman Turkish translation, copied 1553 — miniatures and illumination throughout.",
-     "facsimile": true
-    },
-    {
-     "slug": "wonders-persian-1565",
-     "role": "Persian",
-     "title": "ʻAjāʾib al-makhlūqāt — Persian manuscript",
-     "contributor": "Illuminated manuscript",
-     "year": 1565,
-     "loc_item": "2017454465",
-     "note": "A 713-page Persian manuscript of the Wonders, richly illustrated.",
-     "facsimile": true
-    },
-    {
-     "slug": "wonders-persian-1866",
-     "role": "Persian",
-     "title": "ʻAjāʾib al-makhlūqāt — Persian lithograph",
-     "contributor": "Printed Tehran-tradition lithograph",
-     "year": 1866,
-     "loc_item": "2016397313",
-     "note": "The Wonders in print: a 19th-century lithographed edition with drawn illustrations.",
-     "facsimile": true
-    },
-    {
-     "slug": "wonders-ottoman-1553-transcription",
-     "role": "Ottoman Turkish",
-     "title": "ʻAjāʾib al-makhlūqāt — Ottoman text (AI transcription)",
-     "contributor": "Transcribed from the 1553 manuscript by Claude (AI)",
-     "year": 1553,
-     "loc_item": "2017406674",
-     "note": "A complete AI transcription of the manuscript's nesih hand into readable Arabic-script text, all 314 pages, beside the original scans — unverified, and offered so readers can check it against the source.",
-     "facsimile": false
-    },
-    {
-     "slug": "wonders-ottoman-1553-english",
-     "role": "Translations",
-     "title": "The Wonders of Creation — English (AI translation)",
-     "contributor": "Translated from the Ottoman Turkish by Claude (AI)",
-     "year": 1553,
-     "loc_item": "2017406674",
-     "note": "The first known English rendering of this Ottoman translation, all 314 pages — generated by AI from the manuscript itself, unverified, with the source scan one tap away on every page.",
-     "facsimile": false
-    },
-    {
-     "slug": "wonders-persian-1866-transcription",
-     "role": "Persian",
-     "title": "‘Ajā’ib al-makhlūqāt — Persian lithograph text (AI transcription)",
-     "contributor": "Transcribed from the 1866 lithograph by Claude (AI)",
-     "year": 1866,
-     "loc_item": "2016397313",
-     "note": "A complete AI transcription of the printed Persian text, all 207 pages, beside the original lithograph scans — unverified, and offered so readers can check it against the source.",
-     "facsimile": false
-    },
-    {
-     "slug": "wonders-persian-1866-english",
-     "role": "Translations",
-     "title": "The Wonders of Creation — Persian lithograph, English (AI translation)",
-     "contributor": "Translated from the Persian by Claude (AI)",
-     "year": 1866,
-     "loc_item": "2016397313",
-     "note": "An English rendering of the 1866 printed edition, all 207 pages — generated by AI from the lithograph itself, unverified, with the source scan one tap away on every page.",
-     "facsimile": false
-    }
-   ]
-  }
- ]
+  ]
 }
