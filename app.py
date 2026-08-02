@@ -133,9 +133,9 @@ def _find_megabook(mega_slug):
 
 @app.route("/")
 def library():
-    return render_template("index.html", now=datetime.utcnow(,
+    return render_template("index.html", now=datetime.utcnow(),
         sections=SECTIONS,
-        megabooks_by_section={s["slug"]:[mb for mb in MEGABOOKS if mb.get("section")==s["slug"]] for s in SECTIONS}),
+        megabooks_by_section={s["slug"]: [mb for mb in MEGABOOKS if mb.get("section") == s["slug"]] for s in SECTIONS},
                            megabooks=MEGABOOKS, active_page="library")
 
 
