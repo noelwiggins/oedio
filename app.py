@@ -21,6 +21,8 @@ MANIFEST_PATH = os.path.join(BASE_DIR, "data", "manifest.json")
 with open(MANIFEST_PATH) as f:
     MANIFEST = json.load(f)
 MEGABOOKS = MANIFEST["megabooks"]
+SECTIONS  = MANIFEST.get("sections", [])
+SECTION_MAP = {s["slug"]: s for s in SECTIONS}
 
 
 def _page_count(slug):
@@ -131,8 +133,20 @@ def _find_megabook(mega_slug):
 
 @app.route("/")
 def library():
-    return render_template("index.html", now=datetime.utcnow(),
+    return render_template("index.html", now=datetime.utcnow(,
+        sections=SECTIONS,
+        megabooks_by_section={s["slug"]:[mb for mb in MEGABOOKS if mb.get("section")==s["slug"]] for s in SECTIONS}),
                            megabooks=MEGABOOKS, active_page="library")
+
+
+
+@app.route("/section/<section_slug>")
+def section_page(section_slug):
+    section = SECTION_MAP.get(section_slug)
+    if not section:
+        from flask import abort; abort(404)
+    mbs = [mb for mb in MEGABOOKS if mb.get("section") == section_slug]
+    return render_template("section.html", section=section, megabooks=mbs)
 
 
 @app.route("/book/<mega_slug>")

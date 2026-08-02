@@ -1,0 +1,202 @@
+[
+  {
+    "volume": 1,
+    "title_en": "Naegyeongpyeon Vol.1",
+    "title_ko": "내경편 1권",
+    "section": "internal",
+    "page_count": 60,
+    "data_file": "dongui-vol-01.json"
+  },
+  {
+    "volume": 2,
+    "title_en": "Naegyeongpyeon Vol.2",
+    "title_ko": "내경편 2권",
+    "section": "internal",
+    "page_count": 60,
+    "data_file": "dongui-vol-02.json"
+  },
+  {
+    "volume": 3,
+    "title_en": "Naegyeongpyeon Vol.3",
+    "title_ko": "내경편 3권",
+    "section": "internal",
+    "page_count": 60,
+    "data_file": "dongui-vol-03.json"
+  },
+  {
+    "volume": 4,
+    "title_en": "Naegyeongpyeon Vol.4",
+    "title_ko": "내경편 4권",
+    "section": "internal",
+    "page_count": 60,
+    "data_file": "dongui-vol-04.json"
+  },
+  {
+    "volume": 5,
+    "title_en": "Oehyeongpyeon Vol.1",
+    "title_ko": "외형편 1권",
+    "section": "external",
+    "page_count": 52,
+    "data_file": "dongui-vol-05.json"
+  },
+  {
+    "volume": 6,
+    "title_en": "Oehyeongpyeon Vol.2",
+    "title_ko": "외형편 2권",
+    "section": "external",
+    "page_count": 57,
+    "data_file": "dongui-vol-06.json"
+  },
+  {
+    "volume": 7,
+    "title_en": "Oehyeongpyeon Vol.3",
+    "title_ko": "외형편 3권",
+    "section": "external",
+    "page_count": 52,
+    "data_file": "dongui-vol-07.json"
+  },
+  {
+    "volume": 8,
+    "title_en": "Oehyeongpyeon Vol.4",
+    "title_ko": "외형편 4권",
+    "section": "external",
+    "page_count": 51,
+    "data_file": "dongui-vol-08.json"
+  },
+  {
+    "volume": 9,
+    "title_en": "Oehyeongpyeon Vol.5",
+    "title_ko": "외형편 5권",
+    "section": "external",
+    "page_count": 51,
+    "data_file": "dongui-vol-09.json"
+  },
+  {
+    "volume": 10,
+    "title_en": "Japbyeongpyeon Vol.1",
+    "title_ko": "잡병편 1권",
+    "section": "misc",
+    "page_count": 55,
+    "data_file": "dongui-vol-10.json"
+  },
+  {
+    "volume": 11,
+    "title_en": "Japbyeongpyeon Vol.2",
+    "title_ko": "잡병편 2권",
+    "section": "misc",
+    "page_count": 52,
+    "data_file": "dongui-vol-11.json"
+  },
+  {
+    "volume": 12,
+    "title_en": "Japbyeongpyeon Vol.3",
+    "title_ko": "잡병편 3권",
+    "section": "misc",
+    "page_count": 55,
+    "data_file": "dongui-vol-12.json"
+  },
+  {
+    "volume": 13,
+    "title_en": "Japbyeongpyeon Vol.4",
+    "title_ko": "잡병편 4권",
+    "section": "misc",
+    "page_count": 49,
+    "data_file": "dongui-vol-13.json"
+  },
+  {
+    "volume": 14,
+    "title_en": "Japbyeongpyeon Vol.5",
+    "title_ko": "잡병편 5권",
+    "section": "misc",
+    "page_count": 64,
+    "data_file": "dongui-vol-14.json"
+  },
+  {
+    "volume": 15,
+    "title_en": "Japbyeongpyeon Vol.6",
+    "title_ko": "잡병편 6권",
+    "section": "misc",
+    "page_count": 64,
+    "data_file": "dongui-vol-15.json"
+  },
+  {
+    "volume": 16,
+    "title_en": "Tangaekpyeon Vol.1",
+    "title_ko": "탕액편 1권",
+    "section": "herbal",
+    "page_count": 31,
+    "data_file": "dongui-vol-16.json"
+  },
+  {
+    "volume": 17,
+    "title_en": "Tangaekpyeon Vol.2",
+    "title_ko": "탕액편 2권",
+    "section": "herbal",
+    "page_count": 64,
+    "data_file": "dongui-vol-17.json"
+  },
+  {
+    "volume": 18,
+    "title_en": "Tangaekpyeon Vol.3",
+    "title_ko": "탕액편 3권",
+    "section": "herbal",
+    "page_count": 64,
+    "data_file": "dongui-vol-18.json"
+  },
+  {
+    "volume": 19,
+    "title_en": "Tangaekpyeon Vol.4",
+    "title_ko": "탕액편 4권",
+    "section": "herbal",
+    "page_count": 62,
+    "data_file": "dongui-vol-19.json"
+  },
+  {
+    "volume": 20,
+    "title_en": "Tangaekpyeon Vol.5",
+    "title_ko": "탕액편 5권",
+    "section": "herbal",
+    "page_count": 60,
+    "data_file": "dongui-vol-20.json"
+  },
+  {
+    "volume": 21,
+    "title_en": "Tangaekpyeon Vol.6",
+    "title_ko": "탕액편 6권",
+    "section": "herbal",
+    "page_count": 64,
+    "data_file": "dongui-vol-21.json"
+  },
+  {
+    "volume": 22,
+    "title_en": "Tangaekpyeon Vol.7",
+    "title_ko": "탕액편 7권",
+    "section": "herbal",
+    "page_count": 64,
+    "data_file": "dongui-vol-22.json"
+  },
+  {
+    "volume": 23,
+    "title_en": "Chimgupyeon Vol.1",
+    "title_ko": "침구편 1권",
+    "section": "acupuncture",
+    "page_count": 64,
+    "data_file": "dongui-vol-23.json"
+  },
+  {
+    "volume": 24,
+    "title_en": "Chimgupyeon Vol.2",
+    "title_ko": "침구편 2권",
+    "section": "acupuncture",
+    "page_count": 54,
+    "data_file": "dongui-vol-24.json"
+  },
+  {
+    "volume": 25,
+    "title_en": "Chimgupyeon Vol.3",
+    "title_ko": "침구편 3권",
+    "section": "acupuncture",
+    "page_count": 54,
+    "data_file": "dongui-vol-25.json"
+  }
+]
