@@ -26,3 +26,5 @@ Last updated: 2026-08-02
 4. Matthioli English translation layer — could be added as second reader panel
    once Forge job produces full English output (currently Italian only)
 5. PlentyFish redirect — plentyfish.ai should link to Oedio travel/cartography sections
+
+<!-- deploy trigger 2026-08-02T22:34:29.959234 -->
