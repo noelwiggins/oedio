@@ -13,6 +13,16 @@ from datetime import datetime
 
 from flask import Flask, abort, jsonify, render_template
 
+# ── R2 reader-data base URL ──────────────────────────────────────────────────
+# Set R2_BASE_URL in Railway env to serve reader-data from Cloudflare R2.
+# Falls back to /static/reader-data/ (repo files) when not set.
+_R2_BASE = os.environ.get("R2_BASE_URL", "").rstrip("/")
+def _reader_url(slug):
+    if _R2_BASE:
+        return f"{_R2_BASE}/reader-data/{slug}.json"
+    return f"/static/reader-data/{slug}.json"
+
+
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -225,7 +235,7 @@ def reader(mega_slug, comp_slug):
         siblings=siblings,
         panel_group=panel_group,
         left_default=left_default,
-        data_url=f"/static/reader-data/{comp.get('data_slug', comp_slug)}.json",
+        data_url=_reader_url(comp.get('data_slug', comp_slug)),
     )
 
 
