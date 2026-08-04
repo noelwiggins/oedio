@@ -28,6 +28,25 @@
   .badge { font-size:10.5px; font-weight:700; padding:3px 10px; border-radius:10px;
     background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
   .badge.facs { background:var(--md-sys-color-tertiary-container); color:var(--md-sys-color-on-tertiary-container); }
+
+  /* The Open Reader button is THE primary action on every megabook page --
+     one consistent, unmistakable entry point regardless of how many
+     editions exist underneath it. */
+  .open-reader-cta { margin-top:24px; display:flex; align-items:center; gap:18px;
+    text-decoration:none; padding:22px 26px; border-radius:20px;
+    background:linear-gradient(135deg, var(--md-sys-color-primary-container), var(--md-sys-color-primary-container) 60%, var(--md-sys-color-tertiary-container));
+    box-shadow:0 4px 16px rgba(0,0,0,.35);
+    transition:transform var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard), box-shadow .2s; }
+  .open-reader-cta:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.45); }
+  .open-reader-cta .orc-icon { font-size:38px; color:var(--md-sys-color-on-primary-container); flex:0 0 auto; }
+  .open-reader-cta .orc-text { flex:1; min-width:0; }
+  .open-reader-cta .orc-title { font-family:Georgia, serif; font-size:21px; font-weight:700;
+    color:var(--md-sys-color-on-primary-container); margin-bottom:4px; }
+  .open-reader-cta .orc-sub { font-size:13px; line-height:1.55; color:var(--md-sys-color-on-primary-container); opacity:.85; }
+  .open-reader-cta .orc-arrow { font-size:24px; color:var(--md-sys-color-on-primary-container); flex:0 0 auto; opacity:.7; }
+
+  .individual-editions-label { margin:30px 0 4px; font-size:12px; color:var(--md-sys-color-on-surface-variant);
+    text-align:center; letter-spacing:.02em; }
 </style>
 {% endblock %}
 
@@ -39,18 +58,25 @@
     <p class="desc">{{ mb.description }}</p>
   </div>
 
-  {% if mb.slug == 'odyssey' %}
-  <a class="comp-card" href="/book/{{ mb.slug }}/layers" style="margin-top:22px; display:flex; gap:16px; align-items:center;
-     border-color: var(--md-sys-color-primary); background: var(--md-sys-color-surface-container-high);">
-    <span class="material-symbols-outlined" style="font-size:34px; color:var(--md-sys-color-primary);">stacks</span>
-    <div>
-      <div class="c-title">Open the Layered Reader</div>
-      <div class="c-note">All editions as toggleable layers over one scroll &mdash; parallel translations, source scans,
-        Flaxman engravings, and streaming audio (English narration &amp; ancient Greek recitation), aligned book by book.</div>
+  {% set is_layered = mb.slug == 'odyssey' %}
+  <a class="open-reader-cta" href="{{ open_reader_url }}">
+    <span class="material-symbols-outlined orc-icon">{{ 'stacks' if is_layered else 'auto_stories' }}</span>
+    <div class="orc-text">
+      <div class="orc-title">{{ 'Open the Layered Reader' if is_layered else 'Open Reader' }}</div>
+      <div class="orc-sub">
+        {% if is_layered %}
+        All editions as toggleable layers over one scroll &mdash; parallel translations, source scans,
+        Flaxman engravings, and streaming audio (English narration &amp; ancient Greek recitation), aligned book by book.
+        {% else %}
+        The way to read this megabook &mdash; every edition, translation, and source scan combined.
+        Switch between them from the layer picker inside the reader itself.
+        {% endif %}
+      </div>
     </div>
+    <span class="material-symbols-outlined orc-arrow">arrow_forward</span>
   </a>
-  {% endif %}
 
+  <div class="individual-editions-label">Or open a specific edition directly</div>
   {% for role, comps in grouped %}
   <div class="role-label">{{ role }}</div>
   <div class="comp-grid">

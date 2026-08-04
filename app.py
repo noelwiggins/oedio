@@ -146,6 +146,16 @@ if os.environ.get("DATABASE_URL"):
         db = None
 
 
+# Every megabook needs a single, consistent "Open Reader" entry point --
+# the Odyssey has a true book-aligned layered reader; everything else opens
+# into the standard reader on a sensibly chosen default edition (prefer a
+# real text edition over a pure facsimile, so the first thing a reader sees
+# is text+scan, not a bare image stream).
+for _mb in MEGABOOKS:
+    _default = next((c for c in _mb["components"] if not c["facsimile"]), _mb["components"][0])
+    _mb["default_read_slug"] = _default["slug"]
+
+
 def _find_megabook(mega_slug):
     return next((m for m in MEGABOOKS if m["slug"] == mega_slug), None)
 
@@ -185,8 +195,11 @@ def megabook_page(mega_slug):
     for c in mb["components"]:
         if c["pages"] == 0:
             c["pages"] = _page_count(c.get("data_slug", c["slug"]))
+    open_reader_url = (f"/book/{mega_slug}/layers" if mega_slug == "odyssey"
+                        else f"/book/{mega_slug}/read/{mb['default_read_slug']}")
     return render_template("megabook.html", now=datetime.utcnow(), mb=mb,
                            grouped=[(r, grouped[r]) for r in order],
+                           open_reader_url=open_reader_url,
                            active_page="library")
 
 
