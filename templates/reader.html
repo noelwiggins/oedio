@@ -40,7 +40,23 @@
     display:inline-block; margin:6px 0 2px; }
   .reader-header { flex:none; }
   .reader-layout { display:flex; flex:1; min-height:0; }
-  .reader-image-panel { width:45%; background:#000; overflow-y:auto; scroll-behavior:auto; position:relative; }
+  .reader-layout { --split: 45%; }
+  .reader-image-panel { width:var(--split); background:#000; overflow-y:auto; scroll-behavior:auto; position:relative; }
+  .reader-app.facsimile-app .reader-layout { --split: 45%; } /* unused when hidden, harmless default */
+  .reader-split-handle { flex:0 0 auto; width:10px; margin:0 -5px; cursor:col-resize;
+    position:relative; z-index:80; background:transparent; touch-action:none; }
+  .reader-split-handle::before { content:''; position:absolute; left:4px; top:0; bottom:0; width:2px;
+    background:var(--md-sys-color-outline-variant); transition:background .15s; }
+  .reader-split-handle:hover::before, .reader-split-handle.dragging::before {
+    background:var(--md-sys-color-primary); }
+  .reader-split-handle::after { content:''; position:absolute; left:1px; top:50%; transform:translateY(-50%);
+    width:8px; height:36px; border-radius:5px; background:var(--md-sys-color-surface-container-highest);
+    border:1px solid var(--md-sys-color-outline-variant); opacity:0; transition:opacity .15s; }
+  .reader-split-handle:hover::after, .reader-split-handle.dragging::after { opacity:1; }
+  body.reader-splitting { cursor:col-resize !important; user-select:none !important; }
+  body.reader-splitting * { user-select:none !important; }
+  .reader-app.facsimile-app .reader-split-handle { display:none; }
+  @media (max-width: 800px) { .reader-split-handle { display:none; } }
   /* Panel-layer pickers: shown only for books with AI-forged sibling layers
      (facsimile + transcription + translation share pagination, so either
      panel can independently hold any of the three -- like map layers, but
@@ -64,7 +80,7 @@
   .reader-image-block img { max-width:100%; max-height:calc(100vh - 100px); object-fit:contain;
     box-shadow: 0 4px 24px rgba(0,0,0,.5); cursor:zoom-in; }
   .reader-image-block.reader-image-current img { box-shadow: 0 0 0 2px var(--md-sys-color-primary), 0 4px 24px rgba(0,0,0,.5); }
-  .reader-text-panel-wrap { position:relative; width:55%; height:100%; }
+  .reader-text-panel-wrap { position:relative; width:calc(100% - var(--split)); height:100%; flex:1 1 auto; }
   .reader-text-panel { width:100%; overflow-y:auto; height:100%;
     padding: 24px 32px calc(24px + env(safe-area-inset-bottom)); }
 
@@ -374,6 +390,8 @@
     <!-- Image blocks injected by JS, lazily, in lockstep with the text panel -->
     <div id="reader-image-load-sentinel" style="height:1px;"></div>
   </div>
+  <div class="reader-split-handle" id="reader-split-handle" role="separator" aria-orientation="vertical"
+       aria-label="Resize panels" tabindex="0"></div>
   <div class="reader-text-panel-wrap">
     {% if panel_group and panel_group|length > 1 %}
     <div class="panel-picker-bar">
@@ -1290,6 +1308,61 @@ if (!isMobile) {
   pinMobileHeaderSpace();
   window.addEventListener('resize', pinMobileHeaderSpace);
   window.addEventListener('orientationchange', () => setTimeout(pinMobileHeaderSpace, 200));
+
+  // Draggable panel split: drag the handle to resize the image/text panels
+  // (e.g. drag right to give the scan more room). Ratio persists across
+  // books via localStorage. Desktop only -- mobile shows one panel at a
+  // time, so there's nothing to split there.
+  (function initSplitHandle() {
+    const handle = document.getElementById('reader-split-handle');
+    const layout = document.querySelector('.reader-layout');
+    if (!handle || !layout) return;
+    const MIN_PCT = 20, MAX_PCT = 80;
+    const saved = parseFloat(localStorage.getItem('oedio-reader-split'));
+    if (saved && saved >= MIN_PCT && saved <= MAX_PCT) {
+      layout.style.setProperty('--split', saved + '%');
+    }
+    let dragging = false;
+    function setSplit(clientX) {
+      const rect = layout.getBoundingClientRect();
+      let pct = ((clientX - rect.left) / rect.width) * 100;
+      pct = Math.max(MIN_PCT, Math.min(MAX_PCT, pct));
+      layout.style.setProperty('--split', pct.toFixed(2) + '%');
+      localStorage.setItem('oedio-reader-split', pct.toFixed(2));
+    }
+    function start(clientX) {
+      dragging = true;
+      handle.classList.add('dragging');
+      document.body.classList.add('reader-splitting');
+      setSplit(clientX);
+    }
+    function move(clientX) { if (dragging) setSplit(clientX); }
+    function end() {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      document.body.classList.remove('reader-splitting');
+    }
+    handle.addEventListener('mousedown', (e) => { start(e.clientX); e.preventDefault(); });
+    window.addEventListener('mousemove', (e) => move(e.clientX));
+    window.addEventListener('mouseup', end);
+    handle.addEventListener('touchstart', (e) => start(e.touches[0].clientX), { passive: true });
+    window.addEventListener('touchmove', (e) => { if (dragging) move(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener('touchend', end);
+    // Keyboard: arrow keys nudge the split for accessibility.
+    handle.addEventListener('keydown', (e) => {
+      const rect = layout.getBoundingClientRect();
+      const cur = parseFloat(getComputedStyle(layout).getPropertyValue('--split')) ||
+                  ((rect.width * 0.45));
+      let pct = parseFloat(layout.style.getPropertyValue('--split')) || 45;
+      if (e.key === 'ArrowLeft') { pct = Math.max(MIN_PCT, pct - 2); }
+      else if (e.key === 'ArrowRight') { pct = Math.min(MAX_PCT, pct + 2); }
+      else return;
+      layout.style.setProperty('--split', pct + '%');
+      localStorage.setItem('oedio-reader-split', pct);
+      e.preventDefault();
+    });
+  })();
 
   const layerBtn = document.getElementById('reader-layer-btn');
   const layerBtnLabel = document.getElementById('reader-layer-btn-label');
