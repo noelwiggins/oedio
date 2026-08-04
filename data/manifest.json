@@ -88,7 +88,7 @@
      "year": 1880,
      "loc_item": "10036017",
      "note": "Phaeacian episode in Ancient Greek.",
-     "facsimile": false
+     "facsimile": true
     },
     {
      "slug": "flaxman-1853",
@@ -101,14 +101,34 @@
      "facsimile": true
     },
     {
-     "slug": "dore-gallery-1890",
-     "role": "Illustrations",
-     "title": "Doré Gallery Illustrations",
-     "contributor": "Gustave Doré",
-     "year": 1890,
-     "loc_item": "09001990",
-     "note": "Doré's dramatic Odyssey engravings.",
-     "facsimile": true
+     "slug": "flaxman-1853-transcription",
+     "role": "Illustrated Editions",
+     "title": "The Odyssey, with Flaxman's Designs — full text (AI transcription)",
+     "contributor": "Trans. T. A. Buckley — transcribed from scans by Claude (AI)",
+     "year": 1853,
+     "loc_item": "12034441",
+     "note": "The complete Buckley translation transcribed from the printed page images, all 402 pages, alongside the source scans and Flaxman's plates. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "phaeacian-greek-1880-transcription",
+     "role": "Original Greek",
+     "title": "The Phæacian Episode — Greek text (AI transcription)",
+     "contributor": "Ed. W. W. Merry — transcribed from scans by Claude (AI)",
+     "year": 1880,
+     "loc_item": "10036017",
+     "note": "The ancient Greek transcribed from the scanned page images into readable, searchable text. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "phaeacian-greek-1880-english",
+     "role": "Translations",
+     "title": "The Phæacian Episode — English (AI translation)",
+     "contributor": "Translated from the Greek by Claude (AI)",
+     "year": 1880,
+     "loc_item": "10036017",
+     "note": "An AI translation of Books VI-VIII and XIII directly from this 1880 scholarly edition of the ancient Greek. Unverified.",
+     "facsimile": false
     }
    ]
   },
@@ -148,7 +168,7 @@
      "year": 1890,
      "loc_item": "09001990",
      "note": "Doré's iconic Biblical engravings.",
-     "facsimile": true
+     "facsimile": false
     },
     {
      "slug": "greek-nt-1881",
@@ -158,6 +178,16 @@
      "year": 1881,
      "loc_item": "02013451",
      "note": "Critical edition of the Greek text.",
+     "facsimile": false
+    },
+    {
+     "slug": "dore-gallery-1890-transcription",
+     "role": "Illustrated Editions",
+     "title": "The Doré Bible Gallery — full captions (AI transcription)",
+     "contributor": "Gustave Doré — transcribed from scans by Claude (AI)",
+     "year": 1890,
+     "loc_item": "09001990",
+     "note": "A far more complete transcription than the original OCR pass (208 of 424 pages carry real caption/description text; the rest are correctly identified as plates or blanks). Three pages were blocked by AI content filtering and are marked as such. Unverified.",
      "facsimile": false
     }
    ]
@@ -359,6 +389,26 @@
      "loc_item": "",
      "note": "",
      "facsimile": true
+    },
+    {
+     "slug": "wonders-persian-1866-transcription",
+     "role": "Persian",
+     "title": "ʻAjāʾib al-makhlūqāt — Persian text, 1866 lithograph (AI transcription)",
+     "contributor": "Transcribed from the 1866 lithograph by Claude (AI)",
+     "year": 1866,
+     "loc_item": "",
+     "note": "A complete AI transcription of the 1866 lithograph into readable Persian text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "wonders-persian-1866-english",
+     "role": "Translations",
+     "title": "The Wonders of Creation — English (AI translation, 1866 lithograph)",
+     "contributor": "Translated from the Persian by Claude (AI)",
+     "year": 1866,
+     "loc_item": "",
+     "note": "An AI English translation of the 1866 lithograph edition, a third textual witness alongside the Ottoman and 1565 Persian manuscripts in this megabook. Unverified.",
+     "facsimile": false
     }
    ]
   },
