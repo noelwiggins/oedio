@@ -448,13 +448,14 @@
     {
      "slug": "charaka-samhita",
      "role": "Primary text",
-     "title": "Charaka Samhita (c.600 BCE)",
+     "title": "Charaka Samhita, Vol. 1 (ed. Mihir Chandra, 1898)",
      "contributor": "Charaka",
-     "year": -600,
-     "loc_item": "",
-     "note": "Core Ayurvedic compendium. Documents 340 plant drugs across 8 branches of medicine.",
-     "facsimile": false,
-     "tradition": "ayurveda"
+     "year": 1898,
+     "note": "A genuine 1898 printed Sanskrit edition of the classical Ayurvedic text, replacing an earlier placeholder — 400 real facsimile pages (first of the multi-volume set).",
+     "facsimile": true,
+     "tradition": "ayurveda",
+     "source_url": "https://archive.org/details/Zeim_charaka-samhita-edited-by-mihir-chandra-1898-bombay-khemraj-shri-krishna-dass",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "bencao-gangmu",
