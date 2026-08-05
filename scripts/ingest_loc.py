@@ -64,9 +64,12 @@ def main(item_id, slug, start=1, end=None):
     out = [{"page": p["page"], "text": p["text"], "image": p["image"]} for p in pages]
     os.makedirs("static/reader-data", exist_ok=True)
     path = f"static/reader-data/{slug}.json"
-    if start > 1 and os.path.exists(path):
+    if os.path.exists(path):
         prev = json.load(open(path))
-        out = [p for p in prev if p["page"] < start] + out
+        by_page = {p["page"]: p for p in prev}
+        for p in out:
+            by_page[p["page"]] = p  # new range overwrites/fills in; everything else preserved
+        out = sorted(by_page.values(), key=lambda p: p["page"])
     with open(path, "w") as f:
         json.dump(out, f, ensure_ascii=False)
     n_text = sum(1 for p in out if len(p["text"]) > 40)

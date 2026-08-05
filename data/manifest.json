@@ -497,6 +497,16 @@
      "note": "Jesuit natural history of the Americas. Documents medicinal uses of hundreds of plants across Andean and Mesoamerican traditions.",
      "facsimile": false,
      "tradition": "mesoamerican"
+    },
+    {
+     "slug": "florentine-codex-book11",
+     "role": "Aztec Medicine (Ethnographic)",
+     "title": "Florentine Codex, Book XI: Natural Things",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667856",
+     "note": "The medicinal-plant volume of Sahagún's monumental bilingual Nahuatl/Spanish ethnography, illuminated by Indigenous artists — the companion source to the Badianus Manuscript, presented here as facsimile. All 506 pages digitized from the Library of Congress copy.",
+     "facsimile": true
     }
    ]
   },
