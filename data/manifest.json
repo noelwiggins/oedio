@@ -715,13 +715,13 @@
     {
      "slug": "philippine-medicine",
      "role": "Primary text",
-     "title": "Philippine Traditional Medicine",
-     "contributor": "Filipino healers",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant medicine of the Philippine archipelago — Betel, Lagundi, Akapulko, Sambong.",
-     "facsimile": false,
-     "tradition": "philippine"
+     "title": "Flora de Filipinas, Vol. 1 (1837)",
+     "contributor": "Fray Manuel Blanco, O.S.A.",
+     "year": 1837,
+     "note": "A Spanish Augustinian friar's systematic survey of Philippine flora, including medicinal uses documented from local knowledge — replaces an earlier synthesized placeholder. 350 real facsimile pages (first volume).",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/mobot31753000808599",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "australian-medicine",
