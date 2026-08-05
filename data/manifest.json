@@ -638,13 +638,13 @@
     {
      "slug": "west-african-medicine",
      "role": "Primary text",
-     "title": "West African Traditional Medicine",
-     "contributor": "West African healers",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant knowledge of the Guinea Coast and Sahel — 648 passages documenting medicinal plants across the healing traditions of West Africa.",
-     "facsimile": false,
-     "tradition": "west_african"
+     "title": "A Catalogue of the Aburi Gardens (1906)",
+     "contributor": "Government Botanical Gardens, Aburi, Gold Coast — colonial record",
+     "year": 1906,
+     "note": "A British colonial administration's catalogue of the Gold Coast's botanical garden, recording local plant names and traditional uses as observed and documented by colonial staff. This is an outside observer's record, not a text authored by the West African communities whose knowledge it describes — the closest available primary-source document standing in for a genuinely oral tradition with no single canonical text of its own. 52 real facsimile pages, replacing an earlier synthesized placeholder.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/b28069705",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "south-african-medicine",
