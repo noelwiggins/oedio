@@ -556,13 +556,14 @@
     {
      "slug": "tibetan-gyushi",
      "role": "Primary text",
-     "title": "Gyushi — Four Tantras of Tibetan Medicine",
-     "contributor": "Yuthok Yönten Gönpo",
-     "year": 1200,
-     "loc_item": "",
-     "note": "The foundational text of Tibetan medicine. 156 chapters across four tantras.",
-     "facsimile": false,
-     "tradition": "tibetan"
+     "title": "Mes po'i zhal lung — Commentary on the Four Medical Tantras (rGyud bzhi)",
+     "contributor": "Traditional Tibetan medical scholarship, via BDRC",
+     "year": 1800,
+     "note": "A detailed traditional commentary on the Four Tantras, the foundational text of Sowa Rigpa (Tibetan medicine) — replaces an earlier placeholder. 598 real facsimile pages, sourced via the Buddhist Digital Resource Center.",
+     "facsimile": true,
+     "tradition": "tibetan",
+     "source_url": "https://archive.org/details/bdrc-W23738",
+     "source_label": "Internet Archive (BDRC)"
     },
     {
      "slug": "canon-avicenna",
