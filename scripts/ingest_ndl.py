@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""Ingest a National Diet Library of Japan (dl.ndl.go.jp) item's page scans
-into the oedio reader-data contract via its open IIIF v2 manifest.
+"""Ingest page scans from any open IIIF v2 manifest (National Diet Library of
+Japan, Princeton's Figgy platform, and similar) into the oedio reader-data
+contract. Works with either an NDL pid or a full manifest URL.
 
-NDL publishes a genuine, unauthenticated IIIF API for public-domain
-holdings -- unlike HathiTrust, which blocks programmatic access entirely
-without a registered OAuth key. Confirmed working, no credentials needed.
-
-Usage: python3 ingest_ndl.py <ndl_pid> <slug> [start] [end]
+Usage: python3 ingest_ndl.py <pid_or_manifest_url> <slug> [start] [end]
 Resumable, same merge semantics as ingest_loc.py / ingest_ia.py.
 """
 import json, os, re, sys
@@ -21,8 +18,10 @@ def fetch(url):
     return urllib.request.urlopen(req, timeout=60).read()
 
 
-def main(pid, slug, start=1, end=None):
-    manifest = json.loads(fetch(f"https://dl.ndl.go.jp/api/iiif/{pid}/manifest.json"))
+def main(pid_or_url, slug, start=1, end=None):
+    manifest_url = pid_or_url if pid_or_url.startswith("http") else \
+        f"https://dl.ndl.go.jp/api/iiif/{pid_or_url}/manifest.json"
+    manifest = json.loads(fetch(manifest_url))
     canvases = manifest.get("sequences", [{}])[0].get("canvases", [])
     if end:
         canvases = canvases[start - 1:end]

@@ -704,13 +704,13 @@
     {
      "slug": "maya-medicine",
      "role": "Primary text",
-     "title": "Maya Botanical Medicine",
-     "contributor": "Maya healers and scribes",
-     "year": 900,
-     "loc_item": "",
-     "note": "Plant remedies from the Maya tradition documented in colonial-era texts and surviving codices.",
-     "facsimile": false,
-     "tradition": "mesoamerican"
+     "title": "Ritual of the Bacabs (Maya medical incantations, c. 1779)",
+     "contributor": "Yucatec Maya healers, copied from an earlier manuscript",
+     "year": 1779,
+     "note": "A genuine Maya-language manuscript of medical incantations and herbal remedies — forty-two spells for ailments from seizures to snakebite — replacing an earlier synthesized placeholder. 348 real facsimile pages, Princeton University Library.",
+     "facsimile": true,
+     "source_url": "https://dpul.princeton.edu/mesoamerican/catalog/bn999802r",
+     "source_label": "Princeton University Library"
     },
     {
      "slug": "philippine-medicine",
