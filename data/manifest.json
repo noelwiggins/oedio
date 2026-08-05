@@ -649,13 +649,13 @@
     {
      "slug": "south-african-medicine",
      "role": "Primary text",
-     "title": "Southern African Traditional Medicine",
-     "contributor": "San, Zulu, Xhosa, Khoikhoi physicians",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant medicine of the San, Zulu, Xhosa, and Khoikhoi — including Aloe ferox, Buchu, Rooibos, and Hoodia.",
-     "facsimile": false,
-     "tradition": "south_african"
+     "title": "The Medicinal and Poisonous Plants of Southern Africa (1932)",
+     "contributor": "John Mitchell Watt & Maria Gerdina Breyer-Brandwijk",
+     "year": 1932,
+     "note": "The foundational scientific survey of Southern African medicinal plants, extensively documenting Zulu, Xhosa, Sotho and other traditional usage as recorded by the authors — an outside observer's record rather than a community-authored text, the closest available primary source for a genuinely oral tradition. 350 real facsimile pages, replacing an earlier synthesized placeholder.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/in.ernet.dli.2015.218558",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "east-african-medicine",
