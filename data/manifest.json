@@ -471,13 +471,14 @@
     {
      "slug": "bencao-jing",
      "role": "Primary text",
-     "title": "Shennong Bencao Jing (c.200 CE)",
-     "contributor": "Shennong (attributed)",
-     "year": 200,
-     "loc_item": "",
-     "note": "The Divine Farmer's Classic — 365 plant, mineral, and animal drugs in three grades.",
-     "facsimile": false,
-     "tradition": "chinese"
+     "title": "Shennong Bencao Jing (annotated by Wu Pu)",
+     "contributor": "Attrib. Shennong; commentary by Wu Pu (Three Kingdoms era)",
+     "year": 1900,
+     "note": "The oldest surviving Chinese pharmacopoeia tradition (the original Han-era text is lost; this is a historical reconstruction/commentary edition) — replaces an earlier placeholder. 172 real facsimile pages.",
+     "facsimile": true,
+     "tradition": "chinese",
+     "source_url": "https://archive.org/details/shennongbencaoji00weiw",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "badianus-manuscript",
