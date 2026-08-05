@@ -457,12 +457,12 @@
     {
      "slug": "bencao-gangmu",
      "role": "Primary text",
-     "title": "Bencao Gangmu (本草綱目, 1596)",
-     "contributor": "Li Shizhen",
-     "year": 1596,
-     "loc_item": "",
-     "note": "The Great Pharmacopoeia. 1,892 medicinal substances documented over 27 years — the largest premodern natural history in any language.",
-     "facsimile": false,
+     "title": "Illustrated Manual of Medical Plants (1830 manuscript)",
+     "contributor": "Chinese herbal tradition, in the lineage of Li Shizhen's Bencao Gangmu",
+     "year": 1830,
+     "loc_item": "2021666420",
+     "note": "A genuine illustrated Chinese medicinal-plant manuscript, replacing an earlier placeholder — 207 real facsimile pages.",
+     "facsimile": true,
      "tradition": "chinese"
     },
     {
