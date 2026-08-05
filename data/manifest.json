@@ -435,12 +435,12 @@
     {
      "slug": "dioscorides-materia-medica",
      "role": "Primary text",
-     "title": "De Materia Medica — Dioscorides",
+     "title": "De Materia Medica (early Byzantine manuscript, c. 500 CE)",
      "contributor": "Pedanius Dioscorides",
-     "year": 70,
-     "loc_item": "",
-     "note": "600 plants documented by the Greek physician who served Nero's army. The foundational pharmacopoeia for 1,500 years.",
-     "facsimile": false,
+     "year": 512,
+     "loc_item": "2021667873",
+     "note": "One of the earliest surviving illustrated copies of Dioscorides' foundational herbal, replacing an earlier placeholder — a real 351-page facsimile.",
+     "facsimile": true,
      "tradition": "greek_roman"
     },
     {
