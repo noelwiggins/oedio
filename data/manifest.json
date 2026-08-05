@@ -563,12 +563,12 @@
     {
      "slug": "canon-avicenna",
      "role": "Primary text",
-     "title": "The Canon of Medicine (1025)",
+     "title": "The Canon of Medicine (1329 manuscript)",
      "contributor": "Ibn Sīnā (Avicenna)",
-     "year": 1025,
-     "loc_item": "",
-     "note": "The most influential medical textbook in history. Used in European universities until the 17th century. 800+ plant drugs.",
-     "facsimile": false,
+     "year": 1329,
+     "loc_item": "2021667339",
+     "note": "A genuine 14th-century Arabic manuscript copy, replacing an earlier placeholder — 324 real facsimile pages.",
+     "facsimile": true,
      "tradition": "unani"
     },
     {
