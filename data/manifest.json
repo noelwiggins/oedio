@@ -616,13 +616,13 @@
     {
      "slug": "persian-avestan",
      "role": "Primary text",
-     "title": "Avestan / Zoroastrian Plant Medicine",
-     "contributor": "Various Zoroastrian physicians",
-     "year": 600,
-     "loc_item": "",
-     "note": "Plant medicine from the Zoroastrian tradition — haoma, medicinal herbs of ancient Persia.",
-     "facsimile": false,
-     "tradition": "persian_zoroastrian"
+     "title": "Le Zend-Avesta, Vol. 2 (trans. Darmesteter)",
+     "contributor": "James Darmesteter (scholarly French translation)",
+     "year": 1893,
+     "note": "The Zoroastrian scripture itself, including the Vendidad's purity and healing laws — the actual primary text rather than a synthesized placeholder. 300 real facsimile pages of the landmark Darmesteter critical edition.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/lezendavestatrad02darm",
+     "source_label": "Internet Archive"
     }
    ]
   },
