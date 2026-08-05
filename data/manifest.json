@@ -482,13 +482,14 @@
     {
      "slug": "badianus-manuscript",
      "role": "Facsimile",
-     "title": "Badianus Manuscript (1552)",
-     "contributor": "Martín de la Cruz / Juan Badianus",
+     "title": "Libellus de Medicinalibus Indorum Herbis (Codex de la Cruz-Badiano)",
+     "contributor": "Martín de la Cruz (Nahuatl text), trans. Juan Badiano (Latin)",
      "year": 1552,
-     "loc_item": "",
-     "note": "First New World herbal. Aztec physician documents 180 Nahuatl plant remedies with color illustrations — unique surviving copy.",
+     "note": "The first illustrated scientific text of Nahua medicine and botany produced in the Americas, replacing an earlier placeholder — 135 real facsimile pages of the actual 1552 manuscript.",
      "facsimile": true,
-     "tradition": "mesoamerican"
+     "tradition": "mesoamerican",
+     "source_url": "https://archive.org/details/codex-badiano",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "cobo-historia",
