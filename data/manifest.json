@@ -592,13 +592,14 @@
     {
      "slug": "yamato-honzo",
      "role": "Primary text",
-     "title": "Yamato Honzo (大和本草, 1709)",
-     "contributor": "Kaibara Ekiken (貝原益軒)",
+     "title": "Yamato Honzō, Vol. 1 (1709 first edition)",
+     "contributor": "Kaibara Ekiken",
      "year": 1709,
-     "loc_item": "",
-     "note": "Foundational encyclopedia of Japanese natural history. 1,362 plant species — first systematic separation of Japanese from Chinese botany.",
-     "facsimile": false,
-     "tradition": "japanese_honzo"
+     "note": "The founding text of Japanese natural history and herbal medicine, real facsimile pages from the National Diet Library of Japan — replaces an earlier placeholder. 106 real pages (Volume 1 of the 16-volume set).",
+     "facsimile": true,
+     "tradition": "japanese_honzo",
+     "source_url": "https://dl.ndl.go.jp/info:ndljp/pid/2557353",
+     "source_label": "National Diet Library of Japan"
     },
     {
      "slug": "honzo-wamyo",
