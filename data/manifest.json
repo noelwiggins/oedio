@@ -660,13 +660,13 @@
     {
      "slug": "east-african-medicine",
      "role": "Primary text",
-     "title": "Ethiopian & East African Medicine",
-     "contributor": "Ethiopian physicians",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant medicine of Ethiopia, Kenya, and East Africa including Kigelia africana and Hagenia abyssinica.",
-     "facsimile": false,
-     "tradition": "east_african"
+     "title": "Useful Plants of Nyasaland",
+     "contributor": "Jessie Williamson, ed. Percy James Greenway — colonial record",
+     "year": 1955,
+     "note": "A colonial-era botanical survey of what is now Malawi, documenting local plant uses including traditional medicine — an outside observer's record rather than a community-authored text, the closest available primary source for a genuinely oral tradition. 186 real facsimile pages, replacing an earlier synthesized placeholder.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/usefulplantsofny00willuoft",
+     "source_label": "Internet Archive"
     }
    ]
   },
