@@ -424,13 +424,15 @@
     {
      "slug": "ebers-papyrus",
      "role": "Primary text",
-     "title": "Papyrus Ebers (c.1550 BCE)",
+     "title": "Papyrus Ebers, facsimile edition (Ebers/Stern, 1875)",
      "contributor": "Ancient Egyptian physicians",
-     "year": -1550,
-     "loc_item": "",
-     "note": "Oldest surviving medical document. 700 remedies across 110 pages of hieratic script.",
-     "facsimile": false,
-     "tradition": "egyptian"
+     "year": 1875,
+     "loc_item": "papyrusebersdie00ebergoog",
+     "note": "A photographic facsimile edition of the original ancient Egyptian medical papyrus (c.1550 BCE), sourced from Internet Archive — replaces an earlier placeholder. 216 real facsimile pages.",
+     "facsimile": true,
+     "tradition": "egyptian",
+     "source_url": "https://archive.org/details/papyrusebersdie00ebergoog",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "dioscorides-materia-medica",
