@@ -604,13 +604,14 @@
     {
      "slug": "honzo-wamyo",
      "role": "Primary text",
-     "title": "Honzo Wamyo (本草和名, 918 CE)",
-     "contributor": "Fukane no Sukehito",
-     "year": 918,
-     "loc_item": "",
-     "note": "Japan's oldest surviving pharmacopoeia. Japanese vernacular names alongside Chinese pharmaceutical terms.",
-     "facsimile": false,
-     "tradition": "japanese_honzo"
+     "title": "Honzō Wamyō (1796 printing of the c.918 original)",
+     "contributor": "Fukae Sukehito",
+     "year": 1796,
+     "note": "Japan's oldest surviving materia medica text (Heian period, c.918 CE), matching Chinese drug names to their Japanese equivalents — this 1796 printing, real facsimile pages from the National Diet Library, replaces an earlier placeholder.",
+     "facsimile": true,
+     "tradition": "japanese_honzo",
+     "source_url": "https://dl.ndl.go.jp/info:ndljp/pid/2555536",
+     "source_label": "National Diet Library of Japan"
     },
     {
      "slug": "persian-avestan",
