@@ -313,8 +313,8 @@
     <div class="book-title">{{ book_title }}</div>
     <div class="book-meta">
       <a href="/book/{{ mega_slug }}">&larr; {{ mega_title }}</a> ·
-      {{ book_author }} · {{ book_year }} · Public domain{{ ", facsimile" if facsimile else ", full text" }} ·
-      <a href="{{ book_source_url }}" target="_blank" rel="noopener">View at {{ book_source_label }}</a>
+      {{ book_author }} · {{ book_year }} · Public domain{{ ", facsimile" if facsimile else ", full text" }}
+      {% if book_source_url %}· <a href="{{ book_source_url }}" target="_blank" rel="noopener">View at {{ book_source_label }}</a>{% endif %}
       · <span id="reader-page-indicator">Page — of —</span>
     </div>
     {% if facsimile %}
