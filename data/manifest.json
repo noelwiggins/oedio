@@ -693,13 +693,13 @@
     {
      "slug": "amazonian-medicine",
      "role": "Primary text",
-     "title": "Amazonian Plant Medicine",
-     "contributor": "Amazonian healers",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant medicine of the Amazon basin — Ayahuasca (Banisteriopsis caapi), Cat's claw, Sangre de drago, and 16 other compounds.",
-     "facsimile": false,
-     "tradition": "amazonian"
+     "title": "Notes of a Botanist on the Amazon & Andes, Vol. 1 (1908)",
+     "contributor": "Richard Spruce (travels 1849-1864)",
+     "year": 1908,
+     "note": "The field notebooks of the great Victorian botanist who spent fifteen years documenting Amazonian plants and their uses among indigenous communities, published posthumously — an outside observer's record rather than a community-authored text, the closest available primary source for a genuinely oral tradition. 350 real facsimile pages (first volume), replacing an earlier synthesized placeholder.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/notesofbotanisto00spruuoft",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "maya-medicine",
