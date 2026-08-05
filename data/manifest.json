@@ -493,13 +493,14 @@
     {
      "slug": "cobo-historia",
      "role": "Primary text",
-     "title": "Historia del Nuevo Mundo (1653)",
+     "title": "Historia del Nuevo Mundo, Primera Parte (ed. Jiménez de la Espada)",
      "contributor": "Bernabé Cobo",
      "year": 1653,
-     "loc_item": "",
-     "note": "Jesuit natural history of the Americas. Documents medicinal uses of hundreds of plants across Andean and Mesoamerican traditions.",
-     "facsimile": false,
-     "tradition": "mesoamerican"
+     "note": "The first scholarly edition of Cobo's Andean natural history, replacing an earlier placeholder — 450 real facsimile pages (Part I of the multi-volume work).",
+     "facsimile": true,
+     "tradition": "mesoamerican",
+     "source_url": "https://archive.org/details/A331002",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "florentine-codex-book11",
@@ -791,13 +792,14 @@
     {
      "slug": "welsh-myddfai",
      "role": "Primary text",
-     "title": "Meddygon Myddfai (c.1300)",
-     "contributor": "Physicians of Myddfai, Carmarthenshire",
-     "year": 1300,
-     "loc_item": "",
-     "note": "Oldest surviving Welsh herbal. Hereditary physicians of Myddfai blend Celtic, Druidic, and Christian healing traditions — 30 plant entries documented.",
-     "facsimile": false,
-     "tradition": "celtic_norse"
+     "title": "The Physicians of Myddvai (trans. from ancient Welsh mss.)",
+     "contributor": "Rhiwallon and his sons, physicians of Myddfai — trans. John Pughe",
+     "year": 1861,
+     "note": "Translated directly from the ancient manuscripts held at Jesus College Oxford, Llanover, and Tonn — replaces an earlier placeholder. 519 real facsimile pages, bilingual Welsh/English.",
+     "facsimile": true,
+     "tradition": "celtic_norse",
+     "source_url": "https://archive.org/details/physiciansmyddv00myddgoog",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "norse-medicine",
