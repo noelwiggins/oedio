@@ -1420,6 +1420,25 @@ if (!isMobile) {
     layerBtn.addEventListener('click', () => {
       if (zoomOverlay.style.display !== 'block') openZoom();
     });
+  } else if (layerBtn && new Set(allPages.map(p => p.image)).size >= Math.min(5, allPages.length)) {
+    // Real per-page scans (many distinct image URLs), even though this
+    // component isn't flagged pure-facsimile -- treat "Source" the same way.
+    layerBtn.style.display = 'flex';
+    layerBtnLabel.textContent = 'Source';
+    layerBtn.addEventListener('click', () => {
+      if (zoomOverlay.style.display !== 'block') openZoom();
+    });
+  } else if (layerBtn) {
+    // No alternate layer and no real page scans to show (a single-edition,
+    // text-only book). The floating control should still always be
+    // present and useful -- fall back to jump-to-page, the one navigation
+    // action every book has.
+    layerBtn.style.display = 'flex';
+    layerBtnLabel.textContent = 'Pages';
+    layerBtn.querySelector('.material-symbols-outlined').textContent = 'menu_book';
+    layerBtn.addEventListener('click', () => {
+      if (jumpSelect) { jumpSelect.focus(); jumpSelect.click(); }
+    });
   }
 }
 
