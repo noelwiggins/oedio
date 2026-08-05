@@ -682,13 +682,13 @@
     {
      "slug": "north-american-medicine",
      "role": "Primary text",
-     "title": "North American Indigenous Medicine",
-     "contributor": "Native American healers",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant knowledge of Native American nations — Echinacea, Black cohosh, Goldenseal, Sassafras, and 60+ other medicinal plants.",
-     "facsimile": false,
-     "tradition": "north_american"
+     "title": "Materia Medica Americana (1787)",
+     "contributor": "Johann David Schoepf",
+     "year": 1787,
+     "note": "A German physician's field survey of American medicinal plants, based on his 1783-84 travels through the newly independent United States — the earliest systematic scientific study of North American plant medicine. Replaces an earlier synthesized placeholder. 200 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/diodavidisschoep00sch",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "amazonian-medicine",
