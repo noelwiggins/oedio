@@ -39,6 +39,14 @@ _state = {
     "started_at": None,
     "log": [],
 }
+# KNOWN LIMITATION: this state is in-memory only. A Railway redeploy restarts
+# the process and silently kills any in-progress queue + worker thread with
+# no persistence or resume. Confirmed the hard way: queuing 20 jobs then
+# deploying an unrelated endpoint change killed the batch after only 2 of 22
+# jobs completed. Rule going forward: NEVER trigger a Railway deploy while
+# `queue_remaining` > 0 or `running` is true -- check /api/ingest-queue/status
+# first. A real fix (persisting queue state to a file or DB, resuming after
+# restart) is future work; for now, the operational discipline is the fix.
 _lock = threading.Lock()
 
 
