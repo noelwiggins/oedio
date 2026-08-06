@@ -11,7 +11,7 @@ import json
 import os
 from datetime import datetime
 
-from flask import Flask, abort, jsonify, render_template
+from flask import Flask, abort, jsonify, render_template, request
 
 # ── R2 reader-data base URL ──────────────────────────────────────────────────
 # Set R2_BASE_URL in Railway env to serve reader-data from Cloudflare R2.
@@ -271,6 +271,24 @@ def about():
 @app.route("/api/manifest")
 def api_manifest():
     return jsonify(MANIFEST)
+
+
+@app.route("/api/ingest-queue", methods=["POST"])
+def api_ingest_queue():
+    # Simple shared-secret guard -- this triggers real writes + git pushes,
+    # not something to leave open on a public endpoint.
+    secret = request.headers.get("X-Ingest-Secret") or request.args.get("secret")
+    if secret != os.environ.get("INGEST_QUEUE_SECRET"):
+        abort(403)
+    from ingest_queue import queue_jobs
+    jobs = request.get_json(force=True).get("jobs", [])
+    return jsonify(queue_jobs(jobs))
+
+
+@app.route("/api/ingest-queue/status")
+def api_ingest_queue_status():
+    from ingest_queue import get_status
+    return jsonify(get_status())
 
 
 @app.route("/healthz")
