@@ -76,8 +76,9 @@ def call_claude(img_b64, lang, description, want_translation):
         try:
             resp = json.loads(urllib.request.urlopen(req, timeout=90).read())
             return "".join(b.get("text", "") for b in resp.get("content", []))
-        except Exception:
+        except Exception as e:
             if attempt == 2:
+                print(f"    call_claude failed after 3 attempts: {type(e).__name__}: {e}")
                 return None
             time.sleep(10 * (attempt + 1))
 
@@ -139,7 +140,8 @@ def main(slug, start, end, lang, description=None, want_translation=True):
             if tr.strip() == "NO_TEXT":
                 tr, en = "\u2014", ("\u2014" if want_translation else None)
             return pg, tr, en
-        except Exception:
+        except Exception as e:
+            print(f"  page {pg} failed: {type(e).__name__}: {e}")
             return pg, None, None
 
     done = 0
