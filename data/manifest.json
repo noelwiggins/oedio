@@ -815,13 +815,13 @@
     {
      "slug": "norse-medicine",
      "role": "Primary text",
-     "title": "Norse & Scandinavian Plant Medicine",
-     "contributor": "Anglo-Saxon and Norse healers / Völvas",
-     "year": 1000,
-     "loc_item": "",
-     "note": "Nine Herb Charm (invokes Odin, c.1000 CE), Henrik Harpestraeng Liber Herbarum (c.1244), and Icelandic manuscripts.",
-     "facsimile": false,
-     "tradition": "celtic_norse"
+     "title": "De Simplicibus Medicinis Laxativis (ed. Johnsson, 1914)",
+     "contributor": "Henrik Harpestræng (c.1164-1244), ed. J.W.S. Johnsson",
+     "year": 1914,
+     "note": "A scholarly critical edition of Harpestraeng's medical writings, the direct source tradition behind the surviving Old Norse/Icelandic medical manuscripts (the actual manuscripts, held at Iceland's Arnamagnaean collection, are only accessible through a captcha-gated viewer). 112 real facsimile pages, replacing an earlier synthesized placeholder.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/b23983140",
+     "source_label": "Internet Archive"
     },
     {
      "slug": "russian-travnik",
