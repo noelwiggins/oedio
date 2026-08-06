@@ -503,16 +503,6 @@
      "tradition": "mesoamerican",
      "source_url": "https://archive.org/details/A331002",
      "source_label": "Internet Archive"
-    },
-    {
-     "slug": "florentine-codex-book11",
-     "role": "Aztec Medicine (Ethnographic)",
-     "title": "Florentine Codex, Book XI: Natural Things",
-     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
-     "year": 1577,
-     "loc_item": "2021667856",
-     "note": "The medicinal-plant volume of Sahagún's monumental bilingual Nahuatl/Spanish ethnography, illuminated by Indigenous artists — the companion source to the Badianus Manuscript, presented here as facsimile. All 506 pages digitized from the Library of Congress copy.",
-     "facsimile": true
     }
    ]
   },
@@ -1062,6 +1052,135 @@
      "note": "Spanish royal cartographer's view of the Lesser Antilles.",
      "facsimile": true,
      "dzi_url": "/static/dzi/1781-lopez-antillas-menores.dzi"
+    }
+   ]
+  },
+  {
+   "slug": "florentine-codex",
+   "title": "The Florentine Codex",
+   "author": "Fray Bernardino de Sahagún",
+   "spine_color": "linear-gradient(160deg,#8a3a2e,#4a1e15)",
+   "description": "The most complete surviving account of Aztec civilization at the moment of the Spanish conquest — a bilingual Nahuatl/Spanish encyclopedia compiled by a Franciscan friar working with Nahua scholars and artists over three decades. Twelve books cover the gods, ceremonies, divination, rhetoric, kingship, trade, natural history, and the conquest itself, illustrated throughout by Indigenous tlacuiloque. All twelve volumes, complete, in real facsimile from the Library of Congress copy — 2,439 pages.",
+   "components": [
+    {
+     "slug": "florentine-codex-book01",
+     "role": "Book 1",
+     "title": "Book 1: The Gods",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667846",
+     "note": "118 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book02",
+     "role": "Book 2",
+     "title": "Book 2: The Ceremonies",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667847",
+     "note": "290 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book03",
+     "role": "Book 3",
+     "title": "Book 3: The Origin of the Gods",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667848",
+     "note": "81 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book04",
+     "role": "Book 4",
+     "title": "Book 4: The Soothsayers (Art of Divination)",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667849",
+     "note": "175 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book05",
+     "role": "Book 5",
+     "title": "Book 5: The Omens",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667850",
+     "note": "47 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book06",
+     "role": "Book 6",
+     "title": "Book 6: Rhetoric and Moral Philosophy",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667851",
+     "note": "439 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book07",
+     "role": "Book 7",
+     "title": "Book 7: The Sun, Moon, and Stars, and the Binding of the Years",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667852",
+     "note": "51 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book08",
+     "role": "Book 8",
+     "title": "Book 8: Kings and Lords",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667853",
+     "note": "116 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book09",
+     "role": "Book 9",
+     "title": "Book 9: The Merchants",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667854",
+     "note": "138 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book10",
+     "role": "Book 10",
+     "title": "Book 10: The People (their Virtues and Vices, and other Nations)",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667855",
+     "note": "301 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book11",
+     "role": "Book 11",
+     "title": "Book 11: Natural Things (earth, animals, plants, minerals)",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667856",
+     "note": "506 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book12",
+     "role": "Book 12",
+     "title": "Book 12: The Conquest of Mexico",
+     "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
+     "year": 1577,
+     "loc_item": "2021667857",
+     "note": "177 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "facsimile": true
     }
    ]
   }
