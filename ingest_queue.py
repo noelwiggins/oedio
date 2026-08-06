@@ -90,19 +90,26 @@ def _git_commit_and_push(message, remote):
 
 def _run_job(job, remote):
     sys.path.insert(0, os.path.join(WORK_DIR, "scripts"))
-    for mod in ("ingest_loc", "ingest_ia", "ingest_ndl"):
+    for mod in ("ingest_loc", "ingest_ia", "ingest_ndl", "forge_translate"):
         sys.modules.pop(mod, None)  # force fresh import so BASE/__file__ resolve into this clone
-    os.chdir(WORK_DIR)  # ingest_loc.py writes relative to cwd, not a BASE var
+    os.chdir(WORK_DIR)  # ingest_loc.py / forge_translate.py write relative to cwd
     platform = job["platform"]
     if platform == "loc":
         import ingest_loc as m
+        m.main(job["source"], job["slug"], job.get("start", 1), job.get("end"))
     elif platform == "ia":
         import ingest_ia as m
+        m.main(job["source"], job["slug"], job.get("start", 1), job.get("end"))
     elif platform == "ndl":
         import ingest_ndl as m
+        m.main(job["source"], job["slug"], job.get("start", 1), job.get("end"))
+    elif platform == "forge":
+        import forge_translate as m
+        m.main(job["slug"], job.get("start", 1), job.get("end"),
+               job.get("lang", "English"), job.get("description"),
+               job.get("want_translation", True))
     else:
         raise ValueError(f"unknown platform: {platform}")
-    m.main(job["source"], job["slug"], job.get("start", 1), job.get("end"))
 
 
 def _worker():
