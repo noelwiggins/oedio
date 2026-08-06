@@ -726,13 +726,13 @@
     {
      "slug": "australian-medicine",
      "role": "Primary text",
-     "title": "Australian Aboriginal Plant Medicine",
-     "contributor": "Aboriginal healers",
-     "year": 1900,
-     "loc_item": "",
-     "note": "Plant knowledge of Australian Aboriginal peoples — Tea tree, Eucalyptus, Kangaroo apple, and 15 more.",
-     "facsimile": false,
-     "tradition": "australian"
+     "title": "The Useful Native Plants of Australia (1889)",
+     "contributor": "Joseph Henry Maiden — colonial record",
+     "year": 1889,
+     "note": "A colonial-era compilation of Australian native plant uses. Maiden himself acknowledged relying on settler and scientific sources rather than direct consultation with Aboriginal communities — an outside observer's record at some remove even from other colonial surveys, offered as the closest available primary-source document standing in for a genuinely oral tradition with no single canonical text of its own. 350 real facsimile pages, replacing an earlier synthesized placeholder.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/usefulnativeplan00maid",
+     "source_label": "Internet Archive"
     }
    ]
   },
