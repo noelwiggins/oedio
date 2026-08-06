@@ -273,6 +273,27 @@ def api_manifest():
     return jsonify(MANIFEST)
 
 
+@app.route("/api/network-probe")
+def api_network_probe():
+    secret = request.headers.get("X-Ingest-Secret") or request.args.get("secret")
+    if secret != os.environ.get("INGEST_QUEUE_SECRET"):
+        abort(403)
+    import urllib.request
+    url = request.args.get("url")
+    if not url:
+        abort(400)
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "oedio.com megabook builder (noel@harmonyball.com)"})
+        resp = urllib.request.urlopen(req, timeout=15)
+        body = resp.read(300)
+        challenged = b"Just a moment" in body or b"cf-browser-verification" in body
+        return jsonify({"status": resp.status, "challenged": challenged,
+                        "body_sample": body[:150].decode("utf-8", "replace")})
+    except Exception as e:
+        return jsonify({"error": f"{type(e).__name__}: {e}"})
+
+
 @app.route("/api/ingest-queue", methods=["POST"])
 def api_ingest_queue():
     # Simple shared-secret guard -- this triggers real writes + git pushes,
