@@ -3,52 +3,74 @@
 
 {% block extra_head %}
 <style>
-  .shelf-intro { max-width:900px; margin:0 auto; padding:28px 24px 8px; }
-  .shelf-intro h1 { font-family:Georgia,serif; font-size:26px; font-weight:600;
+  .shelf-intro { max-width:760px; margin:0 auto; padding:24px 24px 4px; text-align:center; }
+  .shelf-intro h1 { font-family:Georgia,serif; font-size:25px; font-weight:600;
     color:var(--md-sys-color-on-surface); margin:0 0 8px; }
-  .shelf-intro p { color:var(--md-sys-color-on-surface-variant); font-size:14px;
-    line-height:1.65; margin:0 0 32px; }
+  .shelf-intro p { color:var(--md-sys-color-on-surface-variant); font-size:13.5px;
+    line-height:1.6; margin:0; }
 
-  /* Section cards */
-  .section-grid { max-width:900px; margin:0 auto; padding:0 24px 40px;
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
-  .section-card { background:var(--md-sys-color-surface-container); border-radius:16px;
-    padding:22px 22px 18px; text-decoration:none; display:block;
-    border:1px solid var(--md-sys-color-outline-variant);
-    transition:transform 0.15s ease, border-color 0.15s ease; }
-  .section-card:hover { transform:translateY(-4px); border-color:var(--md-sys-color-primary); }
-  .section-icon { font-size:28px; margin-bottom:10px; }
-  .section-title { font-family:Georgia,serif; font-size:18px; font-weight:600;
-    color:var(--md-sys-color-on-surface); margin-bottom:6px; }
-  .section-desc { font-size:13px; color:var(--md-sys-color-on-surface-variant);
-    line-height:1.6; margin-bottom:14px; }
-  .section-meta { font-size:11.5px; font-weight:700; letter-spacing:.07em;
-    text-transform:uppercase; color:var(--md-sys-color-primary); }
+  /* ===================== The Rotunda ===================== */
+  .rotunda-wrap { position:relative; height:min(64vh, 560px); min-height:400px;
+    margin:22px 0 0; overflow:hidden;
+    background: radial-gradient(ellipse 70% 55% at 50% 40%, rgba(212,175,90,.09), transparent 70%),
+                linear-gradient(180deg, var(--md-sys-color-surface) 0%, var(--md-sys-color-surface-container-low) 100%);
+    touch-action: pan-y; }
+  .rotunda-stage { position:absolute; inset:0; perspective:1400px; perspective-origin:50% 42%;
+    cursor:grab; }
+  .rotunda-stage.grabbing { cursor:grabbing; }
+  .rotunda { position:absolute; left:50%; top:44%; width:0; height:0;
+    transform-style:preserve-3d; will-change:transform; }
 
-  /* Shelf — all megabooks compact view */
-  .all-shelf-label { max-width:900px; margin:0 auto; padding:0 24px 10px;
+  .r-spine { position:absolute; left:0; top:0; margin-left:calc(var(--w) / -2 * 1px);
+    width:calc(var(--w) * 1px); height:190px; margin-top:-95px; border-radius:4px 9px 9px 4px;
+    display:flex; align-items:center; justify-content:center; padding:14px 7px;
+    text-decoration:none; cursor:pointer; backface-visibility:hidden;
+    box-shadow:2px 2px 9px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.35);
+    transition: box-shadow .2s ease; }
+  .r-spine::before { content:''; position:absolute; inset:6px; border:1px solid rgba(212,175,90,.4);
+    border-radius:3px; pointer-events:none; }
+  .r-spine .rs-title { color:rgba(255,255,255,.94); font-size:12.5px; font-weight:600; line-height:1.28;
+    writing-mode:vertical-rl; text-orientation:mixed; text-align:center; max-height:162px; overflow:hidden;
+    font-family:Georgia,'Times New Roman',serif; letter-spacing:.03em; pointer-events:none; }
+  .r-spine .rs-count { position:absolute; bottom:7px; left:0; right:0; text-align:center;
+    color:rgba(212,175,90,.85); font-size:9px; font-weight:700; writing-mode:horizontal-tb;
+    pointer-events:none; }
+  .r-spine.pulling { transition: transform .55s cubic-bezier(.2,.8,.3,1), box-shadow .3s; z-index:50;
+    box-shadow:6px 10px 28px rgba(0,0,0,.7), inset 0 0 20px rgba(0,0,0,.35); }
+
+  .r-label { position:absolute; left:0; top:0; width:0; height:0; pointer-events:none; }
+  .r-label span { display:block; transform:translate(-50%,-140px); font-size:10.5px; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--md-sys-color-primary);
+    white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,.6); background:rgba(0,0,0,.28);
+    padding:5px 12px; border-radius:12px; backdrop-filter:blur(3px); }
+
+  .r-floor { position:absolute; left:8%; right:8%; bottom:8%; height:14%; border-radius:50%;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,.38), transparent 72%);
+    filter:blur(2px); pointer-events:none; }
+
+  /* Controls overlay */
+  .rotunda-hint { position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    font-size:11px; color:var(--md-sys-color-on-surface-variant); background:var(--md-sys-color-surface-container);
+    padding:5px 14px; border-radius:12px; opacity:.85; pointer-events:none;
+    display:flex; align-items:center; gap:6px; transition:opacity .4s ease; }
+  .rotunda-hint.faded { opacity:0; }
+  .rotunda-zoom-controls { position:absolute; right:12px; bottom:12px; display:flex; flex-direction:column;
+    gap:6px; z-index:40; }
+  .rz-btn { width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface);
+    box-shadow:0 2px 8px rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center;
+    font-size:19px; font-family:Georgia,serif; }
+  .rz-btn:active { transform:scale(.92); }
+
+  .all-shelf-label { max-width:900px; margin:26px auto 0; padding:0 24px 8px;
     font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--md-sys-color-on-surface-variant); }
-  .shelf-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; padding:16px 0 8px; }
-  .shelf-row { display:flex; align-items:flex-end; gap:12px; padding:0 32px;
-    min-width:min-content; }
-  .mega-spine { flex:0 0 auto; height:200px; border-radius:5px 10px 10px 5px; cursor:pointer;
-    position:relative; display:flex; align-items:center; justify-content:center; padding:14px 8px;
-    text-decoration:none;
-    box-shadow:3px 3px 10px rgba(0,0,0,.55),inset 0 0 24px rgba(0,0,0,.35);
-    transition:transform 0.15s ease; }
-  .mega-spine:hover { transform:translateY(-8px); }
-  .mega-spine::before { content:''; position:absolute; inset:6px;
-    border:1px solid rgba(212,175,90,.45); border-radius:3px; pointer-events:none; }
-  .mega-spine .spine-title { color:rgba(255,255,255,.94); font-size:13px; font-weight:600;
-    line-height:1.3; writing-mode:vertical-rl; text-orientation:mixed; text-align:center;
-    max-height:170px; overflow:hidden; font-family:Georgia,'Times New Roman',serif;
-    letter-spacing:.04em; }
-  .mega-spine .spine-count { position:absolute; bottom:8px; left:0; right:0;
-    text-align:center; color:rgba(212,175,90,.85); font-size:9.5px; font-weight:700;
-    writing-mode:horizontal-tb; }
-  .shelf-board { height:10px; background:linear-gradient(#4a3521,#33241a);
-    border-radius:2px; box-shadow:0 4px 6px rgba(0,0,0,.45); margin:0 16px; }
+    color:var(--md-sys-color-on-surface-variant); text-align:center; }
+
+  @media (max-width: 640px) {
+    .rotunda-wrap { height:52vh; min-height:340px; }
+    .r-spine { height:150px; margin-top:-75px; }
+    .r-spine .rs-title { max-height:122px; font-size:11px; }
+  }
 </style>
 {% endblock %}
 
@@ -57,36 +79,198 @@
   <h1>The megabook library</h1>
   <p>Each volume is a <strong>megabook</strong>: one work compiled from multiple digitized editions —
      original languages, competing translations, illustrated printings, commentaries —
-     every one published before 1929 and free of copyright. Browse by section or pull any spine off the shelf.</p>
+     every one published before 1929 and free of copyright. Spin the shelf, pinch to look closer,
+     and tap any spine to pull it down.</p>
 </div>
 
-<div class="section-grid">
-  {% for s in sections %}
-  {% set mb_count = megabooks_by_section.get(s.slug, [])|length %}
-  <a href="/section/{{ s.slug }}" class="section-card">
-    <div class="section-icon">{{ s.icon }}</div>
-    <div class="section-title">{{ s.title }}</div>
-    <div class="section-desc">{{ s.description }}</div>
-    <div class="section-meta">{{ mb_count }} megabook{% if mb_count != 1 %}s{% endif %} &rsaquo;</div>
-  </a>
-  {% endfor %}
-</div>
-
-<div class="all-shelf-label">All volumes</div>
-<div class="shelf-scroll">
-  <div class="shelf-row">
-    {% for mb in megabooks %}
-    <a class="mega-spine" href="/book/{{ mb.slug }}"
-       style="width:{{ 50 + mb.components|length * 13 }}px; background:{{ mb.spine_color }};">
-      <span class="spine-title">{{ mb.title }}</span>
-      <span class="spine-count">{{ mb.components|length }} EDS.</span>
-    </a>
-    {% endfor %}
+<div class="rotunda-wrap" id="rotunda-wrap">
+  <div class="r-floor"></div>
+  <div class="rotunda-stage" id="rotunda-stage">
+    <div class="rotunda" id="rotunda"></div>
+  </div>
+  <div class="rotunda-hint" id="rotunda-hint">
+    <span class="material-symbols-outlined" style="font-size:15px;">swipe</span>
+    Drag to spin &middot; pinch or scroll to zoom &middot; tap a spine to open
+  </div>
+  <div class="rotunda-zoom-controls">
+    <button class="rz-btn" id="rz-in" aria-label="Zoom in">+</button>
+    <button class="rz-btn" id="rz-out" aria-label="Zoom out">&minus;</button>
   </div>
 </div>
-<div class="shelf-board"></div>
+
+<div class="all-shelf-label">{{ megabooks|length }} megabooks on the shelf</div>
 
 <footer class="site-footer">
   © 2026 Noel Wiggins · oedio.com · All rights reserved
 </footer>
+{% endblock %}
+
+{% block extra_scripts %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<script>
+(function () {
+  const SECTIONS = {{ sections|tojson }};
+  const MEGABOOKS = {{ megabooks|tojson }};
+  const bySection = {};
+  MEGABOOKS.forEach(mb => {
+    const key = mb.section || '_other';
+    (bySection[key] = bySection[key] || []).push(mb);
+  });
+  const ordered = [];
+  const sectionRanges = [];
+  SECTIONS.forEach(s => {
+    const books = bySection[s.slug] || [];
+    if (!books.length) return;
+    const start = ordered.length;
+    books.forEach(b => ordered.push(b));
+    sectionRanges.push({ label: s.title, icon: s.icon, start, end: ordered.length - 1 });
+  });
+  (bySection['_other'] || []).forEach(b => ordered.push(b));
+
+  const N = ordered.length;
+  const rotunda = document.getElementById('rotunda');
+  const stage = document.getElementById('rotunda-stage');
+  const wrap = document.getElementById('rotunda-wrap');
+  const hint = document.getElementById('rotunda-hint');
+  if (!N) return;
+
+  const angleStep = 360 / N;
+  const radius = Math.max(260, Math.round(110 / Math.tan(Math.PI / N)));
+
+  ordered.forEach((mb, i) => {
+    const angle = i * angleStep;
+    const width = 46 + Math.min(mb.components.length, 14) * 11;
+    const el = document.createElement('a');
+    el.className = 'r-spine';
+    el.href = '/book/' + mb.slug;
+    el.style.setProperty('--w', width);
+    el.style.background = mb.spine_color;
+    el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+    el.dataset.angle = angle;
+    el.dataset.slug = mb.slug;
+    el.innerHTML = `<span class="rs-title">${mb.title}</span><span class="rs-count">${mb.components.length} EDS.</span>`;
+    rotunda.appendChild(el);
+  });
+
+  sectionRanges.forEach(r => {
+    const midAngle = ((r.start + r.end) / 2) * angleStep;
+    const el = document.createElement('div');
+    el.className = 'r-label';
+    el.style.transform = `rotateY(${midAngle}deg) translateZ(${radius + 4}px)`;
+    el.innerHTML = `<span>${r.icon} ${r.label}</span>`;
+    rotunda.appendChild(el);
+  });
+
+  let currentAngle = -angleStep * 0.5;
+  let scale = 1;
+  let velocity = 0;
+  let dragging = false;
+  let lastX = 0, lastT = 0, moved = 0;
+  let momentumRAF = null;
+
+  function apply() {
+    rotunda.style.transform = `rotateY(${currentAngle}deg) scale(${scale})`;
+  }
+  apply();
+
+  function clampScale(s) { return Math.max(0.55, Math.min(2.4, s)); }
+  function stopMomentum() { if (momentumRAF) cancelAnimationFrame(momentumRAF); momentumRAF = null; }
+  function runMomentum() {
+    stopMomentum();
+    function step() {
+      velocity *= 0.94;
+      currentAngle += velocity;
+      apply();
+      if (Math.abs(velocity) > 0.02) momentumRAF = requestAnimationFrame(step);
+    }
+    momentumRAF = requestAnimationFrame(step);
+  }
+  function fadeHint() { hint.classList.add('faded'); }
+
+  function pointerDown(x) {
+    stopMomentum();
+    dragging = true;
+    lastX = x;
+    lastT = performance.now();
+    moved = 0;
+    stage.classList.add('grabbing');
+  }
+  function pointerMove(x) {
+    if (!dragging) return;
+    const dx = x - lastX;
+    moved += Math.abs(dx);
+    const now = performance.now();
+    const dt = Math.max(1, now - lastT);
+    currentAngle += dx * 0.35;
+    velocity = (dx * 0.35) * (16 / dt);
+    lastX = x; lastT = now;
+    apply();
+  }
+  function pointerUp(target) {
+    if (!dragging) return;
+    dragging = false;
+    stage.classList.remove('grabbing');
+    if (Math.abs(velocity) > 0.15) runMomentum();
+    if (moved < 6) {
+      fadeHint();
+      const spine = target && target.closest ? target.closest('.r-spine') : null;
+      if (spine) openSpine(spine);
+    } else {
+      fadeHint();
+    }
+  }
+
+  stage.addEventListener('mousedown', e => { pointerDown(e.clientX); e.preventDefault(); });
+  window.addEventListener('mousemove', e => pointerMove(e.clientX));
+  window.addEventListener('mouseup', e => pointerUp(e.target));
+
+  let pinchStartDist = null, pinchStartScale = 1;
+  function touchDist(t) {
+    const dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+  stage.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      dragging = false; stopMomentum();
+      pinchStartDist = touchDist(e.touches);
+      pinchStartScale = scale;
+    } else if (e.touches.length === 1) {
+      pointerDown(e.touches[0].clientX);
+    }
+  }, { passive: true });
+  stage.addEventListener('touchmove', e => {
+    if (e.touches.length === 2 && pinchStartDist) {
+      const d = touchDist(e.touches);
+      scale = clampScale(pinchStartScale * (d / pinchStartDist));
+      apply();
+    } else if (e.touches.length === 1) {
+      pointerMove(e.touches[0].clientX);
+    }
+  }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    pinchStartDist = null;
+    pointerUp(e.target);
+  });
+
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    scale = clampScale(scale - e.deltaY * 0.0015);
+    apply();
+    fadeHint();
+  }, { passive: false });
+
+  document.getElementById('rz-in').addEventListener('click', () => { scale = clampScale(scale + 0.18); apply(); fadeHint(); });
+  document.getElementById('rz-out').addEventListener('click', () => { scale = clampScale(scale - 0.18); apply(); fadeHint(); });
+
+  function openSpine(spine) {
+    if (spine.classList.contains('pulling')) return;
+    spine.classList.add('pulling');
+    const angle = parseFloat(spine.dataset.angle);
+    spine.style.transform = `rotateY(${angle}deg) translateZ(${radius + 90}px) scale(1.08)`;
+    setTimeout(() => { window.location.href = spine.getAttribute('href'); }, 420);
+  }
+
+  setTimeout(fadeHint, 4500);
+})();
+</script>
 {% endblock %}
