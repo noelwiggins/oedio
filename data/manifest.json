@@ -503,6 +503,106 @@
      "tradition": "mesoamerican",
      "source_url": "https://archive.org/details/A331002",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "ebers-papyrus-transcription",
+     "role": "Primary text",
+     "title": "Ebers Papyrus — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in German and Latin scholarly commentary",
+     "year": 1875,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Ebers Papyrus (1875 facsimile edition) into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "ebers-papyrus-english",
+     "role": "Translations",
+     "title": "Ebers Papyrus — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1875,
+     "loc_item": "",
+     "note": "An AI English translation of the Ebers Papyrus (1875 facsimile edition), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "charaka-samhita-transcription",
+     "role": "Primary text",
+     "title": "Charaka Samhita — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Sanskrit, with English commentary where present",
+     "year": 1898,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Charaka Samhita (1898 edition) into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "charaka-samhita-english",
+     "role": "Translations",
+     "title": "Charaka Samhita — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1898,
+     "loc_item": "",
+     "note": "An AI English translation of the Charaka Samhita (1898 edition), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "bencao-jing-transcription",
+     "role": "Primary text",
+     "title": "Bencao Jing — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Chinese",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Shennong Bencao Jing into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "bencao-jing-english",
+     "role": "Translations",
+     "title": "Bencao Jing — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1900,
+     "loc_item": "",
+     "note": "An AI English translation of the Shennong Bencao Jing, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "badianus-manuscript-transcription",
+     "role": "Facsimile",
+     "title": "Badianus Manuscript — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Latin, with Nahuatl botanical terms where present",
+     "year": 1552,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Codex de la Cruz-Badiano (1552) into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "badianus-manuscript-english",
+     "role": "Translations",
+     "title": "Badianus Manuscript — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1552,
+     "loc_item": "",
+     "note": "An AI English translation of the Codex de la Cruz-Badiano (1552), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "cobo-historia-transcription",
+     "role": "Primary text",
+     "title": "Cobo Historia — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Spanish",
+     "year": 1653,
+     "loc_item": "",
+     "note": "A complete AI transcription of Cobo's Historia del Nuevo Mundo (1653) into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "cobo-historia-english",
+     "role": "Translations",
+     "title": "Cobo Historia — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1653,
+     "loc_item": "",
+     "note": "An AI English translation of Cobo's Historia del Nuevo Mundo (1653), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
     }
    ]
   },
@@ -723,6 +823,26 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/usefulnativeplan00maid",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "maya-medicine-transcription",
+     "role": "Primary text",
+     "title": "Ritual of the Bacabs — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Yucatec Maya (colonial-era orthography)",
+     "year": 1779,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Ritual of the Bacabs (c.1779) into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "maya-medicine-english",
+     "role": "Translations",
+     "title": "Ritual of the Bacabs — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1779,
+     "loc_item": "",
+     "note": "An AI English translation of the Ritual of the Bacabs (c.1779), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
     }
    ]
   },
@@ -856,6 +976,26 @@
      "note": "94 validated plant monographs — the authoritative global standard for plant medicine.",
      "facsimile": false,
      "tradition": "who"
+    },
+    {
+     "slug": "balds-leechbook-ms-transcription",
+     "role": "Facsimile",
+     "title": "Bald's Leechbook — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Old English (Anglo-Saxon)",
+     "year": 950,
+     "loc_item": "",
+     "note": "A complete AI transcription of Bald's Leechbook (c.950 CE) into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "balds-leechbook-ms-english",
+     "role": "Translations",
+     "title": "Bald's Leechbook — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 950,
+     "loc_item": "",
+     "note": "An AI English translation of Bald's Leechbook (c.950 CE), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
     }
    ]
   },
