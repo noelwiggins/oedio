@@ -713,6 +713,86 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/lezendavestatrad02darm",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "tibetan-gyushi-transcription",
+     "role": "Primary text",
+     "title": "Tibetan Gyushi — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Tibetan",
+     "year": 1800,
+     "loc_item": "",
+     "note": "A complete AI transcription of a traditional Tibetan commentary on the Four Medical Tantras into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "tibetan-gyushi-english",
+     "role": "Translations",
+     "title": "Tibetan Gyushi — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1800,
+     "loc_item": "",
+     "note": "An AI English translation of a traditional Tibetan commentary on the Four Medical Tantras, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "yamato-honzo-transcription",
+     "role": "Primary text",
+     "title": "Yamato Honzo — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Japanese (classical, kanbun-influenced)",
+     "year": 1709,
+     "loc_item": "",
+     "note": "A complete AI transcription of Kaibara Ekiken's 1709 Yamato Honzo, founding text of Japanese natural history into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "yamato-honzo-english",
+     "role": "Translations",
+     "title": "Yamato Honzo — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1709,
+     "loc_item": "",
+     "note": "An AI English translation of Kaibara Ekiken's 1709 Yamato Honzo, founding text of Japanese natural history, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "honzo-wamyo-transcription",
+     "role": "Primary text",
+     "title": "Honzo Wamyo — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Japanese (classical)",
+     "year": 1796,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Honzo Wamyo, Japan's oldest surviving materia medica text into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "honzo-wamyo-english",
+     "role": "Translations",
+     "title": "Honzo Wamyo — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1796,
+     "loc_item": "",
+     "note": "An AI English translation of the Honzo Wamyo, Japan's oldest surviving materia medica text, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "persian-avestan-transcription",
+     "role": "Primary text",
+     "title": "Zend-Avesta — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in French",
+     "year": 1893,
+     "loc_item": "",
+     "note": "A complete AI transcription of Darmesteter's French translation of the Zend-Avesta into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "persian-avestan-english",
+     "role": "Translations",
+     "title": "Zend-Avesta — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1893,
+     "loc_item": "",
+     "note": "An AI English translation of Darmesteter's French translation of the Zend-Avesta, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
     }
    ]
   },
@@ -757,6 +837,36 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/usefulplantsofny00willuoft",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "west-african-medicine-transcription",
+     "role": "Primary text",
+     "title": "Aburi Gardens Catalogue — full text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in English",
+     "year": 1906,
+     "loc_item": "",
+     "note": "A complete AI transcription of an 1906 British colonial catalogue of the Aburi Gardens into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "south-african-medicine-transcription",
+     "role": "Primary text",
+     "title": "Medicinal Plants of Southern Africa — full text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in English",
+     "year": 1932,
+     "loc_item": "",
+     "note": "A complete AI transcription of Watt & Breyer-Brandwijk's 1932 survey of Southern African medicinal plants into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "east-african-medicine-transcription",
+     "role": "Primary text",
+     "title": "Useful Plants of Nyasaland — full text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in English",
+     "year": 1955,
+     "loc_item": "",
+     "note": "A complete AI transcription of a colonial-era survey, Useful Plants of Nyasaland into readable text, beside the original scans. Unverified.",
+     "facsimile": false
     }
    ]
   },
@@ -842,6 +952,66 @@
      "year": 1779,
      "loc_item": "",
      "note": "An AI English translation of the Ritual of the Bacabs (c.1779), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "north-american-medicine-transcription",
+     "role": "Primary text",
+     "title": "Materia Medica Americana — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Latin",
+     "year": 1787,
+     "loc_item": "",
+     "note": "A complete AI transcription of Schoepf's 1787 Materia Medica Americana into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "north-american-medicine-english",
+     "role": "Translations",
+     "title": "Materia Medica Americana — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1787,
+     "loc_item": "",
+     "note": "An AI English translation of Schoepf's 1787 Materia Medica Americana, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "amazonian-medicine-transcription",
+     "role": "Primary text",
+     "title": "Notes of a Botanist on the Amazon — full text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in English",
+     "year": 1908,
+     "loc_item": "",
+     "note": "A complete AI transcription of Richard Spruce's 1908 field notes on Amazonian botany into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "philippine-medicine-transcription",
+     "role": "Primary text",
+     "title": "Flora de Filipinas — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Spanish",
+     "year": 1837,
+     "loc_item": "",
+     "note": "A complete AI transcription of Blanco's 1837 Flora de Filipinas into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "philippine-medicine-english",
+     "role": "Translations",
+     "title": "Flora de Filipinas — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1837,
+     "loc_item": "",
+     "note": "An AI English translation of Blanco's 1837 Flora de Filipinas, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "australian-medicine-transcription",
+     "role": "Primary text",
+     "title": "Useful Native Plants of Australia — full text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in English",
+     "year": 1889,
+     "loc_item": "",
+     "note": "A complete AI transcription of Maiden's 1889 survey The Useful Native Plants of Australia into readable text, beside the original scans. Unverified.",
      "facsimile": false
     }
    ]
@@ -995,6 +1165,86 @@
      "year": 950,
      "loc_item": "",
      "note": "An AI English translation of Bald's Leechbook (c.950 CE), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "leechdoms-cockayne-transcription",
+     "role": "Translation",
+     "title": "Leechdoms — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Old English (Anglo-Saxon)",
+     "year": 1864,
+     "loc_item": "",
+     "note": "A complete AI transcription of Cockayne's edition of Anglo-Saxon medical texts into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "leechdoms-cockayne-english",
+     "role": "Translations",
+     "title": "Leechdoms — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1864,
+     "loc_item": "",
+     "note": "An AI English translation of Cockayne's edition of Anglo-Saxon medical texts, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "matthioli-dioscorides-1544-transcription",
+     "role": "Primary text",
+     "title": "Matthioli's Dioscoride — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Italian",
+     "year": 1544,
+     "loc_item": "",
+     "note": "A complete AI transcription of Matthioli's 1544 Italian commentary on Dioscorides into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "matthioli-dioscorides-1544-english",
+     "role": "Translations",
+     "title": "Matthioli's Dioscoride — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1544,
+     "loc_item": "",
+     "note": "An AI English translation of Matthioli's 1544 Italian commentary on Dioscorides, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "welsh-myddfai-transcription",
+     "role": "Primary text",
+     "title": "Physicians of Myddvai — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Welsh",
+     "year": 1861,
+     "loc_item": "",
+     "note": "A complete AI transcription of The Physicians of Myddvai, medieval Welsh medical manuscripts into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "welsh-myddfai-english",
+     "role": "Translations",
+     "title": "Physicians of Myddvai — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1861,
+     "loc_item": "",
+     "note": "An AI English translation of The Physicians of Myddvai, medieval Welsh medical manuscripts, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "norse-medicine-transcription",
+     "role": "Primary text",
+     "title": "Harpestraeng — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Latin",
+     "year": 1914,
+     "loc_item": "",
+     "note": "A complete AI transcription of Harpestraeng's medieval medical writings into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "norse-medicine-english",
+     "role": "Translations",
+     "title": "Harpestraeng — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1914,
+     "loc_item": "",
+     "note": "An AI English translation of Harpestraeng's medieval medical writings, generated directly from the manuscript images. Unverified.",
      "facsimile": false
     }
    ]
