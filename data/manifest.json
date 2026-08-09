@@ -1711,6 +1711,29 @@
    ],
    "section": "literature",
    "overview": "Between roughly 1545 and 1590, the Franciscan friar Bernardino de Sahagun worked with Nahua scholars, scribes, and artists in Mexico City to compile the most complete surviving record of Aztec civilization on the eve of its destruction by Spanish conquest -- twelve books covering the gods, ceremonies, divination, rhetoric, kingship, trade, natural history, and finally the conquest itself, all illustrated by Indigenous tlacuiloque and written in parallel columns of Nahuatl and Spanish. It's a genuinely strange document: part ethnography, part propaganda, produced by colonizers and colonized working side by side under circumstances neither side controlled, and it remains the single richest primary source historians have for how the Aztec world understood itself just before that understanding was violently overwritten."
+  },
+  {
+   "slug": "first-printings",
+   "title": "Landmark First Printings",
+   "author": "Various",
+   "spine_color": "linear-gradient(160deg,#3a2e1a,#1a1408)",
+   "section": "literature",
+   "description": "The physical objects that mark turning points in how texts moved from manuscript to mass reproduction: the first printed Bible, the earliest surviving editions of works that shaped whole literatures. Each one is here because of when and how it was made, not just what it says.",
+   "overview": "Printing didn't just make books cheaper -- it changed what a text even was. A manuscript was a single object, copied by hand, subtly different every time a scribe's eye or judgment intervened. A printed edition was, for the first time, genuinely the same book in hundreds of hands at once. This collection gathers the specific editions that made that shift matter: the first substantial book printed with movable type in the West, and the earliest surviving printings of works whose later fame depended on that same technology reaching far enough to make them famous at all.",
+   "components": [
+    {
+     "slug": "gutenberg-bible",
+     "role": "The First Printed Book",
+     "title": "The Gutenberg Bible (1454-1456)",
+     "contributor": "Johannes Gutenberg, Mainz",
+     "year": 1455,
+     "loc_item": "",
+     "note": "The first substantial book printed in the West with movable type -- the 42-line Latin Vulgate that marks the start of the printed word in Europe. 1,283 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/thegutembergbible",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
