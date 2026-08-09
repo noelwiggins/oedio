@@ -125,6 +125,46 @@
     cursor:zoom-in; box-shadow:0 2px 8px rgba(0,0,0,.3); opacity:.8; }
   .reader-blank-thumb:hover { opacity:1; }
 
+  /* Notes: a slide-in panel tied to whatever page is currently in view.
+     Stored in localStorage, private to this device -- there's no accounts
+     system on oedio.com, so this is the honest, no-backend way to offer
+     real persistence without pretending it syncs across devices. */
+  .reader-icon-btn { position:relative; }
+  .reader-notes-dot { position:absolute; top:4px; right:4px; width:7px; height:7px; border-radius:50%;
+    background:var(--md-sys-color-primary); }
+  .reader-notes-panel { position:fixed; right:0; top:0; bottom:0; width:340px; max-width:90vw;
+    background:var(--md-sys-color-surface-container-high); z-index:900; box-shadow:-4px 0 20px rgba(0,0,0,.4);
+    display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; }
+  .reader-notes-panel.open { transform:translateX(0); }
+  .rn-header { display:flex; align-items:center; gap:8px; padding:16px 16px 12px;
+    border-bottom:1px solid var(--md-sys-color-outline-variant); color:var(--md-sys-color-on-surface); }
+  .rn-title { font-size:13px; font-weight:600; flex:1; }
+  #rn-textarea { flex:1; border:none; background:transparent; color:var(--md-sys-color-on-surface);
+    padding:16px; font-size:14px; line-height:1.6; resize:none; outline:none;
+    font-family:Georgia, serif; }
+  .rn-footer { display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; border-top:1px solid var(--md-sys-color-outline-variant); }
+  .rn-saved { font-size:11px; color:var(--md-sys-color-on-surface-variant); opacity:0; transition:opacity .3s; }
+  .rn-saved.show { opacity:1; }
+  .rn-link-btn { background:none; border:none; color:var(--md-sys-color-primary); font-size:12px;
+    cursor:pointer; font-weight:600; }
+
+  .reader-notes-list-overlay { display:none; position:fixed; inset:0; z-index:950;
+    background:rgba(0,0,0,.6); align-items:center; justify-content:center; padding:20px; }
+  .reader-notes-list-overlay.open { display:flex; }
+  .rnl-card { background:var(--md-sys-color-surface-container-high); border-radius:16px;
+    max-width:520px; width:100%; max-height:76vh; display:flex; flex-direction:column; overflow:hidden; }
+  .rnl-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px;
+    border-bottom:1px solid var(--md-sys-color-outline-variant); }
+  .rnl-title { font-family:Georgia, serif; font-size:16px; font-weight:600; color:var(--md-sys-color-on-surface); }
+  .rnl-items { overflow-y:auto; padding:8px; }
+  .rnl-item { padding:12px 14px; border-radius:10px; cursor:pointer; }
+  .rnl-item:hover { background:var(--md-sys-color-surface-container-highest); }
+  .rnl-item .rnl-page { font-size:11px; font-weight:700; color:var(--md-sys-color-primary); text-transform:uppercase; }
+  .rnl-item .rnl-text { font-size:13px; color:var(--md-sys-color-on-surface-variant); margin-top:4px;
+    line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .rnl-empty { padding:30px; text-align:center; color:var(--md-sys-color-on-surface-variant); font-size:13px; }
+
   /* Possibly-garbled OCR text: subtle dotted underline, not intrusive --
      just enough to suggest checking the source image at that spot. This
      is a heuristic guess, not a real confidence score, so it's kept quiet
@@ -373,6 +413,10 @@
     <button class="reader-icon-btn" id="reader-sepia-btn" title="Sepia reading mode" aria-label="Sepia mode">
       <span class="material-symbols-outlined" style="font-size:18px;">tonality</span>
     </button>
+    <button class="reader-icon-btn" id="reader-notes-btn" title="Notes for this page" aria-label="Notes">
+      <span class="material-symbols-outlined" style="font-size:18px;">edit_note</span>
+      <span class="reader-notes-dot" id="reader-notes-dot" style="display:none;"></span>
+    </button>
     <div style="position:relative;">
       <button class="reader-icon-btn" id="reader-more-btn" title="More options" aria-label="More options">
         <span class="material-symbols-outlined" style="font-size:18px;">more_vert</span>
@@ -433,6 +477,28 @@
   <div id="reader-grid-content"></div>
 </div>
 <div id="reader-toast"></div>
+
+<div id="reader-notes-panel" class="reader-notes-panel">
+  <div class="rn-header">
+    <span class="material-symbols-outlined" style="font-size:18px;">edit_note</span>
+    <span class="rn-title">Your notes &mdash; page <span id="rn-page-num">—</span></span>
+    <button id="rn-close" class="reader-icon-btn" aria-label="Close notes"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+  </div>
+  <textarea id="rn-textarea" placeholder="Notes for this page stay right here as you read &mdash; saved automatically, private to this device." spellcheck="true"></textarea>
+  <div class="rn-footer">
+    <span id="rn-saved-indicator" class="rn-saved">Saved</span>
+    <button id="rn-view-all" class="rn-link-btn">All notes in this book</button>
+  </div>
+</div>
+<div id="reader-notes-list-overlay" class="reader-notes-list-overlay">
+  <div class="rnl-card">
+    <div class="rnl-header">
+      <span class="rnl-title">All your notes in this book</span>
+      <button id="rnl-close" class="reader-icon-btn" aria-label="Close"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+    </div>
+    <div id="rnl-items" class="rnl-items"></div>
+  </div>
+</div>
 
 <div id="reader-zoom-overlay">
   <div id="reader-zoom-scroll"></div>
@@ -1155,6 +1221,97 @@ document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   panel.classList.toggle('sepia');
   e.currentTarget.classList.toggle('active');
 });
+
+// --- Notes: tied to whatever page is currently in view, saved to
+// localStorage per book+edition+page. No accounts system exists on
+// oedio.com, so this is private to this device/browser -- an honest
+// tradeoff, not pretending to sync across devices. ---
+(function () {
+  const NOTES_PREFIX = 'oedio-note:{{ mega_slug }}:{{ slug }}:';
+  const btn = document.getElementById('reader-notes-btn');
+  const dot = document.getElementById('reader-notes-dot');
+  const notesPanel = document.getElementById('reader-notes-panel');
+  const textarea = document.getElementById('rn-textarea');
+  const pageLabel = document.getElementById('rn-page-num');
+  const savedIndicator = document.getElementById('rn-saved-indicator');
+  const closeBtn = document.getElementById('rn-close');
+  const viewAllBtn = document.getElementById('rn-view-all');
+  const listOverlay = document.getElementById('reader-notes-list-overlay');
+  const listClose = document.getElementById('rnl-close');
+  const listItems = document.getElementById('rnl-items');
+  if (!btn) return;
+
+  let notesOpen = false, saveTimer = null, lastLoadedPage = null;
+
+  function noteKey(pageNum) { return NOTES_PREFIX + pageNum; }
+  function getNote(pageNum) { try { return localStorage.getItem(noteKey(pageNum)) || ''; } catch (e) { return ''; } }
+  function setNote(pageNum, text) {
+    try {
+      if (text.trim()) localStorage.setItem(noteKey(pageNum), text);
+      else localStorage.removeItem(noteKey(pageNum));
+    } catch (e) { /* storage unavailable -- fail quietly, notes just won't persist */ }
+  }
+  function updateDot() {
+    const hasAny = Object.keys(localStorage).some(k => k.startsWith(NOTES_PREFIX));
+    dot.style.display = hasAny ? 'block' : 'none';
+  }
+  function loadForCurrentPage() {
+    const pg = currentPageNum;
+    if (pg === lastLoadedPage) return;
+    lastLoadedPage = pg;
+    pageLabel.textContent = pg || '—';
+    textarea.value = getNote(pg);
+  }
+
+  btn.addEventListener('click', () => {
+    notesOpen = !notesOpen;
+    notesPanel.classList.toggle('open', notesOpen);
+    if (notesOpen) { loadForCurrentPage(); textarea.focus(); }
+  });
+  closeBtn.addEventListener('click', () => { notesOpen = false; notesPanel.classList.remove('open'); });
+
+  textarea.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      setNote(currentPageNum, textarea.value);
+      updateDot();
+      savedIndicator.classList.add('show');
+      setTimeout(() => savedIndicator.classList.remove('show'), 1200);
+    }, 500);
+  });
+
+  // Keep the panel's textarea following the page in view, if it's open --
+  // notes should feel tied to the page, not to a modal you have to close
+  // and reopen every time you scroll.
+  panel.addEventListener('scroll', () => { if (notesOpen) loadForCurrentPage(); });
+
+  viewAllBtn.addEventListener('click', () => {
+    const items = Object.keys(localStorage)
+      .filter(k => k.startsWith(NOTES_PREFIX))
+      .map(k => ({ page: parseInt(k.slice(NOTES_PREFIX.length), 10), text: localStorage.getItem(k) }))
+      .sort((a, b) => a.page - b.page);
+    listItems.innerHTML = items.length ? '' : '<div class="rnl-empty">No notes yet in this book. Notes you add will show up here, organized by page.</div>';
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.className = 'rnl-item';
+      row.innerHTML = `<div class="rnl-page">Page ${it.page}</div><div class="rnl-text"></div>`;
+      row.querySelector('.rnl-text').textContent = it.text;
+      row.addEventListener('click', () => {
+        listOverlay.classList.remove('open');
+        const target = allPages.find(p => p.page === it.page);
+        if (target) { renderUpTo(it.page); const b = panel.querySelector(`[data-page="${it.page}"]`); if (b) b.scrollIntoView(); }
+        currentPageNum = it.page;
+        notesOpen = true; notesPanel.classList.add('open'); loadForCurrentPage();
+      });
+      listItems.appendChild(row);
+    });
+    listOverlay.classList.add('open');
+  });
+  listClose.addEventListener('click', () => listOverlay.classList.remove('open'));
+
+  updateDot();
+})();
+
 
 // --- Thumbnail grid page browser ---
 const gridOverlay = document.getElementById('reader-grid-overlay');
