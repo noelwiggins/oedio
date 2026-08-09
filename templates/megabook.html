@@ -10,6 +10,12 @@
   .mb-head .byline { color:var(--md-sys-color-on-surface-variant); font-size:14px; margin-bottom:14px; }
   .mb-head p.desc { color:var(--md-sys-color-on-surface-variant); font-size:14px; line-height:1.7;
     max-width:680px; }
+  .mb-overview { margin-top:18px; padding-top:18px; border-top:1px solid var(--md-sys-color-outline-variant);
+    max-width:680px; }
+  .mb-overview-label { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--md-sys-color-primary); margin-bottom:8px; }
+  .mb-overview p { color:var(--md-sys-color-on-surface); font-size:14.5px; line-height:1.75;
+    font-family:Georgia, serif; }
 
   .role-label { margin:26px 0 10px; font-size:11px; font-weight:700; letter-spacing:.12em;
     text-transform:uppercase; color:var(--md-sys-color-primary); }
@@ -87,6 +93,12 @@
     <h1>{{ mb.title }}</h1>
     <div class="byline">{{ mb.author }} &middot; {{ mb.components|length }} editions bound into this Oedio</div>
     <p class="desc">{{ mb.description }}</p>
+    {% if mb.overview %}
+    <div class="mb-overview">
+      <div class="mb-overview-label">About this work</div>
+      <p>{{ mb.overview }}</p>
+    </div>
+    {% endif %}
   </div>
 
   {% set is_layered = mb.slug == 'odyssey' %}
