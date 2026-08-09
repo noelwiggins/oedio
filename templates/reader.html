@@ -304,7 +304,13 @@
     .tissue-clone-overlay.tissue-run { animation: tissue-dissolve 900ms cubic-bezier(.3,0,.2,1) forwards; }
     .layer-toggle-btn:active { transform:scale(.94); }
     .layer-toggle-btn .material-symbols-outlined { font-size:20px; }
-    #reader-zoom-overlay.open ~ .layer-toggle-btn { display:none; }
+    /* Previously hidden entirely while the full-screen scan viewer was open --
+       that was the actual bug: there was no way to switch layers from a
+       scan screen. Instead, lift it above the zoom nav bar and boost its
+       z-index so it stays visible and usable while zoomed in. */
+    #reader-zoom-overlay.open ~ .layer-toggle-btn {
+      bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 1010;
+    }
   }
   /* Continuous page stream: pages flow as one infinite scroll instead of
      one-at-a-time transitions; snap keeps a page comfortably framed. */
