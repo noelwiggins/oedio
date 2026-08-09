@@ -243,6 +243,7 @@ def reader(mega_slug, comp_slug):
         book_source_url=(comp.get("source_url") or
                           (f"https://www.loc.gov/item/{comp['loc_item']}/" if comp.get("loc_item") else None)),
         book_source_label=comp.get("source_label", "Library of Congress"),
+        book_note=comp.get("note"),
         facsimile=comp["facsimile"],
         is_translated=comp.get("translated", False),
         original_label=comp.get("original_label"),

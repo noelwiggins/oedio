@@ -38,6 +38,14 @@
   .facsimile-note { font-size:12px; color:var(--md-sys-color-on-surface-variant);
     background:var(--md-sys-color-surface-container); border-radius:10px; padding:8px 14px;
     display:inline-block; margin:6px 0 2px; }
+  .book-note-toggle { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+    color:var(--md-sys-color-primary); cursor:pointer; margin:6px 0 2px; padding:6px 12px;
+    border-radius:10px; background:var(--md-sys-color-surface-container); user-select:none; }
+  .bnt-chevron { transition:transform .2s ease; }
+  .book-note-toggle.open .bnt-chevron { transform:rotate(180deg); }
+  .book-note { display:none; font-size:13px; line-height:1.65; color:var(--md-sys-color-on-surface-variant);
+    max-width:640px; padding:10px 14px 4px; font-family:Georgia, serif; }
+  .book-note.open { display:block; }
   .reader-header { flex:none; }
   .reader-layout { display:flex; flex:1; min-height:0; }
   .reader-layout { --split: 45%; }
@@ -371,6 +379,14 @@
     {% if facsimile %}
     <div class="facsimile-note">Presented as facsimile &mdash; no public-domain translation of this work exists yet.
       The scans themselves are the layer; use the other editions on this Oedio's page for related traditions.</div>
+    {% endif %}
+    {% if book_note %}
+    <div class="book-note-toggle" id="book-note-toggle">
+      <span class="material-symbols-outlined" style="font-size:15px;">history_edu</span>
+      Publishing history &amp; notes
+      <span class="material-symbols-outlined bnt-chevron" style="font-size:15px;">expand_more</span>
+    </div>
+    <div class="book-note" id="book-note">{{ book_note }}</div>
     {% endif %}
   </div>
   <div class="reader-toolbar" id="reader-toolbar-sticky">
@@ -1247,6 +1263,14 @@ document.getElementById('reader-font-btn').addEventListener('click', () => {
 });
 
 // --- Sepia toggle ---
+const noteToggle = document.getElementById('book-note-toggle');
+if (noteToggle) {
+  noteToggle.addEventListener('click', () => {
+    noteToggle.classList.toggle('open');
+    document.getElementById('book-note').classList.toggle('open');
+  });
+}
+
 document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   panel.classList.toggle('sepia');
   e.currentTarget.classList.toggle('active');

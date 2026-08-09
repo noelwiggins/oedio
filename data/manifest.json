@@ -47,7 +47,7 @@
      "contributor": "Trans. S. H. Butcher & Andrew Lang",
      "year": 1921,
      "loc_item": "24021029",
-     "note": "Standard prose translation.",
+     "note": "First published in 1879, the Butcher and Lang prose translation became the standard English Odyssey for a generation of readers who wanted the story without the difficulty of verse -- it was famously the translation Virginia Woolf and countless Victorian schoolchildren grew up on, and its deliberately archaic, faintly biblical prose style (all 'thees' and 'verilys') was a conscious choice meant to signal the poem's ancient dignity, a style that later translators would spend the 20th century reacting against.",
      "facsimile": false
     },
     {
@@ -57,7 +57,7 @@
      "contributor": "Trans. John Norgate",
      "year": 1863,
      "loc_item": "07007760",
-     "note": "Victorian verse translation.",
+     "note": "Verse translations of Homer were a genuine minor industry in 19th-century Britain, with critics and poets (Matthew Arnold most famously) publishing entire essays arguing over whether Homer should be rendered in blank verse, ballad meter, or hexameters -- Norgate's 1863 verse Odyssey was one entrant in that long argument, part of a wave of competing attempts to solve what Arnold called the essential 'Homeric question': how do you make an oral, formulaic ancient Greek epic sound natural in English without either flattening its strangeness or burying it under artificial archaism?",
      "facsimile": false
     },
     {
@@ -97,7 +97,7 @@
      "contributor": "John Flaxman",
      "year": 1853,
      "loc_item": "04003695",
-     "note": "Neoclassical engravings.",
+     "note": "John Flaxman's outline engravings for Homer, first published in Rome in 1793, became one of the most influential and widely copied illustration styles of the entire Neoclassical movement -- their spare, almost minimalist line work (deliberately imitating the flat profiles of ancient Greek vase painting) was a radical departure from the ornate illustration style of the time, and Flaxman's Homer plates were pirated, imitated, and referenced by artists across Europe for decades, shaping how the 19th century visually imagined the ancient world.",
      "facsimile": true
     },
     {
@@ -148,7 +148,7 @@
      "contributor": "King James Version",
      "year": 1837,
      "loc_item": "07019849",
-     "note": "Landmark 1837 American edition.",
+     "note": "The King James Version, first published in 1611, was a genuinely collaborative work of 47 scholars organized into six committees, commissioned by King James I partly to settle theological disputes between competing English translations then in use -- its deliberately formal, cadenced prose (much of it inherited from William Tyndale's earlier translation, executed for heresy in 1536) went on to shape the sound and rhythm of English prose itself for the next three centuries, quoted and echoed by writers who never read another word of Scripture.",
      "facsimile": false
     },
     {
@@ -168,7 +168,7 @@
      "contributor": "Gustave Doré",
      "year": 1890,
      "loc_item": "09001990",
-     "note": "Doré's iconic Biblical engravings.",
+     "note": "Gustave Doré produced his Bible illustrations in 1866 at the height of his fame as the most commercially successful illustrator in Europe, and the images -- vast, shadowy, almost cinematic in their staging -- became so pervasive that they effectively became the default visual imagination of Bible scenes for the following century, endlessly reprinted, pirated, and adapted; the crucifixion and flood scenes in particular were so widely copied that most people who've seen 'a' biblical illustration have unknowingly seen a Doré derivative.",
      "facsimile": false
     },
     {
@@ -219,7 +219,7 @@
      "contributor": "Illus. Gustave Doré",
      "year": 1868,
      "loc_item": "02013073",
-     "note": "Doré's defining illustration set.",
+     "note": "Doré illustrated Paradise Lost in 1866, the same period as his Bible work, and brought the same theatrical, deeply shadowed visual style to Milton's poem -- his rendering of Satan in particular, a magnificently doomed, almost sympathetic figure falling through cosmic darkness, did as much as Milton's own text to cement the Romantic-era reading of Satan as the poem's real protagonist, an interpretation Milton himself would likely have been troubled by.",
      "facsimile": false
     },
     {
@@ -250,7 +250,7 @@
      "contributor": "Trans. anonymous",
      "year": 1910,
      "loc_item": "10011047",
-     "note": "",
+     "note": "European translations of the Arabian Nights were notoriously inconsistent in how much of the material's frank sexuality and violence they preserved or censored -- Richard Burton's famous 1885 translation was privately printed specifically to evade British obscenity law, while editions meant for general and family audiences, like this one, were substantially cleaned up, meaning the 'same' collection of stories reads very differently depending on which 19th-century Englishman happened to be doing the translating and for what audience.",
      "facsimile": false
     },
     {
@@ -291,7 +291,7 @@
      "contributor": "Walt Whitman",
      "year": 1897,
      "loc_item": "04016027",
-     "note": "",
+     "note": "Whitman rewrote and reorganized Leaves of Grass obsessively across nine editions over 37 years, adding new poems, cutting others, and reshuffling the whole architecture of the collection each time -- meaning there is no single definitive 'Leaves of Grass,' only a lifelong, ongoing revision that different editions preserve like geological strata, this one capturing the book roughly as it stood a few years before Whitman's death.",
      "facsimile": false
     },
     {
@@ -332,7 +332,7 @@
      "contributor": "Zakarīyā al-Qazwīnī",
      "year": 1553,
      "loc_item": "2017406674",
-     "note": "Ottoman Turkish manuscript.",
+     "note": "Al-Qazwini's original 13th-century Arabic text was copied and re-illustrated for centuries across the Islamic world, and this 1553 Ottoman Turkish translation is itself already a translation-plus-adaptation two centuries removed from the original -- the illuminator working from an Ottoman court workshop would have had no more direct access to the 'real' wonders being described than any reader today, meaning the illustrations here represent one artist's 16th-century Ottoman imagination of Qazwini's 13th-century Arabic imagination of the natural world.",
      "facsimile": true
     },
     {
@@ -447,7 +447,7 @@
      "contributor": "Pedanius Dioscorides",
      "year": 512,
      "loc_item": "2021667873",
-     "note": "One of the earliest surviving illustrated copies of Dioscorides' foundational herbal, replacing an earlier placeholder — a real 351-page facsimile.",
+     "note": "This manuscript is one of the earliest surviving copies of a text originally written around 50-70 CE, meaning roughly 450 years already separate the original composition from this particular copy -- ancient and medieval medical texts survived only by being continuously recopied by hand, generation after generation, and every gap in that chain of copying meant permanent loss, so what survives today represents an unusually lucky, unbroken transmission across nearly two millennia.",
      "facsimile": true,
      "tradition": "greek_roman"
     },
@@ -492,7 +492,7 @@
      "title": "Libellus de Medicinalibus Indorum Herbis (Codex de la Cruz-Badiano)",
      "contributor": "Martín de la Cruz (Nahuatl text), trans. Juan Badiano (Latin)",
      "year": 1552,
-     "note": "The first illustrated scientific text of Nahua medicine and botany produced in the Americas, replacing an earlier placeholder — 135 real facsimile pages of the actual 1552 manuscript.",
+     "note": "The Badianus Manuscript has one of the strangest ownership histories of any American colonial document: written in 1552, it disappeared from view for over 350 years before resurfacing in the Vatican Library in 1929, where an American researcher recognized what it was. Pope Pius XII gave it as a gift to Mexico in 1990, at which point it finally returned to the country where it had been written more than four centuries earlier -- meaning for most of its existence, the first scientific text on Aztec medicine was sitting, unread and unrecognized, in the Vatican's own collection.",
      "facsimile": true,
      "tradition": "mesoamerican",
      "source_url": "https://archive.org/details/codex-badiano",
@@ -641,7 +641,7 @@
      "contributor": "Ibn Sīnā (Avicenna)",
      "year": 1329,
      "loc_item": "2021667339",
-     "note": "A genuine 14th-century Arabic manuscript copy, replacing an earlier placeholder — 324 real facsimile pages.",
+     "note": "Ibn Sina's Canon of Medicine, completed around 1025, was still being used as a required medical school textbook in parts of Europe as late as the 17th century -- roughly 600 years after it was written, making it one of the longest-serving medical texts in human history, taught at universities in Montpellier and Louvain long after the Islamic world that produced it and the European world that adopted it had each moved through multiple intellectual revolutions.",
      "facsimile": true,
      "tradition": "unani"
     },
@@ -1018,7 +1018,7 @@
      "title": "Ritual of the Bacabs (Maya medical incantations, c. 1779)",
      "contributor": "Yucatec Maya healers, copied from an earlier manuscript",
      "year": 1779,
-     "note": "A genuine Maya-language manuscript of medical incantations and herbal remedies — forty-two spells for ailments from seizures to snakebite — replacing an earlier synthesized placeholder. 348 real facsimile pages, Princeton University Library.",
+     "note": "The Ritual of the Bacabs survives in only a single known manuscript, discovered and preserved almost by accident -- Maya-language medical texts written in the Latin alphabet (introduced by Spanish missionaries specifically to help convert and control Maya communities) are extraordinarily rare, since so much of what the Spanish found written in the older Maya hieroglyphic script was deliberately destroyed as idolatrous. This document exists because Maya scribes adapted the colonizers' own alphabet to preserve knowledge the colonizers were actively trying to erase.",
      "facsimile": true,
      "source_url": "https://dpul.princeton.edu/mesoamerican/catalog/bn999802r",
      "source_label": "Princeton University Library"
@@ -1144,7 +1144,7 @@
      "contributor": "Bald & Cild, Winchester scriptorium",
      "year": 950,
      "loc_item": "",
-     "note": "England's oldest medical compendium. British Library Royal MS 12 D XVII. 279 pages. A remedy in this book was recently proven to kill MRSA.",
+     "note": "Bald's Leechbook survives in a single 10th-century manuscript now held at the British Library, and its remedies are a genuine curiosity of medical history: alongside plausible herbal treatments sits a recipe for an eye infection ointment combining garlic, wine, and cow bile that a 2015 microbiology study found could actually kill MRSA (antibiotic-resistant staph) in laboratory tests -- a thousand-year-old formula that modern researchers are now investigating as a possible real antibiotic, a genuinely rare case of medieval medicine holding up under contemporary scientific scrutiny.",
      "facsimile": true,
      "tradition": "celtic_norse",
      "reader_data_file": "balds-leechbook.json",
@@ -1210,7 +1210,7 @@
      "title": "De Simplicibus Medicinis Laxativis (ed. Johnsson, 1914)",
      "contributor": "Henrik Harpestræng (c.1164-1244), ed. J.W.S. Johnsson",
      "year": 1914,
-     "note": "A scholarly critical edition of Harpestraeng's medical writings, the direct source tradition behind the surviving Old Norse/Icelandic medical manuscripts (the actual manuscripts, held at Iceland's Arnamagnaean collection, are only accessible through a captcha-gated viewer). 112 real facsimile pages, replacing an earlier synthesized placeholder.",
+     "note": "Henrik Harpestraeng served as physician to the Danish king and died in 1244, and his herbal writings survive because Latin, as the shared scholarly language of medieval Europe, let his work circulate and get copied across Scandinavia and beyond in a way that writing purely in Old Danish never could have -- much of what we know of early Scandinavian medicine survives specifically because it was written in Latin for an international audience, not in the vernacular for a local one.",
      "facsimile": true,
      "source_url": "https://archive.org/details/b23983140",
      "source_label": "Internet Archive"
@@ -1675,7 +1675,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667856",
-     "note": "506 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Sahagun's original manuscript nearly didn't survive at all -- Spanish colonial authorities grew suspicious of his project partway through, worried it preserved too much genuine Aztec religious knowledge rather than helping suppress it, and confiscated his papers for a period in the 1570s. The finished work ended up in Florence (hence 'Florentine' Codex) rather than Spain or Mexico, part of the collection of the Medici family, and wasn't seriously studied by scholars outside Italy until the 20th century -- meaning the richest surviving account of Aztec civilization sat in a European private library for roughly three hundred years before most historians even knew to look for it there.",
      "facsimile": true
     },
     {
@@ -1728,7 +1728,7 @@
      "contributor": "Johannes Gutenberg, Mainz",
      "year": 1455,
      "loc_item": "",
-     "note": "The first substantial book printed in the West with movable type -- the 42-line Latin Vulgate that marks the start of the printed word in Europe. 1,283 real facsimile pages.",
+     "note": "Gutenberg printed somewhere between 160 and 180 copies of his Bible around 1454-1455, of which only 49 survive today in varying states of completeness -- roughly a quarter were printed on vellum (calfskin), the rest on paper, and a complete vellum copy is now considered one of the most valuable printed objects in existence. The specific copy digitized here, like most surviving copies, still carries hand-illuminated initials and decorations added by a rubricator after the mechanical printing was finished -- Gutenberg's press could reproduce text, but color and ornament were still added the old way, by hand, meaning every surviving copy is subtly unique despite coming from identical type.",
      "facsimile": true,
      "source_url": "https://archive.org/details/thegutembergbible",
      "source_label": "Internet Archive"
@@ -1751,7 +1751,7 @@
      "contributor": "Attrib. Gautama Buddha's early followers",
      "year": 1900,
      "loc_item": "",
-     "note": "A collection of the Buddha's sayings on ethics and the path to enlightenment, among the most widely translated texts in the Buddhist canon -- this edition presents the original Pali. 116 real facsimile pages.",
+     "note": "The Dhammapada belongs to the earliest layer of Buddhist scripture, likely compiled from the Buddha's oral teachings within a few centuries of his death and preserved in Pali, a liturgical language closely related to the language he's traditionally believed to have actually spoken -- Max Muller's translation of it for the Sacred Books of the East series in the 1880s was many Western readers' first real encounter with Buddhist ethical teaching in their own language, part of a broader Victorian scholarly project to make Asian religious texts as academically respectable and available as the Bible and Quran already were.",
      "facsimile": true,
      "source_url": "https://archive.org/details/india.history.resource.112138",
      "source_label": "Internet Archive"
