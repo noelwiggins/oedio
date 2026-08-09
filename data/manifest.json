@@ -616,36 +616,6 @@
    "description": "Traditional medical texts from Korea, Japan, Tibet, Persia, and the Islamic world.",
    "components": [
     {
-     "slug": "dongui-bogam",
-     "role": "Primary text",
-     "title": "Dongui Bogam (東醫寶鑑, 1613)",
-     "contributor": "Heo Jun (許浚)",
-     "year": 1613,
-     "loc_item": "",
-     "note": "UNESCO Memory of the World. Korea's National Treasure No.1085. 25 volumes synthesizing 2,000 years of East Asian medicine.",
-     "facsimile": false,
-     "tradition": "korean",
-     "corpus_keys": [
-      "korean",
-      "dongui_new_b01",
-      "dongui_new_b02",
-      "dongui_expanded_b01"
-     ]
-    },
-    {
-     "slug": "dongui-bogam-ms",
-     "role": "Manuscript scans",
-     "title": "Dongui Bogam — Original Manuscript (NLK scans)",
-     "contributor": "National Library of Korea",
-     "year": 1613,
-     "loc_item": "",
-     "note": "All 25 volumes as manuscript facsimile scans from the National Library of Korea.",
-     "facsimile": true,
-     "tradition": "korean",
-     "reader_data_file": "dongui-vol-01.json",
-     "reader_data_alignment": "dongui-alignment.json"
-    },
-    {
      "slug": "tibetan-gyushi",
      "role": "Primary text",
      "title": "Mes po'i zhal lung — Commentary on the Four Medical Tantras (rGyud bzhi)",
@@ -793,6 +763,138 @@
      "loc_item": "",
      "note": "An AI English translation of Darmesteter's French translation of the Zend-Avesta, generated directly from the manuscript images. Unverified.",
      "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-1",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Naegyeongpyeon, Vol. 1 (Internal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 1 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 124 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-internal-2",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Naegyeongpyeon, Vol. 2 (Internal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 2 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 130 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-internal-3",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Naegyeongpyeon, Vol. 3 (Internal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 3 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 160 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-internal-4",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Naegyeongpyeon, Vol. 4 (Internal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 4 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 124 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-16",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 1 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 16 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 126 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-17",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 2 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 17 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 118 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-18",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 3 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 18 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 117 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-19",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 4 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 19 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 108 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-20",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 5 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 20 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 118 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-21",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 6 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 21 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 160 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-herbal-22",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Dongui Bogam (東醫寶鑑) — Tangaekpyeon, Vol. 7 (Herbal Medicine)",
+     "contributor": "Heo Jun (許浚), 1613 — National Library of Korea scan",
+     "year": 1613,
+     "loc_item": "",
+     "note": "Real facsimile of volume 22 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 119 pages.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
+     "source_label": "Wikimedia Commons (National Library of Korea)"
     }
    ]
   },
