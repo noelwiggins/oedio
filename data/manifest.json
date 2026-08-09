@@ -648,13 +648,15 @@
     {
      "slug": "kampo-tradition",
      "role": "Primary text",
-     "title": "Kampo Traditional Medicine",
-     "contributor": "Japanese Kampo physicians",
-     "year": 1800,
-     "loc_item": "",
-     "note": "Kampo -- the Japanese adaptation of Chinese medicine -- developed its own distinct diagnostic and herbal traditions after being introduced from China over a thousand years ago, and remains in active, mainstream clinical use in Japan today, prescribed by licensed physicians and covered by national health insurance alongside conventional Western medicine, a rare case of a traditional medical system achieving full institutional integration rather than being relegated to alternative-medicine status.",
-     "facsimile": false,
-     "tradition": "kampo"
+     "title": "Yi Xin Fang / Ishinpo (medicinal recension, 1856 printing)",
+     "contributor": "Tanba Yasuyori (compiler, 984 CE) — this edition 1856",
+     "year": 1856,
+     "loc_item": "2021666350",
+     "note": "The oldest surviving Japanese medical text, compiled in 984 CE by the court physician Tanba Yasuyori, drawing on both Chinese and Japanese sources predating it — known in Japanese as Ishinpo and in Chinese as Yi Xin Fang, the same title in two readings. The original scrolls are held as a National Treasure in Japan with restricted access; this 1856 printed recension, real facsimile via the Library of Congress, replaces an earlier placeholder. 90 real pages.",
+     "facsimile": true,
+     "tradition": "kampo",
+     "source_url": "https://www.loc.gov/item/2021666350/",
+     "source_label": "Library of Congress"
     },
     {
      "slug": "yamato-honzo",
@@ -902,6 +904,226 @@
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
      "source_label": "Wikimedia Commons (National Library of Korea)"
+    },
+    {
+     "slug": "dongui-bogam-internal-1-transcription",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Naegyeongpyeon Vol. 1 (Internal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Naegyeongpyeon Vol. 1 (Internal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-1-english",
+     "role": "Translations",
+     "title": "Naegyeongpyeon Vol. 1 (Internal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Naegyeongpyeon Vol. 1 (Internal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-2-transcription",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Naegyeongpyeon Vol. 2 (Internal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Naegyeongpyeon Vol. 2 (Internal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-2-english",
+     "role": "Translations",
+     "title": "Naegyeongpyeon Vol. 2 (Internal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Naegyeongpyeon Vol. 2 (Internal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-3-transcription",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Naegyeongpyeon Vol. 3 (Internal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Naegyeongpyeon Vol. 3 (Internal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-3-english",
+     "role": "Translations",
+     "title": "Naegyeongpyeon Vol. 3 (Internal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Naegyeongpyeon Vol. 3 (Internal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-4-transcription",
+     "role": "Dongui Bogam — Internal Medicine",
+     "title": "Naegyeongpyeon Vol. 4 (Internal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Naegyeongpyeon Vol. 4 (Internal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-internal-4-english",
+     "role": "Translations",
+     "title": "Naegyeongpyeon Vol. 4 (Internal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Naegyeongpyeon Vol. 4 (Internal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-16-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 1 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 1 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-16-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 1 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 1 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-17-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 2 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 2 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-17-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 2 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 2 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-18-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 3 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 3 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-18-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 3 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 3 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-19-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 4 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 4 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-19-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 4 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 4 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-20-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 5 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 5 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-20-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 5 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 5 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-21-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 6 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 6 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-21-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 6 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 6 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-22-transcription",
+     "role": "Dongui Bogam — Herbal Medicine",
+     "title": "Tangaekpyeon Vol. 7 (Herbal Medicine) — Hanja text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "A complete AI transcription of Tangaekpyeon Vol. 7 (Herbal Medicine) into readable Classical Chinese, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dongui-bogam-herbal-22-english",
+     "role": "Translations",
+     "title": "Tangaekpyeon Vol. 7 (Herbal Medicine) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1613,
+     "loc_item": "",
+     "note": "An AI English translation of Tangaekpyeon Vol. 7 (Herbal Medicine), generated directly from the manuscript images. Unverified.",
+     "facsimile": false
     }
    ],
    "overview": "Asia produced some of the most sophisticated and long-lived medical traditions in human history, many of which remain in active clinical use today alongside modern medicine rather than as historical curiosities. This collection moves from the Arabic-Islamic Canon of Medicine -- a 14th-century manuscript copy of the text that dominated both Islamic and European medical training for over 600 years -- through Sanskrit Ayurvedic classics, Tibetan Buddhist medical tantras, Japanese and Korean pharmacopoeias, and the Zoroastrian purity laws embedded in the Avesta, each tradition developing its own theory of the body, its own diagnostic logic, and its own vast catalog of plant, animal, and mineral remedies."

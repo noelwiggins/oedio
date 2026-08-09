@@ -157,6 +157,32 @@
   .rn-link-btn { background:none; border:none; color:var(--md-sys-color-primary); font-size:12px;
     cursor:pointer; font-weight:600; }
 
+  /* Layer picker: shown before entering a book (once, remembered per
+     book+edition after that), lets the reader choose which layers --
+     Scan, Original, English, Notes -- they actually want, and the
+     floating cycle button then only switches between what was picked. */
+  .reader-layer-picker { display:none; position:fixed; inset:0; z-index:1100;
+    background:rgba(0,0,0,.7); align-items:center; justify-content:center; padding:20px; }
+  .reader-layer-picker.open { display:flex; }
+  .rlp-card { background:var(--md-sys-color-surface-container-high); border-radius:18px;
+    max-width:400px; width:100%; padding:22px 22px 18px; }
+  .rlp-header { display:flex; align-items:center; gap:8px; color:var(--md-sys-color-on-surface); }
+  .rlp-title { font-family:Georgia, serif; font-size:17px; font-weight:600; }
+  .rlp-sub { font-size:12.5px; color:var(--md-sys-color-on-surface-variant); margin:8px 0 16px; line-height:1.5; }
+  .rlp-options { display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
+  .rlp-option { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px;
+    background:var(--md-sys-color-surface-container); cursor:pointer; user-select:none; }
+  .rlp-option.disabled { opacity:.45; cursor:not-allowed; }
+  .rlp-option .rlp-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--md-sys-color-outline);
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .rlp-option.checked .rlp-check { background:var(--md-sys-color-primary); border-color:var(--md-sys-color-primary); }
+  .rlp-option.checked .rlp-check .material-symbols-outlined { display:block; }
+  .rlp-option .rlp-check .material-symbols-outlined { display:none; font-size:15px; color:var(--md-sys-color-on-primary); }
+  .rlp-option-label { font-size:13.5px; color:var(--md-sys-color-on-surface); font-weight:500; }
+  .rlp-option-note { font-size:11px; color:var(--md-sys-color-on-surface-variant); display:block; margin-top:1px; }
+  .rlp-start-btn { width:100%; padding:13px; border:none; border-radius:12px; background:var(--md-sys-color-primary);
+    color:var(--md-sys-color-on-primary); font-size:14px; font-weight:700; cursor:pointer; }
+
   .reader-notes-list-overlay { display:none; position:fixed; inset:0; z-index:950;
     background:rgba(0,0,0,.6); align-items:center; justify-content:center; padding:20px; }
   .reader-notes-list-overlay.open { display:flex; }
@@ -444,6 +470,7 @@
         <span class="material-symbols-outlined" style="font-size:18px;">more_vert</span>
       </button>
       <div class="reader-more-menu" id="reader-more-menu">
+        <button id="reader-layers-btn"><span class="material-symbols-outlined">tune</span> Reader layers</button>
         <button id="reader-bookmark-btn"><span class="material-symbols-outlined">bookmark_border</span> Bookmark this page</button>
         <button id="reader-print-btn"><span class="material-symbols-outlined">print</span> Print to PDF</button>
         <button id="reader-share-btn"><span class="material-symbols-outlined">share</span> Share</button>
@@ -499,6 +526,18 @@
   <div id="reader-grid-content"></div>
 </div>
 <div id="reader-toast"></div>
+
+<div id="reader-layer-picker" class="reader-layer-picker">
+  <div class="rlp-card">
+    <div class="rlp-header">
+      <span class="material-symbols-outlined" style="font-size:20px;">tune</span>
+      <span class="rlp-title">Choose your layers</span>
+    </div>
+    <div class="rlp-sub">Pick what you want to read with. You can change this anytime from the &#8942; menu.</div>
+    <div id="rlp-options" class="rlp-options"></div>
+    <button id="rlp-start" class="rlp-start-btn">Start reading</button>
+  </div>
+</div>
 
 <div id="reader-notes-panel" class="reader-notes-panel">
   <div class="rn-header">
@@ -581,7 +620,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 let FACSIMILE = {{ facsimile|tojson }};
-const PANEL_GROUP = {{ (panel_group or [])|tojson }};
+let PANEL_GROUP = {{ (panel_group or [])|tojson }};
 const BOOK_TITLE = {{ book_title|tojson }};
 const BOOK_AUTHOR = {{ book_author|tojson }};
 const BOOK_YEAR = {{ book_year|tojson }};
@@ -589,6 +628,68 @@ const RESUME_COOKIE = 'reader_pos_' + BOOK_SLUG;
 const PAGE_BATCH_SIZE = 40; // lazily render this many page-blocks at a time
 
 let allPages = [];
+
+// Layer picker: on first visit to this book+edition, ask which layers the
+// reader actually wants (Scan/Original/English/Notes), remember the
+// choice, and filter PANEL_GROUP down to just those before the cycle
+// button below reads it. Returning visits skip straight past this.
+const LAYER_PREF_KEY = 'oedio-layers:' + MEGA_SLUG + ':' + BOOK_SLUG;
+let notesEnabled = true;
+(function resolveLayerPicker() {
+  const hasRealChoice = PANEL_GROUP.length > 1;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LAYER_PREF_KEY) || 'null'); } catch (e) { /* ignore */ }
+
+  if (saved) {
+    if (hasRealChoice && Array.isArray(saved.layers) && saved.layers.length) {
+      const filtered = PANEL_GROUP.filter(g => saved.layers.includes(g.slug));
+      if (filtered.length) PANEL_GROUP = filtered;
+    }
+    notesEnabled = saved.notes !== false;
+    return;
+  }
+  if (!hasRealChoice) return; // nothing to choose between -- don't bother asking
+
+  const picker = document.getElementById('reader-layer-picker');
+  const optionsEl = document.getElementById('rlp-options');
+  const startBtn = document.getElementById('rlp-start');
+  if (!picker || !optionsEl) return;
+
+  const choices = PANEL_GROUP.map(g => ({
+    slug: g.slug, label: g.kind === 'image' ? 'Scan' : g.label, checked: true,
+  }));
+  choices.push({ slug: '__notes__', label: 'Your notes', checked: true,
+    note: 'A private notepad tied to whatever page you\u2019re on' });
+
+  function renderOptions() {
+    optionsEl.innerHTML = '';
+    choices.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'rlp-option' + (c.checked ? ' checked' : '');
+      row.innerHTML = `<span class="rlp-check"><span class="material-symbols-outlined">check</span></span>` +
+        `<span><span class="rlp-option-label">${c.label}</span>` +
+        (c.note ? `<span class="rlp-option-note">${c.note}</span>` : '') + `</span>`;
+      row.addEventListener('click', () => {
+        const checkedCount = choices.filter(x => x.checked).length;
+        if (c.checked && checkedCount <= 1) return; // keep at least one layer active
+        c.checked = !c.checked;
+        renderOptions();
+      });
+      optionsEl.appendChild(row);
+    });
+  }
+  renderOptions();
+  picker.classList.add('open');
+
+  startBtn.addEventListener('click', () => {
+    const layers = choices.filter(c => c.checked && c.slug !== '__notes__').map(c => c.slug);
+    const wantsNotes = choices.find(c => c.slug === '__notes__').checked;
+    localStorage.setItem(LAYER_PREF_KEY, JSON.stringify({ layers, notes: wantsNotes }));
+    picker.classList.remove('open');
+    location.reload();
+  });
+})();
+
 function escapeHtml(s) {
   const d = document.createElement('div');
   d.textContent = s;
@@ -1235,6 +1336,11 @@ function doPrint() { window.print(); }
 const moreBtn = document.getElementById('reader-more-btn');
 const moreMenu = document.getElementById('reader-more-menu');
 moreBtn.addEventListener('click', (e) => { e.stopPropagation(); moreMenu.classList.toggle('open'); });
+document.getElementById('reader-layers-btn').addEventListener('click', () => {
+  localStorage.removeItem(LAYER_PREF_KEY);
+  moreMenu.classList.remove('open');
+  location.reload();
+});
 document.getElementById('reader-bookmark-btn').addEventListener('click', () => {
   const pageNum = parseInt(pageIndicator.textContent.match(/Page (\d+)/)?.[1] || allPages[0].page, 10);
   toggleBookmark(pageNum);
@@ -1300,6 +1406,7 @@ document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   const listClose = document.getElementById('rnl-close');
   const listItems = document.getElementById('rnl-items');
   if (!btn) return;
+  if (!notesEnabled) { btn.style.display = 'none'; }
 
   let notesOpen = false, saveTimer = null, lastLoadedPage = null;
 
