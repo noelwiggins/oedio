@@ -49,8 +49,29 @@ Otherwise respond using EXACTLY this plain-text format and nothing else -- no ma
 (the transcribed text goes here)"""
 
 
+import threading
+
+_wikimedia_lock = threading.Lock()
+_wikimedia_last_request = [0.0]
+
+
 def fetch_image_b64(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "oedio forge"})
+    headers = {"User-Agent": "oedio.com megabook builder (noel@harmonyball.com)"}
+    if "wikimedia.org" in url:
+        # Wikimedia's robot policy requires concurrency of at most 1 and a
+        # delay of at least 1 second between requests -- enforce both here
+        # rather than relying on the caller to know this. Confirmed the hard
+        # way: hit their 429 robot-policy rate limit hard on the first real
+        # batch run, wiping out most of a large job.
+        with _wikimedia_lock:
+            elapsed = time.time() - _wikimedia_last_request[0]
+            if elapsed < 1.2:
+                time.sleep(1.2 - elapsed)
+            req = urllib.request.Request(url, headers=headers)
+            data = urllib.request.urlopen(req, timeout=60).read()
+            _wikimedia_last_request[0] = time.time()
+            return base64.b64encode(data).decode()
+    req = urllib.request.Request(url, headers=headers)
     data = urllib.request.urlopen(req, timeout=60).read()
     return base64.b64encode(data).decode()
 
