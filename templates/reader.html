@@ -114,6 +114,17 @@
   .reader-illustration-thumb .material-symbols-outlined { font-size:16px; vertical-align:middle; }
   .reader-illustration-thumb:hover { border-color:var(--md-sys-color-primary); color:var(--md-sys-color-primary); }
 
+  /* Placeholder for pages with no transcribed text -- keeps every layer's
+     page-number sequence identical to the Scan layer's, so cycling between
+     Scan/Original/English always lands on the exact same page rather than
+     the nearest one that happens to have text. */
+  .reader-page-blank { display:flex; flex-direction:column; align-items:center; gap:10px;
+    padding:26px 16px; color:var(--md-sys-color-on-surface-variant); text-align:center; }
+  .reader-blank-note { font-size:12.5px; font-style:italic; max-width:340px; line-height:1.5; }
+  .reader-blank-thumb { max-width:160px; max-height:200px; object-fit:contain; border-radius:6px;
+    cursor:zoom-in; box-shadow:0 2px 8px rgba(0,0,0,.3); opacity:.8; }
+  .reader-blank-thumb:hover { opacity:1; }
+
   /* Possibly-garbled OCR text: subtle dotted underline, not intrusive --
      just enough to suggest checking the source image at that spot. This
      is a heuristic guess, not a real confidence score, so it's kept quiet
@@ -527,7 +538,28 @@ function renderBlock(p) {
     });
     return block;
   }
-  if (!p.text || p.text.trim().length < 3) return null;
+  if (!p.text || p.text.trim().length < 3) {
+    // Don't just drop this page from the DOM -- if the Scan layer has a
+    // block for page N, every other layer needs one too, or switching
+    // layers lands on the nearest available page instead of the same one.
+    const block = document.createElement('div');
+    block.className = 'reader-page-block reader-page-blank';
+    block.dataset.image = p.image;
+    block.dataset.page = p.page;
+    block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div>` +
+      `<div class="reader-blank-note">No transcribed text on this page &mdash; likely a plate, blank leaf, or illustration.</div>` +
+      (p.image ? `<img class="reader-blank-thumb" src="${p.image}" alt="Page ${p.page} scan" loading="lazy" />` : '');
+    if (p.image) {
+      block.querySelector('.reader-blank-thumb').addEventListener('click', () => {
+        zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+        openZoomOverlay();
+        showZoomPage(zoomCurrentIdx);
+        history.pushState({ readerZoom: true }, '');
+        zoomOpenedViaHistory = true;
+      });
+    }
+    return block;
+  }
   const block = document.createElement('div');
   block.className = 'reader-page-block';
   block.dataset.image = p.image;
@@ -773,7 +805,7 @@ async function setRightSlot(slug) {
   panel.querySelectorAll('.reader-page-block').forEach(el => el.remove());
   loadMoreObserver.disconnect();
   FACSIMILE = entry.kind === 'image';
-  allPages = FACSIMILE ? pages.filter(p => p.image) : pages.filter(p => p.text && p.text.trim().length >= 3 && p.text.trim() !== '\u2014');
+  allPages = FACSIMILE ? pages.filter(p => p.image) : pages.filter(p => p.image);
   renderedCount = 0;
   // Render every batch needed to reach the page you were just on (not just
   // the first batch), then jump straight there -- this is what keeps all
@@ -810,9 +842,12 @@ fetch('{{ data_url }}')
   .then(pages => {
     allPages = FACSIMILE
       ? pages.filter(p => p.image)
-      : pages.filter(p => p.text && p.text.trim().length >= 3);
+      : pages.filter(p => p.image); // keep every real page number, even blank ones, so layer-switching stays aligned by page
     if (!allPages.length) throw new Error('empty');
-    avgTextLength = allPages.reduce((sum, p) => sum + p.text.trim().length, 0) / allPages.length;
+    const realTextPages = allPages.filter(p => p.text && p.text.trim().length >= 3);
+    avgTextLength = realTextPages.length
+      ? realTextPages.reduce((sum, p) => sum + p.text.trim().length, 0) / realTextPages.length
+      : 0;
 
     // Chapter/heading detection heuristic: a line that's short, in caps,
     // and either starts with "CHAPTER" or sits alone near the top of an
