@@ -67,7 +67,7 @@
      "contributor": "Trans. W. Lucas Collins",
      "year": 1870,
      "loc_item": "21013764",
-     "note": "Prose summary edition.",
+     "note": "William Lucas Collins wrote for Blackwood's 'Ancient Classics for English Readers' series, a Victorian publishing project explicitly aimed at making Greek and Roman literature accessible to readers without classical education -- a genuinely democratizing effort at a time when Homer was otherwise the near-exclusive property of university-educated gentlemen who'd studied Greek at public school.",
      "facsimile": false
     },
     {
@@ -77,7 +77,7 @@
      "contributor": "Ada Dodd",
      "year": 1912,
      "loc_item": "12028375",
-     "note": "Young readers' adaptation.",
+     "note": "Retellings of Homer for children became a substantial publishing category in the late 19th and early 20th centuries, part of a broader Victorian and Edwardian belief that classical mythology was essential moral and cultural education -- these versions necessarily smoothed over the Odyssey's more adult content (Odysseus's infidelities, the graphic violence of the suitors' deaths) while preserving the adventure-story bones of the plot.",
      "facsimile": false
     },
     {
@@ -87,7 +87,7 @@
      "contributor": "Ed. W. W. Merry",
      "year": 1880,
      "loc_item": "10036017",
-     "note": "Phaeacian episode in Ancient Greek.",
+     "note": "Scholarly editions of isolated books from Homer, rather than the complete epic, were a standard 19th-century teaching tool -- university Greek courses often worked through individual books like the Phaeacian episode (Books VI-VIII) as self-contained units, complete with their own critical apparatus, since few students had time to work through all 24 books of the original Greek in a single term.",
      "facsimile": true
     },
     {
@@ -158,7 +158,7 @@
      "contributor": "Ed. F. H. A. Scrivener",
      "year": 1898,
      "loc_item": "04002782",
-     "note": "Comprehensive variorum edition with all textual variants.",
+     "note": "A 'variorum' edition is a specific scholarly format that prints multiple different readings, translations, or textual variants side by side, rather than presenting a single authoritative text -- this Bible edition reflects a 19th-century scholarly turn toward treating the biblical text itself as a subject of textual criticism, openly acknowledging the many small disagreements between ancient manuscript traditions rather than papering over them.",
      "facsimile": false
     },
     {
@@ -178,7 +178,7 @@
      "contributor": "Ed. F. H. A. Scrivener",
      "year": 1881,
      "loc_item": "02013451",
-     "note": "Critical edition of the Greek text.",
+     "note": "The Greek New Testament went through a major critical revision in 1881 by the scholars Westcott and Hort, who challenged the manuscript tradition underlying the King James Version by giving much greater weight to older Greek manuscripts discovered in the 19th century -- their edition was controversial at the time precisely because it implied the KJV, by then Britain's most beloved religious text, rested on a less reliable textual foundation than newer scholarship suggested was available.",
      "facsimile": false
     },
     {
@@ -209,7 +209,7 @@
      "contributor": "Ed. Thomas Newton",
      "year": 1852,
      "loc_item": "12017064",
-     "note": "Standard annotated edition.",
+     "note": "Milton dictated the entirety of Paradise Lost to a series of scribes after losing his sight completely by 1652, fifteen years before the poem's 1667 publication -- he reportedly composed in his head overnight and dictated finished passages from memory each morning, an almost unimaginable feat of composition for a poem of over 10,000 lines of blank verse.",
      "facsimile": false
     },
     {
@@ -229,7 +229,7 @@
      "contributor": "Ed. David Masson",
      "year": 1881,
      "loc_item": "00003394",
-     "note": "Complete poems with Latin originals.",
+     "note": "Milton's reputation underwent a dramatic reversal after his death -- during his lifetime he was known at least as much as a radical political pamphleteer who'd defended the execution of King Charles I as he was for his poetry, and it took decades after the 1660 Restoration (when his political writings became actively dangerous to own) for Paradise Lost to eclipse his political notoriety and become the primary thing he was remembered for.",
      "facsimile": false
     }
    ],
@@ -260,7 +260,7 @@
      "contributor": "Trans. E. W. Lane",
      "year": 1915,
      "loc_item": "15016534",
-     "note": "",
+     "note": "The frame story of Scheherazade may be a later addition to the collection rather than part of its earliest layer -- textual historians have traced individual tales within the Nights back through Persian, Indian, and Arabic sources spanning many centuries, meaning the 'collection' itself was assembled and re-assembled by different editors and translators long before any European translator got involved.",
      "facsimile": false
     },
     {
@@ -270,7 +270,7 @@
      "contributor": "Illus. Milo Winter",
      "year": 1924,
      "loc_item": "24001239",
-     "note": "",
+     "note": "Illustrated editions of the Nights became a lucrative genre unto themselves in the early 20th century, with different illustrators bringing wildly different visual sensibilities -- Orientalist fantasy, genuine attempts at historical accuracy, pure children's-book whimsy -- to the same underlying stories, meaning how a given generation of readers pictured Aladdin's lamp or Sinbad's ship depended enormously on which illustrated edition happened to be on their shelf.",
      "facsimile": false
     }
    ],
@@ -301,7 +301,7 @@
      "contributor": "Walt Whitman",
      "year": 1900,
      "loc_item": "00003826",
-     "note": "",
+     "note": "Whitman was still revising Leaves of Grass right up until his death in 1892, and editions published in the years immediately after, like this one, sit in an odd position -- technically posthumous, but still working from Whitman's own final intentions for the text rather than a later editor's reinterpretation of it.",
      "facsimile": false
     },
     {
@@ -311,7 +311,7 @@
      "contributor": "Walt Whitman",
      "year": 1921,
      "loc_item": "21014058",
-     "note": "",
+     "note": "By the early 1920s, Leaves of Grass had gone from a book so scandalous it got Whitman fired from his government clerkship in 1865 (his supervisor found a copy and was horrified) to a genuinely canonical work of American literature being reprinted for a mainstream audience -- one of the more complete public rehabilitations of a once-banned book in American literary history.",
      "facsimile": false
     }
    ],
@@ -362,7 +362,7 @@
      "contributor": "Zakarīyā al-Qazwīnī",
      "year": 1565,
      "loc_item": "2017454465",
-     "note": "Persian manuscript — 176 pages, in progress.",
+     "note": "This 1565 Persian copy sits between the earlier 1553 Ottoman translation and the later 1866 lithograph in this collection, and comparing all three side by side shows something textual scholars call 'manuscript drift' in action -- small errors, additions, and illustrator's choices accumulating across successive copies, each one one step further removed from Qazwini's original 13th-century Arabic.",
      "facsimile": true
     },
     {
@@ -392,7 +392,7 @@
      "contributor": "Wüstenfeld edition",
      "year": 1866,
      "loc_item": "00437031265",
-     "note": "",
+     "note": "By 1866, lithography had replaced hand-copying as the standard method for reproducing Persian manuscripts, allowing this edition to be produced in far larger numbers than the hand-illuminated 1565 copy -- the same text, wonders and all, but now a mechanically reproduced commodity rather than a unique hand-made object, part of the same technological shift that eventually pushed manuscript culture into obsolescence across the Islamic world.",
      "facsimile": true
     },
     {
@@ -652,7 +652,7 @@
      "contributor": "Japanese Kampo physicians",
      "year": 1800,
      "loc_item": "",
-     "note": "Japanese adaptation of Chinese medicine — 210 classical formulas still used in modern Japanese healthcare.",
+     "note": "Kampo -- the Japanese adaptation of Chinese medicine -- developed its own distinct diagnostic and herbal traditions after being introduced from China over a thousand years ago, and remains in active, mainstream clinical use in Japan today, prescribed by licensed physicians and covered by national health insurance alongside conventional Western medicine, a rare case of a traditional medical system achieving full institutional integration rather than being relegated to alternative-medicine status.",
      "facsimile": false,
      "tradition": "kampo"
     },
@@ -1233,7 +1233,7 @@
      "contributor": "German Federal Institute for Drugs and Medical Devices",
      "year": 1994,
      "loc_item": "",
-     "note": "126 evidence-based plant monographs — the gold standard of phytomedicine regulatory review.",
+     "note": "Germany's Commission E was a government expert panel that systematically reviewed herbal medicines for safety and efficacy starting in the 1970s and 80s, producing monographs that became the de facto international standard reference for herbal medicine regulation -- an unusual case of a national bureaucratic body's technical assessments becoming globally influential reference material well beyond German borders.",
      "facsimile": false,
      "tradition": "commission_e"
     },
@@ -1244,7 +1244,7 @@
      "contributor": "American Herbal Pharmacopoeia",
      "year": 2000,
      "loc_item": "",
-     "note": "45 full-quality plant monographs with clinical evidence review.",
+     "note": "The American Herbal Pharmacopoeia was founded in the 1990s specifically to bring the kind of rigorous quality and safety standards that Commission E had established in Germany to the largely unregulated American herbal supplement market -- part of a broader late-20th-century push to bring pharmacological rigor to traditional and herbal medicine practices that had often existed outside formal scientific scrutiny.",
      "facsimile": false,
      "tradition": "ahp"
     },
@@ -1255,7 +1255,7 @@
      "contributor": "World Health Organization",
      "year": 1999,
      "loc_item": "",
-     "note": "94 validated plant monographs — the authoritative global standard for plant medicine.",
+     "note": "The World Health Organization began publishing these monographs in the 1990s as part of an effort to give traditional and herbal medicines -- used by a majority of the world's population, particularly outside wealthy Western countries -- the same kind of standardized, evidence-based documentation that pharmaceutical drugs receive, treating traditional medicine as a serious public health subject rather than dismissing it outright.",
      "facsimile": false,
      "tradition": "who"
     },
@@ -1387,7 +1387,7 @@
      "contributor": "William Agnew Paton",
      "year": 1887,
      "loc_item": "02013426",
-     "note": "Full chapter on Anguilla, Irish settlers, and a 200-year-old French spy's report.",
+     "note": "Late 19th-century Caribbean travel writing increasingly targeted an American rather than purely British readership, as US steamship lines began offering direct tourist routes to the islands -- books like this one helped popularize the Caribbean as a leisure destination for American travelers in exactly the period when tourism was starting to become a genuine economic alternative to the collapsing plantation economy.",
      "facsimile": false
     },
     {
@@ -1397,7 +1397,7 @@
      "contributor": "Anonymous",
      "year": 1893,
      "loc_item": "08028484",
-     "note": "Literary account of a colonial administrator's isolated posting to Anguilla — visited monthly by a mail ship.",
+     "note": "The deliberately breezy, conversational title -- 'gossip' rather than 'history' or 'survey' -- signals a specific late-Victorian travel-writing genre aimed at armchair readers seeking entertainment rather than serious ethnography or economic analysis, part of a broader boom in casual travel journalism as literacy and periodical publishing expanded.",
      "facsimile": false
     },
     {
@@ -1407,7 +1407,7 @@
      "contributor": "James Hume Collens",
      "year": 1866,
      "loc_item": "24031382",
-     "note": "Includes dedicated Anguilla section: 1746 French attack repelled, revenue figures, governance.",
+     "note": "Trinidad's economy and demographics were unusually complex among British Caribbean colonies by the 1860s, having absorbed large numbers of indentured laborers from India after the abolition of slavery -- accounts from this period capture a society in the middle of a demographic transformation whose effects (a large Indo-Trinidadian population) still fundamentally shape the island today.",
      "facsimile": false
     },
     {
@@ -1417,7 +1417,7 @@
      "contributor": "John Fiske",
      "year": 1911,
      "loc_item": "21007149",
-     "note": "Entire chapter (XX) on Anguilla, St. Martin, Barbuda. Opens with the island's 'snake' name etymology.",
+     "note": "By 1911, 'the West Indies' as a travel-writing subject had become a well-established genre with its own conventions and expectations, decades removed from the immediate aftermath of emancipation -- accounts from this later period often reflect nostalgia for a vanishing plantation aristocracy alongside genuine engagement with the economic and social changes reshaping the islands.",
      "facsimile": false
     }
    ],
