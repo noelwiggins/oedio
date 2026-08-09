@@ -610,7 +610,8 @@
      "note": "An AI English translation of Cobo's Historia del Nuevo Mundo (1653), generated directly from the manuscript images. Unverified.",
      "facsimile": false
     }
-   ]
+   ],
+   "overview": "Long before the germ theory of disease or the scientific method as we'd recognize it, healers across the ancient world were doing something remarkably similar: watching what plants and minerals actually did to the body, writing it down, and passing that knowledge on. The texts gathered here span nearly three thousand years and four continents -- an Egyptian medical papyrus from around 1550 BCE, a Byzantine copy of the Greek physician Dioscorides, Chinese and Mesoamerican herbals, colonial-era Andean natural history -- each representing a different civilization's attempt to systematize what worked, what didn't, and why, using whatever framework of the body and the cosmos they had available to them."
   },
   {
    "slug": "materia-medica-asian",
@@ -902,7 +903,8 @@
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
      "source_label": "Wikimedia Commons (National Library of Korea)"
     }
-   ]
+   ],
+   "overview": "Asia produced some of the most sophisticated and long-lived medical traditions in human history, many of which remain in active clinical use today alongside modern medicine rather than as historical curiosities. This collection moves from the Arabic-Islamic Canon of Medicine -- a 14th-century manuscript copy of the text that dominated both Islamic and European medical training for over 600 years -- through Sanskrit Ayurvedic classics, Tibetan Buddhist medical tantras, Japanese and Korean pharmacopoeias, and the Zoroastrian purity laws embedded in the Avesta, each tradition developing its own theory of the body, its own diagnostic logic, and its own vast catalog of plant, animal, and mineral remedies."
   },
   {
    "slug": "materia-medica-african",
@@ -976,7 +978,8 @@
      "note": "A complete AI transcription of a colonial-era survey, Useful Plants of Nyasaland into readable text, beside the original scans. Unverified.",
      "facsimile": false
     }
-   ]
+   ],
+   "overview": "African traditional medicine was overwhelmingly an oral practice, passed down through healers and communities rather than committed to manuscript the way it was in societies with long traditions of medical writing -- which means the real knowledge base is largely absent from any library, ancient or modern. What survives here are colonial-era records: a British catalogue of a Gold Coast botanical garden, a landmark 1932 scientific survey of Southern African medicinal plants, a account of useful plants from what's now Malawi. These are outside observers' documentation, not the traditions' own voice, and that distinction matters -- they're offered as the closest available written record of practices that were never primarily meant to be written down at all."
   },
   {
    "slug": "materia-medica-americas",
@@ -1122,7 +1125,8 @@
      "note": "A complete AI transcription of Maiden's 1889 survey The Useful Native Plants of Australia into readable text, beside the original scans. Unverified.",
      "facsimile": false
     }
-   ]
+   ],
+   "overview": "From the Arctic to Patagonia, Indigenous peoples of the Americas developed medical knowledge entirely independent of the Old World's traditions, using plants that had no equivalent anywhere else on Earth. This collection includes the Badianus Manuscript and the companion volume of the Florentine Codex -- the first scientific texts on Nahua medicine and botany produced after contact, written in Nahuatl and Latin by Indigenous scholars working with Spanish friars -- alongside the Ritual of the Bacabs (a rare surviving Maya-language manuscript of medical incantations), field notes from a Victorian botanist's fifteen years in the Amazon, and one of the first systematic European surveys of North American plant medicine, written in Latin by a German physician traveling through the newly independent United States."
   },
   {
    "slug": "materia-medica-european",
@@ -1355,7 +1359,8 @@
      "note": "An AI English translation of Harpestraeng's medieval medical writings, generated directly from the manuscript images. Unverified.",
      "facsimile": false
     }
-   ]
+   ],
+   "overview": "European herbalism absorbed and transformed classical Greek and Roman medicine for over a thousand years, filtering it through monastery gardens, Renaissance printing presses, and the folk traditions of a dozen different regions and languages. This collection runs from a 10th-century Anglo-Saxon leechbook -- one of the oldest surviving medical texts in English -- through Cockayne's Victorian compilation of early English medicine, Matthioli's hugely influential 16th-century Italian commentary on Dioscorides, medieval Welsh medical manuscripts from Myddfai, and Norse medical writing rooted in the same Latin scholarly tradition that shaped medicine across the continent."
   },
   {
    "slug": "caribbean-travellers",
@@ -1415,7 +1420,8 @@
      "note": "Entire chapter (XX) on Anguilla, St. Martin, Barbuda. Opens with the island's 'snake' name etymology.",
      "facsimile": false
     }
-   ]
+   ],
+   "overview": "European travelers to the Caribbean left behind an enormous body of firsthand writing -- part natural history, part memoir, part colonial propaganda -- describing landscapes, peoples, and plantation economies to audiences back home who had never seen any of it. These accounts are invaluable and deeply compromised at the same time: often the only surviving written record of a place or moment, filtered entirely through the assumptions of the person holding the pen."
   },
   {
    "slug": "caribbean-history-docs",
@@ -1466,7 +1472,8 @@
      "note": "Anguillian settlers credited with founding the Virgin Islands colony. 911-page world gazetteer.",
      "facsimile": false
     }
-   ]
+   ],
+   "overview": "The documentary record of the colonial Caribbean -- official correspondence, legal records, administrative reports -- offers a different kind of evidence than travelers' narratives: less colorful, often more revealing of how colonial power actually operated day to day, what it tracked, and what it considered worth writing down at all."
   },
   {
    "slug": "caribbean-cartography",
@@ -1551,7 +1558,8 @@
      "facsimile": true,
      "dzi_url": "/static/dzi/1781-lopez-antillas-menores.dzi"
     }
-   ]
+   ],
+   "overview": "Maps of the Caribbean from the 17th through 19th centuries chart more than coastlines -- they record which European powers claimed which islands, which routes shaped trade and warfare, and how steadily more of the region's actual geography (and often its Indigenous place names) got overwritten by colonial mapmaking as the decades went on."
   },
   {
    "slug": "florentine-codex",
