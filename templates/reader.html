@@ -237,7 +237,7 @@
   .reader-icon-btn:hover { background:var(--md-sys-color-surface-container-high); }
   .reader-icon-btn.active { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
 
-  .reader-more-menu { display:none; position:absolute; top:44px; left:0; z-index:50; min-width:200px;
+  .reader-more-menu { display:none; position:absolute; top:44px; left:0; z-index:1050; min-width:200px;
     background:var(--md-sys-color-surface-container-highest); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.5);
     padding:6px; flex-direction:column; }
   .reader-more-menu.open { display:flex; }
@@ -629,12 +629,14 @@ const PAGE_BATCH_SIZE = 40; // lazily render this many page-blocks at a time
 
 let allPages = [];
 
-// Layer picker: on first visit to this book+edition, ask which layers the
-// reader actually wants (Scan/Original/English/Notes), remember the
-// choice, and filter PANEL_GROUP down to just those before the cycle
-// button below reads it. Returning visits skip straight past this.
+// Layer picker: on first visit to this book+edition, ask which content
+// layers the reader wants (Scan/Original/English), remember the choice,
+// and filter PANEL_GROUP down to just those before the cycle button below
+// reads it. Notes is NOT part of this choice -- it's always available via
+// its own pencil icon, so offering it here would just be a redundant,
+// confusing second way to toggle the same thing. Returning visits skip
+// straight past this picker.
 const LAYER_PREF_KEY = 'oedio-layers:' + MEGA_SLUG + ':' + BOOK_SLUG;
-let notesEnabled = true;
 (function resolveLayerPicker() {
   const hasRealChoice = PANEL_GROUP.length > 1;
   let saved = null;
@@ -645,7 +647,6 @@ let notesEnabled = true;
       const filtered = PANEL_GROUP.filter(g => saved.layers.includes(g.slug));
       if (filtered.length) PANEL_GROUP = filtered;
     }
-    notesEnabled = saved.notes !== false;
     return;
   }
   if (!hasRealChoice) return; // nothing to choose between -- don't bother asking
@@ -658,8 +659,6 @@ let notesEnabled = true;
   const choices = PANEL_GROUP.map(g => ({
     slug: g.slug, label: g.kind === 'image' ? 'Scan' : g.label, checked: true,
   }));
-  choices.push({ slug: '__notes__', label: 'Your notes', checked: true,
-    note: 'A private notepad tied to whatever page you\u2019re on' });
 
   function renderOptions() {
     optionsEl.innerHTML = '';
@@ -667,8 +666,7 @@ let notesEnabled = true;
       const row = document.createElement('div');
       row.className = 'rlp-option' + (c.checked ? ' checked' : '');
       row.innerHTML = `<span class="rlp-check"><span class="material-symbols-outlined">check</span></span>` +
-        `<span><span class="rlp-option-label">${c.label}</span>` +
-        (c.note ? `<span class="rlp-option-note">${c.note}</span>` : '') + `</span>`;
+        `<span><span class="rlp-option-label">${c.label}</span></span>`;
       row.addEventListener('click', () => {
         const checkedCount = choices.filter(x => x.checked).length;
         if (c.checked && checkedCount <= 1) return; // keep at least one layer active
@@ -682,9 +680,8 @@ let notesEnabled = true;
   picker.classList.add('open');
 
   startBtn.addEventListener('click', () => {
-    const layers = choices.filter(c => c.checked && c.slug !== '__notes__').map(c => c.slug);
-    const wantsNotes = choices.find(c => c.slug === '__notes__').checked;
-    localStorage.setItem(LAYER_PREF_KEY, JSON.stringify({ layers, notes: wantsNotes }));
+    const layers = choices.filter(c => c.checked).map(c => c.slug);
+    localStorage.setItem(LAYER_PREF_KEY, JSON.stringify({ layers }));
     picker.classList.remove('open');
     location.reload();
   });
@@ -1406,7 +1403,6 @@ document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   const listClose = document.getElementById('rnl-close');
   const listItems = document.getElementById('rnl-items');
   if (!btn) return;
-  if (!notesEnabled) { btn.style.display = 'none'; }
 
   let notesOpen = false, saveTimer = null, lastLoadedPage = null;
 
