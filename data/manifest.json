@@ -1438,7 +1438,7 @@
      "contributor": "James A. Thome & J. Horace Kimball",
      "year": 1838,
      "loc_item": "02017739",
-     "note": "American Quaker delegation's firsthand account of Emancipation Day in Anguilla.",
+     "note": "Full emancipation in the British Caribbean came in two stages -- an initial 1834 abolition that nonetheless bound formerly enslaved people into a compulsory 'apprenticeship' system for several more years, followed by full freedom in 1838 after that intermediate system was widely condemned as slavery in all but name. Documents from this exact period capture a genuine hinge moment: the language of freedom already in official use, while the actual social and economic structures of plantation society remained largely intact for decades after.",
      "facsimile": false
     },
     {
@@ -1448,7 +1448,7 @@
      "contributor": "J. Felsenhart",
      "year": 1867,
      "loc_item": "13022174",
-     "note": "Names Anguilla in Charles I's 1627 Carlisle land grants. Translation ongoing.",
+     "note": "French Caribbean colonies followed a different emancipation timeline than the British islands -- slavery was abolished there in 1848, following a revolution in France itself that briefly established the Second Republic -- and administrative documents from the following decades show a colonial government working out, often awkwardly, what citizenship and colonial status actually meant for formerly enslaved populations within the French imperial system.",
      "facsimile": false,
      "is_translated": true
     },
@@ -1459,7 +1459,7 @@
      "contributor": "British Admiralty",
      "year": 1868,
      "loc_item": "ltf91089143",
-     "note": "Official nautical directions. Anguilla's coastline, reefs, and the 'Eel' etymology confirmed.",
+     "note": "Sailing directions like this one were intensely practical documents, updated periodically as reefs shifted, lighthouses were built, and shipping routes changed -- they represent one of the least romanticized genres of colonial-era writing, pure navigational utility, but also an unusually honest record of which passages and harbors actually mattered for trade and naval movement at a given moment in time.",
      "facsimile": false
     },
     {
@@ -1469,7 +1469,7 @@
      "contributor": "John Pinkerton",
      "year": 1811,
      "loc_item": "30033189",
-     "note": "Anguillian settlers credited with founding the Virgin Islands colony. 911-page world gazetteer.",
+     "note": "John Pinkerton's geographical works were hugely popular in early 19th-century Britain, part of a boom in geography publishing that coincided with rapidly expanding British colonial reach -- his compilations synthesized information from many other travelers' and colonial administrators' accounts, meaning works like this functioned as much as reference encyclopedias for armchair readers as genuine firsthand geography.",
      "facsimile": false
     }
    ],
@@ -1490,7 +1490,7 @@
      "contributor": "Arent Roggeveen",
      "year": 1675,
      "loc_item": "",
-     "note": "Dutch nautical chart of the Lesser Antilles by a celebrated Dutch ship's pilot.",
+     "note": "Arent Roggeveen's charts were part of the Dutch Golden Age's remarkable cartographic output -- 17th-century Dutch mapmakers dominated European chartmaking for the Americas and Caribbean, producing maps that English, French, and Spanish sailors relied on even while those nations were geopolitical rivals of the Netherlands, since accurate navigation mattered more than national pride when the alternative was running aground.",
      "facsimile": true
     },
     {
@@ -1500,7 +1500,7 @@
      "contributor": "Willem Janszoon Blaeu",
      "year": 1634,
      "loc_item": "2003630536",
-     "note": "Dutch Golden Age masterpiece. Amsterdam's Blaeu dynasty at its peak.",
+     "note": "The Blaeu family ran the most prestigious mapmaking workshop in 17th-century Europe, and their charts were valued as much for their elaborate decorative cartouches and engraving quality as for navigational accuracy -- owning a Blaeu atlas was a genuine status symbol among wealthy Europeans, less a working tool than a demonstration of taste and means.",
      "facsimile": true,
      "dzi_url": "/static/dzi/2003630536.dzi"
     },
@@ -1511,7 +1511,7 @@
      "contributor": "John Thornton",
      "year": 1680,
      "loc_item": "2007633672",
-     "note": "Official hydrographer to the East India Company and Hudson's Bay Company.",
+     "note": "John Thornton was the leading English chartmaker of his era, official hydrographer to the East India Company and the Hudson's Bay Company -- English maritime cartography had lagged well behind Dutch output for most of the 17th century, and makers like Thornton represented a deliberate effort to build domestic English chartmaking capacity to reduce dependence on Dutch sources, particularly for strategically sensitive colonial territories.",
      "facsimile": true,
      "dzi_url": "/static/dzi/2007633672.dzi"
     },
@@ -1522,7 +1522,7 @@
      "contributor": "Vincenzo Coronelli",
      "year": 1690,
      "loc_item": "95684858",
-     "note": "Venetian cosmographer who built globes for Louis XIV.",
+     "note": "Vincenzo Coronelli was a Franciscan friar, papal cosmographer, and one of the most prolific mapmakers of the late 17th century, famous for constructing enormous ceremonial globes for European royalty alongside his printed maps -- his geographic work sat at an unusual intersection of religious institution, courtly patronage, and genuine scientific ambition.",
      "facsimile": true,
      "dzi_url": "/static/dzi/95684858.dzi"
     },
@@ -1533,7 +1533,7 @@
      "contributor": "Peter Schenk",
      "year": 1710,
      "loc_item": "2004629008",
-     "note": "Amsterdam's Schenk publishing house.",
+     "note": "Pieter Schenk was part of the second generation of great Dutch mapmaking families, working after the initial Golden Age boom had matured into a more competitive, commercially driven map-publishing industry -- by this period, successful cartographic firms were as much publishing businesses managing engraved copper plates as workshops of original geographic research.",
      "facsimile": true,
      "dzi_url": "/static/dzi/2004629008.dzi"
     },
@@ -1544,7 +1544,7 @@
      "contributor": "Jacques-Nicolas Bellin",
      "year": 1758,
      "loc_item": "",
-     "note": "French hydrographer royal — the authoritative French cartographic view of the Antilles.",
+     "note": "Jacques-Nicolas Bellin served as the official hydrographer of the French Navy for decades, and his charts reflect a period of intense French-British rivalry for Caribbean territory during the Seven Years' War, when accurate, current naval charts were matters of direct military and strategic value, not just commercial or decorative ones.",
      "facsimile": true
     },
     {
@@ -1554,7 +1554,7 @@
      "contributor": "Tomás López",
      "year": 1781,
      "loc_item": "",
-     "note": "Spanish royal cartographer's view of the Lesser Antilles.",
+     "note": "Tomas Lopez was Spain's leading cartographer in the late 18th century, trained in Paris but working to build a specifically Spanish mapmaking tradition independent of the French and Dutch dominance that had defined the field for most of the century -- his maps of Spanish Caribbean holdings represent a deliberate late-colonial project of asserting cartographic, and by extension territorial, authority in Spain's own name.",
      "facsimile": true,
      "dzi_url": "/static/dzi/1781-lopez-antillas-menores.dzi"
     }
@@ -1575,7 +1575,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667846",
-     "note": "118 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Book I catalogs the Aztec pantheon in a format clearly modeled on European saints' encyclopedias -- Sahagun and his Nahua collaborators were working within a genre Spanish readers would recognize, even while documenting deities the Spanish colonial project was actively trying to erase, an odd double purpose baked into the book's very structure.",
      "facsimile": true
     },
     {
@@ -1585,7 +1585,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667847",
-     "note": "290 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "The Ceremonies is the longest and most detailed book of the twelve, describing the Aztec ritual calendar month by month -- much of this ceremonial knowledge came from elderly informants who had witnessed these rites firsthand before the conquest, meaning Book II preserves living memory of practices that had already been suppressed by the time it was written down.",
      "facsimile": true
     },
     {
@@ -1595,7 +1595,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667848",
-     "note": "81 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Book III recounts the mythological origin of the god Quetzalcoatl, presenting him partly as a historical ruler who was later deified -- Sahagun's informants blended history and myth in ways that European chroniclers of the period often struggled, and sometimes refused, to take seriously as legitimate historical narrative.",
      "facsimile": true
     },
     {
@@ -1605,7 +1605,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667849",
-     "note": "175 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "The Art of Divination catalogs a Aztec calendrical system, the tonalpohualli, used to predict individual destiny based on birth date -- Spanish clergy considered this kind of astrological practice a serious threat to genuine conversion, since it offered an alternative framework for understanding fate that competed directly with Christian providence.",
      "facsimile": true
     },
     {
@@ -1615,7 +1615,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667850",
-     "note": "47 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Book V, the shortest of the twelve, catalogs omens and superstitions in a tone that's noticeably more skeptical than the surrounding books -- scholars have debated whether that skepticism reflects Sahagun's own editorial hand pushing back against material his Nahua collaborators presented more straightforwardly.",
      "facsimile": true
     },
     {
@@ -1625,7 +1625,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667851",
-     "note": "439 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Rhetoric and Moral Philosophy is widely considered the literary high point of the entire Codex -- it preserves huehuetlatolli, formal Nahuatl speeches on subjects from childbirth to death, that represent some of the most sophisticated surviving examples of pre-conquest Nahuatl oratory, valued today as much for their literary quality as their historical content.",
      "facsimile": true
     },
     {
@@ -1635,7 +1635,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667852",
-     "note": "51 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "The shortest substantive book in the collection, on astronomy and the calendar, reflects how much of Aztec cosmological knowledge Sahagun's project simply couldn't fully capture -- specialized astronomical and calendrical learning was often restricted to a narrow priestly class, and much of it may have already been lost or guarded by the time his informants were consulted.",
      "facsimile": true
     },
     {
@@ -1645,7 +1645,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667853",
-     "note": "116 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Kings and Lords records Aztec political history and royal genealogy from oral accounts of surviving nobility -- this book has been used extensively by historians trying to reconstruct pre-conquest Aztec political history, precisely because so few other sources for that history, outside of the pictorial codices, survive at all.",
      "facsimile": true
     },
     {
@@ -1655,7 +1655,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667854",
-     "note": "138 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "The Merchants documents the pochteca, a powerful hereditary merchant class who functioned as much as long-distance diplomats and intelligence gatherers for the Aztec state as traders -- their detailed trade networks extended far beyond the reach of Aztec military conquest, giving the empire economic influence well past its actual borders.",
      "facsimile": true
     },
     {
@@ -1665,7 +1665,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667855",
-     "note": "301 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "Book X's survey of 'the people, their virtues and vices' includes an unusually direct passage on Aztec medicine and physicians, describing what qualities distinguished a good healer from a bad one -- one of the few places in the Codex where Nahua concepts of professional competence and ethics are laid out explicitly.",
      "facsimile": true
     },
     {
@@ -1685,7 +1685,7 @@
      "contributor": "Fray Bernardino de Sahagún, with Nahua tlacuiloque (scribe-artists)",
      "year": 1577,
      "loc_item": "2021667857",
-     "note": "177 real facsimile pages, Library of Congress copy of the Florentine Codex.",
+     "note": "The Conquest of Mexico is the most historically fraught book in the collection -- Sahagun revised it more than once, and the surviving version still shows signs of Spanish colonial pressure to shape the narrative, making it simultaneously an Indigenous eyewitness account of the conquest and a document produced under the direct supervision of the conquerors it describes.",
      "facsimile": true
     },
     {
@@ -1705,7 +1705,7 @@
      "contributor": "Translated by Claude (AI)",
      "year": 1577,
      "loc_item": "2021667856",
-     "note": "An AI English translation of Book XI's Spanish text, generated directly from the manuscript images, all 506 pages. Unverified.",
+     "note": "This is an original AI translation generated directly from Sahagun's Spanish gloss running alongside the Nahuatl text -- no public-domain English translation of the complete Florentine Codex exists (the standard scholarly translation, Anderson and Dibble's, remains under active copyright), making this the first English rendering of Book XI freely available without restriction.",
      "facsimile": false
     }
    ],
