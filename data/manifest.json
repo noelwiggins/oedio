@@ -1734,6 +1734,29 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "buddhism",
+   "title": "Buddhist Texts",
+   "author": "Various",
+   "spine_color": "linear-gradient(160deg,#8a5a1e,#3d2609)",
+   "section": "literature",
+   "description": "Foundational Buddhist scripture across the tradition's major branches -- Pali Canon texts from Theravada Buddhism, Mahayana sutras, and the historical translations that first brought them to Western readers, alongside original-language sources and facsimiles where they survive.",
+   "overview": "Buddhism produced one of the largest bodies of religious literature in human history, spanning roughly 2,500 years and multiple canonical languages -- Pali, Sanskrit, Chinese, Tibetan -- as the tradition spread from northern India across Asia and split into distinct schools with their own scriptural collections. This Oedio gathers foundational texts across that range: the Dhammapada, a collection of the Buddha's sayings and one of the most widely translated Buddhist texts in any language, alongside the 19th-century scholarly translations -- Max Muller's Sacred Books of the East series chief among them -- that first made these texts broadly available outside Asia.",
+   "components": [
+    {
+     "slug": "dhammapada-pali",
+     "role": "Original text",
+     "title": "The Dhammapada (Pali text, 1900 edition)",
+     "contributor": "Attrib. Gautama Buddha's early followers",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A collection of the Buddha's sayings on ethics and the path to enlightenment, among the most widely translated texts in the Buddhist canon -- this edition presents the original Pali. 116 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/india.history.resource.112138",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
