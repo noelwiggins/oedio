@@ -1673,6 +1673,26 @@
      "loc_item": "2021667857",
      "note": "177 real facsimile pages, Library of Congress copy of the Florentine Codex.",
      "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book11-transcription",
+     "role": "Book 11",
+     "title": "Book 11: Natural Things — Spanish text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1577,
+     "loc_item": "2021667856",
+     "note": "A complete AI transcription of Sahagun's own Spanish gloss running alongside the Nahuatl columns of Book XI, all 506 pages, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book11-english",
+     "role": "Book 11",
+     "title": "Book 11: Natural Things — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1577,
+     "loc_item": "2021667856",
+     "note": "An AI English translation of Book XI's Spanish text, generated directly from the manuscript images, all 506 pages. Unverified.",
+     "facsimile": false
     }
    ],
    "section": "literature"

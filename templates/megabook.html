@@ -47,6 +47,37 @@
 
   .individual-editions-label { margin:30px 0 4px; font-size:12px; color:var(--md-sys-color-on-surface-variant);
     text-align:center; letter-spacing:.02em; }
+
+  /* ===================== Per-Oedio rotunda ===================== */
+  .mb-rotunda-wrap { position:relative; height:min(48vh, 420px); min-height:300px;
+    margin:22px -24px 0; overflow:hidden;
+    background: radial-gradient(ellipse 70% 55% at 50% 40%, rgba(212,175,90,.09), transparent 70%),
+                linear-gradient(180deg, var(--md-sys-color-surface) 0%, var(--md-sys-color-surface-container-low) 100%);
+    touch-action: pan-y; }
+  .mb-rotunda-stage { position:absolute; inset:0; perspective:1200px; perspective-origin:50% 42%; cursor:grab; }
+  .mb-rotunda-stage.grabbing { cursor:grabbing; }
+  .mb-rotunda { position:absolute; left:50%; top:44%; width:0; height:0;
+    transform-style:preserve-3d; will-change:transform; }
+  .mr-spine { position:absolute; left:0; top:0; margin-left:calc(var(--w) / -2 * 1px);
+    width:calc(var(--w) * 1px); height:160px; margin-top:-80px; border-radius:4px 9px 9px 4px;
+    display:flex; align-items:center; justify-content:center; padding:12px 6px;
+    text-decoration:none; cursor:pointer; backface-visibility:hidden;
+    box-shadow:2px 2px 9px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.35); }
+  .mr-spine::before { content:''; position:absolute; inset:5px; border:1px solid rgba(212,175,90,.4);
+    border-radius:3px; pointer-events:none; }
+  .mr-spine .mrs-title { color:rgba(255,255,255,.94); font-size:11px; font-weight:600; line-height:1.25;
+    writing-mode:vertical-rl; text-orientation:mixed; text-align:center; max-height:136px; overflow:hidden;
+    font-family:Georgia,'Times New Roman',serif; letter-spacing:.02em; pointer-events:none; }
+  .mr-spine.pulling { transition: transform .5s cubic-bezier(.2,.8,.3,1); z-index:50; }
+  .mr-label { position:absolute; left:0; top:0; width:0; height:0; pointer-events:none; }
+  .mr-label span { display:block; transform:translate(-50%,-116px); font-size:9.5px; font-weight:700;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--md-sys-color-primary);
+    white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,.6); background:rgba(0,0,0,.28);
+    padding:4px 10px; border-radius:10px; }
+  .mb-rotunda-hint { position:absolute; top:8px; left:50%; transform:translateX(-50%); font-size:10.5px;
+    color:var(--md-sys-color-on-surface-variant); background:var(--md-sys-color-surface-container);
+    padding:4px 12px; border-radius:11px; opacity:.85; pointer-events:none; transition:opacity .4s ease; }
+  .mb-rotunda-hint.faded { opacity:0; }
 </style>
 {% endblock %}
 
@@ -54,7 +85,7 @@
 <div class="mb-wrap">
   <div class="mb-head">
     <h1>{{ mb.title }}</h1>
-    <div class="byline">{{ mb.author }} &middot; {{ mb.components|length }} editions bound into this megabook</div>
+    <div class="byline">{{ mb.author }} &middot; {{ mb.components|length }} editions bound into this Oedio</div>
     <p class="desc">{{ mb.description }}</p>
   </div>
 
@@ -68,7 +99,7 @@
         All editions as toggleable layers over one scroll &mdash; parallel translations, source scans,
         Flaxman engravings, and streaming audio (English narration &amp; ancient Greek recitation), aligned book by book.
         {% else %}
-        The way to read this megabook &mdash; every edition, translation, and source scan combined.
+        The way to read this Oedio &mdash; every edition, translation, and source scan combined.
         Switch between them from the layer picker inside the reader itself.
         {% endif %}
       </div>
@@ -76,23 +107,116 @@
     <span class="material-symbols-outlined orc-arrow">arrow_forward</span>
   </a>
 
-  <div class="individual-editions-label">Or open a specific edition directly</div>
-  {% for role, comps in grouped %}
-  <div class="role-label">{{ role }}</div>
-  <div class="comp-grid">
-    {% for c in comps %}
-    <a class="comp-card" href="/book/{{ mb.slug }}/read/{{ c.slug }}">
-      <div class="c-title">{{ c.title }}</div>
-      <div class="c-meta">{{ c.contributor }} &middot; {{ c.year }} &middot; {{ c.pages }} pages</div>
-      <div class="c-note">{{ c.note }}</div>
-      <div class="c-badges">
-        {% if c.facsimile %}<span class="badge facs">Facsimile &mdash; page images</span>
-        {% else %}<span class="badge">Full text + scans</span>{% endif %}
-        <span class="badge" style="background:transparent; border:1px solid var(--md-sys-color-outline-variant); color:var(--md-sys-color-on-surface-variant);">Library of Congress</span>
-      </div>
-    </a>
-    {% endfor %}
+  <div class="individual-editions-label">Or browse the shelf for this Oedio</div>
+  <div class="mb-rotunda-wrap" id="mb-rotunda-wrap">
+    <div class="mb-rotunda-stage" id="mb-rotunda-stage">
+      <div class="mb-rotunda" id="mb-rotunda"></div>
+    </div>
+    <div class="mb-rotunda-hint" id="mb-rotunda-hint">Drag to spin &middot; tap a spine to open</div>
   </div>
-  {% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const COMPS = {{ mb.components|tojson }};
+  const GROUPED = {{ grouped|tojson }};
+  const SPINE_COLOR = {{ mb.spine_color|tojson }};
+  const MEGA_SLUG = {{ mb.slug|tojson }};
+
+  const ordered = [];
+  const roleRanges = [];
+  GROUPED.forEach(([role, comps]) => {
+    const start = ordered.length;
+    comps.forEach(c => ordered.push(c));
+    roleRanges.push({ label: role, start, end: ordered.length - 1 });
+  });
+
+  const N = ordered.length;
+  const rotunda = document.getElementById('mb-rotunda');
+  const stage = document.getElementById('mb-rotunda-stage');
+  const wrap = document.getElementById('mb-rotunda-wrap');
+  const hint = document.getElementById('mb-rotunda-hint');
+  if (!N || !rotunda) return;
+
+  const angleStep = 360 / N;
+  const radius = Math.max(190, Math.round(85 / Math.tan(Math.PI / N)));
+
+  ordered.forEach((c, i) => {
+    const angle = i * angleStep;
+    const width = 44 + Math.min((c.pages || 30), 700) / 12;
+    const el = document.createElement('a');
+    el.className = 'mr-spine';
+    el.href = '/book/' + MEGA_SLUG + '/read/' + c.slug;
+    el.style.setProperty('--w', Math.min(width, 90));
+    el.style.background = SPINE_COLOR;
+    el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+    el.dataset.angle = angle;
+    el.innerHTML = `<span class="mrs-title">${c.title}</span>`;
+    rotunda.appendChild(el);
+  });
+
+  roleRanges.forEach(r => {
+    const midAngle = ((r.start + r.end) / 2) * angleStep;
+    const el = document.createElement('div');
+    el.className = 'mr-label';
+    el.style.transform = `rotateY(${midAngle}deg) translateZ(${radius + 4}px)`;
+    el.innerHTML = `<span>${r.label}</span>`;
+    rotunda.appendChild(el);
+  });
+
+  let currentAngle = -angleStep * 0.5, velocity = 0, dragging = false;
+  let lastX = 0, lastT = 0, moved = 0, momentumRAF = null;
+
+  function apply() { rotunda.style.transform = `rotateY(${currentAngle}deg)`; }
+  apply();
+  function stopMomentum() { if (momentumRAF) cancelAnimationFrame(momentumRAF); momentumRAF = null; }
+  function runMomentum() {
+    stopMomentum();
+    function step() {
+      velocity *= 0.94; currentAngle += velocity; apply();
+      if (Math.abs(velocity) > 0.02) momentumRAF = requestAnimationFrame(step);
+    }
+    momentumRAF = requestAnimationFrame(step);
+  }
+  function fadeHint() { hint.classList.add('faded'); }
+  function pointerDown(x) {
+    stopMomentum(); dragging = true; lastX = x; lastT = performance.now(); moved = 0;
+    stage.classList.add('grabbing');
+  }
+  function pointerMove(x) {
+    if (!dragging) return;
+    const dx = x - lastX; moved += Math.abs(dx);
+    const now = performance.now(); const dt = Math.max(1, now - lastT);
+    currentAngle += dx * 0.35; velocity = (dx * 0.35) * (16 / dt);
+    lastX = x; lastT = now; apply();
+  }
+  function pointerUp(target) {
+    if (!dragging) return;
+    dragging = false; stage.classList.remove('grabbing');
+    if (Math.abs(velocity) > 0.15) runMomentum();
+    fadeHint();
+    if (moved < 6) {
+      const spine = target && target.closest ? target.closest('.mr-spine') : null;
+      if (spine) openSpine(spine);
+    }
+  }
+  stage.addEventListener('mousedown', e => { pointerDown(e.clientX); e.preventDefault(); });
+  window.addEventListener('mousemove', e => pointerMove(e.clientX));
+  window.addEventListener('mouseup', e => pointerUp(e.target));
+  stage.addEventListener('touchstart', e => { if (e.touches.length === 1) pointerDown(e.touches[0].clientX); }, { passive: true });
+  stage.addEventListener('touchmove', e => { if (e.touches.length === 1) pointerMove(e.touches[0].clientX); }, { passive: true });
+  stage.addEventListener('touchend', e => pointerUp(e.target));
+
+  function openSpine(spine) {
+    if (spine.classList.contains('pulling')) return;
+    spine.classList.add('pulling');
+    const angle = parseFloat(spine.dataset.angle);
+    spine.style.transform = `rotateY(${angle}deg) translateZ(${radius + 70}px) scale(1.08)`;
+    setTimeout(() => { window.location.href = spine.getAttribute('href'); }, 380);
+  }
+  setTimeout(fadeHint, 4000);
+})();
+</script>
 {% endblock %}
