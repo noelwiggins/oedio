@@ -528,6 +528,36 @@
 {% block extra_scripts %}
 <script>
 const BOOK_SLUG = {{ slug|tojson }};
+const MEGA_SLUG = {{ mega_slug|tojson }};
+
+// Back-button history seeding: if someone lands directly on this reader page
+// (a shared link, a bookmark, a fresh tab) rather than clicking through from
+// this site, the browser's real back-stack has nothing of oedio.com in it at
+// all -- pressing back would leave the site immediately. Seed two synthetic
+// entries (home, then this book's page) ahead of the current one so back
+// always retraces book -> home -> away, matching normal in-site navigation.
+// Skipped entirely when the referrer shows we already came from here, since
+// real navigation already built the correct stack and re-seeding would be
+// redundant (or wrong, if the visitor came from home -> book -> reader and
+// is now going back through a stack that's already correct).
+(function seedBackHistory() {
+  const cameFromSite = document.referrer && document.referrer.indexOf(location.origin) === 0;
+  if (cameFromSite) return;
+  const bookUrl = '/book/' + MEGA_SLUG;
+  const hereUrl = location.pathname + location.search;
+  history.replaceState({ oedioNav: '/' }, '', '/');
+  history.pushState({ oedioNav: bookUrl }, '', bookUrl);
+  history.pushState({ oedioNav: hereUrl }, '', hereUrl);
+})();
+window.addEventListener('popstate', (e) => {
+  // pushState/replaceState only rewrite the URL bar -- they don't reload
+  // content, so when the back button pops one of the synthetic entries
+  // above, force a real navigation to actually show that page.
+  if (e.state && e.state.oedioNav && e.state.oedioNav !== location.pathname + location.search) {
+    location.href = e.state.oedioNav;
+  }
+});
+
 let FACSIMILE = {{ facsimile|tojson }};
 const PANEL_GROUP = {{ (panel_group or [])|tojson }};
 const BOOK_TITLE = {{ book_title|tojson }};

@@ -131,6 +131,23 @@
 
 {% block extra_scripts %}
 <script>
+// Same back-button seeding as the reader page, one level shallower: if
+// someone lands directly on this book's page, make sure back still goes
+// through home before leaving the site.
+(function seedBackHistory() {
+  const cameFromSite = document.referrer && document.referrer.indexOf(location.origin) === 0;
+  if (cameFromSite) return;
+  const hereUrl = location.pathname + location.search;
+  history.replaceState({ oedioNav: '/' }, '', '/');
+  history.pushState({ oedioNav: hereUrl }, '', hereUrl);
+})();
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.oedioNav && e.state.oedioNav !== location.pathname + location.search) {
+    location.href = e.state.oedioNav;
+  }
+});
+</script>
+<script>
 (function () {
   const COMPS = {{ mb.components|tojson }};
   const GROUPED = {{ grouped|tojson }};
