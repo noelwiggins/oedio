@@ -27,7 +27,7 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROMPT_TRANSLATE = """This is a page from {description}, in {lang}.
 
-1. Transcribe ALL visible text on the page exactly as written, in its original script, preserving line order. Include marginalia only if clearly part of the text tradition (ignore modern pencil shelf-marks, stamps, catalog numbers, or library annotations). If the page is damaged or partly illegible, transcribe whatever is legible and mark unreadable portions as [illegible] -- do not add any commentary about the damage.
+1. Transcribe ALL visible text on the page exactly as written, in its original script, preserving line order. Include marginalia only if clearly part of the text tradition (ignore modern pencil shelf-marks, stamps, catalog numbers, or library annotations). If a paragraph or sentence begins with a large decorative, illuminated, or ornamental initial letter (a "drop cap") rendered as an image or woodcut rather than plain type, that letter is still the literal first letter of the word -- include it in the transcription as normal text (e.g. a page opening with an ornamental "T" followed by "HE" must be transcribed as "THE", not "HE"). Do not treat decorative initials as pure illustration to be skipped. If the page is damaged or partly illegible, transcribe whatever is legible and mark unreadable portions as [illegible] -- do not add any commentary about the damage.
 2. Then translate the transcribed text into clear, readable English. Preserve the flavor of the original without archaism.
 
 If the page contains no body text (binding, blank leaf, cover, plate with no caption, ruler/color chart), respond with exactly: NO_TEXT
@@ -40,7 +40,7 @@ Otherwise respond using EXACTLY this plain-text format and nothing else -- no ma
 
 PROMPT_NO_TRANSLATE = """This is a page from {description}, printed in {lang}.
 
-Transcribe ALL visible body text on the page exactly as written (this is a clean OCR pass -- correct only obvious scanning artifacts, not wording). Include captions under illustrations but not modern library stamps or shelf-marks. If the page is damaged or partly illegible, transcribe whatever is legible and mark unreadable portions as [illegible] -- do not add any commentary about the damage.
+Transcribe ALL visible body text on the page exactly as written (this is a clean OCR pass -- correct only obvious scanning artifacts, not wording). Include captions under illustrations but not modern library stamps or shelf-marks. If a paragraph or sentence begins with a large decorative, illuminated, or ornamental initial letter (a "drop cap") rendered as an image or woodcut rather than plain type, that letter is still the literal first letter of the word -- include it in the transcription as normal text (e.g. a page opening with an ornamental "T" followed by "HE" must be transcribed as "THE", not "HE"). Do not treat decorative initials as pure illustration to be skipped. If the page is damaged or partly illegible, transcribe whatever is legible and mark unreadable portions as [illegible] -- do not add any commentary about the damage.
 
 If the page contains no body text (binding, blank leaf, cover, or a plate with no caption), respond with exactly: NO_TEXT
 
