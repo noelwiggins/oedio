@@ -25,14 +25,6 @@
    "emblem": "em-ship"
   },
   {
-   "slug": "geography",
-   "title": "Geography",
-   "description": "Historical maps, nautical charts, and the science of place.",
-   "icon": "🗺",
-   "spine_color": "linear-gradient(160deg,#2e3d5c,#111828)",
-   "emblem": "em-map"
-  },
-  {
    "slug": "history",
    "title": "History & Society",
    "description": "Primary documents, official records, and eyewitness histories.",
@@ -579,7 +571,7 @@
   },
   {
    "slug": "caribbean-cartography",
-   "section": "geography",
+   "section": "travel",
    "title": "Caribbean Cartography — 17th to 19th Century",
    "author": "Various",
    "spine_color": "linear-gradient(160deg,#2a3a1a,#121a0a)",
