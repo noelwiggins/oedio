@@ -258,6 +258,55 @@ def megabook_page(mega_slug):
                            active_page="library")
 
 
+@app.route("/book/<mega_slug>/search")
+def megabook_search(mega_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    q = (request.args.get("q") or "").strip()
+    if len(q) < 2:
+        return jsonify({"results": [], "query": q})
+    q_lower = q.lower()
+
+    results = []
+    for c in mb["components"]:
+        slug = c["slug"]
+        path = f"static/reader-data/{c.get('data_slug', slug)}.json"
+        if not os.path.exists(path):
+            continue
+        try:
+            pages = json.load(open(path))
+        except Exception:
+            continue
+        for p in pages:
+            text = p.get("text") or ""
+            if not text or text.strip() == "\u2014":
+                continue
+            idx = text.lower().find(q_lower)
+            if idx == -1:
+                continue
+            start = max(0, idx - 90)
+            end = min(len(text), idx + len(q) + 90)
+            snippet = text[start:end].strip()
+            if start > 0:
+                snippet = "\u2026" + snippet
+            if end < len(text):
+                snippet = snippet + "\u2026"
+            results.append({
+                "component_slug": slug, "component_title": c["title"],
+                "page": p["page"], "snippet": snippet,
+                "match_start": snippet.lower().find(q_lower),
+                "match_len": len(q),
+                "url": f"/book/{mega_slug}/read/{slug}?page={p['page']}",
+            })
+            if len(results) >= 60:
+                break
+        if len(results) >= 60:
+            break
+
+    return jsonify({"results": results, "query": q, "truncated": len(results) >= 60})
+
+
 @app.route("/book/<mega_slug>/group/<group_slug>")
 def volume_group_page(mega_slug, group_slug):
     mb = _find_megabook(mega_slug)

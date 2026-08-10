@@ -54,6 +54,33 @@
   .individual-editions-label { margin:30px 0 4px; font-size:12px; color:var(--md-sys-color-on-surface-variant);
     text-align:center; letter-spacing:.02em; }
 
+  /* Search: scans every transcribed/translated page in this Oedio, server
+     side, and shows results as cards -- title, page, and the matched
+     passage in its actual sentence context, the way a real reference
+     search should look rather than a bare list of page numbers. */
+  .mb-search-wrap { margin-top:26px; }
+  .mb-search-box { display:flex; align-items:center; gap:10px; background:var(--md-sys-color-surface-container);
+    border-radius:14px; padding:12px 16px; border:1px solid var(--md-sys-color-outline-variant); }
+  .mb-search-box input { flex:1; background:none; border:none; outline:none; font-size:14px;
+    color:var(--md-sys-color-on-surface); font-family:inherit; }
+  .mb-search-box input::placeholder { color:var(--md-sys-color-on-surface-variant); }
+  .mb-search-clear { background:none; border:none; cursor:pointer; color:var(--md-sys-color-on-surface-variant);
+    display:flex; padding:2px; }
+  .mb-search-status { font-size:12px; color:var(--md-sys-color-on-surface-variant); margin:10px 2px 0; }
+  .mb-search-results { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+  .mb-search-card { display:block; text-decoration:none; background:var(--md-sys-color-surface-container);
+    border:1px solid var(--md-sys-color-outline-variant); border-radius:14px; padding:14px 16px;
+    transition:border-color .15s ease, transform .15s ease; }
+  .mb-search-card:hover { border-color:var(--md-sys-color-primary); transform:translateY(-1px); }
+  .mb-search-card .msc-title { font-size:13px; font-weight:700; color:var(--md-sys-color-primary);
+    margin-bottom:2px; }
+  .mb-search-card .msc-page { font-size:11px; color:var(--md-sys-color-on-surface-variant);
+    margin-bottom:8px; text-transform:uppercase; letter-spacing:.04em; }
+  .mb-search-card .msc-snippet { font-size:13.5px; line-height:1.6; color:var(--md-sys-color-on-surface);
+    font-family:Georgia, serif; }
+  .mb-search-card .msc-snippet mark { background:rgba(212,175,90,.35); color:inherit;
+    border-radius:3px; padding:0 2px; }
+
   /* Title picker: opened by "Open Reader" -- pick which distinct title you
      want (not a layer choice, a whole different edition/work), then the
      reader's own layer picker takes over for that title's layers. */
@@ -170,7 +197,19 @@
   </button>
   {% endif %}
 
-  <div class="individual-editions-label">Or browse the shelf for this Oedio</div>
+  <div class="mb-search-wrap">
+    <div class="mb-search-box">
+      <span class="material-symbols-outlined" style="font-size:19px; color:var(--md-sys-color-on-surface-variant);">search</span>
+      <input type="text" id="mb-search-input" placeholder="Search every page in this Oedio &mdash; try &quot;turmeric&quot;" autocomplete="off" />
+      <button id="mb-search-clear" class="mb-search-clear" style="display:none;" aria-label="Clear search">
+        <span class="material-symbols-outlined" style="font-size:17px;">close</span>
+      </button>
+    </div>
+    <div id="mb-search-status" class="mb-search-status"></div>
+    <div id="mb-search-results" class="mb-search-results"></div>
+  </div>
+
+  <div class="individual-editions-label" id="shelf-label">Or browse the shelf for this Oedio</div>
   <div id="title-picker" class="tp-overlay">
     <div class="tp-card">
       <div class="tp-header">
@@ -360,6 +399,84 @@ window.addEventListener('popstate', (e) => {
   openBtn.addEventListener('click', () => { build(); overlay.classList.add('open'); });
   closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+})();
+
+// --- Oedio-wide search: scans every transcribed/translated page in this
+// book for matches, server side, and shows results as cards with real
+// sentence context rather than a bare list of page numbers. ---
+(function () {
+  const input = document.getElementById('mb-search-input');
+  const clearBtn = document.getElementById('mb-search-clear');
+  const statusEl = document.getElementById('mb-search-status');
+  const resultsEl = document.getElementById('mb-search-results');
+  const shelfLabel = document.getElementById('shelf-label');
+  const rotundaWrap = document.getElementById('mb-rotunda-wrap');
+  const MEGA_SLUG = {{ mb.slug|tojson }};
+  if (!input) return;
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function renderResults(data) {
+    resultsEl.innerHTML = '';
+    if (!data.results.length) {
+      statusEl.textContent = `No matches for "${data.query}".`;
+      return;
+    }
+    statusEl.textContent = `${data.results.length}${data.truncated ? '+' : ''} match${data.results.length === 1 ? '' : 'es'} for "${data.query}"`;
+    data.results.forEach(r => {
+      const card = document.createElement('a');
+      card.className = 'mb-search-card';
+      card.href = r.url;
+      let snippetHtml = escapeHtml(r.snippet);
+      if (r.match_start >= 0) {
+        const before = escapeHtml(r.snippet.slice(0, r.match_start));
+        const match = escapeHtml(r.snippet.slice(r.match_start, r.match_start + r.match_len));
+        const after = escapeHtml(r.snippet.slice(r.match_start + r.match_len));
+        snippetHtml = `${before}<mark>${match}</mark>${after}`;
+      }
+      card.innerHTML = `<div class="msc-title">${escapeHtml(r.component_title)}</div>` +
+        `<div class="msc-page">Page ${r.page}</div>` +
+        `<div class="msc-snippet">${snippetHtml}</div>`;
+      resultsEl.appendChild(card);
+    });
+  }
+
+  let searchTimer = null, currentQuery = '';
+  function runSearch(q) {
+    if (q === currentQuery) return;
+    currentQuery = q;
+    if (q.length < 2) {
+      resultsEl.innerHTML = '';
+      statusEl.textContent = '';
+      if (shelfLabel) shelfLabel.style.display = '';
+      if (rotundaWrap) rotundaWrap.style.display = '';
+      clearBtn.style.display = 'none';
+      return;
+    }
+    clearBtn.style.display = 'flex';
+    if (shelfLabel) shelfLabel.style.display = 'none';
+    if (rotundaWrap) rotundaWrap.style.display = 'none';
+    statusEl.textContent = 'Searching\u2026';
+    fetch('/book/' + MEGA_SLUG + '/search?q=' + encodeURIComponent(q))
+      .then(r => r.json())
+      .then(data => { if (data.query === input.value.trim()) renderResults(data); })
+      .catch(() => { statusEl.textContent = 'Search failed -- try again.'; });
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = input.value.trim();
+    searchTimer = setTimeout(() => runSearch(q), 350);
+  });
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    runSearch('');
+    input.focus();
+  });
 })();
 </script>
 {% endblock %}
