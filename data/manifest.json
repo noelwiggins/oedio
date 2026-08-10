@@ -848,6 +848,42 @@
      "loc_item": "",
      "note": "An AI English translation of the Dhammapada, foundational Buddhist scripture, generated directly from the manuscript images. Unverified.",
      "facsimile": false
+    },
+    {
+     "slug": "buddhaghosa-parables-burmese",
+     "role": "Theravada Commentary — Burmese Tradition",
+     "title": "Buddhaghosha's Parables (trans. from Burmese, 1870)",
+     "contributor": "Buddhaghosa (5th c. CE) — trans. Capt. T. Rogers",
+     "year": 1870,
+     "loc_item": "",
+     "note": "Parables attributed to the great Theravada commentator Buddhaghosa, translated directly from a Burmese recension -- a real window into the Burmese Buddhist textual tradition specifically, distinct from the Pali or Sri Lankan lines of transmission. 392 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/cu31924077744054",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "atthasalini-commentary",
+     "role": "Theravada Commentary",
+     "title": "The Expositor (Atthasalini), Vol. II (Pali Text Society, 1921)",
+     "contributor": "Buddhaghosa (5th c. CE) — Pali Text Society translation",
+     "year": 1921,
+     "loc_item": "",
+     "note": "Buddhaghosa's commentary on the Dhammasangani, the first book of the Abhidhamma Pitaka -- part of the Pali Text Society's landmark translation series, founded in 1881 specifically to bring the Pali Canon and its classical commentaries into English. 276 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/india.history.resource.117498",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "buddhist-suttas-rhysdavids",
+     "role": "Pali Canon — Famous Translation",
+     "title": "Buddhist Suttas (Sacred Books of the East, Vol. 11)",
+     "contributor": "Trans. T.W. Rhys Davids, ed. Max Müller",
+     "year": 1881,
+     "loc_item": "",
+     "note": "Rhys Davids own translation of core Pali suttas -- part of Max Müller landmark Sacred Books of the East series and one of the foundational texts that first made Buddhist scripture broadly available to English readers. Rhys Davids went on to found the Pali Text Society in 1881, the same year this volume appeared. 376 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/in.ernet.dli.2015.533450",
+     "source_label": "Internet Archive"
     }
    ],
    "emblem": "em-lotus"
