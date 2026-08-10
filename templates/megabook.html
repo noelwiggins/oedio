@@ -54,6 +54,28 @@
   .individual-editions-label { margin:30px 0 4px; font-size:12px; color:var(--md-sys-color-on-surface-variant);
     text-align:center; letter-spacing:.02em; }
 
+  /* Title picker: opened by "Open Reader" -- pick which distinct title you
+     want (not a layer choice, a whole different edition/work), then the
+     reader's own layer picker takes over for that title's layers. */
+  .tp-overlay { display:none; position:fixed; inset:0; z-index:1100;
+    background:rgba(0,0,0,.72); align-items:center; justify-content:center; padding:20px; }
+  .tp-overlay.open { display:flex; }
+  .tp-card { background:var(--md-sys-color-surface-container-high); border-radius:18px;
+    max-width:460px; width:100%; max-height:78vh; display:flex; flex-direction:column; overflow:hidden; }
+  .tp-header { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 6px; }
+  .tp-title { font-family:Georgia, serif; font-size:17px; font-weight:600; color:var(--md-sys-color-on-surface); }
+  .tp-sub { padding:0 20px 14px; font-size:12.5px; color:var(--md-sys-color-on-surface-variant); line-height:1.5; }
+  .tp-list { overflow-y:auto; padding:6px 10px 14px; }
+  .tp-role-label { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--md-sys-color-primary); padding:10px 10px 4px; }
+  .tp-item { display:flex; align-items:center; gap:12px; padding:11px 12px; border-radius:12px;
+    cursor:pointer; text-decoration:none; }
+  .tp-item:hover { background:var(--md-sys-color-surface-container-highest); }
+  .tp-item-spine { width:8px; height:34px; border-radius:3px; flex:0 0 auto; }
+  .tp-item-text { flex:1; min-width:0; }
+  .tp-item-title { font-size:13.5px; font-weight:600; color:var(--md-sys-color-on-surface); line-height:1.3; }
+  .tp-item-meta { font-size:11px; color:var(--md-sys-color-on-surface-variant); margin-top:2px; }
+
   /* ===================== Per-Oedio rotunda ===================== */
   .mb-rotunda-wrap { position:relative; height:min(48vh, 420px); min-height:300px;
     margin:22px -24px 0; overflow:hidden;
@@ -122,24 +144,44 @@
   </div>
 
   {% set is_layered = mb.slug == 'odyssey' %}
+  {% if is_layered %}
   <a class="open-reader-cta" href="{{ open_reader_url }}">
-    <span class="material-symbols-outlined orc-icon">{{ 'stacks' if is_layered else 'auto_stories' }}</span>
+    <span class="material-symbols-outlined orc-icon">stacks</span>
     <div class="orc-text">
-      <div class="orc-title">{{ 'Open the Layered Reader' if is_layered else 'Open Reader' }}</div>
+      <div class="orc-title">Open the Layered Reader</div>
       <div class="orc-sub">
-        {% if is_layered %}
         All editions as toggleable layers over one scroll &mdash; parallel translations, source scans,
         Flaxman engravings, and streaming audio (English narration &amp; ancient Greek recitation), aligned book by book.
-        {% else %}
-        The way to read this Oedio &mdash; every edition, translation, and source scan combined.
-        Switch between them from the layer picker inside the reader itself.
-        {% endif %}
       </div>
     </div>
     <span class="material-symbols-outlined orc-arrow">arrow_forward</span>
   </a>
+  {% else %}
+  <button class="open-reader-cta" id="open-reader-btn" type="button">
+    <span class="material-symbols-outlined orc-icon">auto_stories</span>
+    <div class="orc-text">
+      <div class="orc-title">Open Reader</div>
+      <div class="orc-sub">
+        Choose which title to read &mdash; every edition, translation, and source scan is here.
+        Once you're in, switch between that title's own layers from the picker inside the reader.
+      </div>
+    </div>
+    <span class="material-symbols-outlined orc-arrow">arrow_forward</span>
+  </button>
+  {% endif %}
 
   <div class="individual-editions-label">Or browse the shelf for this Oedio</div>
+  <div id="title-picker" class="tp-overlay">
+    <div class="tp-card">
+      <div class="tp-header">
+        <span class="tp-title">Choose a title</span>
+        <button class="reader-icon-btn" id="tp-close" aria-label="Close"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+      </div>
+      <div class="tp-sub">Every title in this Oedio, one tap away. Once you're reading, switch between that title's own layers &mdash; scan, transcription, translation &mdash; from the picker inside the reader.</div>
+      <div class="tp-list" id="tp-list"></div>
+    </div>
+  </div>
+
   <div class="mb-rotunda-wrap" id="mb-rotunda-wrap">
     <div class="mb-rotunda-stage" id="mb-rotunda-stage">
       <div class="mb-rotunda" id="mb-rotunda"></div>
@@ -275,6 +317,49 @@ window.addEventListener('popstate', (e) => {
     setTimeout(() => { window.location.href = spine.getAttribute('href'); }, 380);
   }
   setTimeout(fadeHint, 4000);
+})();
+
+// --- Title picker: "Open Reader" opens this instead of jumping straight
+// into a default title. Reuses the same GROUPED/roleRanges data the
+// rotunda builds from, so it's always in sync with what's on the shelf. ---
+(function () {
+  const openBtn = document.getElementById('open-reader-btn');
+  if (!openBtn) return; // Odyssey's layered reader skips this entirely
+  const overlay = document.getElementById('title-picker');
+  const closeBtn = document.getElementById('tp-close');
+  const list = document.getElementById('tp-list');
+  const GROUPED = {{ grouped|tojson }};
+  const MEGA_SLUG = {{ mb.slug|tojson }};
+  const SPINE_COLOR = {{ mb.spine_color|tojson }};
+
+  let built = false;
+  function build() {
+    if (built) return;
+    built = true;
+    GROUPED.forEach(([role, comps]) => {
+      const label = document.createElement('div');
+      label.className = 'tp-role-label';
+      label.textContent = role;
+      list.appendChild(label);
+      comps.forEach(c => {
+        const href = c.is_group ? ('/book/' + MEGA_SLUG + '/group/' + c.group_slug)
+                                 : ('/book/' + MEGA_SLUG + '/read/' + c.slug);
+        const a = document.createElement('a');
+        a.className = 'tp-item';
+        a.href = href;
+        const meta = c.is_group ? `${c.pages} pages total` :
+          `${c.contributor || ''}${c.year ? ' · ' + c.year : ''}`;
+        a.innerHTML = `<span class="tp-item-spine" style="background:${SPINE_COLOR}"></span>` +
+          `<span class="tp-item-text"><span class="tp-item-title">${c.title}</span>` +
+          `<span class="tp-item-meta">${meta}</span></span>`;
+        list.appendChild(a);
+      });
+    });
+  }
+
+  openBtn.addEventListener('click', () => { build(); overlay.classList.add('open'); });
+  closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
 })();
 </script>
 {% endblock %}
