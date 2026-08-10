@@ -828,6 +828,26 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/india.history.resource.112138",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "dhammapada-pali-transcription",
+     "role": "Original text",
+     "title": "Dhammapada — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Pali",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A complete AI transcription of the Dhammapada, foundational Buddhist scripture into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dhammapada-pali-english",
+     "role": "Translations",
+     "title": "Dhammapada — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1900,
+     "loc_item": "",
+     "note": "An AI English translation of the Dhammapada, foundational Buddhist scripture, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
     }
    ],
    "emblem": "em-lotus"
@@ -1979,6 +1999,26 @@
      "year": 1914,
      "loc_item": "",
      "note": "An AI English translation of Harpestraeng's medieval medical writings, generated directly from the manuscript images. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "erbario-italian-transcription",
+     "role": "Medieval & Early Modern Europe",
+     "title": "Erbario Italian — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI), in Italian (medieval)",
+     "year": 1400,
+     "loc_item": "",
+     "note": "A complete AI transcription of a c.1400 Italian illuminated herbal manuscript into readable text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "erbario-italian-english",
+     "role": "Translations",
+     "title": "Erbario Italian — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1400,
+     "loc_item": "",
+     "note": "An AI English translation of a c.1400 Italian illuminated herbal manuscript, generated directly from the manuscript images. Unverified.",
      "facsimile": false
     }
    ]
