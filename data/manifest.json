@@ -884,6 +884,36 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/in.ernet.dli.2015.533450",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "buddhaghosa-parables-burmese-transcription",
+     "role": "Theravada Commentary — Burmese Tradition",
+     "title": "Buddhaghosha's Parables — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1870 translation from Burmese scans by Claude (AI)",
+     "year": 1870,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Buddhaghosha's Parables (1870 translation from Burmese), beside the original scans. This is already a real historical English translation -- the transcription pass just makes it properly searchable rather than trapped in scan images. Unverified against the original for OCR accuracy.",
+     "facsimile": false
+    },
+    {
+     "slug": "atthasalini-commentary-transcription",
+     "role": "Theravada Commentary",
+     "title": "The Expositor (Atthasalini) — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1921 Pali Text Society translation scans by Claude (AI)",
+     "year": 1921,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Expositor (Atthasalini) (1921 Pali Text Society translation), beside the original scans. This is already a real historical English translation -- the transcription pass just makes it properly searchable rather than trapped in scan images. Unverified against the original for OCR accuracy.",
+     "facsimile": false
+    },
+    {
+     "slug": "buddhist-suttas-rhysdavids-transcription",
+     "role": "Pali Canon — Famous Translation",
+     "title": "Buddhist Suttas — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1881 Rhys Davids translation scans by Claude (AI)",
+     "year": 1881,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Buddhist Suttas (1881 Rhys Davids translation), beside the original scans. This is already a real historical English translation -- the transcription pass just makes it properly searchable rather than trapped in scan images. Unverified against the original for OCR accuracy.",
+     "facsimile": false
     }
    ],
    "emblem": "em-lotus"
