@@ -205,7 +205,8 @@ window.addEventListener('popstate', (e) => {
     const width = Math.min(44 + Math.min((c.pages || 30), 700) / 12, maxSpineWidth);
     const el = document.createElement('a');
     el.className = 'mr-spine';
-    el.href = '/book/' + MEGA_SLUG + '/read/' + c.slug;
+    el.href = c.is_group ? ('/book/' + MEGA_SLUG + '/group/' + c.group_slug)
+                          : ('/book/' + MEGA_SLUG + '/read/' + c.slug);
     el.style.setProperty('--w', Math.min(width, 90));
     el.style.background = SPINE_COLOR;
     el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;

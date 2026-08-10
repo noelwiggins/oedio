@@ -70,23 +70,51 @@ for _mb in MEGABOOKS:
 # opened. Books without derived layers (the vast majority) get an empty
 # group and the reader behaves exactly as before -- no dropdowns rendered.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Panel groups: components that map page-for-page onto the same base scan
+# (a transcription, one or more translations -- historical or AI-generated
+# -- a facing commentary keyed to the same pages) are swappable in the
+# reader via the floating layer toggle, with the scan as the fixed
+# orientation point every other layer aligns against.
+#
+# Two ways a component joins a group:
+#   1. Implicit (the original convention): a "{base}-transcription" or
+#      "{base}-english" slug is auto-detected as belonging to "{base}".
+#   2. Explicit: any component can set "layer_of": "<base_slug>" and an
+#      optional "layer_kind" (e.g. "translation", "commentary") to join a
+#      group without following the naming convention -- this is what lets
+#      a title carry more than one translation (an old historical one
+#      alongside an AI one) or a non-text layer like a critical essay.
+# Books without any of this get an empty group and the reader behaves
+# exactly as before -- no layer toggle rendered.
+# ---------------------------------------------------------------------------
 PANEL_GROUPS = {}
 for _mb in MEGABOOKS:
-    _slugs = {c["slug"] for c in _mb["components"]}
+    _by_slug = {c["slug"]: c for c in _mb["components"]}
+    _members_of = {}  # base_slug -> ordered list of member slugs
+
     for _c in _mb["components"]:
-        _base = _c["slug"]
+        _base = _c.get("layer_of")
+        if _base and _base in _by_slug:
+            _members_of.setdefault(_base, [_base]).append(_c["slug"])
+
+    for _base in _by_slug:
         _tr, _en = f"{_base}-transcription", f"{_base}-english"
-        if _tr in _slugs or _en in _slugs:
-            _group = [{"slug": _base, "kind": "image", "label": "Original scan"}]
-            if _tr in _slugs:
-                _tr_c = next(x for x in _mb["components"] if x["slug"] == _tr)
-                _group.append({"slug": _tr, "kind": "text", "label": _tr_c["title"]})
-            if _en in _slugs:
-                _en_c = next(x for x in _mb["components"] if x["slug"] == _en)
-                _group.append({"slug": _en, "kind": "text", "label": _en_c["title"]})
-            for _member in [_base, _tr, _en]:
-                if _member in _slugs:
-                    PANEL_GROUPS[_member] = _group
+        if _tr in _by_slug or _en in _by_slug:
+            _lst = _members_of.setdefault(_base, [_base])
+            if _tr in _by_slug and _tr not in _lst: _lst.append(_tr)
+            if _en in _by_slug and _en not in _lst: _lst.append(_en)
+
+    for _base, _member_slugs in _members_of.items():
+        _group = []
+        for _slug in _member_slugs:
+            _mc = _by_slug[_slug]
+            if _slug == _base:
+                _group.append({"slug": _slug, "kind": "image", "label": "Original scan"})
+            else:
+                _group.append({"slug": _slug, "kind": _mc.get("layer_kind", "text"), "label": _mc["title"]})
+        for _slug in _member_slugs:
+            PANEL_GROUPS[_slug] = _group
 
 
 # ---------------------------------------------------------------------------
@@ -184,23 +212,66 @@ def megabook_page(mega_slug):
     mb = _find_megabook(mega_slug)
     if not mb:
         abort(404)
-    # Group components by role, preserving manifest order of first appearance.
-    grouped, order = {}, []
-    for c in mb["components"]:
-        if c["role"] not in grouped:
-            grouped[c["role"]] = []
-            order.append(c["role"])
-        grouped[c["role"]].append(c)
     # Compute page counts lazily here (not at startup) to avoid I/O delays
     for c in mb["components"]:
         if c["pages"] == 0:
             c["pages"] = _page_count(c.get("data_slug", c["slug"]))
+
+    # Multi-volume works (set via "group" on each volume's base-scan
+    # component) collapse into a single representative spine here, rather
+    # than cluttering the shelf with every volume and every one of their
+    # own transcription/translation layers as flat peers. Tapping that
+    # spine opens a sub-Oedio: a second rotunda of just that work's
+    # volumes. Only base-scan components carry "group" -- their own
+    # transcription/english siblings are found via PANEL_GROUPS once a
+    # specific volume is chosen, same as any other book.
+    display_components, seen_groups = [], set()
+    for c in mb["components"]:
+        grp = c.get("group")
+        if grp:
+            if grp in seen_groups:
+                continue
+            seen_groups.add(grp)
+            vols = [x for x in mb["components"] if x.get("group") == grp]
+            total_pages = sum(v["pages"] for v in vols)
+            display_components.append({
+                **c, "title": c["group_title"], "is_group": True, "group_slug": grp,
+                "pages": total_pages,
+                "note": f"{len(vols)} volumes, {total_pages} pages total. " + c.get("note", ""),
+            })
+        elif not c.get("layer_of") and not c["slug"].endswith(("-transcription", "-english")):
+            display_components.append(c)
+
+    # Group components by role, preserving manifest order of first appearance.
+    grouped, order = {}, []
+    for c in display_components:
+        if c["role"] not in grouped:
+            grouped[c["role"]] = []
+            order.append(c["role"])
+        grouped[c["role"]].append(c)
+
     open_reader_url = (f"/book/{mega_slug}/layers" if mega_slug == "odyssey"
                         else f"/book/{mega_slug}/read/{mb['default_read_slug']}")
     return render_template("megabook.html", now=datetime.utcnow(), mb=mb,
                            grouped=[(r, grouped[r]) for r in order],
                            open_reader_url=open_reader_url,
                            active_page="library")
+
+
+@app.route("/book/<mega_slug>/group/<group_slug>")
+def volume_group_page(mega_slug, group_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    vols = [c for c in mb["components"] if c.get("group") == group_slug]
+    if not vols:
+        abort(404)
+    for c in vols:
+        if c["pages"] == 0:
+            c["pages"] = _page_count(c.get("data_slug", c["slug"]))
+    return render_template("volume_group.html", now=datetime.utcnow(), mb=mb,
+                           group_slug=group_slug, group_title=vols[0]["group_title"],
+                           volumes=vols, active_page="library")
 
 
 @app.route("/book/<mega_slug>/read/<comp_slug>")

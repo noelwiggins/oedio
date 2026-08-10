@@ -1194,7 +1194,10 @@
      "note": "Real facsimile of volume 1 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 124 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 1 — Naegyeongpyeon (Internal Medicine)"
     },
     {
      "slug": "dongui-bogam-internal-2",
@@ -1206,7 +1209,10 @@
      "note": "Real facsimile of volume 2 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 130 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 2 — Naegyeongpyeon (Internal Medicine)"
     },
     {
      "slug": "dongui-bogam-internal-3",
@@ -1218,7 +1224,10 @@
      "note": "Real facsimile of volume 3 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 160 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 3 — Naegyeongpyeon (Internal Medicine)"
     },
     {
      "slug": "dongui-bogam-internal-4",
@@ -1230,7 +1239,10 @@
      "note": "Real facsimile of volume 4 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 124 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 4 — Naegyeongpyeon (Internal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-16",
@@ -1242,7 +1254,10 @@
      "note": "Real facsimile of volume 16 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 126 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 5 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-17",
@@ -1254,7 +1269,10 @@
      "note": "Real facsimile of volume 17 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 118 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 6 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-18",
@@ -1266,7 +1284,10 @@
      "note": "Real facsimile of volume 18 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 117 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 7 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-19",
@@ -1278,7 +1299,10 @@
      "note": "Real facsimile of volume 19 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 108 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 8 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-20",
@@ -1290,7 +1314,10 @@
      "note": "Real facsimile of volume 20 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 118 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 9 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-21",
@@ -1302,7 +1329,10 @@
      "note": "Real facsimile of volume 21 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 160 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 10 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-herbal-22",
@@ -1314,7 +1344,10 @@
      "note": "Real facsimile of volume 22 of Korea's foundational medical encyclopedia, sourced from the National Library of Korea's own digitization via Wikimedia Commons. 119 pages.",
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Dongui_Bogam",
-     "source_label": "Wikimedia Commons (National Library of Korea)"
+     "source_label": "Wikimedia Commons (National Library of Korea)",
+     "group": "dongui-bogam",
+     "group_title": "Dongui Bogam (東醫寶鑑)",
+     "volume_label": "Vol. 11 — Tangaekpyeon (Herbal Medicine)"
     },
     {
      "slug": "dongui-bogam-internal-1-transcription",
