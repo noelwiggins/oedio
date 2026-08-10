@@ -65,15 +65,31 @@
   .mb-rotunda { position:absolute; left:50%; top:44%; width:0; height:0;
     transform-style:preserve-3d; will-change:transform; }
   .mr-spine { position:absolute; left:0; top:0; margin-left:calc(var(--w) / -2 * 1px);
-    width:calc(var(--w) * 1px); height:160px; margin-top:-80px; border-radius:4px 9px 9px 4px;
+    width:calc(var(--w) * 1px); height:160px; margin-top:-80px; border-radius:3px 8px 8px 3px;
     display:flex; align-items:center; justify-content:center; padding:12px 6px;
     text-decoration:none; cursor:pointer; backface-visibility:hidden;
-    box-shadow:2px 2px 9px rgba(0,0,0,.5), inset 0 0 20px rgba(0,0,0,.35); }
-  .mr-spine::before { content:''; position:absolute; inset:5px; border:1px solid rgba(212,175,90,.4);
-    border-radius:3px; pointer-events:none; }
-  .mr-spine .mrs-title { color:rgba(255,255,255,.94); font-size:11px; font-weight:600; line-height:1.25;
-    writing-mode:vertical-rl; text-orientation:mixed; text-align:center; max-height:136px; overflow:hidden;
-    font-family:Georgia,'Times New Roman',serif; letter-spacing:.02em; pointer-events:none; }
+    box-shadow:2px 2px 9px rgba(0,0,0,.55), inset 0 0 22px rgba(0,0,0,.4),
+      inset 3px 0 0 rgba(0,0,0,.25), inset -2px 0 0 rgba(255,255,255,.05);
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,.10) 0%, transparent 3%),
+      radial-gradient(circle at 65% 40%, rgba(0,0,0,.14) 0%, transparent 4%),
+      radial-gradient(circle at 35% 65%, rgba(255,255,255,.07) 0%, transparent 3%),
+      radial-gradient(circle at 80% 80%, rgba(0,0,0,.12) 0%, transparent 3%),
+      radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.35) 100%); }
+  .mr-spine::after { content:''; position:absolute; left:2px; right:2px; height:4px; top:18px;
+    border-radius:2px; pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,.4), rgba(255,255,255,.08) 45%, rgba(0,0,0,.35)); }
+  .mr-spine .mrs-band-b { position:absolute; left:2px; right:2px; height:4px; bottom:20px;
+    border-radius:2px; pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,.4), rgba(255,255,255,.08) 45%, rgba(0,0,0,.35)); }
+  .mr-spine::before { content:''; position:absolute; inset:5px; border:1px solid rgba(212,175,90,.45);
+    border-radius:2px 6px 6px 2px; pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(212,175,90,.12); }
+  .mr-spine .mrs-title { color:#cda94f; font-size:11px; font-weight:700; line-height:1.28;
+    writing-mode:vertical-rl; text-orientation:mixed; text-align:center; max-height:124px; overflow:hidden;
+    font-family:Georgia,'Times New Roman',serif; letter-spacing:.05em; pointer-events:none;
+    text-shadow: 0 1px 0 rgba(0,0,0,.75), 0 -1px 0 rgba(255,229,160,.25), 0 2px 3px rgba(0,0,0,.5);
+    opacity:.94; }
   .mr-spine.pulling { transition: transform .5s cubic-bezier(.2,.8,.3,1); z-index:50; }
   .mr-label { position:absolute; left:0; top:0; width:0; height:0; pointer-events:none; }
   .mr-label span { display:block; transform:translate(-50%,-116px); font-size:9.5px; font-weight:700;
@@ -182,7 +198,7 @@ window.addEventListener('popstate', (e) => {
     el.style.background = SPINE_COLOR;
     el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
     el.dataset.angle = angle;
-    el.innerHTML = `<span class="mrs-title">${c.title}</span>`;
+    el.innerHTML = `<span class="mrs-band-b"></span><span class="mrs-title">${c.title}</span>`;
     rotunda.appendChild(el);
   });
 

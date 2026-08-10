@@ -7,7 +7,22 @@
   #reader-toolbar-sticky { position: sticky; top: 60px; z-index: 750;
     background: var(--md-sys-color-surface); padding: 8px 0;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    margin: 0 -4px; padding-left: 4px; padding-right: 4px; }
+    margin: 0 -4px; padding-left: 4px; padding-right: 4px;
+    transition: transform .25s ease, opacity .25s ease; }
+
+  /* Fullscreen reading: hides the site header and reader toolbar entirely
+     for distraction-free reading, leaving just the text/scan and a small
+     floating control to bring the chrome back. */
+  body.reader-fullscreen .top-app-bar { transform:translateY(-100%); opacity:0; pointer-events:none; }
+  body.reader-fullscreen { padding-top:0 !important; }
+  body.reader-fullscreen #reader-toolbar-sticky { transform:translateY(-100%); opacity:0; pointer-events:none;
+    position:fixed; top:0; left:0; right:0; }
+  .top-app-bar { transition: transform .25s ease, opacity .25s ease; }
+  #reader-exit-fullscreen { display:none; position:fixed; top:12px; right:12px; z-index:900;
+    width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface);
+    box-shadow:0 2px 8px rgba(0,0,0,.4); align-items:center; justify-content:center; }
+  body.reader-fullscreen #reader-exit-fullscreen { display:flex; }
 </style>
 <style>
   body { padding-top: 56px; overflow-x: hidden; }
@@ -458,6 +473,9 @@
       <span class="material-symbols-outlined" style="font-size:18px;">headphones</span>
     </button>
     <button class="reader-icon-btn" id="reader-font-btn" title="Text size">Aa</button>
+    <button class="reader-icon-btn" id="reader-fullscreen-btn" title="Fullscreen reading (hide toolbar)" aria-label="Fullscreen reading">
+      <span class="material-symbols-outlined" style="font-size:18px;">fullscreen</span>
+    </button>
     <button class="reader-icon-btn" id="reader-sepia-btn" title="Sepia reading mode" aria-label="Sepia mode">
       <span class="material-symbols-outlined" style="font-size:18px;">tonality</span>
     </button>
@@ -538,6 +556,10 @@
     <button id="rlp-start" class="rlp-start-btn">Start reading</button>
   </div>
 </div>
+
+<button id="reader-exit-fullscreen" aria-label="Exit fullscreen reading">
+  <span class="material-symbols-outlined" style="font-size:19px;">fullscreen_exit</span>
+</button>
 
 <div id="reader-notes-panel" class="reader-notes-panel">
   <div class="rn-header">
@@ -1379,6 +1401,23 @@ if (noteToggle) {
     document.getElementById('book-note').classList.toggle('open');
   });
 }
+
+// --- Fullscreen reading: hides the site header and reader toolbar for
+// distraction-free reading. Toggle from the toolbar icon, or exit via the
+// small floating button that appears once fullscreen is active. ---
+(function () {
+  const fsBtn = document.getElementById('reader-fullscreen-btn');
+  const exitBtn = document.getElementById('reader-exit-fullscreen');
+  if (!fsBtn) return;
+  function setFullscreen(on) {
+    document.body.classList.toggle('reader-fullscreen', on);
+    const icon = fsBtn.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = on ? 'fullscreen_exit' : 'fullscreen';
+    fsBtn.title = on ? 'Exit fullscreen reading' : 'Fullscreen reading (hide toolbar)';
+  }
+  fsBtn.addEventListener('click', () => setFullscreen(!document.body.classList.contains('reader-fullscreen')));
+  exitBtn.addEventListener('click', () => setFullscreen(false));
+})();
 
 document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   panel.classList.toggle('sepia');
