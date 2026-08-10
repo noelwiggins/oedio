@@ -4,37 +4,57 @@
    "slug": "literature",
    "title": "Literature",
    "description": "Epic poetry, sacred texts, and the foundational works of world literature.",
-   "icon": "📖"
+   "icon": "📖",
+   "spine_color": "linear-gradient(160deg,#5c3a2e,#2a1811)",
+   "emblem": "em-quill"
   },
   {
-   "slug": "natural-science",
-   "title": "Natural Sciences",
-   "description": "Botany, medicine, natural history, and the observation of the natural world across civilizations.",
-   "icon": "🌿"
+   "slug": "medicine",
+   "title": "Medicine",
+   "description": "Medicinal and botanical knowledge across every tradition and continent.",
+   "icon": "🩺",
+   "spine_color": "linear-gradient(160deg,#3d5c3a,#1a2818)",
+   "emblem": "em-mortar"
   },
   {
    "slug": "travel",
    "title": "Travel & Exploration",
    "description": "Voyages, accounts, and firsthand observations of the Caribbean and beyond.",
-   "icon": "⚓"
+   "icon": "⚓",
+   "spine_color": "linear-gradient(160deg,#2e4a5c,#111f28)",
+   "emblem": "em-ship"
   },
   {
-   "slug": "cartography",
-   "title": "Cartography",
-   "description": "Historical maps, nautical charts, and the science of place from the 17th century to the present.",
-   "icon": "🗺"
+   "slug": "geography",
+   "title": "Geography",
+   "description": "Historical maps, nautical charts, and the science of place.",
+   "icon": "🗺",
+   "spine_color": "linear-gradient(160deg,#2e3d5c,#111828)",
+   "emblem": "em-map"
   },
   {
    "slug": "history",
    "title": "History & Society",
    "description": "Primary documents, official records, and eyewitness histories.",
-   "icon": "📜"
+   "icon": "📜",
+   "spine_color": "linear-gradient(160deg,#5c4a2e,#281f11)",
+   "emblem": "em-anchor"
   },
   {
    "slug": "religion",
    "title": "Religion",
    "icon": "🙏",
-   "description": "Sacred texts and scripture, organized by tradition."
+   "description": "Sacred texts and scripture, organized by tradition.",
+   "spine_color": "linear-gradient(160deg,#5c3a5c,#281128)",
+   "emblem": "em-dove"
+  },
+  {
+   "slug": "science",
+   "title": "Science",
+   "icon": "🔭",
+   "description": "Natural philosophy, cosmology, and the systematic study of the world.",
+   "spine_color": "linear-gradient(160deg,#2e2e5c,#111128)",
+   "emblem": "em-sun"
   }
  ],
  "megabooks": [
@@ -197,6 +217,18 @@
      "loc_item": "09001990",
      "note": "A far more complete transcription than the original OCR pass (208 of 424 pages carry real caption/description text; the rest are correctly identified as plates or blanks). Three pages were blocked by AI content filtering and are marked as such. Unverified.",
      "facsimile": false
+    },
+    {
+     "slug": "gutenberg-bible",
+     "role": "Facsimile Editions",
+     "title": "The Gutenberg Bible (1454-1456)",
+     "contributor": "Johannes Gutenberg, Mainz",
+     "year": 1455,
+     "loc_item": "",
+     "note": "Gutenberg printed somewhere between 160 and 180 copies of his Bible around 1454-1455, of which only 49 survive today in varying states of completeness -- roughly a quarter were printed on vellum (calfskin), the rest on paper, and a complete vellum copy is now considered one of the most valuable printed objects in existence. The specific copy digitized here, like most surviving copies, still carries hand-illuminated initials and decorations added by a rubricator after the mechanical printing was finished -- Gutenberg's press could reproduce text, but color and ornament were still added the old way, by hand, meaning every surviving copy is subtly unique despite coming from identical type.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/thegutembergbible",
+     "source_label": "Internet Archive"
     }
    ],
    "overview": "No single book has shaped more of the world's literature, law, art, and moral vocabulary than the Bible, a collection of texts written across roughly a thousand years by dozens of authors in Hebrew, Aramaic, and Greek, later assembled, translated, and re-translated by successive religious and scholarly communities. The editions gathered here reflect that long history of transmission itself: the King James Version's Jacobean English shaped the sound of English prose for centuries after; scholarly variorum editions track the countless small disagreements between ancient manuscripts; and Gustave Doré's engravings gave the 19th century its most enduring visual imagination of the text's central scenes.",
@@ -330,7 +362,7 @@
   },
   {
    "slug": "book-of-wonders",
-   "section": "literature",
+   "section": "science",
    "title": "Acâibü'l-Mahlûkât · The Book of Wonders",
    "author": "Zakarīyā ibn Muḥammad al-Qazwīnī",
    "spine_color": "linear-gradient(160deg,#4a2a0a,#2a1005)",
@@ -547,7 +579,7 @@
   },
   {
    "slug": "caribbean-cartography",
-   "section": "cartography",
+   "section": "geography",
    "title": "Caribbean Cartography — 17th to 19th Century",
    "author": "Various",
    "spine_color": "linear-gradient(160deg,#2a3a1a,#121a0a)",
@@ -785,30 +817,6 @@
    "emblem": "em-sun"
   },
   {
-   "slug": "first-printings",
-   "title": "Landmark First Printings",
-   "author": "Various",
-   "spine_color": "linear-gradient(160deg,#3a2e1a,#1a1408)",
-   "section": "literature",
-   "description": "The physical objects that mark turning points in how texts moved from manuscript to mass reproduction: the first printed Bible, the earliest surviving editions of works that shaped whole literatures. Each one is here because of when and how it was made, not just what it says.",
-   "overview": "Printing didn't just make books cheaper -- it changed what a text even was. A manuscript was a single object, copied by hand, subtly different every time a scribe's eye or judgment intervened. A printed edition was, for the first time, genuinely the same book in hundreds of hands at once. This collection gathers the specific editions that made that shift matter: the first substantial book printed with movable type in the West, and the earliest surviving printings of works whose later fame depended on that same technology reaching far enough to make them famous at all.",
-   "components": [
-    {
-     "slug": "gutenberg-bible",
-     "role": "The First Printed Book",
-     "title": "The Gutenberg Bible (1454-1456)",
-     "contributor": "Johannes Gutenberg, Mainz",
-     "year": 1455,
-     "loc_item": "",
-     "note": "Gutenberg printed somewhere between 160 and 180 copies of his Bible around 1454-1455, of which only 49 survive today in varying states of completeness -- roughly a quarter were printed on vellum (calfskin), the rest on paper, and a complete vellum copy is now considered one of the most valuable printed objects in existence. The specific copy digitized here, like most surviving copies, still carries hand-illuminated initials and decorations added by a rubricator after the mechanical printing was finished -- Gutenberg's press could reproduce text, but color and ornament were still added the old way, by hand, meaning every surviving copy is subtly unique despite coming from identical type.",
-     "facsimile": true,
-     "source_url": "https://archive.org/details/thegutembergbible",
-     "source_label": "Internet Archive"
-    }
-   ],
-   "emblem": "em-quill"
-  },
-  {
    "slug": "buddhism",
    "title": "Buddhist Texts",
    "author": "Various",
@@ -838,7 +846,7 @@
    "author": "Various",
    "spine_color": "linear-gradient(160deg,#3d5c3a,#1a2818)",
    "emblem": "em-mortar",
-   "section": "natural-science",
+   "section": "medicine",
    "description": "The world's medicinal plant knowledge, gathered across every continent and three thousand years -- ancient papyri and Byzantine manuscripts, Sanskrit and Tibetan medical classics, Chinese and Korean pharmacopoeias, Mesoamerican and Andean healing traditions, colonial-era African and Australian surveys, and the medieval European herbals that carried classical medicine into the modern age.",
    "overview": "Long before the germ theory of disease or the scientific method as we'd recognize it, healers across every inhabited continent were doing something remarkably similar: watching what plants and minerals actually did to the body, writing it down, and passing that knowledge on. This Oedio gathers that record whole rather than splitting it by geography -- an Egyptian medical papyrus from around 1550 BCE sits alongside a 14th-century copy of Ibn Sina's Canon, a Korean royal physician's encyclopedia beside a Victorian botanist's fifteen years of Amazonian field notes, each representing a different civilization's attempt to systematize what worked, what didn't, and why, using whatever framework of the body and the cosmos they had available to them. Grouped by tradition rather than treated as separate collections, the connections and divergences between them become easier to see.",
    "components": [

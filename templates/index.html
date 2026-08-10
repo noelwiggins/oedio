@@ -115,8 +115,8 @@
   <h1>The Oedio library</h1>
   <p>Each volume is an <strong>Oedio</strong>: one work compiled from multiple digitized editions —
      original languages, competing translations, illustrated printings, commentaries —
-     every one published before 1929 and free of copyright. Spin the shelf, pinch to look closer,
-     and tap any spine to pull it down.</p>
+     every one published before 1929 and free of copyright. Spin the shelf to browse by subject,
+     pinch to look closer, and tap any section to see what's inside.</p>
 </div>
 
 <div class="rotunda-wrap" id="rotunda-wrap">
@@ -147,21 +147,12 @@
 (function () {
   const SECTIONS = {{ sections|tojson }};
   const MEGABOOKS = {{ megabooks|tojson }};
-  const bySection = {};
+  const counts = {};
   MEGABOOKS.forEach(mb => {
     const key = mb.section || '_other';
-    (bySection[key] = bySection[key] || []).push(mb);
+    counts[key] = (counts[key] || 0) + 1;
   });
-  const ordered = [];
-  const sectionRanges = [];
-  SECTIONS.forEach(s => {
-    const books = bySection[s.slug] || [];
-    if (!books.length) return;
-    const start = ordered.length;
-    books.forEach(b => ordered.push(b));
-    sectionRanges.push({ label: s.title, icon: s.icon, start, end: ordered.length - 1 });
-  });
-  (bySection['_other'] || []).forEach(b => ordered.push(b));
+  const ordered = SECTIONS.filter(s => counts[s.slug]);
 
   const N = ordered.length;
   const rotunda = document.getElementById('rotunda');
@@ -171,29 +162,20 @@
   if (!N) return;
 
   const angleStep = 360 / N;
-  const radius = Math.max(260, Math.round(110 / Math.tan(Math.PI / N)));
+  const radius = Math.max(260, Math.round(150 / Math.tan(Math.PI / N)));
 
-  ordered.forEach((mb, i) => {
+  ordered.forEach((s, i) => {
     const angle = i * angleStep;
-    const width = 46 + Math.min(mb.components.length, 14) * 11;
+    const width = 76 + Math.min(counts[s.slug], 10) * 10;
     const el = document.createElement('a');
     el.className = 'r-spine';
-    el.href = '/book/' + mb.slug;
+    el.href = '/section/' + s.slug;
     el.style.setProperty('--w', width);
-    el.style.background = mb.spine_color;
+    el.style.background = s.spine_color;
     el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
     el.dataset.angle = angle;
-    el.dataset.slug = mb.slug;
-    el.innerHTML = `<span class="rs-band-b"></span><span class="rs-emblem"><svg viewBox="0 0 24 24"><use href="#${mb.emblem || 'em-quill'}"></use></svg></span><span class="rs-title">${mb.title}</span><span class="rs-count">${mb.components.length} EDS.</span>`;
-    rotunda.appendChild(el);
-  });
-
-  sectionRanges.forEach(r => {
-    const midAngle = ((r.start + r.end) / 2) * angleStep;
-    const el = document.createElement('div');
-    el.className = 'r-label';
-    el.style.transform = `rotateY(${midAngle}deg) translateZ(${radius + 4}px)`;
-    el.innerHTML = `<span>${r.icon} ${r.label}</span>`;
+    el.dataset.slug = s.slug;
+    el.innerHTML = `<span class="rs-band-b"></span><span class="rs-emblem"><svg viewBox="0 0 24 24"><use href="#${s.emblem || 'em-quill'}"></use></svg></span><span class="rs-title">${s.title}</span><span class="rs-count">${counts[s.slug]} OEDIO${counts[s.slug] !== 1 ? 'S' : ''}</span>`;
     rotunda.appendChild(el);
   });
 
