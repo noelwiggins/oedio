@@ -131,7 +131,8 @@
      "facsimile": false
     }
    ],
-   "overview": "Composed and transmitted orally for centuries before being fixed in writing sometime around the 8th century BCE, the Odyssey follows Odysseus's ten-year journey home from the Trojan War -- a voyage past sirens, cyclopes, and the underworld, while his wife Penelope fends off suitors and his son Telemachus comes of age in his absence. It's less a straightforward war epic than the Iliad, and more a story about cunning, endurance, disguise, and the long, uncertain work of returning to a life that has moved on without you. Its influence on Western storytelling is difficult to overstate: the word 'odyssey' itself entered the language as shorthand for any long, eventful journey, and its structure -- a hero's trials on the way home -- became a template writers have returned to for nearly three thousand years."
+   "overview": "Composed and transmitted orally for centuries before being fixed in writing sometime around the 8th century BCE, the Odyssey follows Odysseus's ten-year journey home from the Trojan War -- a voyage past sirens, cyclopes, and the underworld, while his wife Penelope fends off suitors and his son Telemachus comes of age in his absence. It's less a straightforward war epic than the Iliad, and more a story about cunning, endurance, disguise, and the long, uncertain work of returning to a life that has moved on without you. Its influence on Western storytelling is difficult to overstate: the word 'odyssey' itself entered the language as shorthand for any long, eventful journey, and its structure -- a hero's trials on the way home -- became a template writers have returned to for nearly three thousand years.",
+   "emblem": "em-ship"
   },
   {
    "slug": "bible",
@@ -192,7 +193,8 @@
      "facsimile": false
     }
    ],
-   "overview": "No single book has shaped more of the world's literature, law, art, and moral vocabulary than the Bible, a collection of texts written across roughly a thousand years by dozens of authors in Hebrew, Aramaic, and Greek, later assembled, translated, and re-translated by successive religious and scholarly communities. The editions gathered here reflect that long history of transmission itself: the King James Version's Jacobean English shaped the sound of English prose for centuries after; scholarly variorum editions track the countless small disagreements between ancient manuscripts; and Gustave Doré's engravings gave the 19th century its most enduring visual imagination of the text's central scenes."
+   "overview": "No single book has shaped more of the world's literature, law, art, and moral vocabulary than the Bible, a collection of texts written across roughly a thousand years by dozens of authors in Hebrew, Aramaic, and Greek, later assembled, translated, and re-translated by successive religious and scholarly communities. The editions gathered here reflect that long history of transmission itself: the King James Version's Jacobean English shaped the sound of English prose for centuries after; scholarly variorum editions track the countless small disagreements between ancient manuscripts; and Gustave Doré's engravings gave the 19th century its most enduring visual imagination of the text's central scenes.",
+   "emblem": "em-dove"
   },
   {
    "slug": "paradise-lost",
@@ -233,7 +235,8 @@
      "facsimile": false
     }
    ],
-   "overview": "John Milton dictated Paradise Lost after going blind, working through a scribe to complete an epic poem retelling the biblical Fall of Man -- Satan's rebellion and expulsion from Heaven, and Adam and Eve's temptation and exile from Eden. Published in 1667, three years after the restoration of the English monarchy that Milton, a committed republican, had spent the previous decade opposing, the poem is shot through with questions about freedom, authority, and disobedience that read differently depending on whether you sympathize with its famously charismatic Satan or its struggling, newly fallible humans. It remains one of the most technically ambitious poems in English, written in blank verse at an epic scale rarely attempted before or since."
+   "overview": "John Milton dictated Paradise Lost after going blind, working through a scribe to complete an epic poem retelling the biblical Fall of Man -- Satan's rebellion and expulsion from Heaven, and Adam and Eve's temptation and exile from Eden. Published in 1667, three years after the restoration of the English monarchy that Milton, a committed republican, had spent the previous decade opposing, the poem is shot through with questions about freedom, authority, and disobedience that read differently depending on whether you sympathize with its famously charismatic Satan or its struggling, newly fallible humans. It remains one of the most technically ambitious poems in English, written in blank verse at an epic scale rarely attempted before or since.",
+   "emblem": "em-flame"
   },
   {
    "slug": "arabian-nights",
@@ -274,7 +277,8 @@
      "facsimile": false
     }
    ],
-   "overview": "A frame story about survival through storytelling: Scheherazade, married to a king who has vowed to execute each new wife after their wedding night, keeps herself alive by telling him an unfinished tale every evening, always leaving him wanting the ending enough to spare her one more day. Inside that frame sits a vast, centuries-deep accumulation of stories -- Aladdin, Ali Baba, Sinbad the Sailor -- gathered from Persian, Arabic, Indian, and Egyptian oral traditions over roughly a thousand years before European translators began compiling and publishing them in the 18th and 19th centuries, the era these particular editions come from."
+   "overview": "A frame story about survival through storytelling: Scheherazade, married to a king who has vowed to execute each new wife after their wedding night, keeps herself alive by telling him an unfinished tale every evening, always leaving him wanting the ending enough to spare her one more day. Inside that frame sits a vast, centuries-deep accumulation of stories -- Aladdin, Ali Baba, Sinbad the Sailor -- gathered from Persian, Arabic, Indian, and Egyptian oral traditions over roughly a thousand years before European translators began compiling and publishing them in the 18th and 19th centuries, the era these particular editions come from.",
+   "emblem": "em-crescent"
   },
   {
    "slug": "leaves-of-grass",
@@ -315,7 +319,8 @@
      "facsimile": false
     }
    ],
-   "overview": "Walt Whitman self-published the first edition of Leaves of Grass in 1855 -- a slim book of free verse that broke almost every convention of the poetry being written in America at the time, celebrating the body, democracy, and ordinary working life in long, unrhymed lines that scandalized some readers and electrified others (Ralph Waldo Emerson called it 'the most extraordinary piece of wit and wisdom that America has yet contributed'). Whitman kept revising and expanding it for the rest of his life, publishing new editions roughly every few years until his death in 1892; the editions collected here trace that evolution, from the compact original to the sprawling 'deathbed edition' Whitman considered final."
+   "overview": "Walt Whitman self-published the first edition of Leaves of Grass in 1855 -- a slim book of free verse that broke almost every convention of the poetry being written in America at the time, celebrating the body, democracy, and ordinary working life in long, unrhymed lines that scandalized some readers and electrified others (Ralph Waldo Emerson called it 'the most extraordinary piece of wit and wisdom that America has yet contributed'). Whitman kept revising and expanding it for the rest of his life, publishing new editions roughly every few years until his death in 1892; the editions collected here trace that evolution, from the compact original to the sprawling 'deathbed edition' Whitman considered final.",
+   "emblem": "em-leaf"
   },
   {
    "slug": "book-of-wonders",
@@ -416,7 +421,8 @@
      "facsimile": false
     }
    ],
-   "overview": "Zakariya al-Qazwini's 13th-century Arabic encyclopedia catalogued everything the medieval Islamic world understood about the cosmos -- the movements of the stars, the nature of angels and jinn, the properties of minerals, plants, and the strange creatures believed to inhabit distant lands. It was copied, translated, and illustrated for centuries across the Islamic world, and the manuscripts gathered here -- an illuminated 1553 Ottoman Turkish copy, two Persian editions two centuries apart -- show how the same text kept getting reinterpreted by different scribes and artists, each adding their own illustrations of wonders they'd never seen and couldn't have."
+   "overview": "Zakariya al-Qazwini's 13th-century Arabic encyclopedia catalogued everything the medieval Islamic world understood about the cosmos -- the movements of the stars, the nature of angels and jinn, the properties of minerals, plants, and the strange creatures believed to inhabit distant lands. It was copied, translated, and illustrated for centuries across the Islamic world, and the manuscripts gathered here -- an illuminated 1553 Ottoman Turkish copy, two Persian editions two centuries apart -- show how the same text kept getting reinterpreted by different scribes and artists, each adding their own illustrations of wonders they'd never seen and couldn't have.",
+   "emblem": "em-compass"
   },
   {
    "slug": "materia-medica-ancient",
@@ -611,7 +617,8 @@
      "facsimile": false
     }
    ],
-   "overview": "Long before the germ theory of disease or the scientific method as we'd recognize it, healers across the ancient world were doing something remarkably similar: watching what plants and minerals actually did to the body, writing it down, and passing that knowledge on. The texts gathered here span nearly three thousand years and four continents -- an Egyptian medical papyrus from around 1550 BCE, a Byzantine copy of the Greek physician Dioscorides, Chinese and Mesoamerican herbals, colonial-era Andean natural history -- each representing a different civilization's attempt to systematize what worked, what didn't, and why, using whatever framework of the body and the cosmos they had available to them."
+   "overview": "Long before the germ theory of disease or the scientific method as we'd recognize it, healers across the ancient world were doing something remarkably similar: watching what plants and minerals actually did to the body, writing it down, and passing that knowledge on. The texts gathered here span nearly three thousand years and four continents -- an Egyptian medical papyrus from around 1550 BCE, a Byzantine copy of the Greek physician Dioscorides, Chinese and Mesoamerican herbals, colonial-era Andean natural history -- each representing a different civilization's attempt to systematize what worked, what didn't, and why, using whatever framework of the body and the cosmos they had available to them.",
+   "emblem": "em-mortar"
   },
   {
    "slug": "materia-medica-asian",
@@ -1126,7 +1133,8 @@
      "facsimile": false
     }
    ],
-   "overview": "Asia produced some of the most sophisticated and long-lived medical traditions in human history, many of which remain in active clinical use today alongside modern medicine rather than as historical curiosities. This collection moves from the Arabic-Islamic Canon of Medicine -- a 14th-century manuscript copy of the text that dominated both Islamic and European medical training for over 600 years -- through Sanskrit Ayurvedic classics, Tibetan Buddhist medical tantras, Japanese and Korean pharmacopoeias, and the Zoroastrian purity laws embedded in the Avesta, each tradition developing its own theory of the body, its own diagnostic logic, and its own vast catalog of plant, animal, and mineral remedies."
+   "overview": "Asia produced some of the most sophisticated and long-lived medical traditions in human history, many of which remain in active clinical use today alongside modern medicine rather than as historical curiosities. This collection moves from the Arabic-Islamic Canon of Medicine -- a 14th-century manuscript copy of the text that dominated both Islamic and European medical training for over 600 years -- through Sanskrit Ayurvedic classics, Tibetan Buddhist medical tantras, Japanese and Korean pharmacopoeias, and the Zoroastrian purity laws embedded in the Avesta, each tradition developing its own theory of the body, its own diagnostic logic, and its own vast catalog of plant, animal, and mineral remedies.",
+   "emblem": "em-lotus"
   },
   {
    "slug": "materia-medica-african",
@@ -1201,7 +1209,8 @@
      "facsimile": false
     }
    ],
-   "overview": "African traditional medicine was overwhelmingly an oral practice, passed down through healers and communities rather than committed to manuscript the way it was in societies with long traditions of medical writing -- which means the real knowledge base is largely absent from any library, ancient or modern. What survives here are colonial-era records: a British catalogue of a Gold Coast botanical garden, a landmark 1932 scientific survey of Southern African medicinal plants, a account of useful plants from what's now Malawi. These are outside observers' documentation, not the traditions' own voice, and that distinction matters -- they're offered as the closest available written record of practices that were never primarily meant to be written down at all."
+   "overview": "African traditional medicine was overwhelmingly an oral practice, passed down through healers and communities rather than committed to manuscript the way it was in societies with long traditions of medical writing -- which means the real knowledge base is largely absent from any library, ancient or modern. What survives here are colonial-era records: a British catalogue of a Gold Coast botanical garden, a landmark 1932 scientific survey of Southern African medicinal plants, a account of useful plants from what's now Malawi. These are outside observers' documentation, not the traditions' own voice, and that distinction matters -- they're offered as the closest available written record of practices that were never primarily meant to be written down at all.",
+   "emblem": "em-leaf"
   },
   {
    "slug": "materia-medica-americas",
@@ -1348,7 +1357,8 @@
      "facsimile": false
     }
    ],
-   "overview": "From the Arctic to Patagonia, Indigenous peoples of the Americas developed medical knowledge entirely independent of the Old World's traditions, using plants that had no equivalent anywhere else on Earth. This collection includes the Badianus Manuscript and the companion volume of the Florentine Codex -- the first scientific texts on Nahua medicine and botany produced after contact, written in Nahuatl and Latin by Indigenous scholars working with Spanish friars -- alongside the Ritual of the Bacabs (a rare surviving Maya-language manuscript of medical incantations), field notes from a Victorian botanist's fifteen years in the Amazon, and one of the first systematic European surveys of North American plant medicine, written in Latin by a German physician traveling through the newly independent United States."
+   "overview": "From the Arctic to Patagonia, Indigenous peoples of the Americas developed medical knowledge entirely independent of the Old World's traditions, using plants that had no equivalent anywhere else on Earth. This collection includes the Badianus Manuscript and the companion volume of the Florentine Codex -- the first scientific texts on Nahua medicine and botany produced after contact, written in Nahuatl and Latin by Indigenous scholars working with Spanish friars -- alongside the Ritual of the Bacabs (a rare surviving Maya-language manuscript of medical incantations), field notes from a Victorian botanist's fifteen years in the Amazon, and one of the first systematic European surveys of North American plant medicine, written in Latin by a German physician traveling through the newly independent United States.",
+   "emblem": "em-mortar"
   },
   {
    "slug": "materia-medica-european",
@@ -1582,7 +1592,8 @@
      "facsimile": false
     }
    ],
-   "overview": "European herbalism absorbed and transformed classical Greek and Roman medicine for over a thousand years, filtering it through monastery gardens, Renaissance printing presses, and the folk traditions of a dozen different regions and languages. This collection runs from a 10th-century Anglo-Saxon leechbook -- one of the oldest surviving medical texts in English -- through Cockayne's Victorian compilation of early English medicine, Matthioli's hugely influential 16th-century Italian commentary on Dioscorides, medieval Welsh medical manuscripts from Myddfai, and Norse medical writing rooted in the same Latin scholarly tradition that shaped medicine across the continent."
+   "overview": "European herbalism absorbed and transformed classical Greek and Roman medicine for over a thousand years, filtering it through monastery gardens, Renaissance printing presses, and the folk traditions of a dozen different regions and languages. This collection runs from a 10th-century Anglo-Saxon leechbook -- one of the oldest surviving medical texts in English -- through Cockayne's Victorian compilation of early English medicine, Matthioli's hugely influential 16th-century Italian commentary on Dioscorides, medieval Welsh medical manuscripts from Myddfai, and Norse medical writing rooted in the same Latin scholarly tradition that shaped medicine across the continent.",
+   "emblem": "em-mortar"
   },
   {
    "slug": "caribbean-travellers",
@@ -1643,7 +1654,8 @@
      "facsimile": false
     }
    ],
-   "overview": "European travelers to the Caribbean left behind an enormous body of firsthand writing -- part natural history, part memoir, part colonial propaganda -- describing landscapes, peoples, and plantation economies to audiences back home who had never seen any of it. These accounts are invaluable and deeply compromised at the same time: often the only surviving written record of a place or moment, filtered entirely through the assumptions of the person holding the pen."
+   "overview": "European travelers to the Caribbean left behind an enormous body of firsthand writing -- part natural history, part memoir, part colonial propaganda -- describing landscapes, peoples, and plantation economies to audiences back home who had never seen any of it. These accounts are invaluable and deeply compromised at the same time: often the only surviving written record of a place or moment, filtered entirely through the assumptions of the person holding the pen.",
+   "emblem": "em-ship"
   },
   {
    "slug": "caribbean-history-docs",
@@ -1695,7 +1707,8 @@
      "facsimile": false
     }
    ],
-   "overview": "The documentary record of the colonial Caribbean -- official correspondence, legal records, administrative reports -- offers a different kind of evidence than travelers' narratives: less colorful, often more revealing of how colonial power actually operated day to day, what it tracked, and what it considered worth writing down at all."
+   "overview": "The documentary record of the colonial Caribbean -- official correspondence, legal records, administrative reports -- offers a different kind of evidence than travelers' narratives: less colorful, often more revealing of how colonial power actually operated day to day, what it tracked, and what it considered worth writing down at all.",
+   "emblem": "em-quill"
   },
   {
    "slug": "caribbean-cartography",
@@ -1781,7 +1794,8 @@
      "dzi_url": "/static/dzi/1781-lopez-antillas-menores.dzi"
     }
    ],
-   "overview": "Maps of the Caribbean from the 17th through 19th centuries chart more than coastlines -- they record which European powers claimed which islands, which routes shaped trade and warfare, and how steadily more of the region's actual geography (and often its Indigenous place names) got overwritten by colonial mapmaking as the decades went on."
+   "overview": "Maps of the Caribbean from the 17th through 19th centuries chart more than coastlines -- they record which European powers claimed which islands, which routes shaped trade and warfare, and how steadily more of the region's actual geography (and often its Indigenous place names) got overwritten by colonial mapmaking as the decades went on.",
+   "emblem": "em-map"
   },
   {
    "slug": "florentine-codex",
@@ -1932,7 +1946,8 @@
     }
    ],
    "section": "literature",
-   "overview": "Between roughly 1545 and 1590, the Franciscan friar Bernardino de Sahagun worked with Nahua scholars, scribes, and artists in Mexico City to compile the most complete surviving record of Aztec civilization on the eve of its destruction by Spanish conquest -- twelve books covering the gods, ceremonies, divination, rhetoric, kingship, trade, natural history, and finally the conquest itself, all illustrated by Indigenous tlacuiloque and written in parallel columns of Nahuatl and Spanish. It's a genuinely strange document: part ethnography, part propaganda, produced by colonizers and colonized working side by side under circumstances neither side controlled, and it remains the single richest primary source historians have for how the Aztec world understood itself just before that understanding was violently overwritten."
+   "overview": "Between roughly 1545 and 1590, the Franciscan friar Bernardino de Sahagun worked with Nahua scholars, scribes, and artists in Mexico City to compile the most complete surviving record of Aztec civilization on the eve of its destruction by Spanish conquest -- twelve books covering the gods, ceremonies, divination, rhetoric, kingship, trade, natural history, and finally the conquest itself, all illustrated by Indigenous tlacuiloque and written in parallel columns of Nahuatl and Spanish. It's a genuinely strange document: part ethnography, part propaganda, produced by colonizers and colonized working side by side under circumstances neither side controlled, and it remains the single richest primary source historians have for how the Aztec world understood itself just before that understanding was violently overwritten.",
+   "emblem": "em-sun"
   },
   {
    "slug": "first-printings",
@@ -1955,7 +1970,8 @@
      "source_url": "https://archive.org/details/thegutembergbible",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "emblem": "em-quill"
   },
   {
    "slug": "buddhism",
@@ -1978,7 +1994,8 @@
      "source_url": "https://archive.org/details/india.history.resource.112138",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "emblem": "em-lotus"
   }
  ]
 }

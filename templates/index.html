@@ -62,6 +62,10 @@
     font-family:Georgia,'Times New Roman',serif; letter-spacing:.06em; pointer-events:none;
     text-shadow: 0 1px 0 rgba(0,0,0,.75), 0 -1px 0 rgba(255,229,160,.25), 0 2px 3px rgba(0,0,0,.5);
     opacity:.94; }
+  .r-spine .rs-emblem { position:absolute; top:7px; left:0; right:0; display:flex;
+    justify-content:center; color:#cda94f; opacity:.85; pointer-events:none;
+    filter:drop-shadow(0 1px 0 rgba(0,0,0,.7)) drop-shadow(0 -1px 0 rgba(255,229,160,.2)); }
+  .r-spine .rs-emblem svg { width:15px; height:15px; }
   .r-spine .rs-count { position:absolute; bottom:7px; left:0; right:0; text-align:center;
     color:#cda94f; font-size:9px; font-weight:700; writing-mode:horizontal-tb; letter-spacing:.08em;
     text-shadow: 0 1px 0 rgba(0,0,0,.75), 0 -1px 0 rgba(255,229,160,.2);
@@ -180,7 +184,7 @@
     el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
     el.dataset.angle = angle;
     el.dataset.slug = mb.slug;
-    el.innerHTML = `<span class="rs-band-b"></span><span class="rs-title">${mb.title}</span><span class="rs-count">${mb.components.length} EDS.</span>`;
+    el.innerHTML = `<span class="rs-band-b"></span><span class="rs-emblem"><svg viewBox="0 0 24 24"><use href="#${mb.emblem || 'em-quill'}"></use></svg></span><span class="rs-title">${mb.title}</span><span class="rs-count">${mb.components.length} EDS.</span>`;
     rotunda.appendChild(el);
   });
 
