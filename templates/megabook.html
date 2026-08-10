@@ -191,11 +191,18 @@ window.addEventListener('popstate', (e) => {
   if (!N || !rotunda) return;
 
   const angleStep = 360 / N;
-  const radius = Math.max(190, Math.round(85 / Math.tan(Math.PI / N)));
+  // Cap the radius: the old formula (85 / tan(angleStep)) grows unbounded as
+  // N increases -- fine for a dozen editions, but for a merged Oedio like
+  // Ancient & Classical Herbalism with 100+ components it computed a radius
+  // in the thousands of pixels, pushing every spine far past the camera and
+  // making the whole rotunda appear tiny. Cap it, and shrink spine width to
+  // fit the fixed circle instead of letting the circle grow to fit the spines.
+  const radius = Math.min(480, Math.max(190, Math.round(85 / Math.tan(Math.PI / N))));
+  const maxSpineWidth = 2 * radius * Math.sin(Math.PI / N) * 0.82; // ~18% gap between spines
 
   ordered.forEach((c, i) => {
     const angle = i * angleStep;
-    const width = 44 + Math.min((c.pages || 30), 700) / 12;
+    const width = Math.min(44 + Math.min((c.pages || 30), 700) / 12, maxSpineWidth);
     const el = document.createElement('a');
     el.className = 'mr-spine';
     el.href = '/book/' + MEGA_SLUG + '/read/' + c.slug;
