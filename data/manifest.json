@@ -147,6 +147,18 @@
      "loc_item": "10036017",
      "note": "An AI translation of Books VI-VIII and XIII directly from this 1880 scholarly edition of the ancient Greek. Unverified.",
      "facsimile": false
+    },
+    {
+     "slug": "iliad-lang-leaf-myers-1883",
+     "role": "The Iliad",
+     "title": "The Iliad (trans. Lang, Leaf & Myers, 1883)",
+     "contributor": "Trans. Andrew Lang, Walter Leaf & Ernest Myers",
+     "year": 1883,
+     "loc_item": "",
+     "note": "Homer's other epic, in a prose translation by the same Andrew Lang whose Odyssey (with Butcher) sits elsewhere in this Oedio -- Lang was involved in translating both, part of a sustained Victorian project to render Homer in accessible, dignified English prose rather than verse.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/iliadofhomerdone00homeuoft",
+     "source_label": "Internet Archive"
     }
    ],
    "overview": "Composed and transmitted orally for centuries before being fixed in writing sometime around the 8th century BCE, the Odyssey follows Odysseus's ten-year journey home from the Trojan War -- a voyage past sirens, cyclopes, and the underworld, while his wife Penelope fends off suitors and his son Telemachus comes of age in his absence. It's less a straightforward war epic than the Iliad, and more a story about cunning, endurance, disguise, and the long, uncertain work of returning to a life that has moved on without you. Its influence on Western storytelling is difficult to overstate: the word 'odyssey' itself entered the language as shorthand for any long, eventful journey, and its structure -- a hero's trials on the way home -- became a template writers have returned to for nearly three thousand years.",
@@ -2270,6 +2282,42 @@
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/File:The_Flood_Tablet_or_Tablet_XI_of_the_Epic_of_Gilgamesh,_currently_housed_in_the_British_Museum_in_London.jpg",
      "source_label": "Wikimedia Commons (photo: Osama Shukir Muhammed Amin, CC BY-SA 4.0)"
+    }
+   ]
+  },
+  {
+   "slug": "marcus-aurelius",
+   "title": "Marcus Aurelius: Meditations",
+   "author": "Marcus Aurelius",
+   "spine_color": "linear-gradient(160deg,#4a4a5c,#1e1e28)",
+   "emblem": "em-sun",
+   "section": "literature",
+   "description": "The private philosophical notebook of a Roman emperor, written in Greek during military campaigns and never intended for publication -- one of the most enduring texts of Stoic philosophy.",
+   "overview": "Marcus Aurelius wrote the Meditations in Greek, not Latin, the language of Roman philosophy rather than Roman law and administration -- a private, unpolished record of Stoic self-discipline composed largely during military campaigns near the empire's northern frontier, and never intended for anyone else to read. It survived by accident of transmission rather than design, copied and recopied across the centuries until it became one of the most widely read works of ancient philosophy. This Oedio pairs an 18th-century printing of the original Greek and Latin text with George Long's standard 19th-century English translation.",
+   "components": [
+    {
+     "slug": "marcus-aurelius-greek-1744",
+     "role": "Original text",
+     "title": "Meditations (Greek & Latin, 1744 edition)",
+     "contributor": "Marcus Aurelius (r. 161-180 CE)",
+     "year": 1744,
+     "loc_item": "",
+     "note": "An 18th-century scholarly printing of the original Greek text alongside a facing Latin translation, following the annotated edition of Thomas Gataker -- the Meditations were written in Greek, the philosophical language of the educated Roman elite, not in Latin.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/bim_eighteenth-century_meditations-latin-and-_aurelius-antoninus-marc_1744",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "marcus-aurelius-long-1910",
+     "role": "Translations",
+     "title": "Meditations (trans. George Long, 1910 printing)",
+     "contributor": "Trans. George Long",
+     "year": 1910,
+     "loc_item": "",
+     "note": "George Long's translation, first published in 1862, became the standard English Meditations for generations of readers -- still one of the most widely reprinted versions well over a century later.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/meditationsofmar00marc_0",
+     "source_label": "Internet Archive"
     }
    ]
   }
