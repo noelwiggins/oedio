@@ -2184,6 +2184,30 @@
      "facsimile": false
     }
    ]
+  },
+  {
+   "slug": "yoga",
+   "title": "Yoga & Asana",
+   "author": "Various",
+   "spine_color": "linear-gradient(160deg,#8a4a1e,#3d2009)",
+   "emblem": "em-lotus",
+   "section": "religion",
+   "description": "Illustrated manuscripts documenting the physical practice of yoga -- asanas, mudras, and the postural traditions that predate yoga's 20th-century export to the West.",
+   "overview": "Yoga's postural tradition -- asana -- is far younger than the philosophical and meditative tradition it grew out of; for most of yoga's long history, physical posture was subordinate to breathwork, mental focus, and sound. This Oedio gathers the rare manuscripts that actually illustrate asanas before the 20th century, when hatha yoga's physical dimension began to dominate the wider practice. The Joga Pradipika, an 18th-century text illustrated a century later in 1830, is among the earliest and most complete of these -- 84 painted postures and hand gestures, made a full century before yoga's modern export to the West.",
+   "components": [
+    {
+     "slug": "joga-pradipika",
+     "role": "Original text",
+     "title": "Joga Pradīpikā (text 1737, illustrated manuscript 1830)",
+     "contributor": "Text: Ramanandi Jayatarama · Illustrated manuscript, 1830",
+     "year": 1830,
+     "loc_item": "",
+     "note": "One of the earliest surviving manuscripts to systematically illustrate hatha yoga postures -- 84 asanas and mudras painted a century after Jayatarama's original 1737 text. Digitized by the British Library for the Tantra exhibition at the British Museum; infrared photography of the original revealed the artist's own alterations mid-composition. Independently hosted here via the Public Domain Review rather than the British Library's own site, whose digitized-manuscripts platform has been affected by a 2023 cyberattack. 30 real images.",
+     "facsimile": true,
+     "source_url": "https://publicdomainreview.org/collection/hatha-yoga-images-from-the-joga-pradipika/",
+     "source_label": "Public Domain Review (source: British Library)"
+    }
+   ]
   }
  ]
 }
