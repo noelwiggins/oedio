@@ -2488,6 +2488,54 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "apuleius",
+   "title": "Apuleius: The Golden Ass",
+   "author": "Apuleius",
+   "spine_color": "linear-gradient(160deg,#5c4a3a,#28190f)",
+   "emblem": "em-serpent",
+   "section": "literature",
+   "description": "The only complete Latin novel to survive from antiquity -- a picaresque tale of a man transformed into a donkey, containing the earliest known telling of Cupid and Psyche.",
+   "overview": "The Golden Ass (formally Metamorphoses) is the only Latin novel that survives complete from the ancient world -- a strange, funny, sometimes disturbing picaresque about a man named Lucius who is accidentally transformed into a donkey and must survive a series of misadventures before regaining human form. Embedded within it is the earliest known full telling of Cupid and Psyche, a story that would go on to influence fairy tales for the next 1,800 years. Apuleius wrote in the 2nd century CE in North Africa, and his prose is famously ornate and playful, unlike almost anything else that survives from Roman literature.",
+   "components": [
+    {
+     "slug": "apuleius-golden-ass-1907",
+     "role": "Complete Works",
+     "title": "The Works of Apuleius (1907 edition)",
+     "contributor": "Trans. various",
+     "year": 1907,
+     "loc_item": "",
+     "note": "The Metamorphoses (Golden Ass) alongside Apuleius's other surviving works -- the God of Socrates, the Florida, and his courtroom Defence against a charge of magic -- in one English edition, including a separate metrical version of the Cupid and Psyche episode.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/worksofapuleiusc00apul",
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "argonautica",
+   "title": "Apollonius: The Argonautica",
+   "author": "Apollonius of Rhodes",
+   "spine_color": "linear-gradient(160deg,#2e4a5c,#0f1e28)",
+   "emblem": "em-ship",
+   "section": "literature",
+   "description": "Jason and the Argonauts' quest for the Golden Fleece, in the only complete epic account of the myth to survive from antiquity.",
+   "overview": "Apollonius of Rhodes wrote the Argonautica in the 3rd century BCE, working at the great Library of Alexandria, and it stands as the only complete surviving epic telling of Jason's voyage aboard the Argo in search of the Golden Fleece -- alongside Medea, whose portrayal here as a young woman falling into a destructive love shaped how later writers, including Virgil for Dido, would handle women driven to extremity by passion. Where Homer's epics feel like the product of a long oral tradition, Apollonius was a self-consciously literary poet writing in a library, and the Argonautica shows it: dense with geography, myth, and scholarly allusion in a way that rewards careful reading over the propulsive momentum of the Iliad or Odyssey.",
+   "components": [
+    {
+     "slug": "argonautica-seaton-1912",
+     "role": "Original text & translation",
+     "title": "The Argonautica (Greek & English, trans. Seaton, 1912)",
+     "contributor": "Trans. R.C. Seaton",
+     "year": 1912,
+     "loc_item": "",
+     "note": "The standard Loeb Classical Library edition, presenting Apollonius's original Greek alongside a facing English translation.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/apolloniusrhodiu00apol_0",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
