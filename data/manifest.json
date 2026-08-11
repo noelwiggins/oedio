@@ -2206,6 +2206,26 @@
      "facsimile": true,
      "source_url": "https://publicdomainreview.org/collection/hatha-yoga-images-from-the-joga-pradipika/",
      "source_label": "Public Domain Review (source: British Library)"
+    },
+    {
+     "slug": "joga-pradipika-transcription",
+     "role": "Original text",
+     "title": "Joga Pradipika — Devanagari captions (AI transcription)",
+     "contributor": "Transcribed from the illustrations by Claude (AI)",
+     "year": 1830,
+     "loc_item": "",
+     "note": "AI transcription of the Devanagari asana and mudra captions on each illustrated folio.",
+     "facsimile": false
+    },
+    {
+     "slug": "joga-pradipika-english",
+     "role": "Translations",
+     "title": "Joga Pradipika — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1830,
+     "loc_item": "",
+     "note": "AI English translation of the asana and mudra names captioning each illustration.",
+     "facsimile": false
     }
    ]
   }
