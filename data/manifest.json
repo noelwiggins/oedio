@@ -2404,6 +2404,54 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "euripides",
+   "title": "Euripides",
+   "author": "Euripides",
+   "spine_color": "linear-gradient(160deg,#5c3a3a,#280f0f)",
+   "emblem": "em-flame",
+   "section": "literature",
+   "description": "The most modern-feeling of the three great Athenian tragedians -- psychologically complex, often sympathetic to women and outsiders, and willing to portray the gods as cruel or capricious.",
+   "overview": "Euripides was the youngest of the three great Athenian tragedians, and the most controversial in his own time -- he won the City Dionysia far less often than Sophocles despite writing roughly ninety plays, in part because his work unsettled Athenian audiences in ways Sophocles's rarely did. His characters, especially his women (Medea foremost among them), are given interior complexity and moral arguments that feel startlingly modern; his gods are frequently petty, arbitrary, or absent when needed most. Eighteen or nineteen of his plays survive complete, more than either of his rivals, partly by chance of transmission -- an accident of manuscript survival that shapes which ancient playwright modern readers know best.",
+   "components": [
+    {
+     "slug": "euripides-donne-1883",
+     "role": "Selected Tragedies",
+     "title": "Euripides (trans. Donne, 1883)",
+     "contributor": "Trans. W. Bodham Donne",
+     "year": 1883,
+     "loc_item": "",
+     "note": "A Victorian English edition of Euripides's tragedies, part of the same wave of 19th-century translation that made the Greek tragedians broadly accessible to English readers for the first time.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/euripides00donn",
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "aeschylus-aristophanes",
+   "title": "Aeschylus & Aristophanes",
+   "author": "Aeschylus, Aristophanes",
+   "spine_color": "linear-gradient(160deg,#3a5c4a,#0f281c)",
+   "emblem": "em-flame",
+   "section": "literature",
+   "description": "The oldest of the great tragedians and the master of Athenian comedy, together in one 1900 anthology -- Aeschylus's Agamemnon and Aristophanes's comedies.",
+   "overview": "Aeschylus is the earliest of the three great Athenian tragedians whose work survives, and his Agamemnon -- the first play of the Oresteia trilogy -- is among the oldest complete Greek tragedies known, dramatizing the homecoming and murder of the Trojan War's victorious commander. Aristophanes worked in a completely different register: Old Comedy, sharp political satire aimed at living Athenian politicians and institutions, frequently obscene, and unlike anything the tragedians attempted. That the same 1900 anthology could bind both together says something about how the 19th century approached Greek drama as a single continuous tradition, tragedy and comedy alike.",
+   "components": [
+    {
+     "slug": "greek-dramas-1900",
+     "role": "Selected Plays",
+     "title": "Greek Dramas: Aeschylus, Sophocles, Euripides & Aristophanes (1900)",
+     "contributor": "Ed. Bernadotte Perrin",
+     "year": 1900,
+     "loc_item": "",
+     "note": "An anthology spanning all four major Athenian dramatists in one volume, including Aeschylus's Agamemnon -- the oldest complete Greek tragedy in this library -- and selections from Aristophanes's Old Comedy, a genre of sharp political satire with no real equivalent among the tragedians.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/greekdramasbyaes00perriala",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
