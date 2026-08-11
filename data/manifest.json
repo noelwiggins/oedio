@@ -162,7 +162,12 @@
     }
    ],
    "overview": "Composed and transmitted orally for centuries before being fixed in writing sometime around the 8th century BCE, the Odyssey follows Odysseus's ten-year journey home from the Trojan War -- a voyage past sirens, cyclopes, and the underworld, while his wife Penelope fends off suitors and his son Telemachus comes of age in his absence. It's less a straightforward war epic than the Iliad, and more a story about cunning, endurance, disguise, and the long, uncertain work of returning to a life that has moved on without you. Its influence on Western storytelling is difficult to overstate: the word 'odyssey' itself entered the language as shorthand for any long, eventful journey, and its structure -- a hero's trials on the way home -- became a template writers have returned to for nearly three thousand years.",
-   "emblem": "em-ship"
+   "emblem": "em-ship",
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Map_of_Ancient_Greece_%28as_drawn_in_1903%29.jpg",
+    "caption": "Map of Ancient Greece, drawn in 1903 -- showing the classical city-states, regions, and kingdoms (Attica, the Peloponnese, Boeotia, Thessaly) that appear throughout Greek literature and drama.",
+    "source_label": "Wikimedia Commons, 1903"
+   }
   },
   {
    "slug": "bible",
@@ -236,7 +241,12 @@
     }
    ],
    "overview": "No single book has shaped more of the world's literature, law, art, and moral vocabulary than the Bible, a collection of texts written across roughly a thousand years by dozens of authors in Hebrew, Aramaic, and Greek, later assembled, translated, and re-translated by successive religious and scholarly communities. The editions gathered here reflect that long history of transmission itself: the King James Version's Jacobean English shaped the sound of English prose for centuries after; scholarly variorum editions track the countless small disagreements between ancient manuscripts; and Gustave Doré's engravings gave the 19th century its most enduring visual imagination of the text's central scenes.",
-   "emblem": "em-dove"
+   "emblem": "em-dove",
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Rawson%2C_A.L._Map_of_Palestine_and_all_Bible_lands._1873.jpg",
+    "caption": "Map of Palestine and All Bible Lands, 1873 -- the geography underlying both Testaments, from the tribal territories of ancient Israel to the wider Near Eastern world the biblical narrative moves through.",
+    "source_label": "Wikimedia Commons, 1873"
+   }
   },
   {
    "slug": "paradise-lost",
@@ -320,7 +330,12 @@
     }
    ],
    "overview": "A frame story about survival through storytelling: Scheherazade, married to a king who has vowed to execute each new wife after their wedding night, keeps herself alive by telling him an unfinished tale every evening, always leaving him wanting the ending enough to spare her one more day. Inside that frame sits a vast, centuries-deep accumulation of stories -- Aladdin, Ali Baba, Sinbad the Sailor -- gathered from Persian, Arabic, Indian, and Egyptian oral traditions over roughly a thousand years before European translators began compiling and publishing them in the 18th and 19th centuries, the era these particular editions come from.",
-   "emblem": "em-crescent"
+   "emblem": "em-crescent",
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ae/The_Provinces_of_the_Abbasid_Caliphate%2C_showing_the_chief_high_roads._Sykes%2C_1921..jpg",
+    "caption": "The Provinces of the Abbasid Caliphate, from an 1921 historical atlas -- the world of Baghdad, Basra, and the Silk Road trade routes that the Arabian Nights and much of the medieval Islamic scholarly and cosmological tradition grew out of.",
+    "source_label": "Wikimedia Commons, 1921"
+   }
   },
   {
    "slug": "leaves-of-grass",
@@ -464,7 +479,12 @@
     }
    ],
    "overview": "Zakariya al-Qazwini's 13th-century Arabic encyclopedia catalogued everything the medieval Islamic world understood about the cosmos -- the movements of the stars, the nature of angels and jinn, the properties of minerals, plants, and the strange creatures believed to inhabit distant lands. It was copied, translated, and illustrated for centuries across the Islamic world, and the manuscripts gathered here -- an illuminated 1553 Ottoman Turkish copy, two Persian editions two centuries apart -- show how the same text kept getting reinterpreted by different scribes and artists, each adding their own illustrations of wonders they'd never seen and couldn't have.",
-   "emblem": "em-compass"
+   "emblem": "em-compass",
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/ae/The_Provinces_of_the_Abbasid_Caliphate%2C_showing_the_chief_high_roads._Sykes%2C_1921..jpg",
+    "caption": "The Provinces of the Abbasid Caliphate, from an 1921 historical atlas -- the world of Baghdad, Basra, and the Silk Road trade routes that the Arabian Nights and much of the medieval Islamic scholarly and cosmological tradition grew out of.",
+    "source_label": "Wikimedia Commons, 1921"
+   }
   },
   {
    "slug": "caribbean-travellers",
@@ -818,7 +838,12 @@
    ],
    "section": "literature",
    "overview": "Between roughly 1545 and 1590, the Franciscan friar Bernardino de Sahagun worked with Nahua scholars, scribes, and artists in Mexico City to compile the most complete surviving record of Aztec civilization on the eve of its destruction by Spanish conquest -- twelve books covering the gods, ceremonies, divination, rhetoric, kingship, trade, natural history, and finally the conquest itself, all illustrated by Indigenous tlacuiloque and written in parallel columns of Nahuatl and Spanish. It's a genuinely strange document: part ethnography, part propaganda, produced by colonizers and colonized working side by side under circumstances neither side controlled, and it remains the single richest primary source historians have for how the Aztec world understood itself just before that understanding was violently overwritten.",
-   "emblem": "em-sun"
+   "emblem": "em-sun",
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/33/Map_of_Tenochtitlan_and_Gulf_of_Mexico%2C_1524.jpg",
+    "caption": "The 1524 Nuremberg map of Tenochtitlan and the Gulf of Mexico -- based on an actual Aztec-drawn map presented as a gift to Hernán Cortés between 1519 and 1521, and the first image of the Aztec capital ever seen in Europe. The city's island layout, canals, and causeways came from Indigenous cartography, not European surveying.",
+    "source_label": "Wikimedia Commons, 1524"
+   }
   },
   {
    "slug": "buddhism",
@@ -2331,7 +2356,12 @@
      "source_url": "https://archive.org/details/meditationsofmar00marc_0",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
   },
   {
    "slug": "sappho",
@@ -2367,7 +2397,12 @@
      "source_url": "https://archive.org/details/sapphomemoir00sappiala",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Map_of_Ancient_Greece_%28as_drawn_in_1903%29.jpg",
+    "caption": "Map of Ancient Greece, drawn in 1903 -- Sappho lived on Lesbos, an island in the northeastern Aegean, part of the wider world of Greek city-states and colonies shown here.",
+    "source_label": "Wikimedia Commons, 1903"
+   }
   },
   {
    "slug": "hesiod",
@@ -2391,7 +2426,12 @@
      "source_url": "https://archive.org/details/in.ernet.dli.2015.529422",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Map_of_Ancient_Greece_%28as_drawn_in_1903%29.jpg",
+    "caption": "Map of Ancient Greece, drawn in 1903 -- showing the classical city-states, regions, and kingdoms (Attica, the Peloponnese, Boeotia, Thessaly) that appear throughout Greek literature and drama.",
+    "source_label": "Wikimedia Commons, 1903"
+   }
   },
   {
    "slug": "sophocles",
@@ -2415,7 +2455,12 @@
      "source_url": "https://archive.org/details/tragediesofsopho0000ehpl",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Map_of_Ancient_Greece_%28as_drawn_in_1903%29.jpg",
+    "caption": "Map of Ancient Greece, drawn in 1903 -- showing the classical city-states, regions, and kingdoms (Attica, the Peloponnese, Boeotia, Thessaly) that appear throughout Greek literature and drama.",
+    "source_label": "Wikimedia Commons, 1903"
+   }
   },
   {
    "slug": "euripides",
@@ -2439,7 +2484,12 @@
      "source_url": "https://archive.org/details/euripides00donn",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Map_of_Ancient_Greece_%28as_drawn_in_1903%29.jpg",
+    "caption": "Map of Ancient Greece, drawn in 1903 -- showing the classical city-states, regions, and kingdoms (Attica, the Peloponnese, Boeotia, Thessaly) that appear throughout Greek literature and drama.",
+    "source_label": "Wikimedia Commons, 1903"
+   }
   },
   {
    "slug": "aeschylus-aristophanes",
@@ -2463,7 +2513,12 @@
      "source_url": "https://archive.org/details/greekdramasbyaes00perriala",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Map_of_Ancient_Greece_%28as_drawn_in_1903%29.jpg",
+    "caption": "Map of Ancient Greece, drawn in 1903 -- showing the classical city-states, regions, and kingdoms (Attica, the Peloponnese, Boeotia, Thessaly) that appear throughout Greek literature and drama.",
+    "source_label": "Wikimedia Commons, 1903"
+   }
   },
   {
    "slug": "lucretius",
@@ -2499,7 +2554,12 @@
      "source_url": "https://archive.org/details/onnatureofthings01lucruoft",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
   },
   {
    "slug": "apuleius",
@@ -2523,7 +2583,12 @@
      "source_url": "https://archive.org/details/worksofapuleiusc00apul",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
   },
   {
    "slug": "argonautica",
@@ -2547,7 +2612,12 @@
      "source_url": "https://archive.org/details/apolloniusrhodiu00apol_0",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fe/1855_Spruneri_Map_of_the_Black_Sea_or_Pontus_Euxinus_in_Ancient_Times_-_Geographicus_-_PontusEuxinus-spruneri-1855.jpg",
+    "caption": "An 1855 map of the Black Sea (Pontus Euxinus) in ancient times -- the Argo's destination, Colchis, sat at its eastern edge, making the voyage from Thessaly essentially a journey to the known world's furthest edge as the ancient Greeks understood it.",
+    "source_label": "Wikimedia Commons, 1855"
+   }
   },
   {
    "slug": "cicero",
@@ -2571,7 +2641,12 @@
      "source_url": "https://archive.org/details/orationsofmarcus0000char",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
   },
   {
    "slug": "seneca",
@@ -2595,7 +2670,12 @@
      "source_url": "https://archive.org/details/epistles1650000sene",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
   },
   {
    "slug": "augustine",
@@ -2619,7 +2699,12 @@
      "source_url": "https://archive.org/details/confessionsofsta1909augu",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
   },
   {
    "slug": "boethius",
@@ -2643,7 +2728,41 @@
      "source_url": "https://archive.org/details/theconsolationof00boetuoft",
      "source_label": "Internet Archive"
     }
-   ]
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/72/Roman_Empire_full_map.jpg",
+    "caption": "The Roman Empire, from a 1907 Atlas of Ancient and Classical Geography -- showing the empire at its territorial extent, the world these writers actually lived, ruled, wrote, and were exiled or executed within.",
+    "source_label": "Wikimedia Commons, 1907 atlas"
+   }
+  },
+  {
+   "slug": "herodotus",
+   "title": "Herodotus: The Histories",
+   "author": "Herodotus",
+   "spine_color": "linear-gradient(160deg,#5c4a2e,#28190f)",
+   "emblem": "em-quill",
+   "section": "history",
+   "description": "The 'Father of History' -- the first extended prose work of history in the Western tradition, recounting the Greco-Persian Wars alongside a vast survey of the peoples and lands Herodotus encountered or heard about.",
+   "overview": "Herodotus wrote the Histories in the 5th century BCE, and the book is often credited as the founding work of history as a discipline distinct from myth or epic -- though Herodotus himself mixes careful eyewitness reporting with secondhand travelers' tales, myth, and outright fabrication in ways that later, stricter historians (starting with his near-contemporary Thucydides) found frustrating. At its core, the Histories tells the story of the Greco-Persian Wars, but Herodotus constantly digresses into ethnography and geography -- describing Egyptian customs, Scythian nomads, and the vast Persian Empire itself -- producing something closer to a survey of the known world than a narrow military history.",
+   "components": [
+    {
+     "slug": "herodotus-godley-1921",
+     "role": "Original text & translation",
+     "title": "The Histories (Greek & English, trans. Godley, 1921)",
+     "contributor": "Trans. A.D. Godley",
+     "year": 1921,
+     "loc_item": "",
+     "note": "The standard Loeb Classical Library edition, presenting Herodotus's original Greek alongside a facing English translation.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/herodotuswitheng02herouoft",
+     "source_label": "Internet Archive"
+    }
+   ],
+   "map": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/24/HERODOTUS%281897%29_p2.387_THE_WORLD_ACCORDING_TO_HERDOTUS.jpg",
+    "caption": "“The World According to Herodotus,” from an 1897 edition -- a reconstruction of the Oikoumene (inhabited world) exactly as Herodotus himself described it: Greece at the center, the Persian Empire to the east, Egypt and Libya to the south, and increasingly vague, half-mythical lands at the edges of what the Greeks actually knew.",
+    "source_label": "Wikimedia Commons, 1897 edition"
+   }
   }
  ]
 }

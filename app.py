@@ -420,6 +420,8 @@ def reader(mega_slug, comp_slug):
         panel_group=panel_group,
         left_default=left_default,
         data_url=_reader_url(comp.get('data_slug', comp_slug)),
+        oedio_map=mb.get("map"),
+        oedio_illustrations=mb.get("illustrations"),
     )
 
 

@@ -18,6 +18,7 @@
   body.reader-fullscreen #reader-toolbar-sticky { transform:translateY(-100%); opacity:0; pointer-events:none;
     position:fixed; top:0; left:0; right:0; }
   body.reader-fullscreen .reader-header { display:none; }
+  body.reader-fullscreen #reader-progress-track { display:none; }
   .top-app-bar { transition: transform .25s ease, opacity .25s ease; }
   #reader-exit-fullscreen { display:none; position:fixed; top:12px; right:12px; z-index:900;
     width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
@@ -156,6 +157,29 @@
   .reader-icon-btn { position:relative; }
   .reader-notes-dot { position:absolute; top:4px; right:4px; width:7px; height:7px; border-radius:50%;
     background:var(--md-sys-color-primary); }
+  /* Visual Context: a map showing where the story takes place, plus any
+     relevant illustrations -- reference material tied to the whole work,
+     not to any one page, so it lives behind its own icon rather than in
+     the page-synced layer cycle (same reasoning as Notes). */
+  .reader-visualcontext-overlay { display:none; position:fixed; inset:0; z-index:1100;
+    background:rgba(0,0,0,.72); align-items:center; justify-content:center; padding:20px; }
+  .reader-visualcontext-overlay.open { display:flex; }
+  .vc-card { background:var(--md-sys-color-surface-container-high); border-radius:18px;
+    max-width:640px; width:100%; max-height:84vh; display:flex; flex-direction:column; overflow:hidden; }
+  .vc-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; }
+  .vc-title { font-family:Georgia, serif; font-size:16px; font-weight:600; color:var(--md-sys-color-on-surface); }
+  .vc-scroll { overflow-y:auto; padding:0 20px 20px; }
+  .vc-section { margin-bottom:22px; }
+  .vc-section-label { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--md-sys-color-primary); margin-bottom:10px; }
+  .vc-map-img { width:100%; border-radius:10px; display:block; background:var(--md-sys-color-surface-container); }
+  .vc-caption { font-size:12.5px; color:var(--md-sys-color-on-surface); margin-top:8px; line-height:1.5; }
+  .vc-source { font-size:11px; color:var(--md-sys-color-on-surface-variant); margin-top:3px; }
+  .vc-illustration-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .vc-illustration img { width:100%; border-radius:8px; display:block; background:var(--md-sys-color-surface-container); }
+  .vc-illustration .vc-caption { font-size:11.5px; }
+  @media (max-width:600px) { .vc-illustration-grid { grid-template-columns:1fr; } }
+
   .reader-notes-panel { position:fixed; right:0; top:0; bottom:0; width:340px; max-width:90vw;
     background:var(--md-sys-color-surface-container-high); z-index:900; box-shadow:-4px 0 20px rgba(0,0,0,.4);
     display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; }
@@ -474,6 +498,11 @@
       <span class="material-symbols-outlined" style="font-size:18px;">headphones</span>
     </button>
     <button class="reader-icon-btn" id="reader-font-btn" title="Text size">Aa</button>
+    {% if oedio_map or oedio_illustrations %}
+    <button class="reader-icon-btn" id="reader-visualcontext-btn" title="Map & illustrations" aria-label="Map and illustrations">
+      <span class="material-symbols-outlined" style="font-size:18px;">map</span>
+    </button>
+    {% endif %}
     <button class="reader-icon-btn" id="reader-fullscreen-btn" title="Fullscreen reading (hide toolbar)" aria-label="Fullscreen reading">
       <span class="material-symbols-outlined" style="font-size:18px;">fullscreen</span>
     </button>
@@ -562,6 +591,40 @@
 <button id="reader-exit-fullscreen" aria-label="Exit fullscreen reading">
   <span class="material-symbols-outlined" style="font-size:19px;">fullscreen_exit</span>
 </button>
+
+{% if oedio_map or oedio_illustrations %}
+<div id="reader-visualcontext-overlay" class="reader-visualcontext-overlay">
+  <div class="vc-card">
+    <div class="vc-header">
+      <span class="vc-title">Map &amp; illustrations</span>
+      <button class="reader-icon-btn" id="vc-close" aria-label="Close"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+    </div>
+    <div class="vc-scroll">
+      {% if oedio_map %}
+      <div class="vc-section">
+        <div class="vc-section-label">Where this takes place</div>
+        <img class="vc-map-img" src="{{ oedio_map.image }}" alt="{{ oedio_map.caption }}" loading="lazy" />
+        <div class="vc-caption">{{ oedio_map.caption }}</div>
+        {% if oedio_map.source_label %}<div class="vc-source">{{ oedio_map.source_label }}</div>{% endif %}
+      </div>
+      {% endif %}
+      {% if oedio_illustrations %}
+      <div class="vc-section">
+        <div class="vc-section-label">Illustrations</div>
+        <div class="vc-illustration-grid">
+          {% for ill in oedio_illustrations %}
+          <div class="vc-illustration">
+            <img src="{{ ill.image }}" alt="{{ ill.caption }}" loading="lazy" />
+            <div class="vc-caption">{{ ill.caption }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <div id="reader-notes-panel" class="reader-notes-panel">
   <div class="rn-header">
@@ -1426,6 +1489,16 @@ if (noteToggle) {
   }
   fsBtn.addEventListener('click', () => setFullscreen(!document.body.classList.contains('reader-fullscreen')));
   exitBtn.addEventListener('click', () => setFullscreen(false));
+})();
+
+(function () {
+  const vcBtn = document.getElementById('reader-visualcontext-btn');
+  const vcOverlay = document.getElementById('reader-visualcontext-overlay');
+  const vcClose = document.getElementById('vc-close');
+  if (!vcBtn || !vcOverlay) return;
+  vcBtn.addEventListener('click', () => vcOverlay.classList.add('open'));
+  vcClose.addEventListener('click', () => vcOverlay.classList.remove('open'));
+  vcOverlay.addEventListener('click', (e) => { if (e.target === vcOverlay) vcOverlay.classList.remove('open'); });
 })();
 
 document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
