@@ -962,6 +962,18 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/bjtsuttapitaka",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "nalanda-khuddakanikaya-1",
+     "role": "Devanagari Tradition",
+     "title": "Nalanda Devanagari Pali Series: Khuddakanikaya Vol. 1 (1959)",
+     "contributor": "Ed. Bhikkhu Jagdish Kashyap, Govt. of India & Bihar Govt.",
+     "year": 1959,
+     "loc_item": "",
+     "note": "A joint Government of India / Bihar State Government publication -- the first complete printing of the Pali Tipitaka in Devanagari script, undertaken so the Canon would be available in an Indian script for the first time (it had previously existed only in Sinhala, Burmese, Thai, and Roman scripts). Published for the 2,500th Buddha Jayanti under the direction of Bhikkhu Jagdish Kashyap at Nava Nalanda Mahavihara. As a government work under Indian copyright law, its 60-year term expired in 2019, placing it in the public domain in its country of origin. 582 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/in.ernet.dli.2015.424534",
+     "source_label": "Internet Archive"
     }
    ],
    "emblem": "em-lotus"
