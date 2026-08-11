@@ -2248,6 +2248,30 @@
      "facsimile": false
     }
    ]
+  },
+  {
+   "slug": "mesopotamia",
+   "title": "Mesopotamian Myth & Writing",
+   "author": "Various",
+   "spine_color": "linear-gradient(160deg,#5c4a2e,#281f11)",
+   "emblem": "em-sun",
+   "section": "literature",
+   "description": "The oldest surviving writing in the world -- cuneiform tablets pressed into wet clay in ancient Mesopotamia, including fragments of the Epic of Gilgamesh, the oldest literary work known to survive.",
+   "overview": "Cuneiform emerged in Mesopotamia around 3200 BCE, making it the oldest writing system known to survive in any form -- centuries older than Egyptian hieroglyphs, millennia older than any manuscript tradition elsewhere in this library. Most of what survives is mundane: receipts, tax records, a beer receipt among the very tablets analyzed as recently as this year. But scattered among the administrative debris are literary and mythic works, chief among them the Epic of Gilgamesh -- composed nearly 4,000 years ago, the oldest surviving work of literature in the world, telling the story of a king's journey, his grief at losing his friend Enkidu, and his failed search for immortality. This Oedio gathers real photographs of individual surviving tablets, beginning with the single most famous one: Tablet XI, the Flood Tablet, whose account of a god-sent deluge and a boat built to survive it was the discovery, in 1872, that first alerted the Victorian world to just how old some of its own scripture's stories really were.",
+   "components": [
+    {
+     "slug": "flood-tablet-gilgamesh-xi",
+     "role": "The Epic of Gilgamesh",
+     "title": "The Flood Tablet (Gilgamesh Tablet XI)",
+     "contributor": "Unknown Assyrian scribe, library of Ashurbanipal, Nineveh",
+     "year": -700,
+     "loc_item": "",
+     "note": "The eleventh tablet of the Standard Babylonian version of the Epic of Gilgamesh, recovered from the ruins of King Ashurbanipal's library at Nineveh and first translated in 1872 by George Smith -- a self-taught Assyriologist who, upon realizing what he was reading (a flood narrative strikingly close to the biblical account of Noah, but centuries older than any surviving Hebrew manuscript), was reportedly so excited he began tearing off his clothes in the middle of the British Museum. The tablet tells how the god Ea warns a man named Utnapishtim of a coming flood and instructs him to build a boat to survive it -- a story already ancient by the time Nineveh's scribes copied it in the 7th century BCE. Photographed and released under an open license by Dr. Osama Shukir Muhammed Amin, part of a broader photographic project to make Mesopotamian heritage freely accessible.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/File:The_Flood_Tablet_or_Tablet_XI_of_the_Epic_of_Gilgamesh,_currently_housed_in_the_British_Museum_in_London.jpg",
+     "source_label": "Wikimedia Commons (photo: Osama Shukir Muhammed Amin, CC BY-SA 4.0)"
+    }
+   ]
   }
  ]
 }
