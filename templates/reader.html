@@ -491,6 +491,7 @@
       <div class="reader-more-menu" id="reader-more-menu">
         <button id="reader-layers-btn"><span class="material-symbols-outlined">tune</span> Reader layers</button>
         <button id="reader-bookmark-btn"><span class="material-symbols-outlined">bookmark_border</span> Bookmark this page</button>
+        <button id="reader-download-btn"><span class="material-symbols-outlined">download</span> Download for offline reading</button>
         <button id="reader-print-btn"><span class="material-symbols-outlined">print</span> Print to PDF</button>
         <button id="reader-share-btn"><span class="material-symbols-outlined">share</span> Share</button>
       </div>
@@ -1367,6 +1368,10 @@ document.getElementById('reader-layers-btn').addEventListener('click', () => {
 document.getElementById('reader-bookmark-btn').addEventListener('click', () => {
   const pageNum = parseInt(pageIndicator.textContent.match(/Page (\d+)/)?.[1] || allPages[0].page, 10);
   toggleBookmark(pageNum);
+  moreMenu.classList.remove('open');
+});
+document.getElementById('reader-download-btn').addEventListener('click', () => {
+  window.location.href = '/book/' + MEGA_SLUG + '/read/' + BOOK_SLUG + '/download';
   moreMenu.classList.remove('open');
 });
 document.getElementById('reader-print-btn').addEventListener('click', () => { doPrint(); moreMenu.classList.remove('open'); });

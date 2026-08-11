@@ -258,6 +258,45 @@ def megabook_page(mega_slug):
                            active_page="library")
 
 
+@app.route("/book/<mega_slug>/read/<comp_slug>/download")
+def download_text(mega_slug, comp_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    comp = next((c for c in mb["components"] if c["slug"] == comp_slug), None)
+    if not comp:
+        abort(404)
+    path = f"static/reader-data/{comp.get('data_slug', comp_slug)}.json"
+    if not os.path.exists(path):
+        abort(404)
+    pages = json.load(open(path))
+    real_pages = [p for p in pages if (p.get("text") or "").strip() and p["text"].strip() != "\u2014"]
+
+    lines = [
+        comp["title"], "=" * len(comp["title"]), "",
+        f"{comp.get('contributor', '')} \u00b7 {comp.get('year', '')}",
+        f"Part of the {mb['title']} Oedio on oedio.com", "",
+        f"Downloaded for offline reading \u00b7 {comp['url'] if 'url' in comp else f'https://oedio.com/book/{mega_slug}/read/{comp_slug}'}",
+        "",
+    ]
+    if not real_pages:
+        lines.append("(This edition is presented as facsimile scans only -- no transcribed or")
+        lines.append(" translated text exists yet to include in a text download. View the scans")
+        lines.append(" online for the visual content.)")
+    else:
+        for p in real_pages:
+            lines.append(f"--- Page {p['page']} ---")
+            lines.append("")
+            lines.append(p["text"].strip())
+            lines.append("")
+
+    body = "\n".join(lines)
+    safe_name = "".join(c if c.isalnum() or c in "-_ " else "" for c in comp["title"])[:80].strip() or comp_slug
+    resp = app.response_class(body, mimetype="text/plain; charset=utf-8")
+    resp.headers["Content-Disposition"] = f'attachment; filename="{safe_name}.txt"'
+    return resp
+
+
 @app.route("/book/<mega_slug>/search")
 def megabook_search(mega_slug):
     mb = _find_megabook(mega_slug)
