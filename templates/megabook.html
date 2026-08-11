@@ -144,7 +144,8 @@
     text-shadow: 0 1px 0 rgba(0,0,0,.75), 0 -1px 0 rgba(255,229,160,.25), 0 2px 3px rgba(0,0,0,.5);
     opacity:.94; }
   .mr-spine.pulling { transition: transform .5s cubic-bezier(.2,.8,.3,1); z-index:50; }
-  .mr-label { position:absolute; left:0; top:0; width:0; height:0; pointer-events:none; }
+  .mr-label { position:absolute; left:0; top:0; width:0; height:0; pointer-events:none;
+    backface-visibility:hidden; }
   .mr-label span { display:block; transform:translate(-50%,-116px); font-size:9.5px; font-weight:700;
     letter-spacing:.12em; text-transform:uppercase; color:var(--md-sys-color-primary);
     white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,.6); background:rgba(0,0,0,.28);
@@ -200,7 +201,7 @@
   <div class="mb-search-wrap">
     <div class="mb-search-box">
       <span class="material-symbols-outlined" style="font-size:19px; color:var(--md-sys-color-on-surface-variant);">search</span>
-      <input type="text" id="mb-search-input" placeholder="Search every page in this Oedio &mdash; try &quot;turmeric&quot;" autocomplete="off" />
+      <input type="text" id="mb-search-input" placeholder="Search every page in this Oedio" autocomplete="off" />
       <button id="mb-search-clear" class="mb-search-clear" style="display:none;" aria-label="Clear search">
         <span class="material-symbols-outlined" style="font-size:17px;">close</span>
       </button>
@@ -420,37 +421,70 @@ window.addEventListener('popstate', (e) => {
     return d.innerHTML;
   }
 
-  function renderResults(data) {
-    resultsEl.innerHTML = '';
-    if (!data.results.length) {
-      statusEl.textContent = `No matches for "${data.query}".`;
-      return;
-    }
-    statusEl.textContent = `${data.results.length}${data.truncated ? '+' : ''} match${data.results.length === 1 ? '' : 'es'} for "${data.query}"`;
-    data.results.forEach(r => {
-      const card = document.createElement('a');
-      card.className = 'mb-search-card';
-      card.href = r.url;
-      let snippetHtml = escapeHtml(r.snippet);
-      if (r.match_start >= 0) {
-        const before = escapeHtml(r.snippet.slice(0, r.match_start));
-        const match = escapeHtml(r.snippet.slice(r.match_start, r.match_start + r.match_len));
-        const after = escapeHtml(r.snippet.slice(r.match_start + r.match_len));
-        snippetHtml = `${before}<mark>${match}</mark>${after}`;
-      }
-      card.innerHTML = `<div class="msc-title">${escapeHtml(r.component_title)}</div>` +
-        `<div class="msc-page">Page ${r.page}</div>` +
-        `<div class="msc-snippet">${snippetHtml}</div>`;
-      resultsEl.appendChild(card);
-    });
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
   }
 
-  let searchTimer = null, currentQuery = '';
+  function appendCard(r) {
+    const card = document.createElement('a');
+    card.className = 'mb-search-card';
+    card.href = r.url;
+    let snippetHtml = escapeHtml(r.snippet);
+    if (r.match_start >= 0) {
+      const before = escapeHtml(r.snippet.slice(0, r.match_start));
+      const match = escapeHtml(r.snippet.slice(r.match_start, r.match_start + r.match_len));
+      const after = escapeHtml(r.snippet.slice(r.match_start + r.match_len));
+      snippetHtml = `${before}<mark>${match}</mark>${after}`;
+    }
+    card.innerHTML = `<div class="msc-title">${escapeHtml(r.component_title)}</div>` +
+      `<div class="msc-page">Page ${r.page}</div>` +
+      `<div class="msc-snippet">${snippetHtml}</div>`;
+    resultsEl.appendChild(card);
+  }
+
+  const PAGE_SIZE = 30;
+  let searchTimer = null, currentQuery = '', loadedOffset = 0, hasMore = false, loading = false;
+  let sentinel = null, sentinelObserver = null;
+
+  function setUpSentinel() {
+    if (sentinel) sentinel.remove();
+    if (sentinelObserver) sentinelObserver.disconnect();
+    if (!hasMore) return;
+    sentinel = document.createElement('div');
+    resultsEl.appendChild(sentinel);
+    sentinelObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !loading) loadMore();
+    });
+    sentinelObserver.observe(sentinel);
+  }
+
+  function loadMore() {
+    if (loading || !hasMore) return;
+    loading = true;
+    fetch('/book/' + MEGA_SLUG + '/search?q=' + encodeURIComponent(currentQuery) +
+          '&offset=' + loadedOffset + '&limit=' + PAGE_SIZE)
+      .then(r => r.json())
+      .then(data => {
+        if (data.query !== currentQuery) return;
+        data.results.forEach(appendCard);
+        loadedOffset += data.results.length;
+        hasMore = data.has_more;
+        loading = false;
+        setUpSentinel();
+      })
+      .catch(() => { loading = false; });
+  }
+
   function runSearch(q) {
     if (q === currentQuery) return;
     currentQuery = q;
+    loadedOffset = 0;
+    hasMore = false;
+    resultsEl.innerHTML = '';
+    if (sentinelObserver) sentinelObserver.disconnect();
     if (q.length < 2) {
-      resultsEl.innerHTML = '';
       statusEl.textContent = '';
       if (shelfLabel) shelfLabel.style.display = '';
       if (rotundaWrap) rotundaWrap.style.display = '';
@@ -461,9 +495,21 @@ window.addEventListener('popstate', (e) => {
     if (shelfLabel) shelfLabel.style.display = 'none';
     if (rotundaWrap) rotundaWrap.style.display = 'none';
     statusEl.textContent = 'Searching\u2026';
-    fetch('/book/' + MEGA_SLUG + '/search?q=' + encodeURIComponent(q))
+    fetch('/book/' + MEGA_SLUG + '/search?q=' + encodeURIComponent(q) + '&offset=0&limit=' + PAGE_SIZE)
       .then(r => r.json())
-      .then(data => { if (data.query === input.value.trim()) renderResults(data); })
+      .then(data => {
+        if (data.query !== currentQuery) return;
+        if (!data.total) {
+          statusEl.textContent = `No matches for "${data.query}".`;
+          return;
+        }
+        const totalLabel = data.capped ? `${data.total}+ matches` : `${data.total} match${data.total === 1 ? '' : 'es'}`;
+        statusEl.textContent = `${totalLabel} for "${data.query}"`;
+        data.results.forEach(appendCard);
+        loadedOffset = data.results.length;
+        hasMore = data.has_more;
+        setUpSentinel();
+      })
       .catch(() => { statusEl.textContent = 'Search failed -- try again.'; });
   }
 

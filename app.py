@@ -265,10 +265,13 @@ def megabook_search(mega_slug):
         abort(404)
     q = (request.args.get("q") or "").strip()
     if len(q) < 2:
-        return jsonify({"results": [], "query": q})
+        return jsonify({"results": [], "query": q, "total": 0})
     q_lower = q.lower()
+    offset = max(0, request.args.get("offset", 0, type=int))
+    limit = min(50, max(1, request.args.get("limit", 30, type=int)))
+    SCAN_CAP = 3000  # a defensive ceiling for pathological queries (e.g. single common letters), not a normal result count
 
-    results = []
+    all_results = []
     for c in mb["components"]:
         slug = c["slug"]
         path = f"static/reader-data/{c.get('data_slug', slug)}.json"
@@ -292,19 +295,25 @@ def megabook_search(mega_slug):
                 snippet = "\u2026" + snippet
             if end < len(text):
                 snippet = snippet + "\u2026"
-            results.append({
+            all_results.append({
                 "component_slug": slug, "component_title": c["title"],
                 "page": p["page"], "snippet": snippet,
                 "match_start": snippet.lower().find(q_lower),
                 "match_len": len(q),
                 "url": f"/book/{mega_slug}/read/{slug}?page={p['page']}",
             })
-            if len(results) >= 60:
+            if len(all_results) >= SCAN_CAP:
                 break
-        if len(results) >= 60:
+        if len(all_results) >= SCAN_CAP:
             break
 
-    return jsonify({"results": results, "query": q, "truncated": len(results) >= 60})
+    total = len(all_results)
+    page_slice = all_results[offset:offset + limit]
+    return jsonify({
+        "results": page_slice, "query": q, "total": total,
+        "offset": offset, "has_more": offset + limit < total,
+        "capped": total >= SCAN_CAP,
+    })
 
 
 @app.route("/book/<mega_slug>/group/<group_slug>")
