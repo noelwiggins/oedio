@@ -2548,6 +2548,102 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "cicero",
+   "title": "Cicero: Orations",
+   "author": "Marcus Tullius Cicero",
+   "spine_color": "linear-gradient(160deg,#4a5c3a,#1e280f)",
+   "emblem": "em-quill",
+   "section": "literature",
+   "description": "The greatest orator of the late Roman Republic -- his speeches against Catiline and Verres set the template for Western political rhetoric for two thousand years.",
+   "overview": "Cicero was a lawyer, statesman, and philosopher, but it was as an orator that he made his lasting reputation -- his speeches, delivered in the Senate and the law courts of the late Roman Republic, were studied, memorized, and imitated by students of rhetoric for the next two thousand years. His four orations against Catiline, delivered during an attempted coup in 63 BCE, remain some of the most famous political speeches ever recorded; his prosecution of the corrupt governor Verres established the template for the courtroom takedown. Cicero was executed in 43 BCE on the orders of Mark Antony, his hands and head displayed in the Roman Forum as a warning to other orators -- a brutal end for a man whose actual influence on how educated people speak and argue arguably outlasted the Republic he died defending.",
+   "components": [
+    {
+     "slug": "cicero-orations-1900",
+     "role": "Selected Orations",
+     "title": "Orations of Marcus Tullius Cicero (1900 edition)",
+     "contributor": "Trans. various",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A selection of Cicero's most celebrated speeches in English translation, including the orations against Catiline.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/orationsofmarcus0000char",
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "seneca",
+   "title": "Seneca: Moral Letters",
+   "author": "Seneca the Younger",
+   "spine_color": "linear-gradient(160deg,#3a3a5c,#141428)",
+   "emblem": "em-flame",
+   "section": "literature",
+   "description": "124 letters of Stoic philosophy addressed to a friend, written by a man who served as Nero's tutor and advisor before being ordered to take his own life.",
+   "overview": "Seneca's Moral Letters to Lucilius are addressed to a real friend and Roman official, but they read as a sustained, deliberate work of Stoic philosophy in epistolary form -- meditations on death, wealth, friendship, and how to live well under circumstances you don't control. That last theme carried real weight in Seneca's own life: he served as tutor and later advisor to the emperor Nero, accumulated enormous wealth as a result, and was eventually ordered by his former student to commit suicide on suspicion of conspiracy, a death Tacitus later described in harrowing detail. The gap between Seneca's philosophical advocacy of simplicity and his own considerable riches was mocked even in antiquity -- but the letters themselves remain among the most accessible entry points into Roman Stoic thought.",
+   "components": [
+    {
+     "slug": "seneca-epistles-1917",
+     "role": "Moral Letters to Lucilius",
+     "title": "Epistles 1-65 (1917 edition)",
+     "contributor": "Trans. Richard M. Gummere",
+     "year": 1917,
+     "loc_item": "",
+     "note": "The first volume of Seneca's Moral Letters to Lucilius, part of the standard Loeb Classical Library translation.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/epistles1650000sene",
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "augustine",
+   "title": "Augustine: Confessions",
+   "author": "Augustine of Hippo",
+   "spine_color": "linear-gradient(160deg,#5c3a2e,#28140f)",
+   "emblem": "em-dove",
+   "section": "religion",
+   "description": "Widely considered the first true autobiography in Western literature -- a bishop's unflinching account of his own restless youth and conversion to Christianity.",
+   "overview": "Augustine wrote the Confessions around 397 CE, and it's often credited as the first genuine autobiography in Western literature -- not a public record of achievements, but an interior account of desire, guilt, intellectual searching, and eventual religious conversion, addressed directly to God in a voice startlingly personal for its era. Augustine doesn't spare himself: he writes candidly about a stolen pear as a boy, a long relationship with a mistress he never names, years spent following philosophies he later renounced, and a conversion he experienced as a genuine rupture rather than a smooth transition. The book's psychological interiority had no real precedent in the ancient world and shaped how introspective writing worked for the next 1,600 years.",
+   "components": [
+    {
+     "slug": "augustine-confessions-1909",
+     "role": "The Confessions",
+     "title": "The Confessions of St. Augustine (1909 edition)",
+     "contributor": "Trans. various",
+     "year": 1909,
+     "loc_item": "",
+     "note": "A standard early-20th-century English translation of Augustine's Confessions.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/confessionsofsta1909augu",
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "boethius",
+   "title": "Boethius: The Consolation of Philosophy",
+   "author": "Boethius",
+   "spine_color": "linear-gradient(160deg,#3a4a5c,#141e28)",
+   "emblem": "em-crescent",
+   "section": "literature",
+   "description": "Written in prison awaiting execution, a dialogue between the condemned author and the personified figure of Philosophy on fortune, fate, and true happiness.",
+   "overview": "Boethius was a Roman senator and philosopher who rose to become a high official under the Ostrogothic king Theodoric, then fell from favor, was imprisoned on charges of treason, and was executed around 524 CE without ever learning whether the accusations against him were true. The Consolation of Philosophy was written during that imprisonment, in the last months of his life -- a dialogue between Boethius and a personification of Philosophy herself, who appears at his lowest moment to argue that fortune is inherently fickle, that worldly goods were never truly his to lose, and that genuine happiness must be sought elsewhere. It became one of the most widely read and translated books of the entire Middle Ages, translated into Old English by King Alfred the Great himself and later into Middle English by Chaucer -- read by a condemned man's captors' descendants for a thousand years as one of the great meditations on how to face loss.",
+   "components": [
+    {
+     "slug": "boethius-consolation-1900",
+     "role": "The Consolation of Philosophy",
+     "title": "The Consolation of Philosophy (trans. H.R. James, 1900)",
+     "contributor": "Trans. H.R. James",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A standard English translation of the work Boethius wrote in the final months of his life, awaiting execution on charges of treason.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/theconsolationof00boetuoft",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
