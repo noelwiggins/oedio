@@ -2452,6 +2452,42 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "lucretius",
+   "title": "Lucretius: On the Nature of Things",
+   "author": "Lucretius",
+   "spine_color": "linear-gradient(160deg,#4a3a5c,#1e1428)",
+   "emblem": "em-sun",
+   "section": "science",
+   "description": "A 1st-century BCE Latin poem arguing for a purely materialist universe -- atoms, void, and no divine intervention -- that vanished for a thousand years before a single surviving manuscript was rediscovered in a German monastery in 1417.",
+   "overview": "Lucretius's De Rerum Natura is a work of philosophy disguised as poetry -- six books of Latin verse arguing that the universe consists entirely of atoms moving through void, that the soul dies with the body, and that the gods, if they exist at all, take no interest in human affairs. It's Epicurean philosophy at epic length and ambition, and for most of the Middle Ages it was simply gone: the poem's frank materialism made it deeply unfashionable, and it survived the collapse of antiquity in a single manuscript that the papal secretary and book-hunter Poggio Bracciolini rediscovered in a German monastery in 1417, very possibly saving it from total loss. This 1512 printing followed less than a century after that rediscovery -- itself a witness to how quickly the poem was recopied and disseminated once it re-entered circulation.",
+   "components": [
+    {
+     "slug": "lucretius-1512",
+     "role": "Original text",
+     "title": "De Rerum Natura (1512 Latin printing)",
+     "contributor": "Titus Lucretius Carus (c. 99-55 BCE)",
+     "year": 1512,
+     "loc_item": "",
+     "note": "A printing from less than a century after Poggio Bracciolini rediscovered the poem's sole surviving manuscript in a German monastery in 1417 -- one of the most consequential single manuscript discoveries in intellectual history, credited by some historians with helping seed the broader Renaissance revival of classical and materialist thought.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/bub_gb_hdjW7lSmQ_gC",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "lucretius-bailey-1921",
+     "role": "Translations",
+     "title": "On the Nature of Things (trans. Cyril Bailey, 1921)",
+     "contributor": "Trans. Cyril Bailey",
+     "year": 1921,
+     "loc_item": "",
+     "note": "A standard early-20th-century English prose translation of Lucretius's poem.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/onnatureofthings01lucruoft",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
