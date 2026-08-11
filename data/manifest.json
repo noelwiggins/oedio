@@ -2182,6 +2182,26 @@
      "loc_item": "",
      "note": "An AI English translation of a c.1400 Italian illuminated herbal manuscript, generated directly from the manuscript images. Unverified.",
      "facsimile": false
+    },
+    {
+     "slug": "canon-avicenna-transcription",
+     "role": "South & Central Asia",
+     "title": "The Canon of Medicine — Arabic text (AI transcription)",
+     "contributor": "Transcribed from the manuscript by Claude (AI)",
+     "year": 1329,
+     "loc_item": "",
+     "note": "A complete AI transcription of Ibn Sina's Canon of Medicine into readable Arabic, beside the original 1329 manuscript scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "canon-avicenna-english",
+     "role": "Translations",
+     "title": "The Canon of Medicine — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1329,
+     "loc_item": "",
+     "note": "An AI English translation of the Canon of Medicine, generated directly from the manuscript images -- no public-domain English translation of this complete work exists, making this among the first full English renderings freely available without restriction.",
+     "facsimile": false
     }
    ]
   },
