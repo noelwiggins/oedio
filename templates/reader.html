@@ -1771,6 +1771,11 @@ if (!isMobile) {
   function tissueSnapshotAndSwap(afterSwap) {
     if (cyclingReader) return;
     cyclingReader = true;
+    // If a scan is showing full-screen, the text panel underneath is
+    // completely hidden -- swapping its content there would happen
+    // invisibly, making the toggle look like it does nothing. Close the
+    // zoom view first so the swap is always something the reader can see.
+    if (zoomOverlay.style.display === 'block') closeZoom();
     const clone = panel.cloneNode(true);
     clone.className = 'tissue-clone-overlay';
     clone.removeAttribute('id');
