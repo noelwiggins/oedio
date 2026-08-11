@@ -974,6 +974,42 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/in.ernet.dli.2015.424534",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "buddha-jayanti-vinaya-pitaka",
+     "role": "Sinhala Tradition",
+     "title": "Buddha Jayanti Vinaya Pitaka (1957 edition)",
+     "contributor": "Buddha Jayanti Tripitaka series, Sri Lanka",
+     "year": 1957,
+     "loc_item": "",
+     "note": "The Vinaya Pitaka -- the monastic discipline and code of conduct governing the Buddhist sangha -- from the same Sinhala-script Buddha Jayanti edition as the Sutta Pitaka elsewhere in this Oedio, produced under the patronage of the government of Sri Lanka for the Buddha's 2,500th anniversary.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/bjtvinayapitaka",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "buddha-jayanti-abhidhamma-pitaka",
+     "role": "Sinhala Tradition",
+     "title": "Buddha Jayanti Abhidhamma Pitaka (1957 edition)",
+     "contributor": "Buddha Jayanti Tripitaka series, Sri Lanka",
+     "year": 1957,
+     "loc_item": "",
+     "note": "The Abhidhamma Pitaka -- the systematic philosophical and psychological analysis underlying the Buddha's teaching, the most technical of the three baskets of the Pali Canon -- completing the Sutta and Vinaya Pitakas from the same Sinhala Buddha Jayanti edition elsewhere in this Oedio.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/bjtabhidhammapitaka",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "hewavitarne-sutta-commentary",
+     "role": "Theravada Commentary — Sinhala Tradition",
+     "title": "Suttatthakatha (Simon Hewavitarne Bequest, Sinhala script)",
+     "contributor": "Buddhaghosa and successors -- Simon Hewavitarne Bequest series",
+     "year": 1920,
+     "loc_item": "",
+     "note": "A classical Pali commentary on the Sutta Pitaka, printed in Sinhala script as part of the Simon Hewavitarne Bequest series -- one of the major Sri Lankan commentarial editions, a real complement to the Burmese and Pali-Text-Society commentary traditions already in this Oedio (Buddhaghosa's Parables and the Atthasalini). 305 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/shbsuttatthakatha",
+     "source_label": "Internet Archive"
     }
    ],
    "emblem": "em-lotus"
