@@ -914,6 +914,54 @@
      "loc_item": "",
      "note": "A clean, searchable transcription of Buddhist Suttas (1881 Rhys Davids translation), beside the original scans. This is already a real historical English translation -- the transcription pass just makes it properly searchable rather than trapped in scan images. Unverified against the original for OCR accuracy.",
      "facsimile": false
+    },
+    {
+     "slug": "gandhara-scroll",
+     "role": "The Oldest Buddhist Manuscript",
+     "title": "The Gandhara Scroll (c. 1st century BCE – 1st century CE)",
+     "contributor": "Unknown scribe, ancient Gandhara (modern Afghanistan/Pakistan)",
+     "year": -50,
+     "loc_item": "2018305008",
+     "note": "The oldest known Buddhist manuscript in the world, and among the oldest surviving manuscripts from South Asia in any tradition. Written in Gandhari Prakrit in Kharoshthi script on birch bark, informally called the Bahubuddha Sutra (\"The Many Buddhas Sutra\") for its resemblance to a Sanskrit text of similar name -- it narrates the lives of fifteen buddhas across cosmic time, ending with the prediction of Maitreya, the buddha yet to come. Acquired by the Library of Congress in 2003. 4 real facsimile images of the surviving fragments.",
+     "facsimile": true,
+     "source_url": "https://www.loc.gov/item/2018305008/",
+     "source_label": "Library of Congress"
+    },
+    {
+     "slug": "dhammapada-fausboll-1855",
+     "role": "Original text",
+     "title": "The Dhammapada (ed. Viggo Fausbøll, 1855)",
+     "contributor": "Attrib. Gautama Buddha's early followers, ed. Fausbøll",
+     "year": 1855,
+     "loc_item": "",
+     "note": "The first critical scholarly edition of the Pali Dhammapada ever published, edited by the Danish philologist Viggo Fausbøll -- includes his own Latin commentary, since English Pali scholarship had barely begun in 1855. This edition effectively opened Western academic study of the text; the 1900 edition elsewhere in this Oedio came nearly half a century later, once Pali studies had matured into an English-language field. 495 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/dhammapadam00buddgoog",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "dhammapada-thai-chulalongkorn",
+     "role": "Thai Tradition",
+     "title": "Tipitaka Vol. 25: Dhammapada et al. (King Chulalongkorn Edition, 1893)",
+     "contributor": "King Chulalongkorn (Rama V) edition, Bangkok",
+     "year": 1893,
+     "loc_item": "",
+     "note": "The first printed edition of an almost-complete Pali Canon, published in Thai script in Bangkok -- volume 25, covering the Khuddakapatha, Dhammapada, Udana, Itivuttaka, and Suttanipata. Genuinely distinct from both English-scholarship Dhammapada editions elsewhere in this Oedio: printed in Thailand for the Thai Buddhist tradition itself, not for Western academic study. 492 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/tipiakama25banguoft",
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "buddha-jayanti-sutta-pitaka",
+     "role": "Sinhala Tradition",
+     "title": "Buddha Jayanti Sutta Pitaka (1957–1989 edition)",
+     "contributor": "Buddha Jayanti Tripitaka series, Sri Lanka",
+     "year": 1957,
+     "loc_item": "",
+     "note": "Part of a monumental Sri Lankan edition of the complete Pali Canon in Sinhala script, produced to mark the 2,500th anniversary of the Buddha's parinirvana -- the Sutta Pitaka, the collection of the Buddha's discourses, in the Sinhala Buddhist textual tradition specifically. 209 real facsimile pages.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/bjtsuttapitaka",
+     "source_label": "Internet Archive"
     }
    ],
    "emblem": "em-lotus"
