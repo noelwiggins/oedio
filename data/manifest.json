@@ -2214,6 +2214,18 @@
      "loc_item": "",
      "note": "An AI English translation of the Canon of Medicine, generated directly from the manuscript images -- no public-domain English translation of this complete work exists, making this among the first full English renderings freely available without restriction.",
      "facsimile": false
+    },
+    {
+     "slug": "hippocrates-adams-1886",
+     "role": "Ancient Mediterranean",
+     "title": "The Genuine Works of Hippocrates (trans. Adams, 1886)",
+     "contributor": "Trans. Francis Adams",
+     "year": 1886,
+     "loc_item": "",
+     "note": "Hippocrates is credited as the founder of medicine as an empirical discipline distinct from religious or magical healing -- though modern scholarship believes the 'Hippocratic Corpus' was actually written by many hands over generations, unified under his name as the school's founding figure. This 1886 edition presents what its editor judged the genuinely Hippocratic texts, including the Aphorisms and the Hippocratic Oath.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/genuineworksofhi00tran",
+     "source_label": "Internet Archive"
     }
    ]
   },
