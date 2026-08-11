@@ -2356,6 +2356,54 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "hesiod",
+   "title": "Hesiod: Theogony & Works and Days",
+   "author": "Hesiod",
+   "spine_color": "linear-gradient(160deg,#2e5c3a,#0f2818)",
+   "emblem": "em-sun",
+   "section": "literature",
+   "description": "The earliest systematic account of the Greek gods' origins, composed around the same era as Homer -- the Theogony traces the universe from primordial Chaos through the reign of Zeus.",
+   "overview": "Hesiod composed the Theogony around the 8th century BCE, roughly contemporary with Homer, but where Homer told stories of heroes, Hesiod set out to systematize the gods themselves -- their births, their wars, their genealogies, tracing existence back to Chaos and forward through successive divine generations to the reign of Zeus. It's the closest thing the Greek world had to a founding cosmological text, and it shaped how later Greek and Roman writers understood their own mythology for a thousand years. This edition presents the original Greek alongside its English translation, part of the same Loeb Classical Library tradition that has anchored much of this library's Greek and Latin material.",
+   "components": [
+    {
+     "slug": "hesiod-evelyn-white-1914",
+     "role": "Original text & translation",
+     "title": "Hesiod, the Homeric Hymns, and Homerica (Greek & English, 1914)",
+     "contributor": "Trans. Hugh G. Evelyn-White",
+     "year": 1914,
+     "loc_item": "",
+     "note": "The standard Loeb Classical Library edition, presenting Hesiod's Theogony and Works and Days in the original Greek alongside a facing English translation -- for over a century, this has been the edition most English-speaking students first meet Hesiod through.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/in.ernet.dli.2015.529422",
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "sophocles",
+   "title": "Sophocles: The Tragedies",
+   "author": "Sophocles",
+   "spine_color": "linear-gradient(160deg,#3a2e5c,#180f28)",
+   "emblem": "em-flame",
+   "section": "literature",
+   "description": "The complete surviving tragedies of Sophocles -- including Oedipus Rex and Antigone -- in an 1882 English edition.",
+   "overview": "Sophocles wrote well over 100 plays across a long career in 5th-century BCE Athens, and won the City Dionysia drama competition more times than any other playwright -- yet only seven of his tragedies survive complete today, the rest lost to the same slow attrition of copying and recopying that claimed so much of ancient literature. What remains includes Oedipus Rex, still one of the most structurally influential plays ever written, and Antigone, whose central conflict between civil law and personal conscience has been staged and restaged for 2,500 years. This 1882 edition presents all seven surviving tragedies in English.",
+   "components": [
+    {
+     "slug": "sophocles-plumptre-1882",
+     "role": "Complete Tragedies",
+     "title": "The Tragedies of Sophocles (trans. Plumptre, 1882)",
+     "contributor": "Trans. E.H. Plumptre",
+     "year": 1882,
+     "loc_item": "",
+     "note": "All seven surviving complete tragedies -- Oedipus Rex, Oedipus at Colonus, Antigone, Ajax, Electra, Trachiniae, and Philoctetes -- in one Victorian English edition.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/tragediesofsopho0000ehpl",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
