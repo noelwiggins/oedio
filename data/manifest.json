@@ -2320,6 +2320,42 @@
      "source_label": "Internet Archive"
     }
    ]
+  },
+  {
+   "slug": "sappho",
+   "title": "Sappho",
+   "author": "Sappho",
+   "spine_color": "linear-gradient(160deg,#5c2e4a,#280f1e)",
+   "emblem": "em-lotus",
+   "section": "literature",
+   "description": "Almost none of Sappho's poetry survives complete -- what remains exists mostly as fragments, some preserved by ancient quotation, others recovered from actual papyrus scraps excavated from the sands of Egypt.",
+   "overview": "Sappho was one of the most celebrated poets of the ancient Greek world, but almost nothing of her original work survives intact -- her poetry was lost as a complete body of work sometime in late antiquity, and what remains today exists almost entirely as fragments: lines quoted by later grammarians illustrating a point of meter, or scraps of actual papyrus recovered from an Egyptian rubbish heap at Oxyrhynchus, where the dry climate preserved discarded documents for two thousand years. This Oedio pairs one such fragment -- an actual 2,000-year-old piece of the papyrus itself -- with a 1907 scholarly edition presenting the surviving fragments alongside their English translation.",
+   "components": [
+    {
+     "slug": "sappho-papyrus-739",
+     "role": "Original text",
+     "title": "Papyrus fragment (P. Oxy. I 7) -- On her brother Charaxus",
+     "contributor": "Sappho (c. 630-570 BCE)",
+     "year": -200,
+     "loc_item": "",
+     "note": "An actual fragment of ancient papyrus bearing Sappho's own words, excavated from the rubbish mounds of Oxyrhynchus, Egypt -- recognizable text of two stanzas survives, describing Sappho's prayer for her brother Charaxus's safe return, the same falling-out Herodotus later references. This is not a copy of a copy: it is close to two thousand years old, among the very few physical objects touched by the transmission of Sappho's poetry that survive from antiquity itself.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/File:British_Library_papyrus_739.jpg",
+     "source_label": "Wikimedia Commons (source: British Library, public domain)"
+    },
+    {
+     "slug": "sappho-wharton-1907",
+     "role": "Translations",
+     "title": "Sappho: Memoir, Text, and Translation (1907 edition)",
+     "contributor": "Ed. & trans. Henry Thornton Wharton",
+     "year": 1907,
+     "loc_item": "",
+     "note": "A scholarly edition presenting the surviving Greek fragments alongside a literal English translation, part of the long project of reassembling Sappho's shattered body of work from scattered ancient quotations and papyrus discoveries.",
+     "facsimile": true,
+     "source_url": "https://archive.org/details/sapphomemoir00sappiala",
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
