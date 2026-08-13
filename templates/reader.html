@@ -212,9 +212,10 @@
   @media (max-width:600px) { .vc-illustration-grid { grid-template-columns:1fr; } }
 
   .reader-notes-panel { position:fixed; right:0; top:0; bottom:0; width:340px; max-width:90vw;
-    background:var(--md-sys-color-surface-container-high); z-index:900; box-shadow:-4px 0 20px rgba(0,0,0,.4);
-    display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; }
-  .reader-notes-panel.open { transform:translateX(0); }
+    background:var(--md-sys-color-surface-container-high); z-index:950; box-shadow:-4px 0 20px rgba(0,0,0,.4);
+    display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease;
+    pointer-events:none; }
+  .reader-notes-panel.open { transform:translateX(0); pointer-events:auto; }
   .rn-header { display:flex; align-items:center; gap:8px; padding:16px 16px 12px;
     border-bottom:1px solid var(--md-sys-color-outline-variant); color:var(--md-sys-color-on-surface); }
   .rn-title { font-size:13px; font-weight:600; flex:1; }
