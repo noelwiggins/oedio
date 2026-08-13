@@ -20,6 +20,28 @@
     font-size:13px; padding:8px 14px; border-radius:20px; }
   .top-app-bar a.bar-link:hover, .top-app-bar a.bar-link.active {
     background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+  .top-app-bar button.bar-link { background:none; border:none; cursor:pointer; font-family:inherit; }
+
+  .site-index-overlay { display:none; position:fixed; inset:0; z-index:1200;
+    background:rgba(0,0,0,.72); align-items:flex-start; justify-content:center; padding:70px 20px 20px; }
+  .site-index-overlay.open { display:flex; }
+  .six-card { background:var(--md-sys-color-surface-container-high); border-radius:18px;
+    max-width:640px; width:100%; max-height:78vh; display:flex; flex-direction:column; overflow:hidden; }
+  .six-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 10px; }
+  .six-title { font-family:Georgia, serif; font-size:16px; font-weight:600; color:var(--md-sys-color-on-surface); }
+  .six-filter { margin:0 20px 12px; padding:10px 14px; border-radius:10px;
+    border:1px solid var(--md-sys-color-outline-variant); background:var(--md-sys-color-surface-container);
+    color:var(--md-sys-color-on-surface); font-size:13.5px; outline:none; }
+  .six-scroll { overflow-y:auto; padding:0 10px 18px; }
+  .six-group { margin-bottom:6px; }
+  .six-group-label { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--md-sys-color-primary); padding:12px 12px 4px; }
+  .six-item { display:block; padding:9px 12px; border-radius:10px; text-decoration:none;
+    font-size:13.5px; color:var(--md-sys-color-on-surface); }
+  .six-item:hover { background:var(--md-sys-color-surface-container-highest); }
+  .six-item.six-hidden { display:none; }
+  .six-group.six-hidden { display:none; }
+
   footer.site-footer { padding:20px 24px calc(28px + env(safe-area-inset-bottom));
     border-top:1px solid var(--md-sys-color-outline-variant);
     margin-top:12px; color:var(--md-sys-color-on-surface-variant); font-size:11.5px; text-align:center; }
@@ -94,9 +116,30 @@
   <a href="/" class="brand">oedio<span class="tld">.com</span></a>
   <span class="tagline">public-domain Oedios, compiled from the open internet</span>
   <span class="spacer"></span>
+  <button class="bar-link site-index-btn" id="site-index-btn" type="button">Index</button>
   <a href="/" class="bar-link {{ 'active' if active_page == 'library' else '' }}">Library</a>
   <a href="/about" class="bar-link {{ 'active' if active_page == 'about' else '' }}">About</a>
 </header>
+
+<div id="site-index-overlay" class="site-index-overlay">
+  <div class="six-card">
+    <div class="six-header">
+      <span class="six-title">Every title on oedio.com</span>
+      <button class="reader-icon-btn" id="six-close" aria-label="Close"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+    </div>
+    <input type="text" id="six-filter" class="six-filter" placeholder="Filter titles..." autocomplete="off" />
+    <div class="six-scroll" id="six-scroll">
+      {% for group in site_index %}
+      <div class="six-group">
+        <div class="six-group-label">{{ group.section_title }}</div>
+        {% for t in group.titles %}
+        <a class="six-item" href="/book/{{ t.slug }}">{{ t.title }}</a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
 
 {% block content %}{% endblock %}
 
@@ -105,5 +148,38 @@
   © {{ now.year }} Noel Wiggins. All rights reserved.
 </footer>
 {% block extra_scripts %}{% endblock %}
+<script>
+(function () {
+  const btn = document.getElementById('site-index-btn');
+  const overlay = document.getElementById('site-index-overlay');
+  const closeBtn = document.getElementById('six-close');
+  const filterInput = document.getElementById('six-filter');
+  const scroll = document.getElementById('six-scroll');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    overlay.classList.add('open');
+    filterInput.value = '';
+    applyFilter('');
+    setTimeout(() => filterInput.focus(), 50);
+  });
+  closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+  function applyFilter(q) {
+    q = q.trim().toLowerCase();
+    scroll.querySelectorAll('.six-group').forEach(group => {
+      let anyVisible = false;
+      group.querySelectorAll('.six-item').forEach(item => {
+        const match = !q || item.textContent.toLowerCase().includes(q);
+        item.classList.toggle('six-hidden', !match);
+        if (match) anyVisible = true;
+      });
+      group.classList.toggle('six-hidden', !anyVisible);
+    });
+  }
+  filterInput.addEventListener('input', () => applyFilter(filterInput.value));
+})();
+</script>
 </body>
 </html>

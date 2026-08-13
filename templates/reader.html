@@ -161,6 +161,37 @@
      relevant illustrations -- reference material tied to the whole work,
      not to any one page, so it lives behind its own icon rather than in
      the page-synced layer cycle (same reasoning as Notes). */
+  /* AI reading assistant: chapter overview, page-level notes, and a
+     contextual Q&A box, all generated live from the current page's text --
+     original synthesis, not reproduction of the source. */
+  .reader-aiassist-overlay { display:none; position:fixed; inset:0; z-index:1100;
+    background:rgba(0,0,0,.72); align-items:center; justify-content:center; padding:20px; }
+  .reader-aiassist-overlay.open { display:flex; }
+  .aa-card { background:var(--md-sys-color-surface-container-high); border-radius:18px;
+    max-width:560px; width:100%; max-height:84vh; display:flex; flex-direction:column; overflow:hidden; }
+  .aa-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 8px; }
+  .aa-title { font-family:Georgia, serif; font-size:16px; font-weight:600; color:var(--md-sys-color-on-surface); }
+  .aa-modes { display:flex; gap:8px; padding:8px 16px 12px; }
+  .aa-mode-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px;
+    padding:12px 6px; border-radius:12px; border:1px solid var(--md-sys-color-outline-variant);
+    background:var(--md-sys-color-surface-container); color:var(--md-sys-color-on-surface-variant);
+    font-size:11px; font-weight:600; cursor:pointer; text-align:center; line-height:1.3; }
+  .aa-mode-btn.active { border-color:var(--md-sys-color-primary); color:var(--md-sys-color-primary);
+    background:rgba(212,175,90,.1); }
+  .aa-ask-input-row { display:flex; gap:8px; padding:0 16px 12px; }
+  .aa-ask-input-row input { flex:1; background:var(--md-sys-color-surface-container); border:1px solid var(--md-sys-color-outline-variant);
+    border-radius:10px; padding:10px 14px; font-size:13.5px; color:var(--md-sys-color-on-surface); outline:none; }
+  .aa-ask-submit { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary);
+    border:none; border-radius:10px; padding:0 18px; font-weight:700; font-size:13px; cursor:pointer; }
+  .aa-result-scroll { overflow-y:auto; padding:4px 20px 22px; }
+  .aa-result { font-size:14px; line-height:1.7; color:var(--md-sys-color-on-surface); font-family:Georgia, serif;
+    white-space:pre-wrap; }
+  .aa-result.aa-empty { color:var(--md-sys-color-on-surface-variant); font-family:inherit; font-size:13px;
+    text-align:center; padding:30px 10px; font-style:italic; }
+  .aa-result.aa-loading { color:var(--md-sys-color-on-surface-variant); font-family:inherit; font-size:13px;
+    text-align:center; padding:30px 10px; }
+  .aa-result strong { color:var(--md-sys-color-primary); }
+
   .reader-visualcontext-overlay { display:none; position:fixed; inset:0; z-index:1100;
     background:rgba(0,0,0,.72); align-items:center; justify-content:center; padding:20px; }
   .reader-visualcontext-overlay.open { display:flex; }
@@ -503,6 +534,9 @@
       <span class="material-symbols-outlined" style="font-size:18px;">map</span>
     </button>
     {% endif %}
+    <button class="reader-icon-btn" id="reader-aiassist-btn" title="Overview, page notes &amp; ask a question" aria-label="AI reading assistant">
+      <span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span>
+    </button>
     <button class="reader-icon-btn" id="reader-fullscreen-btn" title="Fullscreen reading (hide toolbar)" aria-label="Fullscreen reading">
       <span class="material-symbols-outlined" style="font-size:18px;">fullscreen</span>
     </button>
@@ -593,6 +627,36 @@
 </button>
 
 {% if oedio_map or oedio_illustrations %}
+<div id="reader-aiassist-overlay" class="reader-aiassist-overlay">
+  <div class="aa-card">
+    <div class="aa-header">
+      <span class="aa-title">Reading assistant</span>
+      <button class="reader-icon-btn" id="aa-close" aria-label="Close"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+    </div>
+    <div class="aa-modes">
+      <button class="aa-mode-btn" id="aa-mode-overview" data-mode="overview">
+        <span class="material-symbols-outlined" style="font-size:19px;">summarize</span>
+        <span>Chapter overview</span>
+      </button>
+      <button class="aa-mode-btn" id="aa-mode-notes" data-mode="notes">
+        <span class="material-symbols-outlined" style="font-size:19px;">notes</span>
+        <span>Explain this page</span>
+      </button>
+      <button class="aa-mode-btn" id="aa-mode-ask" data-mode="ask">
+        <span class="material-symbols-outlined" style="font-size:19px;">search</span>
+        <span>Ask a question</span>
+      </button>
+    </div>
+    <div id="aa-ask-input-row" class="aa-ask-input-row" style="display:none;">
+      <input type="text" id="aa-ask-input" placeholder="Ask about this book, or anything else..." autocomplete="off" />
+      <button id="aa-ask-submit" class="aa-ask-submit">Ask</button>
+    </div>
+    <div class="aa-result-scroll">
+      <div id="aa-result" class="aa-result"></div>
+    </div>
+  </div>
+</div>
+
 <div id="reader-visualcontext-overlay" class="reader-visualcontext-overlay">
   <div class="vc-card">
     <div class="vc-header">
@@ -677,6 +741,7 @@
 <script>
 const BOOK_SLUG = {{ slug|tojson }};
 const MEGA_SLUG = {{ mega_slug|tojson }};
+const MEGA_TITLE = {{ mega_title|tojson }};
 
 // Back-button history seeding: if someone lands directly on this reader page
 // (a shared link, a bookmark, a fresh tab) rather than clicking through from
@@ -797,6 +862,30 @@ function getCookie(name) {
 }
 function setCookie(name, value) {
   document.cookie = name + '=' + value + ';path=/;max-age=' + (60 * 60 * 24 * 365);
+}
+
+// Cross-title reading position, for the homepage's Continue Reading cards.
+// Local to this device/browser -- there's no accounts system yet, so this
+// is honestly scoped the same way Notes and layer preferences are.
+let _lastSavedContinueKey = null;
+function _saveContinueReading(pageEl) {
+  try {
+    const pageNum = parseInt(pageEl.dataset.page, 10);
+    const key = MEGA_SLUG + ':' + BOOK_SLUG;
+    if (_lastSavedContinueKey === key + ':' + pageNum) return; // avoid redundant writes on every scroll tick
+    _lastSavedContinueKey = key + ':' + pageNum;
+    const pageData = allPages.find(p => p.page === pageNum);
+    let snippet = (pageData && pageData.text ? pageData.text : '').replace(/\s+/g, ' ').trim();
+    if (snippet.length > 220) snippet = snippet.slice(0, 220).trim() + '\u2026';
+    const all = JSON.parse(localStorage.getItem('oedio-continue-reading') || '{}');
+    all[key] = {
+      mega_slug: MEGA_SLUG, book_slug: BOOK_SLUG, mega_title: MEGA_TITLE || '',
+      book_title: BOOK_TITLE, page: pageNum, snippet: snippet,
+      url: '/book/' + MEGA_SLUG + '/read/' + BOOK_SLUG + '?page=' + pageNum,
+      updated: Date.now(),
+    };
+    localStorage.setItem('oedio-continue-reading', JSON.stringify(all));
+  } catch (e) { /* storage unavailable -- fail quietly */ }
 }
 
 function flagPossiblyGarbled(text) {
@@ -945,6 +1034,7 @@ const imgObserver = new IntersectionObserver((entries) => {
       currentPageNum = parseInt(pageNum, 10);
       pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
       setCookie(RESUME_COOKIE, pageNum);
+      _saveContinueReading(entry.target);
       updateProgress();
       // Highlight the matching image block so it's clear which scan corresponds
       // to what's currently in view on the text side, even though the image
@@ -1497,6 +1587,86 @@ if (noteToggle) {
   const vcClose = document.getElementById('vc-close');
   if (!vcBtn || !vcOverlay) return;
   vcBtn.addEventListener('click', () => vcOverlay.classList.add('open'));
+
+  (function () {
+    const aaBtn = document.getElementById('reader-aiassist-btn');
+    const aaOverlay = document.getElementById('reader-aiassist-overlay');
+    const aaClose = document.getElementById('aa-close');
+    const aaResult = document.getElementById('aa-result');
+    const askRow = document.getElementById('aa-ask-input-row');
+    const askInput = document.getElementById('aa-ask-input');
+    const askSubmit = document.getElementById('aa-ask-submit');
+    const modeBtns = document.querySelectorAll('.aa-mode-btn');
+    if (!aaBtn) return;
+
+    function escapeHtml(s) {
+      const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+    }
+    function mdLite(text) {
+      // Minimal, safe formatting: **bold** only -- these responses are plain
+      // prose, not full markdown, so nothing fancier is needed.
+      return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+    function setActiveMode(mode) {
+      modeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+      askRow.style.display = mode === 'ask' ? 'flex' : 'none';
+    }
+    function showEmpty(msg) {
+      aaResult.className = 'aa-result aa-empty';
+      aaResult.textContent = msg;
+    }
+    function showLoading() {
+      aaResult.className = 'aa-result aa-loading';
+      aaResult.textContent = 'Thinking\u2026';
+    }
+    function showText(text) {
+      aaResult.className = 'aa-result';
+      aaResult.innerHTML = mdLite(text);
+    }
+
+    function runOverview() {
+      showLoading();
+      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-overview?page=${currentPageNum}`)
+        .then(r => r.json())
+        .then(d => d.overview ? showText(d.overview) : showEmpty(d.error || 'Nothing to show yet.'))
+        .catch(() => showEmpty('Something went wrong -- try again.'));
+    }
+    function runPageNotes() {
+      showLoading();
+      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-page-notes?page=${currentPageNum}`)
+        .then(r => r.json())
+        .then(d => d.notes ? showText(d.notes) : showEmpty(d.error || 'Nothing to show yet.'))
+        .catch(() => showEmpty('Something went wrong -- try again.'));
+    }
+    function runAsk(q) {
+      showLoading();
+      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-ask?page=${currentPageNum}&q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(d => d.answer ? showText(d.answer) : showEmpty(d.error || "Couldn't answer that."))
+        .catch(() => showEmpty('Something went wrong -- try again.'));
+    }
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setActiveMode(btn.dataset.mode);
+        if (btn.dataset.mode === 'overview') runOverview();
+        else if (btn.dataset.mode === 'notes') runPageNotes();
+        else { showEmpty('Type a question below and hit Ask.'); askInput.focus(); }
+      });
+    });
+    askSubmit.addEventListener('click', () => { if (askInput.value.trim()) runAsk(askInput.value.trim()); });
+    askInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && askInput.value.trim()) runAsk(askInput.value.trim());
+    });
+
+    aaBtn.addEventListener('click', () => {
+      aaOverlay.classList.add('open');
+      setActiveMode('overview');
+      runOverview();
+    });
+    aaClose.addEventListener('click', () => aaOverlay.classList.remove('open'));
+    aaOverlay.addEventListener('click', (e) => { if (e.target === aaOverlay) aaOverlay.classList.remove('open'); });
+  })();
   vcClose.addEventListener('click', () => vcOverlay.classList.remove('open'));
   vcOverlay.addEventListener('click', (e) => { if (e.target === vcOverlay) vcOverlay.classList.remove('open'); });
 })();

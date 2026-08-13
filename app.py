@@ -9,9 +9,38 @@ without touching the reader.
 """
 import json
 import os
+import urllib.request
+import urllib.error
 from datetime import datetime
 
 from flask import Flask, abort, jsonify, render_template, request
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
+
+
+def _call_claude(prompt, max_tokens=1200):
+    """A direct, live call to Claude for on-demand reader-assist features
+    (chapter overviews, page notes, contextual Q&A) -- distinct from the
+    forge translation pipeline, which runs offline and writes to disk.
+    These are short, user-triggered calls, not bulk background jobs."""
+    if not ANTHROPIC_API_KEY:
+        return None
+    body = json.dumps({
+        "model": ANTHROPIC_MODEL, "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": prompt}],
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages", data=body,
+        headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"})
+    try:
+        resp = urllib.request.urlopen(req, timeout=45)
+        data = json.loads(resp.read())
+        return data["content"][0]["text"]
+    except Exception as e:
+        print(f"_call_claude failed: {e}")
+        return None
 
 # ── R2 reader-data base URL ──────────────────────────────────────────────────
 # Set R2_BASE_URL in Railway env to serve reader-data from Cloudflare R2.
@@ -33,6 +62,23 @@ with open(MANIFEST_PATH) as f:
 MEGABOOKS = MANIFEST["megabooks"]
 SECTIONS  = MANIFEST.get("sections", [])
 SECTION_MAP = {s["slug"]: s for s in SECTIONS}
+
+
+@app.context_processor
+def inject_site_index():
+    """Every page gets a light-weight index of every section and title on
+    the site, for the header's Index dropdown -- no page needs to remember
+    to pass this in explicitly."""
+    by_section = {}
+    for mb in MEGABOOKS:
+        by_section.setdefault(mb.get("section", "_other"), []).append(
+            {"slug": mb["slug"], "title": mb["title"]})
+    site_index = []
+    for s in SECTIONS:
+        titles = sorted(by_section.get(s["slug"], []), key=lambda t: t["title"])
+        if titles:
+            site_index.append({"section_title": s["title"], "section_slug": s["slug"], "titles": titles})
+    return {"site_index": site_index}
 
 
 def _page_count(slug):
@@ -256,6 +302,114 @@ def megabook_page(mega_slug):
                            grouped=[(r, grouped[r]) for r in order],
                            open_reader_url=open_reader_url,
                            active_page="library")
+
+
+def _gather_page_context(mb, comp, page_num, lookback=15):
+    """Pull the text of the current page plus a lookback window of prior
+    pages from the same component, for feeding to the AI-assist endpoints."""
+    path = f"static/reader-data/{comp.get('data_slug', comp['slug'])}.json"
+    if not os.path.exists(path):
+        return "", ""
+    pages = json.load(open(path))
+    pages_by_num = {p["page"]: p for p in pages}
+    current_text = (pages_by_num.get(page_num) or {}).get("text", "") or ""
+    window_text = []
+    for p in range(max(1, page_num - lookback), page_num + 1):
+        t = (pages_by_num.get(p) or {}).get("text", "") or ""
+        if t and t.strip() != "\u2014":
+            window_text.append(t.strip())
+    return current_text.strip(), "\n\n".join(window_text)
+
+
+@app.route("/book/<mega_slug>/read/<comp_slug>/ai-overview")
+def ai_overview(mega_slug, comp_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    comp = next((c for c in mb["components"] if c["slug"] == comp_slug), None)
+    if not comp:
+        abort(404)
+    page_num = request.args.get("page", 1, type=int)
+    _, window = _gather_page_context(mb, comp, page_num, lookback=20)
+    if not window:
+        return jsonify({"error": "No transcribed text available for this section yet."}), 404
+    prompt = (
+        f"You are a literary scholar giving a reader a quick orientation. Below is an excerpt "
+        f"from \"{comp['title']}\" ({comp.get('contributor', '')}, {comp.get('year', '')}), "
+        f"part of {mb['title']}, covering roughly the last 20 pages up to where the reader "
+        f"currently is.\n\nWrite, in your own words (do not quote long passages):\n"
+        f"1. A short plain-language summary of what's happening in this stretch (2-4 sentences).\n"
+        f"2. 2-3 salient points worth noting -- a turning point, a key introduction, a theme "
+        f"emerging.\n"
+        f"3. A brief critical/scholarly aside (1-2 sentences) -- something a knowledgeable "
+        f"reader would find genuinely interesting about this section specifically.\n\n"
+        f"Keep the whole response under 180 words, plain text, no headers or markdown.\n\n"
+        f"---EXCERPT---\n{window[:9000]}"
+    )
+    result = _call_claude(prompt, max_tokens=500)
+    if not result:
+        return jsonify({"error": "Couldn't generate an overview right now -- try again in a moment."}), 503
+    return jsonify({"overview": result.strip()})
+
+
+@app.route("/book/<mega_slug>/read/<comp_slug>/ai-page-notes")
+def ai_page_notes(mega_slug, comp_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    comp = next((c for c in mb["components"] if c["slug"] == comp_slug), None)
+    if not comp:
+        abort(404)
+    page_num = request.args.get("page", 1, type=int)
+    page_text, _ = _gather_page_context(mb, comp, page_num, lookback=0)
+    if not page_text or page_text == "\u2014":
+        return jsonify({"error": "No transcribed text on this page to annotate."}), 404
+    prompt = (
+        f"You are annotating a single page from \"{comp['title']}\" "
+        f"({comp.get('contributor', '')}, {comp.get('year', '')}) like footnotes in a scholarly "
+        f"edition. Below is the text of just this one page.\n\n"
+        f"Identify the people, places, things, and any complex or unusual words/concepts "
+        f"mentioned on this specific page, and give a brief explanatory note for each -- "
+        f"in your own words, not quoted from any source. Skip anything too minor or obvious "
+        f"to be worth a note. Format as a simple list: **Term** — explanation. "
+        f"If nothing on the page warrants a note, say so plainly. Keep it under 220 words total.\n\n"
+        f"---PAGE TEXT---\n{page_text[:6000]}"
+    )
+    result = _call_claude(prompt, max_tokens=600)
+    if not result:
+        return jsonify({"error": "Couldn't generate notes right now -- try again in a moment."}), 503
+    return jsonify({"notes": result.strip()})
+
+
+@app.route("/book/<mega_slug>/read/<comp_slug>/ai-ask")
+def ai_ask(mega_slug, comp_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    comp = next((c for c in mb["components"] if c["slug"] == comp_slug), None)
+    if not comp:
+        abort(404)
+    page_num = request.args.get("page", 1, type=int)
+    q = (request.args.get("q") or "").strip()
+    if len(q) < 2:
+        return jsonify({"error": "Ask a real question."}), 400
+    page_text, window = _gather_page_context(mb, comp, page_num, lookback=8)
+    prompt = (
+        f"A reader is on page {page_num} of \"{comp['title']}\" ({comp.get('contributor', '')}, "
+        f"{comp.get('year', '')}), part of {mb['title']} on oedio.com. Here is the text of "
+        f"their current page and the several pages before it, for context:\n\n"
+        f"---CONTEXT---\n{window[:7000]}\n---END CONTEXT---\n\n"
+        f"The reader's question: \"{q}\"\n\n"
+        f"Answer helpfully and directly, in your own words. If the question is about the "
+        f"text itself, use the context above. If it goes beyond the text (broader history, "
+        f"a modern parallel, an unrelated question), answer from general knowledge -- the "
+        f"reader may be asking about something well outside this passage. Keep it focused "
+        f"and under 200 words unless the question genuinely needs more."
+    )
+    result = _call_claude(prompt, max_tokens=700)
+    if not result:
+        return jsonify({"error": "Couldn't answer right now -- try again in a moment."}), 503
+    return jsonify({"answer": result.strip()})
 
 
 @app.route("/book/<mega_slug>/read/<comp_slug>/download")

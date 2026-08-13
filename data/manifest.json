@@ -47,6 +47,14 @@
    "description": "Natural philosophy, cosmology, and the systematic study of the world.",
    "spine_color": "linear-gradient(160deg,#2e2e5c,#111128)",
    "emblem": "em-sun"
+  },
+  {
+   "slug": "philosophy",
+   "title": "Philosophy",
+   "icon": "🧠",
+   "description": "The foundational works of Western philosophical thought.",
+   "spine_color": "linear-gradient(160deg,#2e3a5c,#0f1428)",
+   "emblem": "em-sun"
   }
  ],
  "megabooks": [
@@ -159,6 +167,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/iliadofhomerdone00homeuoft",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "iliad-lang-leaf-myers-1883-transcription",
+     "role": "The Iliad",
+     "title": "The Iliad — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1883 translation scans by Claude (AI)",
+     "year": 1883,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Iliad (1883 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "overview": "Composed and transmitted orally for centuries before being fixed in writing sometime around the 8th century BCE, the Odyssey follows Odysseus's ten-year journey home from the Trojan War -- a voyage past sirens, cyclopes, and the underworld, while his wife Penelope fends off suitors and his son Telemachus comes of age in his absence. It's less a straightforward war epic than the Iliad, and more a story about cunning, endurance, disguise, and the long, uncertain work of returning to a life that has moved on without you. Its influence on Western storytelling is difficult to overstate: the word 'odyssey' itself entered the language as shorthand for any long, eventful journey, and its structure -- a hero's trials on the way home -- became a template writers have returned to for nearly three thousand years.",
@@ -2251,6 +2269,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/genuineworksofhi00tran",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "hippocrates-adams-1886-transcription",
+     "role": "Ancient Mediterranean",
+     "title": "The Genuine Works of Hippocrates — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1886 edition by Claude (AI)",
+     "year": 1886,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of the 1886 Adams translation, beside the original scans.",
+     "facsimile": false
     }
    ]
   },
@@ -2355,6 +2383,36 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/meditationsofmar00marc_0",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "marcus-aurelius-greek-1744-transcription",
+     "role": "Original text",
+     "title": "Meditations (Greek & Latin) — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1744 Greek/Latin edition scans by Claude (AI)",
+     "year": 1744,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Meditations (Greek & Latin) (1744 Greek/Latin edition), beside the original scans.",
+     "facsimile": false
+    },
+    {
+     "slug": "marcus-aurelius-greek-1744-english",
+     "role": "Translations",
+     "title": "Meditations (Greek & Latin) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1744,
+     "loc_item": "",
+     "note": "An AI English translation of Meditations (Greek & Latin), generated directly from the manuscript images.",
+     "facsimile": false
+    },
+    {
+     "slug": "marcus-aurelius-long-1910-transcription",
+     "role": "Translations",
+     "title": "Meditations (trans. Long) — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1910 translation scans by Claude (AI)",
+     "year": 1910,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Meditations (trans. Long) (1910 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2396,6 +2454,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/sapphomemoir00sappiala",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "sappho-wharton-1907-transcription",
+     "role": "Translations",
+     "title": "Sappho — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1907 edition scans by Claude (AI)",
+     "year": 1907,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Sappho (1907 edition), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2425,6 +2493,26 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/in.ernet.dli.2015.529422",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "hesiod-evelyn-white-1914-transcription",
+     "role": "Original text & translation",
+     "title": "Hesiod — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1914 Greek/English Loeb edition scans by Claude (AI)",
+     "year": 1914,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Hesiod (1914 Greek/English Loeb edition), beside the original scans.",
+     "facsimile": false
+    },
+    {
+     "slug": "hesiod-evelyn-white-1914-english",
+     "role": "Translations",
+     "title": "Hesiod — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1914,
+     "loc_item": "",
+     "note": "An AI English translation of Hesiod, generated directly from the manuscript images.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2454,6 +2542,31 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/tragediesofsopho0000ehpl",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "laurentianus-sophocles",
+     "data_slug": "laurentianus-32-9",
+     "layer_of": "sophocles-plumptre-1882",
+     "layer_kind": "image",
+     "role": "Ancient Manuscript",
+     "title": "Manuscript witness — Laurentianus 32.9 (10th c.)",
+     "contributor": "Unknown Byzantine scribe, 10th century CE",
+     "year": 950,
+     "loc_item": "",
+     "note": "A page from the Laurentianus 32.9, copied in the 10th century -- the single most important surviving manuscript for this text, and among the oldest substantial witnesses to Greek tragedy still in existence. Held at the Biblioteca Medicea Laurenziana in Florence, part of the Medici family's library. This is a facing layer, not a swap-in replacement for the readable modern edition elsewhere in this Oedio -- flip to it to see how the text actually looked and traveled through the centuries before reaching the page you're reading now.",
+     "facsimile": true,
+     "source_url": "https://cdm21059.contentdm.oclc.org/digital/collection/plutei/id/711140",
+     "source_label": "Biblioteca Medicea Laurenziana (via Biblissima IIIF)"
+    },
+    {
+     "slug": "sophocles-plumptre-1882-transcription",
+     "role": "Complete Tragedies",
+     "title": "The Tragedies — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1882 translation scans by Claude (AI)",
+     "year": 1882,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Tragedies (1882 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2483,6 +2596,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/euripides00donn",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "euripides-donne-1883-transcription",
+     "role": "Selected Tragedies",
+     "title": "Euripides — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1883 translation scans by Claude (AI)",
+     "year": 1883,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Euripides (1883 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2512,6 +2635,31 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/greekdramasbyaes00perriala",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "laurentianus-aeschylus",
+     "data_slug": "laurentianus-32-9",
+     "layer_of": "greek-dramas-1900",
+     "layer_kind": "image",
+     "role": "Ancient Manuscript",
+     "title": "Manuscript witness — Laurentianus 32.9 (10th c.)",
+     "contributor": "Unknown Byzantine scribe, 10th century CE",
+     "year": 950,
+     "loc_item": "",
+     "note": "A page from the Laurentianus 32.9, copied in the 10th century -- the single most important surviving manuscript for this text, and among the oldest substantial witnesses to Greek tragedy still in existence. Held at the Biblioteca Medicea Laurenziana in Florence, part of the Medici family's library. This is a facing layer, not a swap-in replacement for the readable modern edition elsewhere in this Oedio -- flip to it to see how the text actually looked and traveled through the centuries before reaching the page you're reading now.",
+     "facsimile": true,
+     "source_url": "https://cdm21059.contentdm.oclc.org/digital/collection/plutei/id/711140",
+     "source_label": "Biblioteca Medicea Laurenziana (via Biblissima IIIF)"
+    },
+    {
+     "slug": "greek-dramas-1900-transcription",
+     "role": "Selected Plays",
+     "title": "Greek Dramas — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1900 anthology scans by Claude (AI)",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Greek Dramas (1900 anthology), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2553,6 +2701,36 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/onnatureofthings01lucruoft",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "lucretius-1512-transcription",
+     "role": "Original text",
+     "title": "De Rerum Natura — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1512 Latin printing scans by Claude (AI)",
+     "year": 1512,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of De Rerum Natura (1512 Latin printing), beside the original scans.",
+     "facsimile": false
+    },
+    {
+     "slug": "lucretius-1512-english",
+     "role": "Translations",
+     "title": "De Rerum Natura — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1512,
+     "loc_item": "",
+     "note": "An AI English translation of De Rerum Natura, generated directly from the manuscript images.",
+     "facsimile": false
+    },
+    {
+     "slug": "lucretius-bailey-1921-transcription",
+     "role": "Translations",
+     "title": "On the Nature of Things — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1921 translation scans by Claude (AI)",
+     "year": 1921,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of On the Nature of Things (1921 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2582,6 +2760,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/worksofapuleiusc00apul",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "apuleius-golden-ass-1907-transcription",
+     "role": "Complete Works",
+     "title": "The Works of Apuleius — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1907 edition scans by Claude (AI)",
+     "year": 1907,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Works of Apuleius (1907 edition), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2611,6 +2799,41 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/apolloniusrhodiu00apol_0",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "laurentianus-argonautica",
+     "data_slug": "laurentianus-32-9",
+     "layer_of": "argonautica-seaton-1912",
+     "layer_kind": "image",
+     "role": "Ancient Manuscript",
+     "title": "Manuscript witness — Laurentianus 32.9 (10th c.)",
+     "contributor": "Unknown Byzantine scribe, 10th century CE",
+     "year": 950,
+     "loc_item": "",
+     "note": "A page from the Laurentianus 32.9, copied in the 10th century -- the single most important surviving manuscript for this text, and among the oldest substantial witnesses to Greek tragedy still in existence. Held at the Biblioteca Medicea Laurenziana in Florence, part of the Medici family's library. This is a facing layer, not a swap-in replacement for the readable modern edition elsewhere in this Oedio -- flip to it to see how the text actually looked and traveled through the centuries before reaching the page you're reading now.",
+     "facsimile": true,
+     "source_url": "https://cdm21059.contentdm.oclc.org/digital/collection/plutei/id/711140",
+     "source_label": "Biblioteca Medicea Laurenziana (via Biblissima IIIF)"
+    },
+    {
+     "slug": "argonautica-seaton-1912-transcription",
+     "role": "Original text & translation",
+     "title": "The Argonautica — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1912 Greek/English Loeb edition scans by Claude (AI)",
+     "year": 1912,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Argonautica (1912 Greek/English Loeb edition), beside the original scans.",
+     "facsimile": false
+    },
+    {
+     "slug": "argonautica-seaton-1912-english",
+     "role": "Translations",
+     "title": "The Argonautica — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1912,
+     "loc_item": "",
+     "note": "An AI English translation of The Argonautica, generated directly from the manuscript images.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2640,6 +2863,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/orationsofmarcus0000char",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "cicero-orations-1900-transcription",
+     "role": "Selected Orations",
+     "title": "Orations — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1900 edition scans by Claude (AI)",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Orations (1900 edition), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2669,6 +2902,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/epistles1650000sene",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "seneca-epistles-1917-transcription",
+     "role": "Moral Letters to Lucilius",
+     "title": "Moral Letters — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1917 translation scans by Claude (AI)",
+     "year": 1917,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of Moral Letters (1917 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2698,6 +2941,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/confessionsofsta1909augu",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "augustine-confessions-1909-transcription",
+     "role": "The Confessions",
+     "title": "The Confessions — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1909 translation scans by Claude (AI)",
+     "year": 1909,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Confessions (1909 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2727,6 +2980,16 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/theconsolationof00boetuoft",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "boethius-consolation-1900-transcription",
+     "role": "The Consolation of Philosophy",
+     "title": "The Consolation of Philosophy — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1900 translation scans by Claude (AI)",
+     "year": 1900,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Consolation of Philosophy (1900 translation), beside the original scans.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2756,6 +3019,41 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/herodotuswitheng02herouoft",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "laurentianus-herodotus",
+     "data_slug": "laurentianus-herodotus-70-3",
+     "layer_of": "herodotus-godley-1921",
+     "layer_kind": "image",
+     "role": "Ancient Manuscript",
+     "title": "Manuscript witness — Codex Laurentianus Plut.70.3 (10th c.)",
+     "contributor": "Unknown Byzantine scribes, 10th century CE",
+     "year": 950,
+     "loc_item": "",
+     "note": "The oldest surviving substantial manuscript of Herodotus's Histories, known to scholars as Codex A -- carefully copied by two scribes in succession, with marginal summaries and scholia. Held at the Biblioteca Medicea Laurenziana in Florence, the same library housing the oldest Sophocles and Aeschylus manuscripts elsewhere in this library. A facing layer, not a replacement for the readable modern edition -- flip to it to see the actual page tradition standing behind the translation you're reading.",
+     "facsimile": true,
+     "source_url": "https://cdm21059.contentdm.oclc.org/digital/collection/plutei/id/1358114",
+     "source_label": "Biblioteca Medicea Laurenziana (via Biblissima IIIF)"
+    },
+    {
+     "slug": "herodotus-godley-1921-transcription",
+     "role": "Original text & translation",
+     "title": "The Histories — clean text (AI transcription)",
+     "contributor": "Transcribed from the 1921 Greek/English Loeb edition scans by Claude (AI)",
+     "year": 1921,
+     "loc_item": "",
+     "note": "A clean, searchable transcription of The Histories (1921 Greek/English Loeb edition), beside the original scans.",
+     "facsimile": false
+    },
+    {
+     "slug": "herodotus-godley-1921-english",
+     "role": "Translations",
+     "title": "The Histories — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1921,
+     "loc_item": "",
+     "note": "An AI English translation of The Histories, generated directly from the manuscript images.",
+     "facsimile": false
     }
    ],
    "map": {
@@ -2763,6 +3061,119 @@
     "caption": "“The World According to Herodotus,” from an 1897 edition -- a reconstruction of the Oikoumene (inhabited world) exactly as Herodotus himself described it: Greece at the center, the Persian Empire to the east, Egypt and Libya to the south, and increasingly vague, half-mythical lands at the edges of what the Greeks actually knew.",
     "source_label": "Wikimedia Commons, 1897 edition"
    }
+  },
+  {
+   "slug": "plato",
+   "title": "Plato: The Complete Dialogues",
+   "author": "Plato",
+   "spine_color": "linear-gradient(160deg,#3a2e5c,#180f28)",
+   "emblem": "em-sun",
+   "section": "philosophy",
+   "description": "Benjamin Jowett's complete five-volume translation of Plato's dialogues -- the primary source for nearly everything known of Socrates's actual teaching, since Socrates himself wrote nothing.",
+   "overview": "Plato's dialogues are the single most important body of philosophical writing to survive from antiquity, and they present a genuine puzzle: nearly all of them feature Socrates as the central speaker, but Socrates himself left no writing at all -- everything we know of his actual teaching comes filtered through Plato (and, separately, through Xenophon, elsewhere in this Oedio). Scholars still debate how much of \"Socrates\" in these dialogues is the historical man and how much is Plato using him as a mouthpiece for his own evolving thought, especially across four decades of writing that moved from tightly focused ethical questions (What is courage? What is piety?) to the vast metaphysical and political architecture of the Republic and Laws. Benjamin Jowett's translation, first published in 1871 and revised for this 1875-1892 second edition, was for generations the standard English Plato -- comprehensive, stately, and still eminently readable.",
+   "components": [
+    {
+     "slug": "plato-jowett-vol1",
+     "role": "The Dialogues",
+     "title": "The Dialogues of Plato, Vol. I — Euthyphro, Apology, Crito, Phaedo, and others (trans. Jowett)",
+     "contributor": "Trans. Benjamin Jowett",
+     "year": 1875,
+     "loc_item": "",
+     "note": "Part of Jowett's complete five-volume translation, the standard English Plato for well over a century.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "plato-jowett-vol2",
+     "role": "The Dialogues",
+     "title": "The Dialogues of Plato, Vol. II — Meno, Euthydemus, The Republic (partial), and others (trans. Jowett)",
+     "contributor": "Trans. Benjamin Jowett",
+     "year": 1875,
+     "loc_item": "",
+     "note": "Part of Jowett's complete five-volume translation, the standard English Plato for well over a century.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "plato-jowett-vol3",
+     "role": "The Dialogues",
+     "title": "The Dialogues of Plato, Vol. III — The Republic (continued), Timaeus, Critias, and others (trans. Jowett)",
+     "contributor": "Trans. Benjamin Jowett",
+     "year": 1875,
+     "loc_item": "",
+     "note": "Part of Jowett's complete five-volume translation, the standard English Plato for well over a century.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "plato-jowett-vol4",
+     "role": "The Dialogues",
+     "title": "The Dialogues of Plato, Vol. IV — Sophist, Statesman, Philebus, Symposium, and others (trans. Jowett)",
+     "contributor": "Trans. Benjamin Jowett",
+     "year": 1875,
+     "loc_item": "",
+     "note": "Part of Jowett's complete five-volume translation, the standard English Plato for well over a century.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    },
+    {
+     "slug": "plato-jowett-vol5",
+     "role": "The Dialogues",
+     "title": "The Dialogues of Plato, Vol. V — Laws (trans. Jowett)",
+     "contributor": "Trans. Benjamin Jowett",
+     "year": 1875,
+     "loc_item": "",
+     "note": "Part of Jowett's complete five-volume translation, the standard English Plato for well over a century.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "aristotle",
+   "title": "Aristotle",
+   "author": "Aristotle",
+   "spine_color": "linear-gradient(160deg,#5c4a2e,#28190f)",
+   "emblem": "em-compass",
+   "section": "philosophy",
+   "description": "The Oxford translation of Aristotle's works, edited by W.D. Ross -- the standard complete English Aristotle.",
+   "overview": "Aristotle studied under Plato for twenty years before founding his own school, the Lyceum, and his surviving works read almost nothing like Plato's dialogues -- dense, systematic treatises covering logic, physics, biology, ethics, politics, poetics, and metaphysics, apparently closer to lecture notes than finished literary works. What survives is itself a matter of accident: most of what Aristotle actually published for a general readership is lost, and what remains are the more technical, in-house teaching texts, which is part of why Aristotle can read as dry compared to Plato's dramatic dialogues despite covering nearly as much intellectual ground. The Oxford translation under W.D. Ross's editorship, published 1908-1952, remains the standard complete English Aristotle used in university courses today.",
+   "components": [
+    {
+     "slug": "aristotle-ross-vol1",
+     "role": "Selected Works",
+     "title": "The Works of Aristotle, Vol. I (Oxford trans., ed. Ross, 1923 printing)",
+     "contributor": "Ed. W.D. Ross",
+     "year": 1923,
+     "loc_item": "",
+     "note": "Part of the standard Oxford translation of Aristotle's complete works.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    }
+   ]
+  },
+  {
+   "slug": "xenophon",
+   "title": "Xenophon: Memorabilia",
+   "author": "Xenophon",
+   "spine_color": "linear-gradient(160deg,#4a5c3a,#1e280f)",
+   "emblem": "em-quill",
+   "section": "philosophy",
+   "description": "A soldier and historian's own memories and defense of Socrates -- the other primary source for the historical Socrates, alongside Plato.",
+   "overview": "Xenophon knew Socrates personally, but unlike Plato he was a soldier and historian rather than a philosopher by temperament, and his Socrates comes across differently -- more practical, more concerned with everyday ethics and household management than with the abstract metaphysics Plato's Socrates often pursues. Written partly as a direct defense of Socrates against the charges that led to his execution in 399 BCE, the Memorabilia gives modern readers their only substantial alternative to Plato's portrait -- and the differences between the two accounts are exactly what make reconstructing the actual historical Socrates so difficult.",
+   "components": [
+    {
+     "slug": "xenophon-memorabilia-1861",
+     "role": "Memorabilia of Socrates",
+     "title": "Xenophon's Memorabilia of Socrates (1861 edition)",
+     "contributor": "Trans. various",
+     "year": 1861,
+     "loc_item": "",
+     "note": "Xenophon's own recollections and defense of Socrates -- the primary source for the historical Socrates alongside Plato's dialogues, and often strikingly different in tone and emphasis.",
+     "facsimile": true,
+     "source_label": "Internet Archive"
+    }
+   ]
   }
  ]
 }
