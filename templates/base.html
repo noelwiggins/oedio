@@ -46,6 +46,11 @@
     border-top:1px solid var(--md-sys-color-outline-variant);
     margin-top:12px; color:var(--md-sys-color-on-surface-variant); font-size:11.5px; text-align:center; }
   @media (max-width:640px) { .top-app-bar .tagline { display:none; } }
+  @media (max-width:480px) {
+    .top-app-bar { padding:0 10px; gap:4px; }
+    .top-app-bar a.bar-link, .top-app-bar button.bar-link { padding:8px 10px; font-size:12.5px; }
+    .six-btn-label { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -116,7 +121,10 @@
   <a href="/" class="brand">oedio<span class="tld">.com</span></a>
   <span class="tagline">public-domain Oedios, compiled from the open internet</span>
   <span class="spacer"></span>
-  <button class="bar-link site-index-btn" id="site-index-btn" type="button">Index</button>
+  <button class="bar-link site-index-btn" id="site-index-btn" type="button">
+    <span class="material-symbols-outlined six-btn-icon" style="font-size:18px; vertical-align:-4px;">menu_book</span>
+    <span class="six-btn-label">Index</span>
+  </button>
   <a href="/" class="bar-link {{ 'active' if active_page == 'library' else '' }}">Library</a>
   <a href="/about" class="bar-link {{ 'active' if active_page == 'about' else '' }}">About</a>
 </header>
