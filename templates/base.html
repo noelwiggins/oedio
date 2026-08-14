@@ -16,10 +16,11 @@
   .top-app-bar .brand .tld { color:var(--md-sys-color-primary); }
   .top-app-bar .tagline { font-size:12px; color:var(--md-sys-color-on-surface-variant); }
   .top-app-bar .spacer { flex:1; }
-  .top-app-bar a.bar-link { color:var(--md-sys-color-on-surface-variant); text-decoration:none;
-    font-size:13px; padding:8px 14px; border-radius:20px; }
-  .top-app-bar a.bar-link:hover, .top-app-bar a.bar-link.active {
-    background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+  .top-app-bar a.bar-link, .top-app-bar button.bar-link { color:var(--md-sys-color-on-surface); text-decoration:none;
+    font-size:13.5px; font-weight:600; padding:8px 14px; border-radius:20px; }
+  .top-app-bar a.bar-link:hover, .top-app-bar a.bar-link.active,
+  .top-app-bar button.bar-link:hover, .top-app-bar button.bar-link.active {
+    background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
   .top-app-bar button.bar-link { background:none; border:none; cursor:pointer; font-family:inherit; }
 
   .site-index-overlay { display:none; position:fixed; inset:0; z-index:1200;
