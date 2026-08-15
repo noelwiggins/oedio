@@ -852,6 +852,26 @@
      "loc_item": "2021667856",
      "note": "This is an original AI translation generated directly from Sahagun's Spanish gloss running alongside the Nahuatl text -- no public-domain English translation of the complete Florentine Codex exists (the standard scholarly translation, Anderson and Dibble's, remains under active copyright), making this the first English rendering of Book XI freely available without restriction.",
      "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book01-transcription",
+     "role": "Book 1",
+     "title": "Book 1: The Gods — Spanish text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "year": 1577,
+     "loc_item": "2021667846",
+     "note": "A complete AI transcription of Sahagun's Spanish gloss for Book I, covering the Aztec pantheon, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book01-english",
+     "role": "Book 1",
+     "title": "Book 1: The Gods — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "year": 1577,
+     "loc_item": "2021667846",
+     "note": "An AI English translation of Book I, generated directly from the manuscript images -- no public-domain English translation of this complete work exists.",
+     "facsimile": false
     }
    ],
    "section": "literature",
