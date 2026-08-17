@@ -117,14 +117,15 @@
      "facsimile": true
     },
     {
-     "slug": "flaxman-1853",
+     "slug": "flaxman-1853-v2",
      "role": "Illustrations",
      "title": "Flaxman's Iliad & Odyssey Plates",
      "contributor": "John Flaxman",
      "year": 1853,
      "loc_item": "04003695",
      "note": "John Flaxman's outline engravings for Homer, first published in Rome in 1793, became one of the most influential and widely copied illustration styles of the entire Neoclassical movement -- their spare, almost minimalist line work (deliberately imitating the flat profiles of ancient Greek vase painting) was a radical departure from the ornate illustration style of the time, and Flaxman's Homer plates were pirated, imitated, and referenced by artists across Europe for decades, shaping how the 19th century visually imagined the ancient world.",
-     "facsimile": true
+     "facsimile": true,
+     "source_url": "https://archive.org/details/odysseyhomer01flaxgoog"
     },
     {
      "slug": "flaxman-1853-transcription",
@@ -226,14 +227,15 @@
      "facsimile": false
     },
     {
-     "slug": "greek-nt-1881",
+     "slug": "greek-nt-westcotthort-1895",
      "role": "Original text",
-     "title": "Greek New Testament",
+     "title": "Greek New Testament (Westcott-Hort, 1895 printing)",
      "contributor": "Ed. F. H. A. Scrivener",
-     "year": 1881,
+     "year": 1895,
      "loc_item": "02013451",
-     "note": "The Greek New Testament went through a major critical revision in 1881 by the scholars Westcott and Hort, who challenged the manuscript tradition underlying the King James Version by giving much greater weight to older Greek manuscripts discovered in the 19th century -- their edition was controversial at the time precisely because it implied the KJV, by then Britain's most beloved religious text, rested on a less reliable textual foundation than newer scholarship suggested was available.",
-     "facsimile": false
+     "note": "The Westcott and Hort critical edition of the Greek New Testament, giving greater weight to older manuscripts than the tradition underlying the King James Version -- this 1895 revised American printing includes facing English text.",
+     "facsimile": false,
+     "source_url": "https://archive.org/details/westcott-hort-the-new-testament-in-the-original-greek"
     },
     {
      "slug": "dore-gallery-1890-transcription",
