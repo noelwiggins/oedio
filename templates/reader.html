@@ -1028,6 +1028,15 @@ if (langToggle) {
 }
 
 let currentImageBlock = null;
+let imageSyncSuppressed = false;
+let imageSyncSuppressTimer = null;
+imagePanel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
+imagePanel.addEventListener('touchmove', suppressImageSyncBriefly, { passive: true });
+function suppressImageSyncBriefly() {
+  imageSyncSuppressed = true;
+  clearTimeout(imageSyncSuppressTimer);
+  imageSyncSuppressTimer = setTimeout(() => { imageSyncSuppressed = false; }, 1500);
+}
 const imgObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -1037,12 +1046,30 @@ const imgObserver = new IntersectionObserver((entries) => {
       setCookie(RESUME_COOKIE, pageNum);
       _saveContinueReading(entry.target);
       updateProgress();
-      // Highlight the matching image block so it's clear which scan corresponds
-      // to what's currently in view on the text side, even though the image
-      // panel now scrolls independently rather than swapping a single image.
+      // Keep the image panel genuinely in sync with whatever page is in
+      // view on the text side -- the scan is the foundational layer every
+      // other layer's page numbers are keyed to, so when they drift apart
+      // (a page of transcribed text is a different height than a scanned
+      // page image, especially around blank/plate pages), the image panel
+      // needs to actively follow, not just get a highlight while silently
+      // falling behind.
       if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
       const imgBlock = imagePanel.querySelector(`.reader-image-block[data-page="${pageNum}"]`);
-      if (imgBlock) { imgBlock.classList.add('reader-image-current'); currentImageBlock = imgBlock; }
+      if (imgBlock) {
+        imgBlock.classList.add('reader-image-current');
+        currentImageBlock = imgBlock;
+        if (!imageSyncSuppressed) {
+          const imgRect = imgBlock.getBoundingClientRect();
+          const panelRect = imagePanel.getBoundingClientRect();
+          // Only correct drift once it's meaningfully out of sync -- avoids
+          // fighting a reader who is deliberately scrolling the scan panel
+          // on their own to look closer at something, and avoids jittery
+          // re-scrolling on every minor intersection tick.
+          if (imgRect.top < panelRect.top - 40 || imgRect.top > panelRect.top + panelRect.height * 0.6) {
+            imgBlock.scrollIntoView({ block: 'start', behavior: 'auto' });
+          }
+        }
+      }
     }
   });
 }, { root: null, threshold: 0.5 });

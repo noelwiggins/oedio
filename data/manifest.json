@@ -2606,15 +2606,15 @@
    "overview": "Euripides was the youngest of the three great Athenian tragedians, and the most controversial in his own time -- he won the City Dionysia far less often than Sophocles despite writing roughly ninety plays, in part because his work unsettled Athenian audiences in ways Sophocles's rarely did. His characters, especially his women (Medea foremost among them), are given interior complexity and moral arguments that feel startlingly modern; his gods are frequently petty, arbitrary, or absent when needed most. Eighteen or nineteen of his plays survive complete, more than either of his rivals, partly by chance of transmission -- an accident of manuscript survival that shapes which ancient playwright modern readers know best.",
    "components": [
     {
-     "slug": "euripides-donne-1883",
+     "slug": "euripides-1902",
      "role": "Selected Tragedies",
-     "title": "Euripides (trans. Donne, 1883)",
+     "title": "Euripides (1902 edition)",
      "contributor": "Trans. W. Bodham Donne",
-     "year": 1883,
+     "year": 1902,
      "loc_item": "",
-     "note": "A Victorian English edition of Euripides's tragedies, part of the same wave of 19th-century translation that made the Greek tragedians broadly accessible to English readers for the first time.",
+     "note": "A complete English edition of Euripides’s surviving tragedies, 1902 printing.",
      "facsimile": true,
-     "source_url": "https://archive.org/details/euripides00donn",
+     "source_url": "https://archive.org/details/Euripides",
      "source_label": "Internet Archive"
     },
     {
