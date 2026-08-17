@@ -33,7 +33,7 @@ REPO_URL_TEMPLATE = "https://noelwiggins:{token}@github.com/noelwiggins/oedio.gi
 _state = {
     "running": False,
     "queue": [],
-    "current": None,
+    "current": [],  # now a list -- multiple jobs can run in parallel across worker threads
     "done": [],
     "failed": [],
     "started_at": None,
@@ -48,6 +48,15 @@ _state = {
 # first. A real fix (persisting queue state to a file or DB, resuming after
 # restart) is future work; for now, the operational discipline is the fix.
 _lock = threading.Lock()
+# Separate lock specifically for git operations (pull/commit/push) on the
+# shared WORK_DIR checkout. Multiple worker threads can safely do their own
+# image-fetching and API-calling concurrently -- each writes to its own
+# reader-data JSON file, no conflict there -- but git pull/commit/push must
+# stay strictly serialized or concurrent workers racing on the same working
+# directory risk real corruption (interleaved commits, lock conflicts, one
+# thread's push picking up another's half-written file).
+_git_lock = threading.Lock()
+NUM_WORKERS = 3  # calibrated parallelism: real speedup without stacking too much concurrency against Anthropic's own account-level rate limits
 
 
 def _log(msg):
@@ -120,31 +129,30 @@ def _run_job(job, remote):
         raise ValueError(f"unknown platform: {platform}")
 
 
-def _worker():
+def _worker(worker_id):
     with _lock:
         _state["running"] = True
-        _state["started_at"] = time.time()
+        if _state["started_at"] is None:
+            _state["started_at"] = time.time()
     try:
         remote = _ensure_repo()
     except Exception as e:
-        _log(f"FATAL: could not set up repo: {e}")
-        with _lock:
-            _state["running"] = False
+        _log(f"FATAL: could not set up repo (worker {worker_id}): {e}")
         return
     while True:
         with _lock:
             if not _state["queue"]:
-                _state["running"] = False
-                _state["current"] = None
                 break
             job = _state["queue"].pop(0)
-            _state["current"] = job
+            _state["current"].append(job)
         label = job.get("label", job["slug"])
         try:
-            _log(f"running: {label}")
-            _run(["git", "pull", "--no-rebase", remote, "main"], cwd=WORK_DIR, check=False)
+            _log(f"running: {label} (worker {worker_id})")
+            with _git_lock:
+                _run(["git", "pull", "--no-rebase", remote, "main"], cwd=WORK_DIR, check=False)
             _run_job(job, remote)
-            pushed = _git_commit_and_push(f"Forge queue: {label}", remote)
+            with _git_lock:
+                pushed = _git_commit_and_push(f"Forge queue: {label}", remote)
             with _lock:
                 _state["done"].append({"label": label, "slug": job["slug"], "pushed": pushed})
             _log(f"done: {label} (pushed={pushed})")
@@ -154,7 +162,14 @@ def _worker():
             print(tb)
             with _lock:
                 _state["failed"].append({"label": label, "slug": job["slug"], "error": str(e)})
+        finally:
+            with _lock:
+                _state["current"] = [j for j in _state["current"] if j is not job]
         time.sleep(3)  # be polite to source servers between jobs
+    with _lock:
+        # Only the last worker to finish flips running back off
+        if not any(t.is_alive() for t in threading.enumerate() if t.name.startswith("forge-worker-") and t is not threading.current_thread()):
+            _state["running"] = False
 
 
 def queue_jobs(jobs):
@@ -162,8 +177,9 @@ def queue_jobs(jobs):
         _state["queue"].extend(jobs)
         already_running = _state["running"]
     if not already_running:
-        t = threading.Thread(target=_worker, daemon=True)
-        t.start()
+        for i in range(NUM_WORKERS):
+            t = threading.Thread(target=_worker, args=(i,), daemon=True, name=f"forge-worker-{i}")
+            t.start()
     return {"queued": len(jobs), "already_running": already_running}
 
 

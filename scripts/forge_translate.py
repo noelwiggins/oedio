@@ -167,7 +167,7 @@ def main(slug, start, end, lang, description=None, want_translation=True):
 
     done = 0
     processed = 0
-    with ThreadPoolExecutor(max_workers=4) as ex:
+    with ThreadPoolExecutor(max_workers=7) as ex:
         futures = {ex.submit(work, pg): pg for pg in todo}
         for fut in as_completed(futures):
             pg, tr, en = fut.result()
