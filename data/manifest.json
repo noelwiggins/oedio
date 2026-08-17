@@ -87,14 +87,15 @@
      "facsimile": false
     },
     {
-     "slug": "collins-1870",
+     "slug": "collins-1870-v2",
      "role": "Translation",
      "title": "The Iliad and Odyssey",
      "contributor": "Trans. W. Lucas Collins",
      "year": 1870,
      "loc_item": "21013764",
      "note": "William Lucas Collins wrote for Blackwood's 'Ancient Classics for English Readers' series, a Victorian publishing project explicitly aimed at making Greek and Roman literature accessible to readers without classical education -- a genuinely democratizing effort at a time when Homer was otherwise the near-exclusive property of university-educated gentlemen who'd studied Greek at public school.",
-     "facsimile": false
+     "facsimile": false,
+     "source_url": "https://archive.org/details/homerodyssey00coll"
     },
     {
      "slug": "childrens-1912",
