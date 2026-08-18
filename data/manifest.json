@@ -655,18 +655,20 @@
      "source_label": "National Library of France (Gallica)"
     },
     {
-     "slug": "blaeu-1634",
+     "slug": "blaeu-1634-v2",
      "role": "Map",
      "title": "Insulae Americanae in Oceano Septentrionali (1634)",
      "contributor": "Willem Janszoon Blaeu",
      "year": 1634,
      "loc_item": "2003630536",
-     "note": "The Blaeu family ran the most prestigious mapmaking workshop in 17th-century Europe, and their charts were valued as much for their elaborate decorative cartouches and engraving quality as for navigational accuracy -- owning a Blaeu atlas was a genuine status symbol among wealthy Europeans, less a working tool than a demonstration of taste and means.",
+     "note": "Willem Blaeu's decorative 1634 chart of the Caribbean, based on the extremely rare circa-1631 chart by Hessel Gerritsz -- so influential that more than a dozen later 17th-century maps copied it, some down to the title.",
      "facsimile": true,
-     "dzi_url": "/static/dzi/2003630536.dzi"
+     "dzi_url": "/static/dzi/2003630536.dzi",
+     "source_url": "https://www.loc.gov/item/2003630536/",
+     "source_label": "Library of Congress"
     },
     {
-     "slug": "thornton-1680",
+     "slug": "thornton-1680-v2",
      "role": "Map",
      "title": "A Chart of the Caribe Ilands (1680)",
      "contributor": "John Thornton",
@@ -674,7 +676,9 @@
      "loc_item": "2007633672",
      "note": "John Thornton was the leading English chartmaker of his era, official hydrographer to the East India Company and the Hudson's Bay Company -- English maritime cartography had lagged well behind Dutch output for most of the 17th century, and makers like Thornton represented a deliberate effort to build domestic English chartmaking capacity to reduce dependence on Dutch sources, particularly for strategically sensitive colonial territories.",
      "facsimile": true,
-     "dzi_url": "/static/dzi/2007633672.dzi"
+     "dzi_url": "/static/dzi/2007633672.dzi",
+     "source_url": "https://www.loc.gov/item/2007633672/",
+     "source_label": "Library of Congress"
     },
     {
      "slug": "coronelli-1690",
