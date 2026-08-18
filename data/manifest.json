@@ -649,8 +649,10 @@
      "contributor": "Arent Roggeveen",
      "year": 1675,
      "loc_item": "",
-     "note": "Arent Roggeveen's charts were part of the Dutch Golden Age's remarkable cartographic output -- 17th-century Dutch mapmakers dominated European chartmaking for the Americas and Caribbean, producing maps that English, French, and Spanish sailors relied on even while those nations were geopolitical rivals of the Netherlands, since accurate navigation mattered more than national pride when the alternative was running aground.",
-     "facsimile": true
+     "note": "A Dutch nautical chart of the Lesser Antilles, from Grenada to Anguilla, by Arent Roggeveen -- a real 17th-century Dutch cartographer and ship's pilot (his son Jacob later became the first European to reach Easter Island). Held at the National Library of France with a clean 'No Known Copyright' status.",
+     "facsimile": true,
+     "source_url": "https://gallica.bnf.fr/ark:/12148/btv1b8596295t",
+     "source_label": "National Library of France (Gallica)"
     },
     {
      "slug": "blaeu-1634",
