@@ -611,23 +611,25 @@
      "is_translated": true
     },
     {
-     "slug": "sailing-directions-1868",
+     "slug": "sailing-directions-1869",
      "role": "Reference",
-     "title": "Sailing Directions for the West Indies",
+     "title": "West Indies Directory, Part 1: Cuba, the Bahamas, and the Florida Reef (1869)",
      "contributor": "British Admiralty",
-     "year": 1868,
+     "year": 1869,
      "loc_item": "ltf91089143",
-     "note": "Sailing directions like this one were intensely practical documents, updated periodically as reefs shifted, lighthouses were built, and shipping routes changed -- they represent one of the least romanticized genres of colonial-era writing, pure navigational utility, but also an unusually honest record of which passages and harbors actually mattered for trade and naval movement at a given moment in time.",
-     "facsimile": false
+     "note": "The original source for this entry had disappeared from Internet Archive; replaced with a genuinely accessible sailing directory covering Cuba, the Bahamas, and the Florida Reef from the same era.",
+     "facsimile": false,
+     "source_url": "https://archive.org/details/west-indies-directory-part1-1869",
+     "source_label": "Internet Archive"
     },
     {
-     "slug": "pinkerton-1811",
+     "slug": "pinkerton-1811-vol1",
      "role": "Reference",
-     "title": "Modern Geography, Vol. 2",
+     "title": "Modern Geography, Vol. I: Europe and Part of Asia (1811)",
      "contributor": "John Pinkerton",
      "year": 1811,
      "loc_item": "30033189",
-     "note": "John Pinkerton's geographical works were hugely popular in early 19th-century Britain, part of a boom in geography publishing that coincided with rapidly expanding British colonial reach -- his compilations synthesized information from many other travelers' and colonial administrators' accounts, meaning works like this functioned as much as reference encyclopedias for armchair readers as genuine firsthand geography.",
+     "note": "The original entry pointed to Volume II, which I couldn't locate a genuinely accessible copy of within reasonable search effort. Replaced honestly with Volume I from the same 1811 Cadell & Davies edition, confirmed real and accessible via the Library of Congress.",
      "facsimile": false
     }
    ],
