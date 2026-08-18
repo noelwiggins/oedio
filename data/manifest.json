@@ -259,6 +259,18 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/thegutembergbible",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "garima-gospels",
+     "role": "Ancient Manuscript",
+     "title": "The Garima Gospels (Ge’ez, c. 330–650 CE)",
+     "contributor": "Attributed to Abba Garima and later scribes",
+     "year": 450,
+     "loc_item": "",
+     "note": "Two Ethiopic gospel books held at the Abba Garima Monastery in Tigray, radiocarbon-dated to somewhere between 330 and 650 CE -- among the strongest candidates for the oldest surviving illuminated Christian manuscripts in the world, rivaling or predating the Rabbula Gospels long considered the earliest example. Tradition holds that Saint Abba Garima wrote and illustrated the complete gospels in a single day, with God halting the sun in the sky so he could finish. The manuscripts have never left the monastery -- not even for conservation, which had to be carried out on site -- and were moved into hiding for the first time in their recorded history during the Tigray war in 2020. Only a handful of images exist publicly; this Oedio carries every one currently available under an open license, credited to the Ethiopian Heritage Fund's conservation documentation rather than the restricted scholarly digitization that exists but requires institutional access.",
+     "facsimile": true,
+     "source_url": "https://commons.wikimedia.org/wiki/Category:Garima_Gospels",
+     "source_label": "Wikimedia Commons (credit: Ethiopian Heritage Fund, public domain)"
     }
    ],
    "overview": "No single book has shaped more of the world's literature, law, art, and moral vocabulary than the Bible, a collection of texts written across roughly a thousand years by dozens of authors in Hebrew, Aramaic, and Greek, later assembled, translated, and re-translated by successive religious and scholarly communities. The editions gathered here reflect that long history of transmission itself: the King James Version's Jacobean English shaped the sound of English prose for centuries after; scholarly variorum editions track the countless small disagreements between ancient manuscripts; and Gustave Doré's engravings gave the 19th century its most enduring visual imagination of the text's central scenes.",
