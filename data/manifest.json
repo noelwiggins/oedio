@@ -2116,50 +2116,6 @@
      "source_label": "Internet Archive"
     },
     {
-     "slug": "russian-travnik",
-     "role": "Medieval & Early Modern Europe",
-     "title": "Russian Travnik — Monastery Herbal Tradition",
-     "contributor": "Orthodox monastery physicians",
-     "year": 1700,
-     "loc_item": "",
-     "note": "Russian Orthodox monastery herbal medicine. Byzantine learning, Central Asian influence, and Siberian plant knowledge — Chaga, Rhodiola, Sea buckthorn.",
-     "facsimile": false,
-     "tradition": "russian_slavic"
-    },
-    {
-     "slug": "commission-e",
-     "role": "Modern Reference Works",
-     "title": "German Commission E Monographs",
-     "contributor": "German Federal Institute for Drugs and Medical Devices",
-     "year": 1994,
-     "loc_item": "",
-     "note": "Germany's Commission E was a government expert panel that systematically reviewed herbal medicines for safety and efficacy starting in the 1970s and 80s, producing monographs that became the de facto international standard reference for herbal medicine regulation -- an unusual case of a national bureaucratic body's technical assessments becoming globally influential reference material well beyond German borders.",
-     "facsimile": false,
-     "tradition": "commission_e"
-    },
-    {
-     "slug": "american-herbal-pharmacopoeia",
-     "role": "Modern Reference Works",
-     "title": "American Herbal Pharmacopoeia",
-     "contributor": "American Herbal Pharmacopoeia",
-     "year": 2000,
-     "loc_item": "",
-     "note": "The American Herbal Pharmacopoeia was founded in the 1990s specifically to bring the kind of rigorous quality and safety standards that Commission E had established in Germany to the largely unregulated American herbal supplement market -- part of a broader late-20th-century push to bring pharmacological rigor to traditional and herbal medicine practices that had often existed outside formal scientific scrutiny.",
-     "facsimile": false,
-     "tradition": "ahp"
-    },
-    {
-     "slug": "who-monographs",
-     "role": "Modern Reference Works",
-     "title": "WHO Monographs on Selected Medicinal Plants",
-     "contributor": "World Health Organization",
-     "year": 1999,
-     "loc_item": "",
-     "note": "The World Health Organization began publishing these monographs in the 1990s as part of an effort to give traditional and herbal medicines -- used by a majority of the world's population, particularly outside wealthy Western countries -- the same kind of standardized, evidence-based documentation that pharmaceutical drugs receive, treating traditional medicine as a serious public health subject rather than dismissing it outright.",
-     "facsimile": false,
-     "tradition": "who"
-    },
-    {
      "slug": "balds-leechbook-ms-transcription",
      "role": "Medieval & Early Modern Europe",
      "title": "Bald's Leechbook — original-language text (AI transcription)",
