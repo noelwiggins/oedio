@@ -9,6 +9,7 @@ without touching the reader.
 """
 import json
 import os
+import re
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -304,6 +305,16 @@ def megabook_page(mega_slug):
                            active_page="library")
 
 
+FN_TOKEN_RE = re.compile(r"\u27e6fn:[^\u27e7]+\u27e7")
+
+
+def _strip_fn_tokens(text):
+    """Remove the \u27e6fn:ID\u27e7 inline footnote-marker tokens (see
+    scripts/parse_gibbon.py) before feeding page text to the AI assist
+    endpoints -- they're reader-UI plumbing, not prose."""
+    return FN_TOKEN_RE.sub("", text or "")
+
+
 def _gather_page_context(mb, comp, page_num, lookback=15):
     """Pull the text of the current page plus a lookback window of prior
     pages from the same component, for feeding to the AI-assist endpoints."""
@@ -312,13 +323,24 @@ def _gather_page_context(mb, comp, page_num, lookback=15):
         return "", ""
     pages = json.load(open(path))
     pages_by_num = {p["page"]: p for p in pages}
-    current_text = (pages_by_num.get(page_num) or {}).get("text", "") or ""
+    current_text = _strip_fn_tokens((pages_by_num.get(page_num) or {}).get("text", "") or "")
     window_text = []
     for p in range(max(1, page_num - lookback), page_num + 1):
-        t = (pages_by_num.get(p) or {}).get("text", "") or ""
+        t = _strip_fn_tokens((pages_by_num.get(p) or {}).get("text", "") or "")
         if t and t.strip() != "\u2014":
             window_text.append(t.strip())
     return current_text.strip(), "\n\n".join(window_text)
+
+
+def _gather_page_footnotes(mb, comp, page_num):
+    """Real footnotes (not AI-generated) attached to this page, if the
+    component carries them -- see parse_gibbon.py's "footnotes" field."""
+    path = f"static/reader-data/{comp.get('data_slug', comp['slug'])}.json"
+    if not os.path.exists(path):
+        return []
+    pages = json.load(open(path))
+    page = next((p for p in pages if p.get("page") == page_num), None)
+    return (page or {}).get("footnotes") or []
 
 
 @app.route("/book/<mega_slug>/read/<comp_slug>/ai-overview")
@@ -364,17 +386,44 @@ def ai_page_notes(mega_slug, comp_slug):
     page_text, _ = _gather_page_context(mb, comp, page_num, lookback=0)
     if not page_text or page_text == "\u2014":
         return jsonify({"error": "No transcribed text on this page to annotate."}), 404
-    prompt = (
-        f"You are annotating a single page from \"{comp['title']}\" "
-        f"({comp.get('contributor', '')}, {comp.get('year', '')}) like footnotes in a scholarly "
-        f"edition. Below is the text of just this one page.\n\n"
-        f"Identify the people, places, things, and any complex or unusual words/concepts "
-        f"mentioned on this specific page, and give a brief explanatory note for each -- "
-        f"in your own words, not quoted from any source. Skip anything too minor or obvious "
-        f"to be worth a note. Format as a simple list: **Term** — explanation. "
-        f"If nothing on the page warrants a note, say so plainly. Keep it under 220 words total.\n\n"
-        f"---PAGE TEXT---\n{page_text[:6000]}"
-    )
+    real_footnotes = _gather_page_footnotes(mb, comp, page_num)
+    if real_footnotes:
+        # This page already carries the author's/editor's real footnotes --
+        # generating AI glosses that duplicate them would just be noise.
+        # Instead: gloss what the footnotes themselves don't cover (obscure
+        # classical names, untranslated Latin/Greek in the notes, historical
+        # context a modern reader wouldn't have) so the two layers add up
+        # to something neither gives alone.
+        fn_digest = "\n".join(
+            f"- [{f['type']}] {f['text'][:200]}" for f in real_footnotes[:25]
+        )
+        prompt = (
+            f"You are helping a reader of \"{comp['title']}\" ({comp.get('contributor', '')}, "
+            f"{comp.get('year', '')}). This page already has its own real footnotes "
+            f"(citations to classical sources, plus editorial notes) -- listed below so you "
+            f"don't repeat them.\n\n"
+            f"Your job is different: gloss whatever the footnotes assume the reader already "
+            f"knows and a modern reader likely doesn't -- who a cited classical author is, "
+            f"what an untranslated Latin/Greek phrase in a note means, brief context for a "
+            f"person, place, or event mentioned in passing. Skip anything already explained "
+            f"by a footnote. Format as a simple list: **Term** — explanation. If nothing "
+            f"needs glossing beyond what's already footnoted, say so plainly. Keep it under "
+            f"220 words total.\n\n"
+            f"---THIS PAGE'S EXISTING FOOTNOTES---\n{fn_digest}\n\n"
+            f"---PAGE TEXT---\n{page_text[:6000]}"
+        )
+    else:
+        prompt = (
+            f"You are annotating a single page from \"{comp['title']}\" "
+            f"({comp.get('contributor', '')}, {comp.get('year', '')}) like footnotes in a scholarly "
+            f"edition. Below is the text of just this one page.\n\n"
+            f"Identify the people, places, things, and any complex or unusual words/concepts "
+            f"mentioned on this specific page, and give a brief explanatory note for each -- "
+            f"in your own words, not quoted from any source. Skip anything too minor or obvious "
+            f"to be worth a note. Format as a simple list: **Term** — explanation. "
+            f"If nothing on the page warrants a note, say so plainly. Keep it under 220 words total.\n\n"
+            f"---PAGE TEXT---\n{page_text[:6000]}"
+        )
     result = _call_claude(prompt, max_tokens=600)
     if not result:
         return jsonify({"error": "Couldn't generate notes right now -- try again in a moment."}), 503
@@ -567,6 +616,7 @@ def reader(mega_slug, comp_slug):
         book_source_label=comp.get("source_label", "Library of Congress"),
         book_note=comp.get("note"),
         facsimile=comp["facsimile"],
+        text_only=comp.get("text_only", False),
         is_translated=comp.get("translated", False),
         original_label=comp.get("original_label"),
         start_page=None,

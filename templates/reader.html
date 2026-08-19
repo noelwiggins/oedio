@@ -229,6 +229,46 @@
   .rn-link-btn { background:none; border:none; color:var(--md-sys-color-primary); font-size:12px;
     cursor:pointer; font-weight:600; }
 
+  /* Footnotes: inline clickable markers in the running text, plus a synced
+     rail (desktop) / bottom sheet (mobile) that lists every footnote on the
+     current page, scrolled to and highlighting whichever one was tapped.
+     Citation-type (Gibbon's own source citations) and commentary-type
+     (Milman/Guizot's added editorial notes) get distinct accent colors so
+     the reader can tell at a glance which kind of note it is. */
+  .fn-marker { display:inline-block; font-size:.72em; font-weight:700; line-height:1;
+    padding:1px 4px; margin:0 1px; border-radius:5px; cursor:pointer; vertical-align:super;
+    background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+  .fn-marker[data-fn-type="commentary"] { background:var(--md-sys-color-tertiary-container);
+    color:var(--md-sys-color-on-tertiary-container); }
+  .fn-marker.active { outline:2px solid var(--md-sys-color-primary); }
+
+  .reader-footnotes-panel { position:fixed; right:0; top:0; bottom:0; width:380px; max-width:92vw;
+    background:var(--md-sys-color-surface-container-high); z-index:960; box-shadow:-4px 0 20px rgba(0,0,0,.4);
+    display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease;
+    pointer-events:none; }
+  .reader-footnotes-panel.open { transform:translateX(0); pointer-events:auto; }
+  .fnp-header { display:flex; align-items:center; gap:8px; padding:16px 16px 12px;
+    border-bottom:1px solid var(--md-sys-color-outline-variant); color:var(--md-sys-color-on-surface); }
+  .fnp-title { font-size:13px; font-weight:600; flex:1; }
+  .fnp-list { flex:1; overflow-y:auto; padding:8px 16px 24px; }
+  .fnp-item { padding:14px 0; border-bottom:1px solid var(--md-sys-color-outline-variant); scroll-margin-top:16px; }
+  .fnp-item.active { background:var(--md-sys-color-secondary-container); margin:0 -16px; padding:14px 16px;
+    border-radius:10px; border-bottom-color:transparent; }
+  .fnp-item-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .fnp-num { font-size:11px; font-weight:800; color:var(--md-sys-color-primary); }
+  .fnp-type-tag { font-size:10px; font-weight:700; letter-spacing:.3px; text-transform:uppercase;
+    padding:2px 7px; border-radius:6px; background:var(--md-sys-color-secondary-container);
+    color:var(--md-sys-color-on-secondary-container); }
+  .fnp-item[data-fn-type="commentary"] .fnp-type-tag { background:var(--md-sys-color-tertiary-container);
+    color:var(--md-sys-color-on-tertiary-container); }
+  .fnp-text { font-size:13.5px; line-height:1.6; color:var(--md-sys-color-on-surface); font-family:Georgia, serif; }
+  .fnp-empty { padding:24px 0; font-size:13px; color:var(--md-sys-color-on-surface-variant); text-align:center; }
+  @media (max-width:760px) {
+    .reader-footnotes-panel { left:0; right:0; top:auto; width:auto; max-width:none; height:65vh;
+      border-radius:20px 20px 0 0; transform:translateY(100%); box-shadow:0 -4px 20px rgba(0,0,0,.4); }
+    .reader-footnotes-panel.open { transform:translateY(0); }
+  }
+
   /* Layer picker: shown before entering a book (once, remembered per
      book+edition after that), lets the reader choose which layers --
      Scan, Original, English, Notes -- they actually want, and the
@@ -520,12 +560,14 @@
     <select class="reader-jump-select" id="reader-jump-select">
       <option value="">Jump to page…</option>
     </select>
+    {% if not text_only %}
     <button class="reader-icon-btn" id="reader-grid-btn" title="Page thumbnail grid" aria-label="Thumbnail grid view">
       <span class="material-symbols-outlined" style="font-size:18px;">grid_view</span>
     </button>
     <button class="reader-icon-btn" id="reader-view-scan-btn" title="View original scanned page" aria-label="View scan">
       <span class="material-symbols-outlined" style="font-size:18px;">image</span>
     </button>
+    {% endif %}
     <button class="reader-icon-btn" id="reader-tts-btn" title="Read this page aloud" aria-label="Read aloud">
       <span class="material-symbols-outlined" style="font-size:18px;">headphones</span>
     </button>
@@ -535,6 +577,10 @@
       <span class="material-symbols-outlined" style="font-size:18px;">map</span>
     </button>
     {% endif %}
+    <button class="reader-icon-btn" id="reader-footnotes-btn" title="Footnotes on this page" aria-label="Footnotes" style="display:none;">
+      <span class="material-symbols-outlined" style="font-size:18px;">format_list_numbered</span>
+      <span class="reader-notes-dot" id="reader-footnotes-dot" style="display:none;"></span>
+    </button>
     <button class="reader-icon-btn" id="reader-aiassist-btn" title="Overview, page notes &amp; ask a question" aria-label="AI reading assistant">
       <span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span>
     </button>
@@ -713,6 +759,15 @@
   </div>
 </div>
 
+<div id="reader-footnotes-panel" class="reader-footnotes-panel">
+  <div class="fnp-header">
+    <span class="material-symbols-outlined" style="font-size:18px;">format_list_numbered</span>
+    <span class="fnp-title">Footnotes &mdash; page <span id="fnp-page-num">—</span></span>
+    <button id="fnp-close" class="reader-icon-btn" aria-label="Close footnotes"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+  </div>
+  <div id="fnp-list" class="fnp-list"></div>
+</div>
+
 <div id="reader-zoom-overlay">
   <div id="reader-zoom-scroll"></div>
   <div id="reader-zoom-page-label"></div>
@@ -773,6 +828,7 @@ window.addEventListener('popstate', (e) => {
 });
 
 let FACSIMILE = {{ facsimile|tojson }};
+const TEXT_ONLY = {{ text_only|tojson }}; // no per-page scan image at all (e.g. a reading edition with no aligned facsimile)
 let PANEL_GROUP = {{ (panel_group or [])|tojson }};
 const BOOK_TITLE = {{ book_title|tojson }};
 const BOOK_AUTHOR = {{ book_author|tojson }};
@@ -959,7 +1015,9 @@ function renderBlock(p) {
   block.dataset.page = p.page;
   block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div><div class="reader-page-text"></div>`;
   const textToShow = (currentLang === 'translation' && p.translation) ? p.translation : p.text;
-  block.querySelector('.reader-page-text').innerHTML = flagPossiblyGarbled(textToShow);
+  block.querySelector('.reader-page-text').innerHTML = window.renderFootnoteMarkers
+    ? window.renderFootnoteMarkers(flagPossiblyGarbled(textToShow), p.page)
+    : flagPossiblyGarbled(textToShow);
   if (p.translation) block.dataset.hasTranslation = 'true';
 
   // Illustration detection: pages with unusually little OCR text relative
@@ -969,7 +1027,7 @@ function renderBlock(p) {
   // this is a heuristic -- but a genuinely useful one, since it lets us
   // surface likely illustrations directly in the scrollable text instead
   // of leaving people to discover them only by opening the full scan.
-  if (p.text.trim().length < avgTextLength * 0.15 && p.text.trim().length < 200) {
+  if (!TEXT_ONLY && p.text.trim().length < avgTextLength * 0.15 && p.text.trim().length < 200) {
     const thumb = document.createElement('div');
     thumb.className = 'reader-illustration-thumb';
     thumb.innerHTML = `<img src="${p.image}" alt="Illustration on page ${p.page}" loading="lazy" />` +
@@ -1011,7 +1069,9 @@ function rerenderAllPagesForLangSwitch() {
     const p = allPages.find(pg => pg.page === pageNum);
     if (!p) return;
     const textToShow = (currentLang === 'translation' && p.translation) ? p.translation : p.text;
-    block.querySelector('.reader-page-text').innerHTML = flagPossiblyGarbled(textToShow);
+    block.querySelector('.reader-page-text').innerHTML = window.renderFootnoteMarkers
+      ? window.renderFootnoteMarkers(flagPossiblyGarbled(textToShow), p.page)
+      : flagPossiblyGarbled(textToShow);
   });
 }
 
@@ -1226,7 +1286,7 @@ async function setRightSlot(slug) {
   panel.querySelectorAll('.reader-page-block').forEach(el => el.remove());
   loadMoreObserver.disconnect();
   FACSIMILE = entry.kind === 'image';
-  allPages = FACSIMILE ? pages.filter(p => p.image) : pages.filter(p => p.image);
+  allPages = FACSIMILE ? pages.filter(p => p.image) : (TEXT_ONLY ? pages : pages.filter(p => p.image));
   renderedCount = 0;
   // Render every batch needed to reach the page you were just on (not just
   // the first batch), then jump straight there -- this is what keeps all
@@ -1263,8 +1323,9 @@ fetch('{{ data_url }}')
   .then(pages => {
     allPages = FACSIMILE
       ? pages.filter(p => p.image)
-      : pages.filter(p => p.image); // keep every real page number, even blank ones, so layer-switching stays aligned by page
+      : (TEXT_ONLY ? pages : pages.filter(p => p.image)); // keep every real page number, even blank ones, so layer-switching stays aligned by page
     if (!allPages.length) throw new Error('empty');
+    document.dispatchEvent(new CustomEvent('oedio:pages-loaded'));
     const realTextPages = allPages.filter(p => p.text && p.text.trim().length >= 3);
     avgTextLength = realTextPages.length
       ? realTextPages.reduce((sum, p) => sum + p.text.trim().length, 0) / realTextPages.length
@@ -1794,10 +1855,123 @@ document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   updateDot();
 })();
 
+// --- Footnotes: markers embedded in the text as \u27e6fn:ID\u27e7 tokens (see
+// scripts/parse_gibbon.py) get turned into clickable superscripts here. The
+// panel lists every footnote on the page currently in view, tapping a
+// marker scrolls the panel to and highlights that specific one -- a
+// click-triggered version of a synced rail, without the scroll-jank of a
+// continuously live-syncing one. ---
+(function () {
+  const btn = document.getElementById('reader-footnotes-btn');
+  const dot = document.getElementById('reader-footnotes-dot');
+  const fnPanel = document.getElementById('reader-footnotes-panel');
+  const closeBtn = document.getElementById('fnp-close');
+  const pageLabel = document.getElementById('fnp-page-num');
+  const listEl = document.getElementById('fnp-list');
+  if (!btn || !fnPanel) return;
+
+  let fnOpen = false;
+  let footnotesByPage = {}; // page -> {id -> {id, type, text}}
+  let anyFootnotes = false;
+
+  function indexFootnotes() {
+    footnotesByPage = {};
+    anyFootnotes = false;
+    allPages.forEach(p => {
+      if (Array.isArray(p.footnotes) && p.footnotes.length) {
+        anyFootnotes = true;
+        const byId = {};
+        p.footnotes.forEach(f => { byId[f.id] = f; });
+        footnotesByPage[p.page] = byId;
+      }
+    });
+    btn.style.display = anyFootnotes ? 'flex' : 'none';
+  }
+
+  // Turns already-HTML-escaped page text (from flagPossiblyGarbled) into
+  // final markup: the \u27e6fn:ID\u27e7 tokens are plain characters, safe to
+  // regex-replace after escaping since they contain no HTML metacharacters.
+  window.renderFootnoteMarkers = function (html, pageNum) {
+    const byId = footnotesByPage[pageNum];
+    return html.replace(/\u27e6fn:([^\u27e7]+)\u27e7/g, (_, fnId) => {
+      const fn = byId && byId[fnId];
+      const type = fn ? fn.type : 'citation';
+      const num = fnId.includes('.') ? fnId.split('.').pop() : fnId;
+      return `<sup class="fn-marker" data-fn="${fnId}" data-fn-type="${type}" data-fn-page="${pageNum}">${num}</sup>`;
+    });
+  };
+
+  function renderPanelForPage(pageNum, highlightId) {
+    const byId = footnotesByPage[pageNum] || {};
+    const entries = Object.values(byId);
+    pageLabel.textContent = pageNum || '\u2014';
+    if (!entries.length) {
+      listEl.innerHTML = '<div class="fnp-empty">No footnotes on this page.</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    entries.forEach(fn => {
+      const num = fn.id.includes('.') ? fn.id.split('.').pop() : fn.id;
+      const item = document.createElement('div');
+      item.className = 'fnp-item';
+      item.dataset.fnType = fn.type;
+      item.dataset.fnId = fn.id;
+      if (fn.id === highlightId) item.classList.add('active');
+      item.innerHTML = `<div class="fnp-item-head"><span class="fnp-num">${num}</span>` +
+        `<span class="fnp-type-tag">${fn.type === 'commentary' ? 'Editorial note' : 'Citation'}</span></div>` +
+        `<div class="fnp-text"></div>`;
+      item.querySelector('.fnp-text').textContent = fn.text;
+      listEl.appendChild(item);
+    });
+    if (highlightId) {
+      const target = listEl.querySelector(`.fnp-item[data-fn-id="${highlightId}"]`);
+      if (target) setTimeout(() => target.scrollIntoView({ block: 'center' }), 30);
+    }
+  }
+
+  function openPanel(pageNum, highlightId) {
+    fnOpen = true;
+    fnPanel.classList.add('open');
+    renderPanelForPage(pageNum, highlightId);
+  }
+  closeBtn.addEventListener('click', () => { fnOpen = false; fnPanel.classList.remove('open'); });
+
+  btn.addEventListener('click', () => {
+    if (fnOpen) { fnOpen = false; fnPanel.classList.remove('open'); return; }
+    openPanel(currentPageNum, null);
+  });
+
+  // Event delegation: markers are re-created on every scroll/render, so a
+  // single listener on the scrolling panel catches all of them, present or
+  // future, without re-binding per marker.
+  panel.addEventListener('click', (e) => {
+    const marker = e.target.closest('.fn-marker');
+    if (!marker) return;
+    const fnId = marker.dataset.fn;
+    const pageNum = parseInt(marker.dataset.fnPage, 10);
+    document.querySelectorAll('.fn-marker.active').forEach(m => m.classList.remove('active'));
+    marker.classList.add('active');
+    openPanel(pageNum, fnId);
+  });
+
+  // Keep the panel following the page in view if it's already open, same
+  // behavior as the Notes panel.
+  let lastPanelPage = null;
+  panel.addEventListener('scroll', () => {
+    if (fnOpen && currentPageNum !== lastPanelPage) {
+      lastPanelPage = currentPageNum;
+      renderPanelForPage(currentPageNum, null);
+    }
+  });
+
+  document.addEventListener('oedio:pages-loaded', indexFootnotes);
+})();
+
 
 // --- Thumbnail grid page browser ---
 const gridOverlay = document.getElementById('reader-grid-overlay');
-document.getElementById('reader-view-scan-btn').addEventListener('click', () => {
+const viewScanBtn = document.getElementById('reader-view-scan-btn');
+if (viewScanBtn) viewScanBtn.addEventListener('click', () => {
   zoomCurrentIdx = currentPageIdx();
   openZoomOverlay();
   showZoomPage(zoomCurrentIdx);
@@ -1807,7 +1981,8 @@ document.getElementById('reader-view-scan-btn').addEventListener('click', () => 
 
 const gridContent = document.getElementById('reader-grid-content');
 let gridBuilt = false;
-document.getElementById('reader-grid-btn').addEventListener('click', () => {
+const gridBtn = document.getElementById('reader-grid-btn');
+if (gridBtn) gridBtn.addEventListener('click', () => {
   if (!gridBuilt && allPages.length) {
     allPages.forEach(p => {
       const thumb = document.createElement('div');
