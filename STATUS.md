@@ -1,6 +1,54 @@
 # Oedio STATUS — Library of Alexandria
 
-Last updated: 2026-08-02
+Last updated: 2026-08-19
+
+## Gibbon's Decline and Fall — footnote-centric section (2026-08-19)
+
+Added as a new megabook: `gibbon-decline-fall` (history section), 6-volume
+group (`gibbon-vol1`..`gibbon-vol6`), 296 pages, 8,542 footnotes.
+
+- **Source**: Project Gutenberg #731–736, the Milman/Guizot 1845 edition —
+  the only Gutenberg edition with all footnotes intact (Gibbon's own
+  citations + Guizot's editorial corrections, signed "—M.").
+- **Pipeline**: `scripts/parse_gibbon.py` splits each volume's HTML on
+  Gutenberg's own chapter/part divisions, replaces inline footnote refs
+  with `⟦fn:CH.N⟧` tokens, and extracts a parallel `footnotes[]` array per
+  page (`type: citation` or `commentary`, heuristically classified by the
+  "Note: ... —M." convention). Rerunning it is one command per volume if
+  the parse ever needs adjusting.
+- **This is a text edition, not a page-aligned facsimile** — Gutenberg's
+  web pagination doesn't match any physical scan. No image field is set;
+  reader ships in a new `TEXT_ONLY` mode (see below).
+- **New reader capability — `TEXT_ONLY` mode**: fixed a real bug where the
+  page filter (`pages.filter(p => p.image)`) silently dropped every page
+  without a scan image. `text_only: true` on a manifest component now
+  keeps all pages and hides the view-scan/grid-view buttons (meaningless
+  without images) instead of crashing or rendering blank. Available for
+  any future text-only component, not just Gibbon.
+- **Footnote panel UI**: inline clickable superscript markers (color-coded
+  citation vs. commentary), a right-rail (desktop) / bottom-sheet (mobile)
+  panel listing every footnote on the page in view, opens scrolled to
+  whichever marker was tapped. New toolbar button, auto-hidden on books
+  with no footnote data.
+- **AI assistant integration**: "Explain this page" now detects real
+  footnote data and glosses what the footnotes *don't* already cover
+  (who a cited classical author is, untranslated Latin in an editorial
+  note) instead of duplicating them.
+
+**Pending / not done:**
+- No real facsimile component paired yet — would need genuine LOC/IA scan
+  verification (per the site's own broken-source-audit standard) for a
+  period edition; not attempted this session rather than guess a loc_item.
+- No maps/illustrations sourced for this megabook yet.
+- Footnote `type` classification is a heuristic (looks for "Note:" +
+  "—M." signature) — not scholarly-reviewed.
+- Railway auto-deploy from the GitHub push didn't fire on its own this
+  session (known recurring issue, see below) — had to trigger manually via
+  `serviceInstanceDeploy`, which redeployed the *previous* commit's cached
+  build rather than pulling fresh. Fixed by pushing this STATUS.md update
+  as a new commit to retrigger the webhook properly — confirm the live
+  site's deployed commitHash matches HEAD before trusting oedio.com is current.
+
 
 ## Live site
 - URL: oedio.com | Railway: web-production-0df99e.up.railway.app
