@@ -1391,10 +1391,36 @@ fetch('{{ data_url }}')
     const jumpTarget = urlPage || resumePage || (START_PAGE > 1 ? String(START_PAGE) : null);
     if (jumpTarget) {
       renderUpTo(parseInt(jumpTarget, 10) + PAGE_BATCH_SIZE);
-      setTimeout(() => {
+      // A deep-linked jump (e.g. from search) shouldn't get fought by the
+      // image panel's own independent "correct drift" scroll -- that
+      // mechanism isn't guarded by syncingScroll (it reacts to whichever
+      // page intersects, not to who caused the scroll), so left alone it
+      // can drag the text panel to a fraction-equivalent-but-wrong page
+      // via the cross-panel scroll sync. suppressImageSyncBriefly()'s
+      // normal 1.5s window (tuned for a manual scroll flick) isn't long
+      // enough here -- real facsimile images can take several seconds to
+      // load over the network, and once suppression lapses mid-load the
+      // drag resumes. Hold it explicitly for the whole jump-settle window,
+      // re-landing on the target periodically as layout continues to
+      // shift underneath it.
+      imageSyncSuppressed = true;
+      clearTimeout(imageSyncSuppressTimer);
+      const jumpSettleStart = Date.now();
+      const JUMP_SETTLE_BUDGET = 10000;
+      const scrollToJumpTarget = () => {
         const target = panel.querySelector(`.reader-page-block[data-page="${jumpTarget}"]`);
-        if (target) target.scrollIntoView({ block: 'start' });
-      }, 50);
+        if (target && Math.abs(target.getBoundingClientRect().top) > 4) {
+          target.scrollIntoView({ block: 'start' });
+        }
+      };
+      scrollToJumpTarget();
+      const jumpSettleInterval = setInterval(() => {
+        scrollToJumpTarget();
+        if (Date.now() - jumpSettleStart > JUMP_SETTLE_BUDGET) {
+          clearInterval(jumpSettleInterval);
+          imageSyncSuppressed = false;
+        }
+      }, 200);
     }
 
     // --- In-book search ---

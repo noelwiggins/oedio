@@ -10,6 +10,8 @@ without touching the reader.
 import json
 import os
 import re
+import sqlite3
+import functools
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -243,15 +245,119 @@ def library():
                            megabooks=MEGABOOKS, active_page="library")
 
 
+@functools.lru_cache(maxsize=1)
+def _search_db():
+    """Cached read-only connection to the full-text search index (see
+    scripts/build_search_index.py). Contentless FTS5 -- the index itself
+    holds no page text, only the inverted index + page metadata, so it
+    stays small enough to commit to the repo. Returns None if the index
+    hasn't been built yet, so search degrades gracefully rather than 500ing."""
+    path = "data/search_index.sqlite"
+    if not os.path.exists(path):
+        return None
+    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True, check_same_thread=False)
+    return con
+
+
+def _fts_query(q):
+    """Turn a raw user query into an FTS5 MATCH expression: each word is a
+    separate prefix term, ANDed together, so 'ginger fever' requires both
+    words to appear somewhere on the page (not as an exact phrase)."""
+    words = re.findall(r"\w+", q)
+    if not words:
+        return None
+    return " AND ".join(f'"{w}"*' for w in words)
+
+
+@app.route("/api/search/fulltext")
+def api_search_fulltext():
+    """Real full-text search across every indexed page (36k+ pages, ~9M
+    words) via SQLite FTS5. Returns page-level hits with a snippet built
+    from the actual page text (re-read from the original reader-data JSON
+    at request time, since the index itself is contentless) and a direct
+    deep link into the reader at that exact page."""
+    q = (request.args.get("q") or "").strip()
+    if len(q) < 2:
+        return jsonify({"results": [], "query": q})
+    con = _search_db()
+    if con is None:
+        return jsonify({"results": [], "query": q, "error": "search index not built"}), 503
+
+    match_expr = _fts_query(q)
+    if not match_expr:
+        return jsonify({"results": [], "query": q})
+
+    rows = con.execute(
+        """
+        SELECT m.megabook_slug, m.megabook_title, m.component_slug, m.component_title, m.page,
+               bm25(pages_fts) AS rank
+        FROM pages_fts
+        JOIN pages_meta m ON m.rowid = pages_fts.rowid
+        WHERE pages_fts MATCH ?
+        ORDER BY rank
+        LIMIT 30
+        """,
+        (match_expr,),
+    ).fetchall()
+
+    words_lower = [w.lower() for w in re.findall(r"\w+", q)]
+    results = []
+    for megabook_slug, megabook_title, component_slug, component_title, page, rank in rows:
+        comp = _find_component(megabook_slug, component_slug)
+        data_slug = comp.get("data_slug", component_slug) if comp else component_slug
+        text = _page_text(data_slug, page)
+        snippet = _build_snippet(text, words_lower) if text else ""
+        results.append({
+            "megabook_slug": megabook_slug, "megabook_title": megabook_title,
+            "component_slug": component_slug, "component_title": component_title,
+            "page": page, "snippet": snippet,
+        })
+    return jsonify({"results": results, "query": q})
+
+
+def _find_component(megabook_slug, component_slug):
+    mb = next((m for m in MEGABOOKS if m["slug"] == megabook_slug), None)
+    if not mb:
+        return None
+    return next((c for c in mb.get("components", []) if c["slug"] == component_slug), None)
+
+
+@functools.lru_cache(maxsize=256)
+def _page_text(data_slug, page_num):
+    path = f"static/reader-data/{data_slug}.json"
+    if not os.path.exists(path):
+        return ""
+    pages = json.load(open(path, encoding="utf-8"))
+    p = next((x for x in pages if x.get("page") == page_num), None)
+    return _strip_fn_tokens((p or {}).get("text", "") or "")
+
+
+def _build_snippet(text, words_lower, radius=90):
+    """Find the first occurrence of any query word and return surrounding
+    context, rather than just the start of the page -- a hit 3000
+    characters into a page is useless to show as 'the first 90 chars'."""
+    low = text.lower()
+    pos = -1
+    for w in words_lower:
+        idx = low.find(w)
+        if idx != -1 and (pos == -1 or idx < pos):
+            pos = idx
+    if pos == -1:
+        return text[:180].strip() + ("…" if len(text) > 180 else "")
+    start = max(0, pos - radius)
+    end = min(len(text), pos + radius)
+    prefix = "…" if start > 0 else ""
+    suffix = "…" if end < len(text) else ""
+    return prefix + text[start:end].strip() + suffix
+
+
 @app.route("/api/search")
 def api_search():
     """Site-wide metadata search across every Oedio's title, author,
-    description, and component roles/notes/contributors. This is a
-    metadata-level search, not full-text across every page of every book --
-    the corpus is too large (249 components across 32 megabooks, many
-    running thousands of pages) to scan on every keystroke without a real
-    search index, which doesn't exist yet. Good enough to answer "does
-    oedio have anything on X" and jump straight to the right book."""
+    description, and component roles/notes/contributors -- fast, one result
+    per book, good for "does oedio have anything on X". For real full-text
+    search across page content itself, see /api/search/fulltext, which
+    queries the SQLite FTS5 index built by scripts/build_search_index.py."""
     q = (request.args.get("q") or "").strip().lower()
     if len(q) < 2:
         return jsonify({"results": [], "query": q})

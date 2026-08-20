@@ -38,6 +38,9 @@
   .sr-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 10px; }
   .sr-title { font-family:Georgia, serif; font-size:15px; font-weight:600; color:var(--md-sys-color-on-surface); }
   .sr-scroll { overflow-y:auto; padding:4px 12px 18px; }
+  .sr-section-label { font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:#cda94f; padding:12px 12px 4px; }
+  .sr-section-label:first-child { padding-top:6px; }
   .sr-item { display:block; padding:12px 12px; border-radius:12px; text-decoration:none; margin-bottom:2px; }
   .sr-item:hover { background:var(--md-sys-color-surface-container-highest); }
   .sr-item-title { font-size:14px; font-weight:600; color:var(--md-sys-color-on-surface); margin-bottom:2px; }
@@ -299,30 +302,58 @@
 
   async function runSearch(q) {
     if (!q || q.trim().length < 2) return;
+    const query = q.trim();
     overlay.classList.add('open');
     titleEl.textContent = 'Searching\u2026';
     scrollEl.innerHTML = '';
     try {
-      const r = await fetch('/api/search?q=' + encodeURIComponent(q.trim()));
-      const data = await r.json();
-      const results = data.results || [];
-      titleEl.textContent = results.length
-        ? `${results.length} Oedio${results.length !== 1 ? 's' : ''} matching \u201c${q.trim()}\u201d`
-        : `Nothing found for \u201c${q.trim()}\u201d`;
-      if (!results.length) {
-        scrollEl.innerHTML = '<div class="sr-empty">Nothing matched that search across titles, authors, and volume notes. Try a broader term, or browse the shelf below.</div>';
+      const [metaRes, ftRes] = await Promise.all([
+        fetch('/api/search?q=' + encodeURIComponent(query)).then(r => r.json()).catch(() => ({ results: [] })),
+        fetch('/api/search/fulltext?q=' + encodeURIComponent(query)).then(r => r.json()).catch(() => ({ results: [] })),
+      ]);
+      const books = metaRes.results || [];
+      const passages = ftRes.results || [];
+      const total = books.length + passages.length;
+      titleEl.textContent = total
+        ? `Results for \u201c${query}\u201d`
+        : `Nothing found for \u201c${query}\u201d`;
+      if (!total) {
+        scrollEl.innerHTML = '<div class="sr-empty">Nothing matched that search across titles, descriptions, or the full text of every page. Try a broader term, or browse the shelf below.</div>';
         return;
       }
-      results.forEach(res => {
-        const a = document.createElement('a');
-        a.className = 'sr-item';
-        a.href = '/book/' + res.slug;
-        a.innerHTML = `<div class="sr-item-title"></div><div class="sr-item-author"></div><div class="sr-item-snippet"></div>`;
-        a.querySelector('.sr-item-title').textContent = res.title;
-        a.querySelector('.sr-item-author').textContent = res.author || '';
-        a.querySelector('.sr-item-snippet').textContent = res.snippet || '';
-        scrollEl.appendChild(a);
-      });
+      scrollEl.innerHTML = '';
+      if (books.length) {
+        const label = document.createElement('div');
+        label.className = 'sr-section-label';
+        label.textContent = 'Books';
+        scrollEl.appendChild(label);
+        books.forEach(res => {
+          const a = document.createElement('a');
+          a.className = 'sr-item';
+          a.href = '/book/' + res.slug;
+          a.innerHTML = `<div class="sr-item-title"></div><div class="sr-item-author"></div><div class="sr-item-snippet"></div>`;
+          a.querySelector('.sr-item-title').textContent = res.title;
+          a.querySelector('.sr-item-author').textContent = res.author || '';
+          a.querySelector('.sr-item-snippet').textContent = res.snippet || '';
+          scrollEl.appendChild(a);
+        });
+      }
+      if (passages.length) {
+        const label = document.createElement('div');
+        label.className = 'sr-section-label';
+        label.textContent = 'Passages';
+        scrollEl.appendChild(label);
+        passages.forEach(res => {
+          const a = document.createElement('a');
+          a.className = 'sr-item';
+          a.href = `/book/${res.megabook_slug}/read/${res.component_slug}?page=${res.page}`;
+          a.innerHTML = `<div class="sr-item-title"></div><div class="sr-item-author"></div><div class="sr-item-snippet"></div>`;
+          a.querySelector('.sr-item-title').textContent = res.megabook_title;
+          a.querySelector('.sr-item-author').textContent = res.component_title + ' \u00b7 p. ' + res.page;
+          a.querySelector('.sr-item-snippet').textContent = res.snippet || '';
+          scrollEl.appendChild(a);
+        });
+      }
     } catch (e) {
       titleEl.textContent = 'Search unavailable right now';
       scrollEl.innerHTML = '<div class="sr-empty">Something went wrong reaching the search. Try again in a moment.</div>';
