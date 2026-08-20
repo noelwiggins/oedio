@@ -9,6 +9,61 @@
   .shelf-intro p { color:var(--md-sys-color-on-surface-variant); font-size:13.5px;
     line-height:1.6; margin:0; }
 
+  /* ===================== Search hero ===================== */
+  .search-hero { max-width:680px; margin:22px auto 0; padding:0 24px; }
+  .search-hero-eyebrow { text-align:center; font-size:11px; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--md-sys-color-on-surface-variant); margin-bottom:10px; }
+  .search-hero-box { display:flex; border:1.5px solid #cda94f; border-radius:10px;
+    background:var(--md-sys-color-surface-container); box-shadow:0 0 0 3px rgba(205,169,79,.08), 0 8px 28px rgba(0,0,0,.35);
+    transition:box-shadow .2s ease; overflow:hidden; }
+  .search-hero-box:focus-within { box-shadow:0 0 0 4px rgba(205,169,79,.16), 0 8px 34px rgba(0,0,0,.45); }
+  .search-hero-input { flex:1; background:transparent; border:none; outline:none;
+    color:var(--md-sys-color-on-surface); font-family:Georgia, serif; font-size:15px;
+    padding:14px 16px; min-width:0; }
+  .search-hero-input::placeholder { color:var(--md-sys-color-on-surface-variant); opacity:.75; }
+  .search-hero-btn { border:none; background:#cda94f; color:#1c1608; font-weight:700;
+    font-size:13px; padding:0 22px; cursor:pointer; letter-spacing:.02em; }
+  .search-hero-btn:active { background:#b8963f; }
+  .search-hero-chips { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px;
+    margin-top:12px; }
+  .search-hero-chips span { font-size:11.5px; color:var(--md-sys-color-on-surface-variant);
+    cursor:pointer; padding:4px 2px; border-bottom:1px dashed transparent; }
+  .search-hero-chips span:hover { color:#cda94f; border-bottom-color:#cda94f; }
+
+  .search-results-overlay { display:none; position:fixed; inset:0; z-index:1150;
+    background:rgba(0,0,0,.7); align-items:flex-start; justify-content:center; padding:70px 20px 20px; }
+  .search-results-overlay.open { display:flex; }
+  .sr-card { background:var(--md-sys-color-surface-container-high); border-radius:18px;
+    max-width:600px; width:100%; max-height:78vh; display:flex; flex-direction:column; overflow:hidden; }
+  .sr-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 10px; }
+  .sr-title { font-family:Georgia, serif; font-size:15px; font-weight:600; color:var(--md-sys-color-on-surface); }
+  .sr-scroll { overflow-y:auto; padding:4px 12px 18px; }
+  .sr-item { display:block; padding:12px 12px; border-radius:12px; text-decoration:none; margin-bottom:2px; }
+  .sr-item:hover { background:var(--md-sys-color-surface-container-highest); }
+  .sr-item-title { font-size:14px; font-weight:600; color:var(--md-sys-color-on-surface); margin-bottom:2px; }
+  .sr-item-author { font-size:11.5px; color:#cda94f; margin-bottom:5px; }
+  .sr-item-snippet { font-size:12.5px; line-height:1.5; color:var(--md-sys-color-on-surface-variant);
+    font-family:Georgia, serif; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .sr-empty { padding:30px 16px; text-align:center; font-size:13px; color:var(--md-sys-color-on-surface-variant); }
+
+  /* ===================== Featured grid ===================== */
+  .featured-wrap { max-width:900px; margin:30px auto 0; padding:0 24px; }
+  .featured-label { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--md-sys-color-on-surface-variant); margin-bottom:12px; }
+  .featured-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .featured-card { display:block; text-decoration:none; border-radius:14px; padding:16px 18px;
+    background:var(--md-sys-color-surface-container); border:1px solid var(--md-sys-color-outline-variant);
+    transition:border-color .15s, transform .15s; position:relative; overflow:hidden; }
+  .featured-card:hover { border-color:#cda94f; transform:translateY(-2px); }
+  .featured-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+    background:var(--fc-accent, #cda94f); }
+  .featured-card-tag { display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+    letter-spacing:.1em; text-transform:uppercase; color:#cda94f; margin-bottom:8px; }
+  .featured-card-tag svg { width:13px; height:13px; }
+  .featured-card-title { font-family:Georgia, serif; font-size:16px; font-weight:600;
+    color:var(--md-sys-color-on-surface); margin-bottom:6px; line-height:1.25; }
+  .featured-card-desc { font-size:12.5px; line-height:1.55; color:var(--md-sys-color-on-surface-variant); }
+
   /* ===================== The Rotunda ===================== */
   .rotunda-wrap { position:relative; height:min(64vh, 560px); min-height:400px;
     margin:22px 0 0; overflow:hidden;
@@ -138,6 +193,39 @@
      pinch to look closer, and tap any section to see what's inside.</p>
 </div>
 
+<div class="search-hero">
+  <div class="search-hero-eyebrow">Search {{ megabooks|length }} Oedios across {{ sections|length }} traditions</div>
+  <div class="search-hero-box">
+    <input type="text" id="search-hero-input" class="search-hero-input"
+      placeholder="Rome &middot; footnotes &middot; maps &middot; medicine &middot; myth"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    <button class="search-hero-btn" id="search-hero-btn" type="button">Search</button>
+  </div>
+  <div class="search-hero-chips" id="search-hero-chips">
+    <span data-q="footnotes">&#9670; footnotes &amp; commentary</span>
+    <span data-q="maps">&#9670; maps</span>
+    <span data-q="medicine">&#9670; medicine</span>
+    <span data-q="war">&#9670; war &amp; empire</span>
+    <span data-q="myth">&#9670; myth</span>
+    <span data-q="voyages">&#9670; voyages</span>
+  </div>
+</div>
+
+<div class="search-results-overlay" id="search-results-overlay">
+  <div class="sr-card">
+    <div class="sr-header">
+      <span class="sr-title" id="sr-title">Searching&hellip;</span>
+      <button class="reader-icon-btn" id="sr-close" aria-label="Close"><span class="material-symbols-outlined" style="font-size:18px;">close</span></button>
+    </div>
+    <div class="sr-scroll" id="sr-scroll"></div>
+  </div>
+</div>
+
+<div class="featured-wrap">
+  <div class="featured-label">Featured</div>
+  <div class="featured-grid" id="featured-grid"></div>
+</div>
+
 <div id="continue-reading-wrap" class="continue-reading-wrap" style="display:none;">
   <div class="cr-label">Continue reading</div>
   <div id="continue-reading-scroll" class="continue-reading-scroll"></div>
@@ -193,6 +281,91 @@
       wrap.style.display = 'block';
     }
   } catch (e) { /* localStorage unavailable -- just skip the section */ }
+})();
+
+// --- Site-wide search + Featured grid ---
+(function () {
+  const MEGABOOKS = {{ megabooks|tojson }};
+  const bySlug = {};
+  MEGABOOKS.forEach(mb => { bySlug[mb.slug] = mb; });
+
+  const input = document.getElementById('search-hero-input');
+  const btn = document.getElementById('search-hero-btn');
+  const chips = document.getElementById('search-hero-chips');
+  const overlay = document.getElementById('search-results-overlay');
+  const closeBtn = document.getElementById('sr-close');
+  const titleEl = document.getElementById('sr-title');
+  const scrollEl = document.getElementById('sr-scroll');
+
+  async function runSearch(q) {
+    if (!q || q.trim().length < 2) return;
+    overlay.classList.add('open');
+    titleEl.textContent = 'Searching\u2026';
+    scrollEl.innerHTML = '';
+    try {
+      const r = await fetch('/api/search?q=' + encodeURIComponent(q.trim()));
+      const data = await r.json();
+      const results = data.results || [];
+      titleEl.textContent = results.length
+        ? `${results.length} Oedio${results.length !== 1 ? 's' : ''} matching \u201c${q.trim()}\u201d`
+        : `Nothing found for \u201c${q.trim()}\u201d`;
+      if (!results.length) {
+        scrollEl.innerHTML = '<div class="sr-empty">Nothing matched that search across titles, authors, and volume notes. Try a broader term, or browse the shelf below.</div>';
+        return;
+      }
+      results.forEach(res => {
+        const a = document.createElement('a');
+        a.className = 'sr-item';
+        a.href = '/book/' + res.slug;
+        a.innerHTML = `<div class="sr-item-title"></div><div class="sr-item-author"></div><div class="sr-item-snippet"></div>`;
+        a.querySelector('.sr-item-title').textContent = res.title;
+        a.querySelector('.sr-item-author').textContent = res.author || '';
+        a.querySelector('.sr-item-snippet').textContent = res.snippet || '';
+        scrollEl.appendChild(a);
+      });
+    } catch (e) {
+      titleEl.textContent = 'Search unavailable right now';
+      scrollEl.innerHTML = '<div class="sr-empty">Something went wrong reaching the search. Try again in a moment.</div>';
+    }
+  }
+
+  btn.addEventListener('click', () => runSearch(input.value));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(input.value); });
+  chips.querySelectorAll('span[data-q]').forEach(chip => {
+    chip.addEventListener('click', () => { input.value = chip.dataset.q; runSearch(chip.dataset.q); });
+  });
+  closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+  // Featured grid: a curated set of standout Oedios, not algorithmically
+  // picked -- each one showcases a different thing the site does (a real
+  // footnote-linked reading edition, a fully layered multi-language
+  // reader, a multi-volume facsimile group), so newcomers see the range
+  // in four cards instead of having to click around to find it.
+  const FEATURED = [
+    { slug: 'gibbon-decline-fall', tag: 'Footnote reader', accent: '#c47a9e',
+      desc: 'Gibbon\u2019s Decline and Fall, 71 chapters and 8,500+ footnotes \u2014 every citation and editorial note pulled into its own readable panel.' },
+    { slug: 'odyssey', tag: 'Layered reader', accent: '#c9756a',
+      desc: 'Greek text, multiple English translations, and the original page scans, all switchable in the same reading view.' },
+    { slug: 'florentine-codex', tag: 'Facsimile, 12 volumes', accent: '#e08a5c',
+      desc: 'Sahag\u00fan\u2019s Aztec encyclopedia in Nahuatl and Spanish, illustrated by Nahua scribe-artists \u2014 the real 16th-century pages.' },
+    { slug: 'marcus-aurelius', tag: 'Philosophy', accent: '#8a8aa8',
+      desc: 'The Meditations, written by a Roman emperor as a private notebook \u2014 never meant for publication.' },
+  ];
+  const grid = document.getElementById('featured-grid');
+  FEATURED.forEach(f => {
+    const mb = bySlug[f.slug];
+    if (!mb) return; // skip gracefully if a slug ever moves/renames
+    const a = document.createElement('a');
+    a.className = 'featured-card';
+    a.href = '/book/' + mb.slug;
+    a.style.setProperty('--fc-accent', f.accent);
+    a.innerHTML = `<div class="featured-card-tag"><svg viewBox="0 0 24 24"><use href="#${mb.emblem || 'em-quill'}"></use></svg>${f.tag}</div>` +
+      `<div class="featured-card-title"></div><div class="featured-card-desc"></div>`;
+    a.querySelector('.featured-card-title').textContent = mb.title;
+    a.querySelector('.featured-card-desc').textContent = f.desc;
+    grid.appendChild(a);
+  });
 })();
 
 (function () {

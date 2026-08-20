@@ -243,6 +243,53 @@ def library():
                            megabooks=MEGABOOKS, active_page="library")
 
 
+@app.route("/api/search")
+def api_search():
+    """Site-wide metadata search across every Oedio's title, author,
+    description, and component roles/notes/contributors. This is a
+    metadata-level search, not full-text across every page of every book --
+    the corpus is too large (249 components across 32 megabooks, many
+    running thousands of pages) to scan on every keystroke without a real
+    search index, which doesn't exist yet. Good enough to answer "does
+    oedio have anything on X" and jump straight to the right book."""
+    q = (request.args.get("q") or "").strip().lower()
+    if len(q) < 2:
+        return jsonify({"results": [], "query": q})
+    terms = [t for t in q.split() if t]
+    results = []
+    for mb in MEGABOOKS:
+        title_l = (mb.get("title") or "").lower()
+        author_l = (mb.get("author") or "").lower()
+        desc = mb.get("description") or ""
+        parts = [title_l, author_l, desc.lower()]
+        matched_note = None
+        for c in mb.get("components", []):
+            note = c.get("note") or ""
+            role = c.get("role") or ""
+            ctitle = c.get("title") or ""
+            contributor = c.get("contributor") or ""
+            blob = f"{ctitle} {role} {contributor} {note}".lower()
+            parts.append(blob)
+            if matched_note is None and terms and all(t in blob for t in terms):
+                matched_note = note or ctitle
+        haystack = " \n".join(parts)
+        if not all(t in haystack for t in terms):
+            continue
+        score = sum(haystack.count(t) for t in terms)
+        if any(t in title_l for t in terms):
+            score += 50
+        if any(t in author_l for t in terms):
+            score += 30
+        snippet = matched_note or desc
+        results.append({
+            "slug": mb["slug"], "title": mb["title"], "author": mb.get("author", ""),
+            "section": mb.get("section", ""), "snippet": snippet[:240],
+            "spine_color": mb.get("spine_color", ""), "score": score,
+        })
+    results.sort(key=lambda r: -r["score"])
+    return jsonify({"results": results[:24], "query": q})
+
+
 
 @app.route("/section/<section_slug>")
 def section_page(section_slug):
