@@ -43,7 +43,72 @@ group (`gibbon-vol1`..`gibbon-vol6`), 296 pages, 8,542 footnotes.
 - Footnote `type` classification is a heuristic (looks for "Note:" +
   "—M." signature) — not scholarly-reviewed.
 
-## Homepage: search + Featured grid, ported from Plantacopia's UX (2026-08-19)
+## Corpus-wide pagination grounding audit (2026-08-20)
+
+Noel asked whether all Oedio books use the same algorithm to ground page
+numbers to their real source. Investigated what actually makes this work,
+then audited the whole corpus against it.
+
+**The algorithm**: for a properly grounded book, `page` in reader-data
+JSON is assigned directly from the real source's own scan sequence number
+at ingestion time (e.g. Odyssey's `page: 3` has
+`.../odysseyofh00home_0003/...` -- the literal 3rd photographed leaf of
+that physical LOC item). This isn't something that needs retrofitting
+across the library -- it's how the original ingestion pipeline already
+worked for every real facsimile component. The one deviation was Gibbon
+(built from a web text edition with no scan behind it at all), already
+handled correctly via the `text_only` flag added this session rather than
+pretending its synthetic page numbers are physical pages.
+
+**Built `scripts/audit_pagination_grounding.py`**: for every one of the
+249 components, checks whether page numbers actually track a real
+sequence number embedded in the image URLs (tries every digit-run
+position in the URL, since real-world schemes vary wildly by provider --
+archive.org leaf index, LOC/WDL barcode+sequence, British Library hex ARK,
+Princeton content-hash IIIF -- and picks whichever position moves in
+lockstep with the page number across consecutive pages). This is a
+reusable tool -- rerun it after any future ingestion to catch this class
+of bug automatically, which is the actual answer to "make sure all books
+use the same algorithm."
+
+**Found one real, serious bug**: `badianus-manuscript` (+ its
+transcription and english sibling components) had every single page
+misordered -- 134 of 135 pages out of true sequence. The ingestion had
+sorted image filenames lexicographically ("pg.1.jpg", "pg.10.jpg",
+"pg.100.jpg", "pg.101.jpg", ..., "pg.2.jpg", "pg.20.jpg"...) instead of
+numerically, so reader page 2 was showing the manuscript's real page 10,
+reader page 3 was showing real page 100, etc., throughout the whole book.
+Text and image stayed correctly paired with each other (both came from
+the same source file per array entry) -- only the reading *order* was
+scrambled. Fixed via new `scripts/fix_scrambled_page_order.py`: re-sorts
+by the real number parsed from each image filename, reassigns sequential
+`page` 1..135 in true reading order. Verified: page 1 through 6 now show
+`pg.1`, `pg. 2`, `pg.3`, `pg.4`, `pg.5`, `pg.6` in order. Backups of the
+pre-fix files are in `/tmp` locally if a diff is ever needed (not
+committed -- the fix is a straightforward re-sort, verifiably correct).
+
+**Everything else flagged by the audit turned out to be a false positive
+from the tool's own URL-parsing limits, verified by hand**: dioscorides
+(recto/verso "001a"/"001b" folio naming -- genuinely sequential, my
+digit-tracker just can't model the a/b suffix), balds-leechbook-ms
+(hex-style British Library ARK ids -- genuinely sequential, "0x" prefix
+confused the digit-run parser). Two components are legitimately not
+page-through books at all rather than being broken: `garima-gospels` and
+`joga-pradipika` are curated illustration sets (a handful of
+representative images from different sources/folios, not a full facsimile
+read-through), so "page order" doesn't apply to them the way it does to
+an actual book. `maya-medicine` uses Princeton's content-hash IIIF urls
+(no sequence number embedded at all) -- genuinely unverifiable by URL
+alone; would need a manual visual spot-check to confirm, flagged as a
+follow-up rather than claimed either way.
+
+**Net result**: 223/249 components confirmed grounded by the tool, the
+rest individually accounted for above (1 real bug now fixed, rest false
+alarms or legitimately different content type). Rerun
+`scripts/audit_pagination_grounding.py` after adding new books to keep
+this guarantee.
+
+
 
 Added a prominent search hero (eyebrow + input + quick-search chips) and
 a "Featured" card grid to the homepage, matching what you liked about
