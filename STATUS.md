@@ -35,25 +35,55 @@ group (`gibbon-vol1`..`gibbon-vol6`), 296 pages, 8,542 footnotes.
   (who a cited classical author is, untranslated Latin in an editorial
   note) instead of duplicating them.
 
-**Pending / not done:**
+**Pending / not done for Gibbon:**
 - No real facsimile component paired yet — would need genuine LOC/IA scan
   verification (per the site's own broken-source-audit standard) for a
   period edition; not attempted this session rather than guess a loc_item.
 - No maps/illustrations sourced for this megabook yet.
 - Footnote `type` classification is a heuristic (looks for "Note:" +
   "—M." signature) — not scholarly-reviewed.
-- Railway auto-deploy from the GitHub push didn't fire on its own this
-  session (known recurring issue, see below) — had to trigger manually via
-  `serviceInstanceDeploy`, which redeployed the *previous* commit's cached
-  build rather than pulling fresh. Fixed by pushing this STATUS.md update
-  as a new commit to retrigger the webhook properly — confirm the live
-  site's deployed commitHash matches HEAD before trusting oedio.com is current.
+
+## Homepage: search + Featured grid, ported from Plantacopia's UX (2026-08-19)
+
+Added a prominent search hero (eyebrow + input + quick-search chips) and
+a "Featured" card grid to the homepage, matching what you liked about
+Plantacopia — done in Oedio's own gold/MD3 visual language rather than
+Plantacopia's forest-green palette, since the two sites already have
+distinct, coherent identities and grafting one onto the other would clash.
+
+- **New `/api/search` route**: metadata search (title, author,
+  description, component roles/notes/contributors) across all 32
+  megabooks / 249 components. Tested: "footnote" → Gibbon, "maps" →
+  Caribbean Cartography, "homer" → Odyssey + Hesiod. **Not full-text
+  across every page** — the corpus is too large (many components run
+  thousands of pages) to scan per-keystroke without a real search index.
+  That would be the natural next step if deeper search is wanted.
+- Results render in an overlay panel (title/author/snippet, click →
+  book page), same interaction shape as Plantacopia's search-results-overlay.
+- **Featured grid**: 4 hand-picked cards (Gibbon footnote reader, Odyssey
+  layered reader, Florentine Codex facsimile, Marcus Aurelius) using the
+  existing SVG emblem sprite + per-card accent colors. Curated, not
+  algorithmic — update the `FEATURED` array in `templates/index.html` to
+  change which books are highlighted.
+- Did not port Plantacopia's rotating frontispiece hero (the book-spread
+  illustration cycler) — would need curated illustration URLs per
+  megabook, which don't exist yet; flagging as a possible follow-up.
+
+**Still pending: the Railway auto-deploy issue above.** Three commits
+now sit unpushed to production (`50a03a3`, `b96ea6f`, `90834c7`) —
+Gibbon's footnote section, the STATUS.md update, and this search/featured
+work are all built, tested locally, and on GitHub `main`, but the live
+site is still serving the older commit `6eef216`. Needs the manual
+reconnect in the Railway dashboard before any of this goes live.
 
 
 ## Live site
 - URL: oedio.com | Railway: web-production-0df99e.up.railway.app
-- 14 megabooks · 76 components · 100% reader-data coverage
-- 5 sections: Literature, Natural Sciences, Travel, Cartography, History & Society
+- 32 megabooks · 249 components (once the pending deploy above goes live)
+- 7 sections: Literature, Medicine, Travel, History & Society, Religion, Science, Philosophy
+- **NOTE**: the counts above reflect GitHub `main`, not necessarily what's
+  currently served — see the Railway deploy-stuck note above before
+  trusting oedio.com matches this file.
 
 ## Architecture — storage
 
