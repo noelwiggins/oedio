@@ -3376,6 +3376,68 @@
           "source_label": "Internet Archive (Glasgow University Library copy); full transcription at Project Gutenberg #49513"
         }
       ]
+    },
+    {
+      "slug": "kings-american-dispensatory",
+      "section": "science",
+      "title": "King's American Dispensatory",
+      "author": "Harvey Wickes Felter and John Uri Lloyd",
+      "spine_color": "linear-gradient(160deg,#4a3520,#1e1610)",
+      "emblem": "em-mortar",
+      "description": "The standard reference of the Eclectic physicians -- 19th-century American doctors who broke from mainstream medicine to practice botanical treatment with real clinical rigor. Adopted as the Eclectic movement's official standard authority by resolution of the National Eclectic Medical Association in 1879. Still actively cited by practicing herbalists and naturopaths today, not just historians.",
+      "components": [
+        {
+          "slug": "kings-dispensatory-vol1-facsimile",
+          "role": "Facsimile: Volume 1 (A-F)",
+          "title": "Volume 1, A-F (1898 revision)",
+          "contributor": "Harvey Wickes Felter and John Uri Lloyd",
+          "year": 1898,
+          "loc_item": "",
+          "note": "Real scanned pages (University of Toronto copy, Medical Heritage Library). For the complete transcribed text, Henriette's Herbal has hosted and maintained a full transcription of this exact edition for decades (see source link) -- Oedio points to it directly rather than duplicating an entire two-volume medical reference into a second database.",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/kingsamericandis01kinguoft",
+          "source_label": "Internet Archive (University of Toronto copy); full transcription at henriettes-herb.com/eclectic/kings",
+          "group": "kings-dispensatory",
+          "group_title": "King's American Dispensatory"
+        },
+        {
+          "slug": "kings-dispensatory-vol2-facsimile",
+          "role": "Facsimile: Volume 2 (G-Z)",
+          "title": "Volume 2, G-Z (1898 revision)",
+          "contributor": "Harvey Wickes Felter and John Uri Lloyd",
+          "year": 1898,
+          "loc_item": "",
+          "note": "Completes the two-volume set.",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/kingsamericandis02kinguoft",
+          "source_label": "Internet Archive (University of Toronto copy); full transcription at henriettes-herb.com/eclectic/kings",
+          "group": "kings-dispensatory",
+          "group_title": "King's American Dispensatory"
+        }
+      ]
+    },
+    {
+      "slug": "ellingwood-american-materia-medica",
+      "section": "science",
+      "title": "American Materia Medica, Therapeutics and Pharmacognosy",
+      "author": "Finley Ellingwood",
+      "spine_color": "linear-gradient(160deg,#2e4a3a,#12201a)",
+      "emblem": "em-mortar",
+      "description": "A Chicago Eclectic physician's 1919 reference, organized unusually by body system rather than by plant -- 'agents acting on the nervous system,' 'agents acting on the heart' -- closer to how a clinician (or a store clerk fielding a symptom question) actually thinks. Considered a classic reference in herbal medicine; the book was nearly lost until herbalist Michael Moore rescued and re-scanned it.",
+      "components": [
+        {
+          "slug": "ellingwood-materia-medica-facsimile",
+          "role": "Facsimile",
+          "title": "American Materia Medica (1919)",
+          "contributor": "Finley Ellingwood",
+          "year": 1919,
+          "loc_item": "",
+          "note": "Real scanned pages. For the complete transcribed text, Henriette's Herbal hosts a full transcription (see source link).",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/b31352868",
+          "source_label": "Internet Archive; full transcription at henriettes-herb.com/eclectic/ellingwood"
+        }
+      ]
     }
   ]
 }
