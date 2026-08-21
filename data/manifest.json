@@ -3438,6 +3438,29 @@
           "source_label": "Internet Archive; full transcription at henriettes-herb.com/eclectic/ellingwood"
         }
       ]
+    },
+    {
+      "slug": "felter-eclectic-materia-medica",
+      "section": "science",
+      "title": "The Eclectic Materia Medica, Pharmacology and Therapeutics",
+      "author": "Harvey Wickes Felter",
+      "spine_color": "linear-gradient(160deg,#3a2e4a,#181220)",
+      "emblem": "em-mortar",
+      "description": "Felter's 1922 textbook, written in response to repeated requests from his own students at the Eclectic Medical College of Cincinnati -- a condensed, practical single-volume companion to the two-volume King's American Dispensatory he also co-authored. A practicing herbalist writing decades later described keeping several Eclectic materia medica volumes, this one included, beside the bed for regular reference.",
+      "components": [
+        {
+          "slug": "felter-eclectic-materia-medica-facsimile",
+          "role": "Facsimile",
+          "title": "The Eclectic Materia Medica, Pharmacology and Therapeutics (1922)",
+          "contributor": "Harvey Wickes Felter",
+          "year": 1922,
+          "loc_item": "",
+          "note": "Real scanned pages, 752 total. For the complete transcribed text, Henriette's Herbal hosts a full transcription (see source link).",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/bwb_Y0-AAQ-635_1",
+          "source_label": "Internet Archive; full transcription at henriettes-herb.com/eclectic/felter"
+        }
+      ]
     }
   ]
 }
