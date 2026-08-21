@@ -3330,6 +3330,52 @@
         }
       ],
       "emblem": "em-quill"
+    },
+    {
+      "slug": "gerard-herball",
+      "section": "science",
+      "title": "The Herball, or Generall Historie of Plantes",
+      "author": "John Gerard",
+      "spine_color": "linear-gradient(160deg,#3d5a2a,#1a2610)",
+      "emblem": "em-leaf",
+      "description": "The most influential English herbal ever printed — 1,000+ species across 1,482 pages, the first English description of the potato, and the standard reference for English gardeners and physicians well into the 18th century. This is the real 1597 first edition, page by page, as originally printed.",
+      "components": [
+        {
+          "slug": "gerard-herball-facsimile",
+          "role": "Facsimile",
+          "title": "The Herball (1597, first edition)",
+          "contributor": "John Gerard",
+          "year": 1597,
+          "loc_item": "",
+          "note": "Real scanned pages of the 1597 first edition (Missouri Botanical Garden / Biodiversity Heritage Library copy). This is the facsimile only -- for the full transcribed text, the Biodiversity Heritage Library and Internet Archive both host complete OCR text of this exact scan (see source link).",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/mobot31753000817749",
+          "source_label": "Internet Archive / Biodiversity Heritage Library (Missouri Botanical Garden copy)"
+        }
+      ]
+    },
+    {
+      "slug": "culpeper-complete-herbal",
+      "section": "science",
+      "title": "Culpeper's Complete Herbal",
+      "author": "Nicholas Culpeper",
+      "spine_color": "linear-gradient(160deg,#6b4423,#2e1c0e)",
+      "emblem": "em-leaf",
+      "description": "First published 1653 and still in print 370 years later -- the most enduring herbal in the English language. Culpeper broke with tradition by writing in English rather than Latin so ordinary people, not just physicians, could use it, and treated his poor patients in London for free.",
+      "components": [
+        {
+          "slug": "culpeper-facsimile",
+          "role": "Facsimile",
+          "title": "Complete Herbal (Glasgow University Library copy)",
+          "contributor": "Nicholas Culpeper",
+          "year": 1653,
+          "loc_item": "",
+          "note": "Real scanned pages of a historical printing (Milner and Company, Glasgow University Library copy, digitized by Internet Archive). For the complete transcribed text, Project Gutenberg hosts and maintains a full clean transcription of this work (see source link) -- rather than duplicate an entire book's text into a second database, Oedio points to it directly.",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/b21450705",
+          "source_label": "Internet Archive (Glasgow University Library copy); full transcription at Project Gutenberg #49513"
+        }
+      ]
     }
   ]
 }
