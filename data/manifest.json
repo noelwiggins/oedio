@@ -3271,6 +3271,62 @@
           "source_label": "Project Gutenberg (Milman/Guizot ed., 1845)",
           "group": "gibbon-volumes",
           "group_title": "The History of the Decline and Fall of the Roman Empire"
+        },
+        {
+          "slug": "gibbon-facsimile-vol1",
+          "role": "Facsimile: Volume 1",
+          "title": "Volume 1 (1781 printing, original text)",
+          "contributor": "Edward Gibbon",
+          "year": 1781,
+          "loc_item": "",
+          "note": "The actual first-edition pages, as originally printed -- Gibbon's own text and footnotes, without Milman and Guizot's 1845 editorial additions (that annotated text edition, with the footnote reading panel, is the other set of volumes above). This is a standalone facsimile, not page-aligned to the annotated text -- it's a different edition entirely, browsable on its own as a window into how Gibbon's readers first encountered the book in 1781.",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/bim_eighteenth-century_the-history-of-the-decli_gibbon-edward_1781_1",
+          "source_label": "Internet Archive (Boston Public Library copy, 1781 printing)",
+          "group": "gibbon-facsimile",
+          "group_title": "The History of the Decline and Fall of the Roman Empire — Original Facsimile"
+        },
+        {
+          "slug": "gibbon-facsimile-vol2",
+          "role": "Facsimile: Volume 2",
+          "title": "Volume 2 (1781 printing, original text)",
+          "contributor": "Edward Gibbon",
+          "year": 1781,
+          "loc_item": "",
+          "note": "Continues the 1781 first-edition facsimile set.",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/bim_eighteenth-century_the-history-of-the-decli_gibbon-edward_1781_2",
+          "source_label": "Internet Archive (Boston Public Library copy, 1781 printing)",
+          "group": "gibbon-facsimile",
+          "group_title": "The History of the Decline and Fall of the Roman Empire — Original Facsimile"
+        },
+        {
+          "slug": "gibbon-facsimile-vol3",
+          "role": "Facsimile: Volume 3",
+          "title": "Volume 3 (1781 printing, original text)",
+          "contributor": "Edward Gibbon",
+          "year": 1781,
+          "loc_item": "",
+          "note": "Completes the 1781 first-edition facsimile set (Volumes 1-3).",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/bim_eighteenth-century_the-history-of-the-decli_gibbon-edward_1781_3",
+          "source_label": "Internet Archive (Boston Public Library copy, 1781 printing)",
+          "group": "gibbon-facsimile",
+          "group_title": "The History of the Decline and Fall of the Roman Empire — Original Facsimile"
+        },
+        {
+          "slug": "gibbon-facsimile-vol4-6",
+          "role": "Facsimile: Volumes 4-6",
+          "title": "Volumes 4, 5 & 6 (1788 printing, bound together, original text)",
+          "contributor": "Edward Gibbon",
+          "year": 1788,
+          "loc_item": "",
+          "note": "The concluding three volumes, published together in 1788 to complete the original six-volume work -- bound as a single physical set in this copy (each volume marked by its own half-title page inside), so they're kept as one component here rather than split apart. 717 pages.",
+          "facsimile": true,
+          "source_url": "https://archive.org/details/bim_eighteenth-century_the-history-of-the-decli_gibbon-edward_1788",
+          "source_label": "Internet Archive (Boston Public Library copy, 1788 printing)",
+          "group": "gibbon-facsimile",
+          "group_title": "The History of the Decline and Fall of the Roman Empire — Original Facsimile"
         }
       ],
       "emblem": "em-quill"
