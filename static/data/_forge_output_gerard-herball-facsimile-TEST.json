@@ -1,0 +1,32 @@
+{
+  "job_name": "TEST gerard-herball-facsimile (3 pages)",
+  "completed_at": "2026-08-23T14:31:32.346698",
+  "segment_count": 3,
+  "results": [
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 501 Server Error: Not Implemented for url: https://iiif.archive.org/image/iiif/2/mobot31753000817749%2Fmobot31753000817749_jp2.tar%2Fmobot31753000817749_jp2%2Fmobot31753000817749_0000.jp2/full/pct:50/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "1",
+      "_error": "501 Server Error: Not Implemented for url: https://iiif.archive.org/image/iiif/2/mobot31753000817749%2Fmobot31753000817749_jp2.tar%2Fmobot31753000817749_jp2%2Fmobot31753000817749_0000.jp2/full/pct:50/0/default.jpg"
+    },
+    {
+      "title_inferred": "Title page of Gerard's Herball, 1597",
+      "original_text": "THE\nHERBALL\nOR GENERALL\nHistorie of\nPlantes.\nGathered by John Gerarde\nof London Master in\nCHIRVRGERIE.\nImprinted at London by\nIohn Norton.\n1597",
+      "translation": "THE\nHERBALL\nOR GENERAL\nHistory of\nPlants.\nGathered by John Gerard\nof London, Master in\nSURGERY.\nPrinted at London by\nJohn Norton.\n1597",
+      "legibility": "full",
+      "translator_notes": "This is the elaborately engraved title page of Gerard's Herball (1597). The border features allegorical figures, botanical imagery, putti, and at the bottom a formal garden scene. A later owner's inscription appears at the top: 'Ler Rachel ho romneo & nun' (partially legible, possibly a name and provenance note). A library stamp reading 'Mo. Bot. Garden' with the date '1893' is stamped in purple ink over the date '1597'. The word 'CHIRVRGERIE' is an Early Modern English spelling of 'Chirurgerie' (Surgery). The publisher's name 'Iohn' uses the period-typical 'I' for modern 'J'.",
+      "_label": "2"
+    },
+    {
+      "title_inferred": "Dedicatory page with coat of arms and Latin verse",
+      "original_text": "CORVNVM, VIA VNA.\n\nQuot descripta vides (Mecœnas) nomina florum,\nMueldus ἐχαθὼν tot tibi mente precor.",
+      "translation": "ONE HEART, ONE WAY. [motto on the coat of arms]\n\nAs many names of flowers as you see here described, O Maecenas,\nso many times does Mueldus [the author/dedicator], giving thanks, pray for you in his heart.",
+      "legibility": "partial",
+      "translator_notes": "The page features an elaborate heraldic woodcut coat of arms with two lions as supporters, a crest, and the Garter motto 'HONI SOIT QUI MAL Y PENSE' around the shield. The motto on the cartouche below reads 'CORVNVM, VIA VNA' (One Heart, One Way), which is the motto of William Cecil, Lord Burghley, to whom Gerard's Herball was dedicated. The Latin distich below addresses a 'Maecenas' (patron figure). The second line contains a Greek word — rendered here as 'ἐχαθὼν' — which is partially legible and uncertain; it may be a form of εὐχαριστῶν (giving thanks) or similar. There is a faint library stamp below the coat of arms. The name 'Mueldus' is uncertain and may be a Latinized form of the author's or dedicator's name.",
+      "_label": "3"
+    }
+  ]
+}
