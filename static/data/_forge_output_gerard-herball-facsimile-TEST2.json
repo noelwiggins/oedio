@@ -1,0 +1,36 @@
+{
+  "job_name": "TEST2 gerard-herball-facsimile (3 pages, post-fix)",
+  "completed_at": "2026-08-23T14:36:59.633826",
+  "segment_count": 3,
+  "results": [
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 501 Server Error: Not Implemented for url: https://iiif.archive.org/image/iiif/2/mobot31753000817749%2Fmobot31753000817749_jp2.tar%2Fmobot31753000817749_jp2%2Fmobot31753000817749_0000.jp2/full/pct:50/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "1",
+      "_error": "501 Server Error: Not Implemented for url: https://iiif.archive.org/image/iiif/2/mobot31753000817749%2Fmobot31753000817749_jp2.tar%2Fmobot31753000817749_jp2%2Fmobot31753000817749_0000.jp2/full/pct:50/0/default.jpg"
+    },
+    {
+      "title_inferred": "Title page of Gerard's Herball (1597)",
+      "original_text": "THE\nHERBALL\nOR GENERALL\nHistorie of\nPlantes.\n\nGathered by John Gerarde\nof London Master in\nCHIRVRGERIE.\n\nImprinted at London by\nIohn Norton.\n\n1597",
+      "translation": "THE HERBALL, OR GENERAL HISTORY OF PLANTS. Gathered by John Gerarde of London, Master in Surgery. Printed at London by John Norton. 1597.",
+      "legibility": "full",
+      "confidence": "high",
+      "confidence_reason": "The title page text is printed in clear roman and italic type and is well preserved and legible.",
+      "translator_notes": "An illegible ink inscription appears at the top of the page in a later cursive hand, possibly reading something like 'Ex libris Rachel...' or a similar ownership note; too faint/cursive to confidently transcribe. A pink stamp reading 'Mo. Bot. Garden 1899' (a library accession stamp) appears near the imprint date and is not part of the original text.",
+      "_label": "2"
+    },
+    {
+      "title_inferred": "Heraldic Coat of Arms with Latin Motto (Dedication Page)",
+      "original_text": "HONI SOIT QUI MAL Y PENSE\n\nCOR VNVM, VIA VNA.\n\nQuot descripta vides (Mecœnas) nomina florum,\nMυειάδας εξαθῶν tot tibi mente precor.",
+      "translation": "Shame on him who thinks evil of it (the Order of the Garter motto)\n\nOne heart, one way.\n\nAs many named flowers as you see described here, Patron,\nSo many myriads [of blessings] I wish you with my whole mind.",
+      "legibility": "full",
+      "confidence": "medium",
+      "confidence_reason": "The heraldic motto and Latin verses are clear, but the small Greek phrase and fine details of the woodcut inscription are difficult to render with full certainty.",
+      "translator_notes": "The image shows an elaborate heraldic achievement (coat of arms with supporters of two lions, a helm, and crest) surrounded by the Garter motto 'HONI SOIT QUI MAL Y PENSE'. Below the shield is the motto 'COR VNVM, VIA VNA' (One heart, one way). Beneath the woodcut is a Latin distich addressed to a patron (Mecoenas), with a partial Greek phrase inserted, likely a scribal or printer's flourish. A faint pink stamp/label appears on the shield area but is illegible and appears to be a later library marking, not part of the original text.",
+      "_label": "3"
+    }
+  ]
+}
