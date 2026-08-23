@@ -287,10 +287,19 @@ def api_search_fulltext():
     if not match_expr:
         return jsonify({"results": [], "query": q})
 
+    # bm25() column weights, in table-column order (text, title, author).
+    # Un-weighted, a title/author match ranks the same as one incidental
+    # mention in body text -- so searching an author's name to find their
+    # own book could lose to some other book that happens to name-drop them
+    # once. Title and author matches get weighted far above body text, since
+    # someone searching a specific known name/title wants that work itself,
+    # not just anything that mentions it in passing. (bm25 scores are
+    # negative -- more negative is a better match -- so these are the
+    # per-column *multipliers* applied before summing, not point bonuses.)
     rows = con.execute(
         """
         SELECT m.megabook_slug, m.megabook_title, m.component_slug, m.component_title, m.page,
-               bm25(pages_fts) AS rank
+               bm25(pages_fts, 1.0, 8.0, 8.0) AS rank
         FROM pages_fts
         JOIN pages_meta m ON m.rowid = pages_fts.rowid
         WHERE pages_fts MATCH ?

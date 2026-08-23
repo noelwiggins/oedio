@@ -37,7 +37,7 @@ def main():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
     con = sqlite3.connect(DB_PATH)
-    con.execute("CREATE VIRTUAL TABLE pages_fts USING fts5(text, content='')")
+    con.execute("CREATE VIRTUAL TABLE pages_fts USING fts5(text, title, author, content='')")
     con.execute("""
         CREATE TABLE pages_meta (
             rowid INTEGER PRIMARY KEY,
@@ -79,7 +79,12 @@ def main():
                 if len(text.strip()) < 20:
                     continue  # skip blank/near-blank pages, not worth indexing
                 rowid += 1
-                con.execute("INSERT INTO pages_fts(rowid, text) VALUES (?, ?)", (rowid, text))
+                title_text = f"{mb['title']} {comp.get('title', comp.get('role', ''))}"
+                author_text = f"{mb.get('author', '')} {comp.get('contributor', '')}"
+                con.execute(
+                    "INSERT INTO pages_fts(rowid, text, title, author) VALUES (?, ?, ?, ?)",
+                    (rowid, text, title_text, author_text),
+                )
                 con.execute(
                     "INSERT INTO pages_meta(rowid, megabook_slug, megabook_title, component_slug, "
                     "component_title, page, char_count) VALUES (?, ?, ?, ?, ?, ?, ?)",
