@@ -66,7 +66,7 @@
   .reader-header { flex:none; }
   .reader-layout { display:flex; flex:1; min-height:0; }
   .reader-layout { --split: 45%; }
-  .reader-image-panel { width:var(--split); background:#000; overflow-y:auto; scroll-behavior:auto; position:relative; }
+  .reader-image-panel { width:var(--split); background:#000; overflow-y:auto; overflow-anchor:none; scroll-behavior:auto; position:relative; }
   .reader-app.facsimile-app .reader-layout { --split: 45%; } /* unused when hidden, harmless default */
   .reader-split-handle { flex:0 0 auto; width:10px; margin:0 -5px; cursor:col-resize;
     position:relative; z-index:80; background:transparent; touch-action:none; }
@@ -107,7 +107,7 @@
     box-shadow: 0 4px 24px rgba(0,0,0,.5); cursor:zoom-in; }
   .reader-image-block.reader-image-current img { box-shadow: 0 0 0 2px var(--md-sys-color-primary), 0 4px 24px rgba(0,0,0,.5); }
   .reader-text-panel-wrap { position:relative; width:calc(100% - var(--split)); height:100%; flex:1 1 auto; }
-  .reader-text-panel { width:100%; overflow-y:auto; height:100%;
+  .reader-text-panel { width:100%; overflow-y:auto; overflow-anchor:none; height:100%;
     padding: 24px 32px calc(24px + env(safe-area-inset-bottom)); }
 
   /* Find-on-page style minimap: a thin strip of orange bands next to the text
