@@ -1109,25 +1109,23 @@ function suppressImageSyncBriefly() {
   clearTimeout(imageSyncSuppressTimer);
   imageSyncSuppressTimer = setTimeout(() => { imageSyncSuppressed = false; }, 1500);
 }
-// Robust "which page is the reader actually on" tracking. A single 50%
-// visibility threshold works fine for short text blocks, but a full-height
-// scan photo can occupy nearly the entire viewport for a wide range of
-// scroll positions -- it stays "more than 50% visible" long after the
-// reader has moved past its top edge, which is what was producing
-// persistent, growing drift rather than the sync catching up. Track the
-// full set of currently-visible blocks per panel and pick whichever one's
-// top edge is genuinely closest to the panel's own top -- the same logic
-// a native scrollspy/reading-position implementation would use.
+// Debounced "settle and snap" page sync, replacing the earlier reactive
+// approach. The two panels can move at completely different natural
+// paces -- a tall scan image barely scrolls past in the time a short
+// paragraph of translation flies by -- so trying to correct DURING active
+// scrolling means the correction is constantly being interrupted and
+// re-triggered by the reader's own continued scroll input, which can look
+// like nothing is happening at all. Instead: each panel tracks its own
+// current page immediately and independently (for the page indicator,
+// resume cookie, etc.), but the panels only ever pull each other into
+// sync once scrolling has genuinely stopped -- like a slot machine wheel
+// settling into place, not being yanked mid-spin.
 const visibleInText = new Set();
 const visibleInImage = new Set();
 function closestToTop(elements, panelTop) {
   let best = null, bestDist = Infinity;
   elements.forEach(el => {
     const top = el.getBoundingClientRect().top - panelTop;
-    // Prefer blocks whose top has already passed the panel's own top edge
-    // (i.e. the reader has scrolled to or past them) -- among those, the
-    // one closest to 0 is the current page. Blocks still below the top
-    // are only used as a fallback if nothing has been reached yet.
     const dist = top <= 40 ? Math.abs(top) : top + 100000;
     if (dist < bestDist) { bestDist = dist; best = el; }
   });
@@ -1139,86 +1137,86 @@ const imgObserver = new IntersectionObserver((entries) => {
     if (entry.isIntersecting) visibleInText.add(entry.target);
     else visibleInText.delete(entry.target);
   });
-  if (syncInProgress) return; // this intersection change was caused by the reverse sync direction, not a genuine reader scroll
   const panelRect = panel.getBoundingClientRect();
   const current = closestToTop(visibleInText, panelRect.top);
   if (!current) return;
-  {
-      const pageNum = current.dataset.page;
-      currentPageNum = parseInt(pageNum, 10);
-      pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
-      setCookie(RESUME_COOKIE, pageNum);
-      _saveContinueReading(current);
-      updateProgress();
-      // Keep the right panel genuinely in sync with whatever page is in
-      // view on the left side -- whether the right panel currently holds
-      // scan images (.reader-image-block) or another text layer like a
-      // translation (.reader-simple-text-block), since the earlier version
-      // of this fix only searched for image blocks and silently did nothing
-      // when two text layers were being compared side by side.
-      if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
-      const imgBlock = imagePanel.querySelector(`.reader-image-block[data-page="${pageNum}"], .reader-simple-text-block[data-page="${pageNum}"]`);
-      if (imgBlock) {
-        imgBlock.classList.add('reader-image-current');
-        currentImageBlock = imgBlock;
-        if (!imageSyncSuppressed) {
-          const imgRect = imgBlock.getBoundingClientRect();
-          const panelRect2 = imagePanel.getBoundingClientRect();
-          // Only correct drift once it's meaningfully out of sync -- avoids
-          // fighting a reader who is deliberately scrolling the scan panel
-          // on their own to look closer at something, and avoids jittery
-          // re-scrolling on every minor intersection tick.
-          if (imgRect.top < panelRect2.top - 40 || imgRect.top > panelRect2.top + panelRect2.height * 0.6) {
-            syncInProgress = true;
-            imgBlock.scrollIntoView({ block: 'start', behavior: 'auto' });
-            setTimeout(() => { syncInProgress = false; }, 150);
-          }
-        }
-      }
-  }
+  const pageNum = current.dataset.page;
+  currentPageNum = parseInt(pageNum, 10);
+  pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
+  setCookie(RESUME_COOKIE, pageNum);
+  _saveContinueReading(current);
+  updateProgress();
 }, { root: null, threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
 
-// Reverse direction: the right panel (scans, or a second text layer) is
-// very often much taller per page than the left -- a full manuscript photo
-// vs a short paragraph of translation -- so a reader working through the
-// book by scrolling the right panel needs the left panel to follow just as
-// reliably as the other way around. Anchored on data-page, exactly like
-// the left-to-right direction above, with the same loop-prevention flag
-// and the same closest-to-top tracking.
 const rightPanelObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) visibleInImage.add(entry.target);
     else visibleInImage.delete(entry.target);
   });
-  if (syncInProgress) return;
   const panelRect = imagePanel.getBoundingClientRect();
   const current = closestToTop(visibleInImage, panelRect.top);
   if (!current) return;
-  {
-      const pageNum = current.dataset.page;
-      currentPageNum = parseInt(pageNum, 10);
-      pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
-      setCookie(RESUME_COOKIE, pageNum);
-      updateProgress();
-      if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
-      currentImageBlock = current;
-      current.classList.add('reader-image-current');
-      const textBlock = panel.querySelector(`.reader-page-block[data-page="${pageNum}"]`);
-      if (textBlock) {
-        if (currentTextBlock) currentTextBlock.classList.remove('reader-page-current');
-        currentTextBlock = textBlock;
-        if (!imageSyncSuppressed) {
-          const textRect = textBlock.getBoundingClientRect();
-          const panelRect2 = panel.getBoundingClientRect();
-          if (textRect.top < panelRect2.top - 40 || textRect.top > panelRect2.top + panelRect2.height * 0.6) {
-            syncInProgress = true;
-            textBlock.scrollIntoView({ block: 'start', behavior: 'auto' });
-            setTimeout(() => { syncInProgress = false; }, 150);
-          }
-        }
-      }
-  }
+  const pageNum = current.dataset.page;
+  currentPageNum = parseInt(pageNum, 10);
+  pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
+  setCookie(RESUME_COOKIE, pageNum);
+  updateProgress();
+  if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
+  currentImageBlock = current;
+  current.classList.add('reader-image-current');
 }, { root: null, threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] });
+
+// The actual cross-panel sync: fires only once a panel's own scrolling has
+// been still for a short beat. syncInProgress prevents the snap itself
+// (a programmatic scroll on the OTHER panel) from being mistaken for that
+// panel's own genuine scroll and triggering a snap back.
+let textScrollSettleTimer = null;
+let imageScrollSettleTimer = null;
+
+function snapToPage(pageNum, drivingPanel) {
+  if (syncInProgress) return;
+  const targetPanel = drivingPanel === 'text' ? imagePanel : panel;
+  const sel = drivingPanel === 'text'
+    ? `.reader-image-block[data-page="${pageNum}"], .reader-simple-text-block[data-page="${pageNum}"]`
+    : `.reader-page-block[data-page="${pageNum}"]`;
+  const target = targetPanel.querySelector(sel);
+  if (!target) return;
+  const targetRect = target.getBoundingClientRect();
+  const panelRect = targetPanel.getBoundingClientRect();
+  if (targetRect.top < panelRect.top - 40 || targetRect.top > panelRect.top + panelRect.height * 0.6) {
+    syncInProgress = true;
+    target.scrollIntoView({ block: 'start', behavior: 'auto' });
+    setTimeout(() => { syncInProgress = false; }, 250);
+  }
+  if (drivingPanel === 'text') {
+    if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
+    target.classList.add('reader-image-current');
+    currentImageBlock = target;
+  } else {
+    if (currentTextBlock) currentTextBlock.classList.remove('reader-page-current');
+    currentTextBlock = target;
+  }
+}
+
+panel.addEventListener('scroll', () => {
+  if (syncInProgress || imageSyncSuppressed) return;
+  clearTimeout(textScrollSettleTimer);
+  textScrollSettleTimer = setTimeout(() => {
+    const panelRect = panel.getBoundingClientRect();
+    const current = closestToTop(visibleInText, panelRect.top);
+    if (current) snapToPage(current.dataset.page, 'text');
+  }, 220);
+}, { passive: true });
+
+imagePanel.addEventListener('scroll', () => {
+  if (syncInProgress || imageSyncSuppressed) return;
+  clearTimeout(imageScrollSettleTimer);
+  imageScrollSettleTimer = setTimeout(() => {
+    const panelRect = imagePanel.getBoundingClientRect();
+    const current = closestToTop(visibleInImage, panelRect.top);
+    if (current) snapToPage(current.dataset.page, 'image');
+  }, 220);
+}, { passive: true });
 
 function renderNextBatch() {
   const slice = allPages.slice(renderedCount, renderedCount + PAGE_BATCH_SIZE);
