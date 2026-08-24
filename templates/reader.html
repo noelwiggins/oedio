@@ -1106,15 +1106,14 @@ const imgObserver = new IntersectionObserver((entries) => {
       setCookie(RESUME_COOKIE, pageNum);
       _saveContinueReading(entry.target);
       updateProgress();
-      // Keep the image panel genuinely in sync with whatever page is in
-      // view on the text side -- the scan is the foundational layer every
-      // other layer's page numbers are keyed to, so when they drift apart
-      // (a page of transcribed text is a different height than a scanned
-      // page image, especially around blank/plate pages), the image panel
-      // needs to actively follow, not just get a highlight while silently
-      // falling behind.
+      // Keep the right panel genuinely in sync with whatever page is in
+      // view on the left side -- whether the right panel currently holds
+      // scan images (.reader-image-block) or another text layer like a
+      // translation (.reader-simple-text-block), since the earlier version
+      // of this fix only searched for image blocks and silently did nothing
+      // when two text layers were being compared side by side.
       if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
-      const imgBlock = imagePanel.querySelector(`.reader-image-block[data-page="${pageNum}"]`);
+      const imgBlock = imagePanel.querySelector(`.reader-image-block[data-page="${pageNum}"], .reader-simple-text-block[data-page="${pageNum}"]`);
       if (imgBlock) {
         imgBlock.classList.add('reader-image-current');
         currentImageBlock = imgBlock;
