@@ -1411,6 +1411,18 @@ fetch('{{ data_url }}')
         if (target && Math.abs(target.getBoundingClientRect().top) > 4) {
           target.scrollIntoView({ block: 'start' });
         }
+        // The right panel was previously left to catch up on its own via
+        // the intersection observer once suppression lifted -- but that
+        // relies on whatever happens to be intersecting at that moment,
+        // which doesn't reliably land on the actual jump target and was
+        // producing real, persistent mismatches (e.g. left panel correctly
+        // on page 6, right panel stuck on page 3 from before the jump).
+        // Explicitly scroll the right panel to the same target directly,
+        // the same way the left panel already does.
+        const rightTarget = imagePanel.querySelector(`.reader-image-block[data-page="${jumpTarget}"], .reader-simple-text-block[data-page="${jumpTarget}"]`);
+        if (rightTarget && Math.abs(rightTarget.getBoundingClientRect().top) > 4) {
+          rightTarget.scrollIntoView({ block: 'start' });
+        }
       };
       scrollToJumpTarget();
       const jumpSettleInterval = setInterval(() => {

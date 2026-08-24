@@ -3463,7 +3463,7 @@
    ]
   },
   {
-   "slug": "zia-quran",
+   "slug": "ziya-quran",
    "title": "An Ottoman Illuminated Quran",
    "author": "Unknown Ottoman scribe",
    "spine_color": "linear-gradient(160deg,#2e4a3a,#0f2818)",
@@ -3473,7 +3473,7 @@
    "overview": "This Oedio exists because a reader offered to share it. Ziya Danishmend photographed 70 pages from an illuminated Ottoman Quran manuscript in his own collection and submitted the scans to be added here -- our thanks to him for making a genuinely rare, privately-held historical document publicly accessible for the first time. The submitted pages run from Surat al-An'am (chapter 6) through the end of the Quranic text and into a section of appended prayers, including the Du'a al-Adhan (the supplication recited after the call to prayer) -- consistent with the way complete Ottoman Quran manuscripts were traditionally bound with devotional material attached. Each surah opens with a gold-illuminated headpiece in a distinctive Ottoman decorative style, and the margins carry additional annotation in Ottoman Turkish alongside the Arabic Quranic text. Ziya has noted that these 70 pages represent roughly a third of the complete manuscript, with further sections to be submitted later -- this Oedio will grow to reflect that as more arrives.",
    "components": [
     {
-     "slug": "zia-quran-manuscript",
+     "slug": "ziya-quran-manuscript",
      "role": "Manuscript (submitted, part 1 of ~3)",
      "title": "Illuminated Quran Manuscript — Surat al-An'am through appended prayers",
      "contributor": "Submitted by Ziya Danishmend, from his personal collection",
@@ -3482,27 +3482,30 @@
      "note": "Photographed by Ziya Danishmend and submitted to Oedio directly -- our thanks to him for this contribution. Covers Surat al-An'am (ch. 6) through the end of the Quranic text and into appended devotional material including the Du'a al-Adhan. This is the first of an expected three submissions covering the complete manuscript; later sections will be added to this same entry as they arrive, continuing the page numbering forward from page 70.",
      "facsimile": true,
      "source_url": "",
-     "source_label": "Submitted by Ziya Danishmend"
+     "source_label": "Submitted by Ziya Danishmend",
+     "data_slug": "zia-quran-manuscript"
     },
     {
-     "slug": "zia-quran-manuscript-transcription",
+     "slug": "ziya-quran-manuscript-transcription",
      "role": "Arabic text",
      "title": "Arabic Quranic Text — clean transcription (AI)",
      "contributor": "Transcribed from Ziya Danishmend's scans by Claude (AI)",
      "year": 1750,
      "loc_item": "",
      "note": "A clean, searchable transcription of the Quranic Arabic text and Ottoman Turkish marginal notes, beside the original manuscript photographs. Unverified against the printed Uthmani text.",
-     "facsimile": false
+     "facsimile": false,
+     "data_slug": "zia-quran-manuscript-transcription"
     },
     {
-     "slug": "zia-quran-manuscript-english",
+     "slug": "ziya-quran-manuscript-english",
      "role": "Translations",
      "title": "English Translation (AI)",
      "contributor": "Translated by Claude (AI)",
      "year": 1750,
      "loc_item": "",
      "note": "An AI English translation generated directly from the manuscript images. For the Quranic text itself, readers seeking an authoritative rendering should consult a scholarly translation (e.g., Abdel Haleem, Sahih International) rather than rely on this as definitive -- this translation exists to make the manuscript's content generally accessible, not to serve as a religious authority.",
-     "facsimile": false
+     "facsimile": false,
+     "data_slug": "zia-quran-manuscript-english"
     }
    ]
   }
