@@ -1100,6 +1100,11 @@ let imageSyncSuppressTimer = null;
 // block directly. syncInProgress prevents the two observers from
 // ping-ponging off each other's own sync-triggered scroll.
 let syncInProgress = false;
+// TEMPORARY DIAGNOSTIC: cross-panel sync completely disabled to isolate
+// whether the sync mechanism itself is causing the reported "bouncing on
+// load" behavior, or whether something else entirely is responsible.
+// Remove this and the guards below once the real cause is confirmed.
+const SYNC_DISABLED_FOR_DIAGNOSIS = true;
 imagePanel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
 imagePanel.addEventListener('touchmove', suppressImageSyncBriefly, { passive: true });
 panel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
@@ -1174,6 +1179,7 @@ let textScrollSettleTimer = null;
 let imageScrollSettleTimer = null;
 
 function snapToPage(pageNum, drivingPanel) {
+  if (SYNC_DISABLED_FOR_DIAGNOSIS) return;
   if (syncInProgress) return;
   const targetPanel = drivingPanel === 'text' ? imagePanel : panel;
   const sel = drivingPanel === 'text'
