@@ -1100,11 +1100,6 @@ let imageSyncSuppressTimer = null;
 // block directly. syncInProgress prevents the two observers from
 // ping-ponging off each other's own sync-triggered scroll.
 let syncInProgress = false;
-// TEMPORARY DIAGNOSTIC: cross-panel sync completely disabled to isolate
-// whether the sync mechanism itself is causing the reported "bouncing on
-// load" behavior, or whether something else entirely is responsible.
-// Remove this and the guards below once the real cause is confirmed.
-const SYNC_DISABLED_FOR_DIAGNOSIS = true;
 imagePanel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
 imagePanel.addEventListener('touchmove', suppressImageSyncBriefly, { passive: true });
 panel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
@@ -1179,7 +1174,6 @@ let textScrollSettleTimer = null;
 let imageScrollSettleTimer = null;
 
 function snapToPage(pageNum, drivingPanel) {
-  if (SYNC_DISABLED_FOR_DIAGNOSIS) return;
   if (syncInProgress) return;
   const targetPanel = drivingPanel === 'text' ? imagePanel : panel;
   const sel = drivingPanel === 'text'
@@ -1501,32 +1495,29 @@ fetch('{{ data_url }}')
       clearTimeout(imageSyncSuppressTimer);
       const jumpSettleStart = Date.now();
       const JUMP_SETTLE_BUDGET = 10000;
+      let stableChecks = 0;
       const scrollToJumpTarget = () => {
         const target = panel.querySelector(`.reader-page-block[data-page="${jumpTarget}"]`);
-        if (target && Math.abs(target.getBoundingClientRect().top) > 4) {
-          target.scrollIntoView({ block: 'start' });
-        }
-        // The right panel was previously left to catch up on its own via
-        // the intersection observer once suppression lifted -- but that
-        // relies on whatever happens to be intersecting at that moment,
-        // which doesn't reliably land on the actual jump target and was
-        // producing real, persistent mismatches (e.g. left panel correctly
-        // on page 6, right panel stuck on page 3 from before the jump).
-        // Explicitly scroll the right panel to the same target directly,
-        // the same way the left panel already does.
         const rightTarget = imagePanel.querySelector(`.reader-image-block[data-page="${jumpTarget}"], .reader-simple-text-block[data-page="${jumpTarget}"]`);
-        if (rightTarget && Math.abs(rightTarget.getBoundingClientRect().top) > 4) {
-          rightTarget.scrollIntoView({ block: 'start' });
-        }
-      };
-      scrollToJumpTarget();
-      const jumpSettleInterval = setInterval(() => {
-        scrollToJumpTarget();
-        if (Date.now() - jumpSettleStart > JUMP_SETTLE_BUDGET) {
+        const leftOff = target && Math.abs(target.getBoundingClientRect().top) > 4;
+        const rightOff = rightTarget && Math.abs(rightTarget.getBoundingClientRect().top) > 4;
+        if (leftOff) target.scrollIntoView({ block: 'start' });
+        if (rightOff) rightTarget.scrollIntoView({ block: 'start' });
+        // Stop as soon as both panels have genuinely settled, rather than
+        // continuing to re-snap for the full budget regardless -- if
+        // nothing needed correcting for two checks in a row, further
+        // "corrections" are just fighting normal layout settling (e.g.
+        // images still loading in) and were producing visible bouncing
+        // on every single page load with a resume position, not just
+        // real jumps.
+        if (!leftOff && !rightOff) stableChecks++; else stableChecks = 0;
+        if (stableChecks >= 2 || Date.now() - jumpSettleStart > JUMP_SETTLE_BUDGET) {
           clearInterval(jumpSettleInterval);
           imageSyncSuppressed = false;
         }
-      }, 200);
+      };
+      scrollToJumpTarget();
+      const jumpSettleInterval = setInterval(scrollToJumpTarget, 400);
     }
 
     // --- In-book search ---
