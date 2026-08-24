@@ -1089,16 +1089,28 @@ if (langToggle) {
 }
 
 let currentImageBlock = null;
+let currentTextBlock = null;
 let imageSyncSuppressed = false;
 let imageSyncSuppressTimer = null;
+// The two panels can have dramatically different heights per page -- a
+// scanned manuscript photo is much taller than a short block of translated
+// text -- so proportional/scroll-position-based syncing doesn't hold. Both
+// directions anchor on the actual page NUMBER instead: whichever panel the
+// reader is actively scrolling drives the other to the matching data-page
+// block directly. syncInProgress prevents the two observers from
+// ping-ponging off each other's own sync-triggered scroll.
+let syncInProgress = false;
 imagePanel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
 imagePanel.addEventListener('touchmove', suppressImageSyncBriefly, { passive: true });
+panel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
+panel.addEventListener('touchmove', suppressImageSyncBriefly, { passive: true });
 function suppressImageSyncBriefly() {
   imageSyncSuppressed = true;
   clearTimeout(imageSyncSuppressTimer);
   imageSyncSuppressTimer = setTimeout(() => { imageSyncSuppressed = false; }, 1500);
 }
 const imgObserver = new IntersectionObserver((entries) => {
+  if (syncInProgress) return; // this intersection change was caused by the reverse sync direction, not a genuine reader scroll
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const pageNum = entry.target.dataset.page;
@@ -1126,7 +1138,45 @@ const imgObserver = new IntersectionObserver((entries) => {
           // on their own to look closer at something, and avoids jittery
           // re-scrolling on every minor intersection tick.
           if (imgRect.top < panelRect.top - 40 || imgRect.top > panelRect.top + panelRect.height * 0.6) {
+            syncInProgress = true;
             imgBlock.scrollIntoView({ block: 'start', behavior: 'auto' });
+            setTimeout(() => { syncInProgress = false; }, 150);
+          }
+        }
+      }
+    }
+  });
+}, { root: null, threshold: 0.5 });
+
+// Reverse direction: the right panel (scans, or a second text layer) is
+// very often much taller per page than the left -- a full manuscript photo
+// vs a short paragraph of translation -- so a reader working through the
+// book by scrolling the right panel needs the left panel to follow just as
+// reliably as the other way around. Anchored on data-page, exactly like
+// the left-to-right direction above, with the same loop-prevention flag.
+const rightPanelObserver = new IntersectionObserver((entries) => {
+  if (syncInProgress) return;
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const pageNum = entry.target.dataset.page;
+      currentPageNum = parseInt(pageNum, 10);
+      pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
+      setCookie(RESUME_COOKIE, pageNum);
+      updateProgress();
+      if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
+      currentImageBlock = entry.target;
+      entry.target.classList.add('reader-image-current');
+      const textBlock = panel.querySelector(`.reader-page-block[data-page="${pageNum}"]`);
+      if (textBlock) {
+        if (currentTextBlock) currentTextBlock.classList.remove('reader-page-current');
+        currentTextBlock = textBlock;
+        if (!imageSyncSuppressed) {
+          const textRect = textBlock.getBoundingClientRect();
+          const panelRect = panel.getBoundingClientRect();
+          if (textRect.top < panelRect.top - 40 || textRect.top > panelRect.top + panelRect.height * 0.6) {
+            syncInProgress = true;
+            textBlock.scrollIntoView({ block: 'start', behavior: 'auto' });
+            setTimeout(() => { syncInProgress = false; }, 150);
           }
         }
       }
@@ -1265,10 +1315,14 @@ async function setLeftSlot(slug) {
   const pages = await fetchLayerData(entry.data_slug || slug);
   const targetPage = currentPageNum;
   imagePanel.querySelectorAll('.reader-image-block, .reader-simple-text-block').forEach(el => el.remove());
+  rightPanelObserver.disconnect();
   const frag = document.createDocumentFragment();
   pages.forEach(p => {
     const block = entry.kind === 'image' ? buildLeftImageBlock(p) : buildLeftTextBlock(p);
-    if (block) frag.appendChild(block);
+    if (block) {
+      frag.appendChild(block);
+      rightPanelObserver.observe(block);
+    }
   });
   imagePanel.insertBefore(frag, imageSentinel);
   // Land on the same page you were reading in whatever layer was showing
