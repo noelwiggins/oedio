@@ -1199,7 +1199,7 @@ function snapToPage(pageNum, drivingPanel) {
 }
 
 panel.addEventListener('scroll', () => {
-  if (syncInProgress || imageSyncSuppressed) return;
+  if (syncInProgress) return;
   clearTimeout(textScrollSettleTimer);
   textScrollSettleTimer = setTimeout(() => {
     const panelRect = panel.getBoundingClientRect();
@@ -1209,7 +1209,7 @@ panel.addEventListener('scroll', () => {
 }, { passive: true });
 
 imagePanel.addEventListener('scroll', () => {
-  if (syncInProgress || imageSyncSuppressed) return;
+  if (syncInProgress) return;
   clearTimeout(imageScrollSettleTimer);
   imageScrollSettleTimer = setTimeout(() => {
     const panelRect = imagePanel.getBoundingClientRect();
