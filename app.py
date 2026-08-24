@@ -57,6 +57,21 @@ def _reader_url(slug):
 
 app = Flask(__name__)
 
+
+@app.after_request
+def add_cache_headers(response):
+    """HTML pages must always revalidate with the server -- this site
+    updates frequently (new content, bug fixes), and a page silently served
+    from the browser's own cache with no explicit directive telling it not
+    to can look exactly like a fix "not working" when it's actually just
+    not been loaded at all. Static assets (images, reader-data JSON) are
+    untouched here and keep normal caching, since those don't carry the
+    same staleness risk and genuinely benefit from it."""
+    if response.content_type and response.content_type.startswith("text/html"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MANIFEST_PATH = os.path.join(BASE_DIR, "data", "manifest.json")
 
