@@ -158,10 +158,11 @@ for _mb in MEGABOOKS:
         _group = []
         for _slug in _member_slugs:
             _mc = _by_slug[_slug]
+            _data_slug = _mc.get("data_slug", _slug)
             if _slug == _base:
-                _group.append({"slug": _slug, "kind": "image", "label": "Original scan"})
+                _group.append({"slug": _slug, "data_slug": _data_slug, "kind": "image", "label": "Original scan"})
             else:
-                _group.append({"slug": _slug, "kind": _mc.get("layer_kind", "text"), "label": _mc["title"]})
+                _group.append({"slug": _slug, "data_slug": _data_slug, "kind": _mc.get("layer_kind", "text"), "label": _mc["title"]})
         for _slug in _member_slugs:
             PANEL_GROUPS[_slug] = _group
 

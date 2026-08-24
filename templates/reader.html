@@ -1261,7 +1261,7 @@ let leftSlotSlug = null;
 async function setLeftSlot(slug) {
   leftSlotSlug = slug;
   const entry = groupEntry(slug);
-  const pages = await fetchLayerData(slug);
+  const pages = await fetchLayerData(entry.data_slug || slug);
   const targetPage = currentPageNum;
   imagePanel.querySelectorAll('.reader-image-block, .reader-simple-text-block').forEach(el => el.remove());
   const frag = document.createDocumentFragment();
@@ -1280,7 +1280,7 @@ async function setLeftSlot(slug) {
 
 async function setRightSlot(slug) {
   const entry = groupEntry(slug);
-  const pages = await fetchLayerData(slug);
+  const pages = await fetchLayerData(entry.data_slug || slug);
   const targetPage = currentPageNum;
   panel.querySelectorAll('.reader-page-block').forEach(el => el.remove());
   loadMoreObserver.disconnect();
