@@ -57,6 +57,11 @@ _wikimedia_last_request = [0.0]
 
 def fetch_image_b64(url):
     headers = {"User-Agent": "oedio.com megabook builder (noel@harmonyball.com)"}
+    if not url.startswith("http"):
+        # Local file path -- used for user-submitted scans processed directly
+        # from disk before the images are deployed and have a real URL yet.
+        with open(url, "rb") as f:
+            return base64.b64encode(f.read()).decode()
     if "wikimedia.org" in url:
         # Wikimedia's robot policy requires concurrency of at most 1 and a
         # delay of at least 1 second between requests -- enforce both here
@@ -96,6 +101,11 @@ def call_claude(img_b64, lang, description, want_translation):
     for attempt in range(3):
         try:
             resp = json.loads(urllib.request.urlopen(req, timeout=90).read())
+            usage = resp.get("usage", {})
+            if usage:
+                with open("/tmp/forge_token_log.jsonl", "a") as logf:
+                    logf.write(json.dumps({"input_tokens": usage.get("input_tokens", 0),
+                                            "output_tokens": usage.get("output_tokens", 0)}) + "\n")
             return "".join(b.get("text", "") for b in resp.get("content", []))
         except Exception as e:
             if attempt == 2:
