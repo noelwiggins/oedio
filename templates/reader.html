@@ -81,6 +81,25 @@
   body.reader-splitting { cursor:col-resize !important; user-select:none !important; }
   body.reader-splitting * { user-select:none !important; }
   .reader-app.facsimile-app .reader-split-handle { display:none; }
+  .reader-app.singlepage-mode .reader-split-handle { display:none; }
+  .reader-app.singlepage-mode .reader-image-panel,
+  .reader-app.singlepage-mode .reader-text-panel-wrap { width:100% !important; flex:1 1 100%; }
+  .reader-app.singlepage-mode.singlepage-showing-image .reader-text-panel-wrap { display:none; }
+  .reader-app.singlepage-mode.singlepage-showing-text .reader-image-panel { display:none; }
+  #reader-singlepage-toggle-bar { position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
+    z-index:60; display:none; background:rgba(20,20,20,.92); backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:5px; gap:2px;
+    box-shadow:0 6px 24px rgba(0,0,0,.4); }
+  .reader-app.singlepage-mode #reader-singlepage-toggle-bar { display:flex; }
+  #reader-singlepage-toggle-bar button { border:none; background:transparent; color:rgba(255,255,255,.65);
+    font-family:Roboto,sans-serif; font-size:12.5px; padding:8px 16px; border-radius:999px; cursor:pointer;
+    white-space:nowrap; transition:background .15s, color .15s; }
+  #reader-singlepage-toggle-bar button.active { background:var(--md-sys-color-primary); color:#1a1a1a; font-weight:500; }
+  #reader-singlepage-toggle-bar button:not(.active):hover { background:rgba(255,255,255,.08); color:#fff; }
+  @media (max-width: 800px) {
+    #reader-singlepage-toggle-bar { bottom:16px; }
+    #reader-singlepage-toggle-bar button { padding:8px 12px; font-size:12px; }
+  }
   @media (max-width: 800px) { .reader-split-handle { display:none; } }
   /* Panel-layer pickers: shown only for books with AI-forged sibling layers
      (facsimile + transcription + translation share pagination, so either
@@ -588,6 +607,9 @@
     <button class="reader-icon-btn" id="reader-fullscreen-btn" title="Fullscreen reading (hide toolbar)" aria-label="Fullscreen reading">
       <span class="material-symbols-outlined" style="font-size:18px;">fullscreen</span>
     </button>
+    <button class="reader-icon-btn" id="reader-singlepage-btn" title="Single page view (toggle between layers)" aria-label="Single page view">
+      <span class="material-symbols-outlined" style="font-size:18px;">splitscreen</span>
+    </button>
     <button class="reader-icon-btn" id="reader-sepia-btn" title="Sepia reading mode" aria-label="Sepia mode">
       <span class="material-symbols-outlined" style="font-size:18px;">tonality</span>
     </button>
@@ -648,6 +670,8 @@
   </div>
 </div>
 </div><!-- /.reader-app -->
+
+<div id="reader-singlepage-toggle-bar"></div>
 
 <div id="reader-cite-popup"><button id="reader-cite-btn">Cite this passage</button></div>
 
@@ -1841,6 +1865,74 @@ if (noteToggle) {
   }
   fsBtn.addEventListener('click', () => setFullscreen(!document.body.classList.contains('reader-fullscreen')));
   exitBtn.addEventListener('click', () => setFullscreen(false));
+})();
+
+(function () {
+  const spBtn = document.getElementById('reader-singlepage-btn');
+  const toggleBar = document.getElementById('reader-singlepage-toggle-bar');
+  const readerApp = document.querySelector('.reader-app');
+  if (!spBtn || !toggleBar || !readerApp || TEXT_ONLY) {
+    if (spBtn) spBtn.style.display = 'none'; // nothing to toggle for a text-only book -- already single-panel
+    return;
+  }
+  const hasGroup = typeof PANEL_GROUP !== 'undefined' && PANEL_GROUP.length > 1;
+  let currentChoice = null; // for the simple 2-way case: 'image' or 'text'
+
+  function buildToggleBar() {
+    toggleBar.innerHTML = '';
+    const options = hasGroup ? PANEL_GROUP : [{ slug: '__image__', label: 'Scan', kind: 'image' }, { slug: '__text__', label: 'Text', kind: 'text' }];
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt.label;
+      btn.dataset.slug = opt.slug;
+      btn.addEventListener('click', () => selectOption(opt));
+      toggleBar.appendChild(btn);
+    });
+    updateActiveButton();
+  }
+
+  function updateActiveButton() {
+    const activeSlug = hasGroup ? (rightSelect ? rightSelect.value : PANEL_GROUP[0].slug) : (currentChoice === 'image' ? '__image__' : '__text__');
+    toggleBar.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.slug === activeSlug));
+  }
+
+  function selectOption(opt) {
+    if (hasGroup) {
+      // Route through the existing layer system so search, TTS, jump-to-page
+      // and bookmarks -- all wired to the main pipeline -- keep working
+      // correctly on whatever layer is now showing.
+      if (rightSelect) { rightSelect.value = opt.slug; rightSelect.dispatchEvent(new Event('change')); }
+      readerApp.classList.remove('singlepage-showing-image', 'singlepage-showing-text');
+      readerApp.classList.add(opt.kind === 'image' ? 'singlepage-showing-image' : 'singlepage-showing-text');
+    } else {
+      currentChoice = opt.kind;
+      readerApp.classList.toggle('singlepage-showing-image', opt.kind === 'image');
+      readerApp.classList.toggle('singlepage-showing-text', opt.kind === 'text');
+    }
+    updateActiveButton();
+    try { localStorage.setItem('oedio-singlepage-choice', opt.kind); } catch (e) {}
+  }
+
+  function setSinglePageMode(on) {
+    readerApp.classList.toggle('singlepage-mode', on);
+    spBtn.classList.toggle('active-toggle', on);
+    try { localStorage.setItem('oedio-singlepage-mode', on ? '1' : '0'); } catch (e) {}
+    if (on) {
+      buildToggleBar();
+      const savedChoice = (function () { try { return localStorage.getItem('oedio-singlepage-choice'); } catch (e) { return null; } })();
+      const startOpt = hasGroup
+        ? (PANEL_GROUP.find(g => g.slug === (rightSelect ? rightSelect.value : null)) || PANEL_GROUP[0])
+        : { kind: savedChoice === 'image' ? 'image' : 'text' };
+      selectOption(startOpt);
+    }
+  }
+
+  spBtn.addEventListener('click', () => setSinglePageMode(!readerApp.classList.contains('singlepage-mode')));
+
+  // Restore the reader's last single-page preference on load.
+  try {
+    if (localStorage.getItem('oedio-singlepage-mode') === '1') setSinglePageMode(true);
+  } catch (e) {}
 })();
 
 (function () {
