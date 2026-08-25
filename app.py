@@ -554,6 +554,16 @@ def ai_page_notes(mega_slug, comp_slug):
     page_num = request.args.get("page", 1, type=int)
     page_text, _ = _gather_page_context(mb, comp, page_num, lookback=0)
     if not page_text or page_text == "\u2014":
+        # The requested page may be slightly off from what the reader is
+        # actually looking at (e.g. residual client-side sync imprecision),
+        # so check a small window of nearby pages before giving up outright.
+        for offset in (1, -1, 2, -2, 3, -3):
+            alt_text, _ = _gather_page_context(mb, comp, page_num + offset, lookback=0)
+            if alt_text and alt_text != "\u2014":
+                page_num += offset
+                page_text = alt_text
+                break
+    if not page_text or page_text == "\u2014":
         return jsonify({"error": "No transcribed text on this page to annotate."}), 404
     real_footnotes = _gather_page_footnotes(mb, comp, page_num)
     if real_footnotes:
