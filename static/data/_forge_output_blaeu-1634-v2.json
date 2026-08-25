@@ -1,0 +1,16 @@
+{
+  "job_name": "blaeu-1634-v2 (1 pages)",
+  "completed_at": "2026-08-25T14:10:04.266928",
+  "segment_count": 1,
+  "results": [
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: 403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/service:gmd:gmd4:g4390:g4390:ct008343/full/pct:25/0/default.jpg]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "1",
+      "_error": "403 Client Error: Forbidden for url: https://tile.loc.gov/image-services/iiif/service:gmd:gmd4:g4390:g4390:ct008343/full/pct:25/0/default.jpg"
+    }
+  ]
+}
