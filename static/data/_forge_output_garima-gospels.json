@@ -1,0 +1,77 @@
+{
+  "job_name": "garima-gospels (7 pages)",
+  "completed_at": "2026-08-25T00:16:55.018496",
+  "segment_count": 7,
+  "results": [
+    {
+      "title_inferred": "Full-page illustration of a haloed Evangelist or Apostle figure with ornamental border",
+      "original_text": "",
+      "translation": "",
+      "legibility": "illustration_only",
+      "confidence": "high",
+      "confidence_reason": "The page contains only a decorative border and a painted figure with no visible script to transcribe",
+      "translator_notes": "The image shows a standing haloed figure in green and pink robes holding a book, framed by a decorative border of stylized bud/leaf motifs; no marginal text or catchwords are visible in this reproduction.",
+      "_label": "1"
+    },
+    {
+      "title_inferred": "Canon table pages with decorative arches (Eusebian canon tables)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The image shows ornate canon table arches with columns of numerals beneath, but the script is too small and low-resolution to reliably transcribe individual characters.",
+      "translator_notes": "This is a two-page spread (folios 3v-4r) featuring elaborate illuminated architectural canon tables typical of Ethiopian Gospel manuscripts, with columns of Ge'ez numerals (canon reference numbers) beneath decorative arches. The numerals appear to be concordance tables (Eusebian canons) rather than continuous prose text, and the resolution is insufficient to transcribe them accurately. Folio numbers '3v' and '4r' are visible at the bottom of the image as page labels.",
+      "_label": "2"
+    },
+    {
+      "title_inferred": "Eusebian Canon Table (decorated arch with numeral columns)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page contains a canon table of numerical concordance figures rather than continuous prose text, and the numerals/letters are too small and stylized in this image to transcribe reliably.",
+      "translator_notes": "This is a canon table page (Eusebian concordance) framed by an elaborately decorated arch with birds, flowers, and geometric guilloche patterns typical of Garima Gospels illumination. The columns contain Ge'ez numerals (in the ancient alphabetic numeral system) referencing parallel Gospel passages, not narrative text, so a meaningful translation is not applicable. Page number '3v' appears as a modern archival label at bottom, not part of the original manuscript.",
+      "_label": "3"
+    },
+    {
+      "title_inferred": "Evangelist portrait with facing text page (Ge'ez Gospel manuscript)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The image resolution and script density make individual Ge'ez letters too indistinct to transcribe reliably character-by-character.",
+      "translator_notes": "Left folio contains a full-page illustration of an evangelist (halo, holding a book/box, green cloak) within a decorative frame with knotwork/feather-pattern borders. Right folio contains two columns of Ge'ez text in black ink with red dotted punctuation marks between words, but the photograph is not sharp enough for confident letter-by-letter transcription; attempting a full reading would risk fabricating text not actually verifiable from the image.",
+      "_label": "4"
+    },
+    {
+      "title_inferred": "Canon Table (Eusebian Canon) illumination pages",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The right page is a decorative arch illustration with no legible text, and the left page contains faint columnar text under an arch that is too small and worn to reliably transcribe from the image.",
+      "translator_notes": "Left page shows a canon-table style arch with painted birds, peacocks, and interlace patterns above columns of faint reddish Ge'ez numeral/text lists (likely a concordance table), too indistinct to transcribe reliably. Right page is a purely architectural/ornamental arch illustration with peacocks and no visible script.",
+      "_label": "5"
+    },
+    {
+      "title_inferred": "Eusebian Canon Table page (decorated arch with concordance numerals)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page shows an illuminated canon table arch with columns of numerals and small Ge'ez text too small and worn to reliably transcribe from the image.",
+      "translator_notes": "This appears to be a canon table (concordance) page listing numerical references to Gospel parallel passages beneath ornate decorated arches; the fine script within the columns is illegible at this resolution. No marginalia clearly visible beyond the decorative border motifs (birds, flowers, geometric patterns).",
+      "_label": "6"
+    },
+    {
+      "title_inferred": "Evangelist Portrait (illuminated illustration, no text)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "illustration_only",
+      "confidence": "high",
+      "confidence_reason": "The page contains only a full-page illuminated portrait of an evangelist with decorative border, no script present",
+      "translator_notes": "The image depicts a haloed, bearded figure seated on a cushioned stool, wearing white and gold robes, with a leopard-print undergarment (or footstool covering), making a gesture of blessing or speech with raised fingers. An inkwell or writing implement stand appears beside him, suggesting this is an Evangelist portrait typical of Gospel manuscripts. The border is decorated with interlace and floral motifs in red, blue, yellow, and black. No text, marginalia, or catchwords are visible on this page.",
+      "_label": "7"
+    }
+  ]
+}
