@@ -931,6 +931,10 @@ function escapeHtml(s) {
 let avgTextLength = 200; // recalculated once real page data loads; used for illustration detection
 let renderedCount = 0;
 let currentPageNum = 1; // kept in sync by imgObserver; used to keep layer swaps on the same page
+let mainPipelinePageNum = 1; // dedicated to the text/main-pipeline panel specifically -- currentPageNum
+  // can be overwritten by either of the two split-view panels' observers, whichever fired most
+  // recently, which isn't necessarily the panel the reader is actually looking at; the AI assist
+  // feature needs the main pipeline's own page specifically, not whichever one raced to write last
 const panel = document.getElementById('reader-text-panel');
 const imagePanel = document.getElementById('reader-image-panel');
 const imageSentinel = document.getElementById('reader-image-load-sentinel');
@@ -1204,6 +1208,7 @@ const imgObserver = new IntersectionObserver((entries) => {
   if (!current) return;
   const pageNum = current.dataset.page;
   currentPageNum = parseInt(pageNum, 10);
+  mainPipelinePageNum = currentPageNum; // dedicated to the text/main-pipeline side specifically -- see note below
   pageIndicator.textContent = `Page ${pageNum} of ${allPages[allPages.length - 1].page}`;
   setCookie(RESUME_COOKIE, pageNum);
   _saveContinueReading(current);
@@ -1983,21 +1988,21 @@ if (noteToggle) {
 
     function runOverview() {
       showLoading();
-      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-overview?page=${currentPageNum}`)
+      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-overview?page=${mainPipelinePageNum}`)
         .then(r => r.json())
         .then(d => d.overview ? showText(d.overview) : showEmpty(d.error || 'Nothing to show yet.'))
         .catch(() => showEmpty('Something went wrong -- try again.'));
     }
     function runPageNotes() {
       showLoading();
-      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-page-notes?page=${currentPageNum}`)
+      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-page-notes?page=${mainPipelinePageNum}`)
         .then(r => r.json())
         .then(d => d.notes ? showText(d.notes) : showEmpty(d.error || 'Nothing to show yet.'))
         .catch(() => showEmpty('Something went wrong -- try again.'));
     }
     function runAsk(q) {
       showLoading();
-      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-ask?page=${currentPageNum}&q=${encodeURIComponent(q)}`)
+      fetch(`/book/${MEGA_SLUG}/read/${BOOK_SLUG}/ai-ask?page=${mainPipelinePageNum}&q=${encodeURIComponent(q)}`)
         .then(r => r.json())
         .then(d => d.answer ? showText(d.answer) : showEmpty(d.error || "Couldn't answer that."))
         .catch(() => showEmpty('Something went wrong -- try again.'));
