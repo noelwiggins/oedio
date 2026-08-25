@@ -1181,13 +1181,23 @@ function snapToPage(pageNum, drivingPanel) {
     : `.reader-page-block[data-page="${pageNum}"]`;
   const target = targetPanel.querySelector(sel);
   if (!target) return;
-  const targetRect = target.getBoundingClientRect();
-  const panelRect = targetPanel.getBoundingClientRect();
-  if (targetRect.top < panelRect.top - 40 || targetRect.top > panelRect.top + panelRect.height * 0.6) {
-    syncInProgress = true;
-    target.scrollIntoView({ block: 'start', behavior: 'auto' });
-    setTimeout(() => { syncInProgress = false; }, 250);
+  // Loose tolerance by page number, not pixels: let the reader freely nudge
+  // either side within a page or two -- e.g. checking a scan more closely,
+  // or re-reading a line of translation -- without that small adjustment
+  // dragging the other panel along too. Only correct once the panels have
+  // genuinely diverged by more than this margin.
+  const SNAP_TOLERANCE_PAGES = 2;
+  const otherPanelRect = targetPanel.getBoundingClientRect();
+  const otherVisible = targetPanel === imagePanel ? visibleInImage : visibleInText;
+  const otherCurrent = closestToTop(otherVisible, otherPanelRect.top);
+  const otherPageNum = otherCurrent ? parseInt(otherCurrent.dataset.page, 10) : null;
+  const drivingPageNum = parseInt(pageNum, 10);
+  if (otherPageNum !== null && Math.abs(otherPageNum - drivingPageNum) <= SNAP_TOLERANCE_PAGES) {
+    return; // close enough -- leave the reader's own positioning alone
   }
+  syncInProgress = true;
+  target.scrollIntoView({ block: 'start', behavior: 'auto' });
+  setTimeout(() => { syncInProgress = false; }, 250);
   if (drivingPanel === 'text') {
     if (currentImageBlock) currentImageBlock.classList.remove('reader-image-current');
     target.classList.add('reader-image-current');
