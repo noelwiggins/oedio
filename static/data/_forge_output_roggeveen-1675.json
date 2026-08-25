@@ -1,0 +1,17 @@
+{
+  "job_name": "roggeveen-1675 (1 pages)",
+  "completed_at": "2026-08-25T14:10:01.703748",
+  "segment_count": 1,
+  "results": [
+    {
+      "title_inferred": "Pascaerte van de Caribes Eylanden (Chart of the Caribbean Islands) - title cartouche and map",
+      "original_text": "Pascaerte\nVande Caribes Eylanden,\nVan 't Eylant Granadillos, tot 't Eylant Anguilla.\nBeschreven door Arent Roggeveen.",
+      "translation": "Chart\nof the Caribbean Islands,\nFrom the Island of Grenadines to the Island of Anguilla.\nDescribed by Arent Roggeveen.",
+      "legibility": "partial",
+      "confidence": "medium",
+      "confidence_reason": "The cartouche text is clear in the Dutch script style, but numerous small island name labels scattered across the map are too small and faint to transcribe reliably.",
+      "translator_notes": "The map contains many small place-name labels for individual islands (e.g., Barbados, St. Vincent, St. Lucia, Martinique, Guadeloupe/'La Deseada', Montserrat, Saba, Curaçao area names, St. Martin, Anguilla) which are marginal to the main title and too small to transcribe with confidence. Two stamped seals (one blue, one red) appear on the left and bottom margins, likely later library or ownership stamps, not part of the original text. A scale/legend box appears in the lower right corner with additional small text not fully legible.",
+      "_label": "1"
+    }
+  ]
+}
