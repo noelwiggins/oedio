@@ -1053,6 +1053,7 @@ function renderImageBlock(p) {
   block.className = 'reader-image-block';
   block.dataset.page = p.page;
   block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
+  trackImageLoad(block.querySelector('img'));
   block.addEventListener('click', () => {
     zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
     openZoomOverlay();
@@ -1100,6 +1101,41 @@ let imageSyncSuppressTimer = null;
 // block directly. syncInProgress prevents the two observers from
 // ping-ponging off each other's own sync-triggered scroll.
 let syncInProgress = false;
+// Track scan-image loading explicitly. The reader was behaving erratically
+// for new readers specifically during the window before scans finish
+// downloading -- each image arriving shifts layout, which is exactly what
+// the sync mechanism was fighting. Rather than just tune correction
+// timing further, make this period visible and honest (a real "please
+// wait" instead of unexplained jumpiness), and hold off on aggressive
+// cross-panel correction until loading has genuinely settled down.
+let imagesLoadedCount = 0;
+let imagesTotalCount = 0;
+let imagesStillLoading = true;
+const loadingBanner = document.createElement('div');
+loadingBanner.id = 'reader-loading-banner';
+loadingBanner.style.cssText = 'position:sticky;top:0;z-index:5;background:#1A1810;' +
+  'border-bottom:1px solid #3A3020;color:#C4A860;font-family:monospace;font-size:11px;' +
+  'letter-spacing:0.05em;padding:6px 12px;text-align:center;display:none;';
+imagePanel.insertBefore(loadingBanner, imagePanel.firstChild);
+function updateLoadingBanner() {
+  if (imagesTotalCount === 0) return;
+  if (imagesLoadedCount >= imagesTotalCount) {
+    if (imagesStillLoading) {
+      imagesStillLoading = false;
+      loadingBanner.style.display = 'none';
+    }
+    return;
+  }
+  loadingBanner.style.display = 'block';
+  loadingBanner.textContent = `Loading scans… ${imagesLoadedCount} / ${imagesTotalCount}`;
+}
+function trackImageLoad(img) {
+  imagesTotalCount++;
+  updateLoadingBanner();
+  const done = () => { imagesLoadedCount++; updateLoadingBanner(); };
+  if (img.complete) done();
+  else { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); }
+}
 imagePanel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
 imagePanel.addEventListener('touchmove', suppressImageSyncBriefly, { passive: true });
 panel.addEventListener('wheel', suppressImageSyncBriefly, { passive: true });
@@ -1175,6 +1211,7 @@ let imageScrollSettleTimer = null;
 
 function snapToPage(pageNum, drivingPanel) {
   if (syncInProgress) return;
+  if (imagesStillLoading) return; // don't fight scroll position while scans are still arriving and shifting layout underneath
   const targetPanel = drivingPanel === 'text' ? imagePanel : panel;
   const sel = drivingPanel === 'text'
     ? `.reader-image-block[data-page="${pageNum}"], .reader-simple-text-block[data-page="${pageNum}"]`
@@ -1332,6 +1369,7 @@ function buildLeftImageBlock(p) {
   block.className = 'reader-image-block';
   block.dataset.page = p.page;
   block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
+  trackImageLoad(block.querySelector('img'));
   block.addEventListener('click', () => {
     const idx = allPages.findIndex(pg => pg.page === p.page);
     if (idx < 0) return;
