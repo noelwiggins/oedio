@@ -144,8 +144,8 @@
      page-number sequence identical to the Scan layer's, so cycling between
      Scan/Original/English always lands on the exact same page rather than
      the nearest one that happens to have text. */
-  .reader-page-blank { display:flex; flex-direction:column; align-items:center; gap:10px;
-    padding:26px 16px; color:var(--md-sys-color-on-surface-variant); text-align:center; }
+  .reader-page-blank { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    padding:26px 16px; min-height:min(60vh, 500px); color:var(--md-sys-color-on-surface-variant); text-align:center; }
   .reader-blank-note { font-size:12.5px; font-style:italic; max-width:340px; line-height:1.5; }
   .reader-blank-thumb { max-width:160px; max-height:200px; object-fit:contain; border-radius:6px;
     cursor:zoom-in; box-shadow:0 2px 8px rgba(0,0,0,.3); opacity:.8; }
