@@ -611,7 +611,7 @@
 </div>
 
 <div class="reader-layout">
-  <div class="reader-image-panel" id="reader-image-panel">
+  <div class="reader-image-panel" id="reader-image-panel" {{ 'style="display:none"' | safe if text_only else '' }}>
     {% if panel_group and panel_group|length > 1 %}
     <div class="panel-picker-bar">
       <span class="material-symbols-outlined">layers</span>
@@ -625,9 +625,11 @@
     <!-- Image blocks injected by JS, lazily, in lockstep with the text panel -->
     <div id="reader-image-load-sentinel" style="height:1px;"></div>
   </div>
+  {% if not text_only %}
   <div class="reader-split-handle" id="reader-split-handle" role="separator" aria-orientation="vertical"
        aria-label="Resize panels" tabindex="0"></div>
-  <div class="reader-text-panel-wrap">
+  {% endif %}
+  <div class="reader-text-panel-wrap" {{ 'style="width:100%"' | safe if text_only else '' }}>
     {% if panel_group and panel_group|length > 1 %}
     <div class="panel-picker-bar">
       <span class="material-symbols-outlined">layers</span>
