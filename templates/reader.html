@@ -1215,7 +1215,7 @@ panel.addEventListener('scroll', () => {
     const panelRect = panel.getBoundingClientRect();
     const current = closestToTop(visibleInText, panelRect.top);
     if (current) snapToPage(current.dataset.page, 'text');
-  }, 220);
+  }, 700);
 }, { passive: true });
 
 imagePanel.addEventListener('scroll', () => {
@@ -1225,7 +1225,7 @@ imagePanel.addEventListener('scroll', () => {
     const panelRect = imagePanel.getBoundingClientRect();
     const current = closestToTop(visibleInImage, panelRect.top);
     if (current) snapToPage(current.dataset.page, 'image');
-  }, 220);
+  }, 700);
 }, { passive: true });
 
 function renderNextBatch() {
