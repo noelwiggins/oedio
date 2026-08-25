@@ -700,7 +700,6 @@
   <span class="material-symbols-outlined" style="font-size:19px;">fullscreen_exit</span>
 </button>
 
-{% if oedio_map or oedio_illustrations %}
 <div id="reader-aiassist-overlay" class="reader-aiassist-overlay">
   <div class="aa-card">
     <div class="aa-header">
@@ -731,6 +730,7 @@
   </div>
 </div>
 
+{% if oedio_map or oedio_illustrations %}
 <div id="reader-visualcontext-overlay" class="reader-visualcontext-overlay">
   <div class="vc-card">
     <div class="vc-header">
@@ -1941,8 +1941,11 @@ if (noteToggle) {
   const vcClose = document.getElementById('vc-close');
   if (!vcBtn || !vcOverlay) return;
   vcBtn.addEventListener('click', () => vcOverlay.classList.add('open'));
+  vcClose.addEventListener('click', () => vcOverlay.classList.remove('open'));
+  vcOverlay.addEventListener('click', (e) => { if (e.target === vcOverlay) vcOverlay.classList.remove('open'); });
+})();
 
-  (function () {
+(function () {
     const aaBtn = document.getElementById('reader-aiassist-btn');
     const aaOverlay = document.getElementById('reader-aiassist-overlay');
     const aaClose = document.getElementById('aa-close');
@@ -2020,9 +2023,6 @@ if (noteToggle) {
     });
     aaClose.addEventListener('click', () => aaOverlay.classList.remove('open'));
     aaOverlay.addEventListener('click', (e) => { if (e.target === aaOverlay) aaOverlay.classList.remove('open'); });
-  })();
-  vcClose.addEventListener('click', () => vcOverlay.classList.remove('open'));
-  vcOverlay.addEventListener('click', (e) => { if (e.target === vcOverlay) vcOverlay.classList.remove('open'); });
 })();
 
 document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
