@@ -557,7 +557,7 @@ def ai_page_notes(mega_slug, comp_slug):
         # The requested page may be slightly off from what the reader is
         # actually looking at (e.g. residual client-side sync imprecision),
         # so check a small window of nearby pages before giving up outright.
-        for offset in (1, -1, 2, -2, 3, -3):
+        for offset in (1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 7, -7, 10, -10, 15, -15, 20, -20):
             alt_text, _ = _gather_page_context(mb, comp, page_num + offset, lookback=0)
             if alt_text and alt_text != "\u2014":
                 page_num += offset
