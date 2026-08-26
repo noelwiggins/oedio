@@ -1,0 +1,1505 @@
+{
+  "job_name": "VI_F_7 — transcription (150 pages)",
+  "completed_at": "2026-08-26T13:55:41.712991",
+  "segment_count": 150,
+  "results": [
+    {
+      "title_inferred": "Opening folio of medical/astrological treatise with decorated initial",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Densely written cursive Latin script in a heavily abbreviated notarial/medical hand, image resolution insufficient to reliably resolve individual words and abbreviations",
+      "translator_notes": "Page begins with a large decorated red-and-black initial letter (appears to be 'H' or similar) followed by a rubricated heading in red ink that is illegible at this resolution. The text is written in a dense, heavily abbreviated cursive hand typical of 15th-century Latin manuscripts, with numerous red paragraph marks (pilcrows) and red-touched initials scattered throughout to mark divisions in the text. A circular stamp/seal (later library or archival mark) appears near the bottom of the page. Marginal notes in a different, lighter ink appear in the left margin at top. Given the resolution and complexity of the abbreviations, a reliable word-by-word transcription cannot be produced; a higher-resolution image or expert consultation would be needed for accurate transcription.",
+      "_label": "VI_F_7-fol-1r"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: HTTPSConnectionPool(host='imagines.manuscriptorium.com', port=443): Max retries exceeded with url: /loris/AIPDIG-NKCR__VI_F_7______3IGGBSD-cs/ID0001V/full/600,/0/default.jpg (Caused by NameResolutionError(\"HTTPSConnection(host='imagines.manuscriptorium.com', port=443): Failed to resolve 'imagines.manuscriptorium.com' ([Errno -3] Temporary failure in name resolution)\"))]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "VI_F_7-fol-1v",
+      "_error": "HTTPSConnectionPool(host='imagines.manuscriptorium.com', port=443): Max retries exceeded with url: /loris/AIPDIG-NKCR__VI_F_7______3IGGBSD-cs/ID0001V/full/600,/0/default.jpg (Caused by NameResolutionError(\"HTTPSConnection(host='imagines.manuscriptorium.com', port=443): Failed to resolve 'imagines.manuscriptorium.com' ([Errno -3] Temporary failure in name resolution)\"))"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page with rubricated section headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated medieval cursive script that cannot be reliably read from the image resolution provided; only isolated letterforms and two rubricated headings are discernible but not confidently transcribable.",
+      "translator_notes": "Two red rubricated headings are visible, likely marking section titles (possibly incipits such as 'Speculum...' or similar), along with numerous red paragraph marks (pilcrows) and touched initials scattered through the text; the dense abbreviation and cramped cursive hand make a reliable line-by-line transcription impossible without higher resolution or additional context. A marginal note appears at the top left edge of the page but is illegible.",
+      "_label": "VI_F_7-fol-2r"
+    },
+    {
+      "title_inferred": "Astrological/medical text, dense prose with rubricated paragraph marks",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a densely abbreviated cursive Latin script that is too small and compressed in the available image resolution to reliably transcribe letter by letter.",
+      "translator_notes": "Page contains dense text in a fast cursive hand with numerous red rubricated paragraph marks (pilcrows) and initial letters; a marginal note appears in the left margin partway down, and a rubricated heading/incipit-like line appears near the bottom ('...ca et duo dvritie...' or similar). Without higher resolution or specialist familiarity with this specific hand, a reliable line-by-line transcription cannot be produced; declining detailed transcription to avoid fabricating content.",
+      "_label": "VI_F_7-fol-2v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise, incipit with rubric 'De Spera tractatus'",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Gothic script with dense ligatures that cannot be reliably transcribed from the image alone.",
+      "translator_notes": "Rubricated heading reads approximately 'De Spera tractatus' with a large decorated initial letter (possibly 'V' or 'N'). Red paragraph marks and initials appear throughout the text in both columns. The script is highly abbreviated academic Latin typical of 15th-century Prague university manuscripts; without higher resolution or specialist paleographic collation, a confident line-by-line transcription cannot be produced.",
+      "_label": "VI_F_7-fol-3r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise text, dense marginal glosses",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Handwriting is a densely abbreviated medieval cursive script with heavy marginal annotation, too small and compressed in the available image to reliably transcribe individual words.",
+      "translator_notes": "Page contains extensive marginal notes surrounding the main text block, an illuminated red initial 'V' partway down the page, and red paragraph marks (rubrics) scattered throughout; the bottom of the page has additional faint notes possibly by a later hand. Resolution is insufficient for confident letter-by-letter transcription.",
+      "_label": "VI_F_7-fol-3v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text with marginal annotations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated medieval Latin cursive script that cannot be reliably transcribed from this image resolution and level of abbreviation.",
+      "translator_notes": "Page shows dense main text in two columns with extensive marginal glosses/annotations in a different, smaller hand along both margins; several red paragraph marks (paraph signs) are visible; a partial red catchword or note appears at top; a small drawing/marginal symbol may be present but is not clearly legible. The main script uses heavy scribal abbreviations typical of 15th-century Latin scholastic/scientific manuscripts, making confident word-by-word transcription infeasible without higher resolution or specialist paleographic collation with known parallel texts.",
+      "_label": "VI_F_7-fol-4r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise text (folio 4v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated Latin cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page contains a full column of continuous Latin text with a large decorated initial and rubricated (red) letters at line beginnings and mid-text; several words highlighted in red ink suggest emphasis or section markers (possibly astrological terms). Marginal notes and catchwords are not clearly distinguishable from the main text at this resolution, so no separate transcription of marginalia could be made. A confident full transcription would require higher resolution imaging or paleographic expertise applied directly to the manuscript.",
+      "_label": "VI_F_7-fol-4v"
+    },
+    {
+      "title_inferred": "Latin medical/astrological treatise text (folio 5r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated 15th-century cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "A rubricated heading appears roughly a third of the way down the page beginning with a red initial, possibly marking a new section or chapter incipit; red paraph marks and highlighted initials occur throughout the text. Marginal notes are visible on the left edge but are cropped/cut off and illegible. Full transcription would require higher resolution imaging and closer paleographic study of this particular scribal hand.",
+      "_label": "VI_F_7-fol-5r"
+    },
+    {
+      "title_inferred": "Latin astronomical/medical text page (dense abbreviated prose)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is heavily abbreviated cursive Gothic script with extensive use of scribal contractions, and the image resolution is insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "Page shows dense two-column-like continuous text with red rubrication marks (paragraph markers and highlighted initial letters) scattered throughout; a marginal 'X' and other marginal notation appear at top left; unable to produce a reliable word-by-word transcription given the compressed cursive hand and image quality.",
+      "_label": "VI_F_7-fol-5v"
+    },
+    {
+      "title_inferred": "Medical/astrological treatise page (heading 'Elementales quod dicitur altacom continue')",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated medieval cursive script that cannot be reliably transcribed at this resolution.",
+      "translator_notes": "A rubricated heading appears near the top reading something like 'Elementales quod dicitur altacom continue' with red paragraph marks (rubrics) scattered throughout the text and marginal red notations (e.g., 'ii p', 'iii p') visible in the right margin; left margin contains earlier text continuing from a previous folio. Full transcription not attempted due to script density and image resolution limits.",
+      "_label": "VI_F_7-fol-6r"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page, dense Latin text with rubricated initials",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense abbreviated cursive script with heavy contractions cannot be reliably transcribed at this resolution without expert paleographic examination of the original.]\n[Text is heavily abbreviated medieval Latin cursive, written in a dense gothic hand with numerous suspension marks and red rubricated initials (paragraph marks and highlighted capitals). The handwriting is too compressed and abbreviated to produce a reliable letter-by-letter transcription from the image alone.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated cursive script with heavy contractions cannot be reliably transcribed at this resolution without expert paleographic examination of the original.",
+      "translator_notes": "Page contains a rubric at bottom reading something like 'S. Hec quatuor' with red ink corrections/marginal notes throughout; several paragraph marks (¶) in red scattered through the text; right margin shows bleed-through or offset text from facing page. Full transcription would require higher resolution image and specialist paleographic review.",
+      "_label": "VI_F_7-fol-6v"
+    },
+    {
+      "title_inferred": "Latin astrological/medical text, dense abbreviated prose (fol. 7r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated Latin cursive script with extensive scribal shorthand cannot be reliably transcribed at this resolution.",
+      "translator_notes": "Page contains dense Gothic cursive Latin text with numerous suspension and contraction abbreviations typical of 15th-century academic manuscripts. Some words appear highlighted or underlined in red ink (rubrication), possibly marking key terms or section divisions. A marginal note in a different, more angular hand appears along the left edge of the page. Without higher resolution imagery or specialist paleographic software, a confident line-by-line transcription is not possible; a full reading would require in-person examination or expert paleographer consultation.",
+      "_label": "VI_F_7-fol-7r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with dense abbreviated Latin text",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, heavily abbreviated Gothic cursive with numerous scribal contractions that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "The page contains red rubricated initials and paragraph marks (e.g., a large decorated capital beginning a section, and repeated red pilcrow-like marks) indicating section divisions typical of astrological/medical treatises. The dense abbreviation system (common in 15th-century scholastic Latin manuscripts) with suspended endings and tironian notes makes accurate word-by-word transcription unreliable without higher resolution or specialist paleographic collation. A full transcription would require direct manuscript examination or a much higher resolution scan to distinguish individual letterforms and abbreviation marks with confidence.",
+      "_label": "VI_F_7-fol-7v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text with rubricated section headings (heavily abbreviated Latin)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated Gothic cursive script with heavy scribal shorthand cannot be reliably transcribed from the image at this resolution.",
+      "translator_notes": "Page contains extensive marginal annotations in a different hand along the left margin; several rubricated (red) headings and paragraph marks appear mid-text (e.g., a red-boxed heading beginning 'Omnino q...' and another 'Omnia enim...'); folio numbered '10' in upper right corner; text is written in a compressed, highly abbreviated Latin cursive typical of 15th-century Prague scientific manuscripts, making confident line-by-line transcription impossible without higher resolution or specialist paleographic examination.",
+      "_label": "VI_F_7-fol-8r"
+    },
+    {
+      "title_inferred": "Astronomical/medical treatise page with heading in red rubric",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is a heavily abbreviated 15th-century cursive with dense ligatures, and the image resolution is insufficient to confidently resolve individual words or lines.]\n[Illegible dense cursive Latin text in abbreviated notarial hand, with red rubricated heading and initials; individual words cannot be reliably transcribed from the available image resolution]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive with dense ligatures, and the image resolution is insufficient to confidently resolve individual words or lines.",
+      "translator_notes": "A red rubricated heading appears roughly two-thirds down the page, likely marking a new section; red paragraph marks and initial strokes are visible throughout. A line at the bottom left reads something like 'Q[uae]... circulum in h[oc]... inferior... trescit' but this is uncertain. No marginalia beyond the rubrication is clearly distinguishable.",
+      "_label": "VI_F_7-fol-8v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise (Latin, on celestial motion and spheres)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavy abbreviation and cramped cursive script prevent confident word-by-word transcription without higher resolution or specialist paleographic comparison.]\n[The text is written in a dense, heavily abbreviated 15th-century Latin cursive hand with numerous suspensions and contractions typical of scholastic astronomical manuscripts. Individual words and abbreviation marks can be made out, but the density of ligatures, superscript abbreviation strokes, and the compressed hand make a reliable full transcription impossible from the image alone. A red-highlighted rubric/heading appears mid-page beginning with what may be 'In[itium] none[?] ...']",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavy abbreviation and cramped cursive script prevent confident word-by-word transcription without higher resolution or specialist paleographic comparison.",
+      "translator_notes": "There is a rubricated (red) heading/initial mid-page, possibly marking a new section or chapter (rendered in red ink, partly boxed). Marginal red touches/paraphs appear throughout the text. No marginalia beyond these rubrics is clearly visible; no catchword is discernible at the bottom of the page in this image.",
+      "_label": "VI_F_7-fol-9r"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary natures (Jupiter, Mars, Sol, Venus, Mercury, Luna)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive gothic script with extensive contractions that cannot be reliably deciphered from the image alone",
+      "translator_notes": "Page contains marginal planetary symbols and degree/sign markers (e.g., 'Jupiter', 'Mars', 'Sol', 'Venus', 'Mercurius', 'Luna') with red rubrication marking planetary headings; the running text appears to describe planetary qualities (calidus, humidus, etc.) typical of astrological-medical planetary characterizations, but individual words are too abbreviated and faint to transcribe with confidence.",
+      "_label": "VI_F_7-fol-9v"
+    },
+    {
+      "title_inferred": "Astronomical treatise on planetary motions (fol. 10r)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavily abbreviated cursive script with dense ligatures cannot be reliably transcribed at this resolution without risking fabricated readings.]\n[Text is written in a dense 15th-century Latin cursive hand with heavy abbreviation, interlinear glosses, and red rubrication for capitals/numerals. The script is too compressed and abbreviated to transcribe reliably letter-by-letter from the image without higher resolution.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated cursive script with dense ligatures cannot be reliably transcribed at this resolution without risking fabricated readings.",
+      "translator_notes": "The page contains marginal annotations in a smaller hand alongside the main text block, and red rubrication marks (paragraph marks, initials, and possibly numerals) scattered throughout. The main text appears to discuss astronomical/astrological topics (motion of planets, zodiac, celestial spheres) based on recognizable recurring terms such as 'motu', 'celi', 'planetarum', 'zodiacus', and 'stelle', but a confident full transcription is not possible from this image alone.",
+      "_label": "VI_F_7-fol-10r"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page with rubricated headings (folio 10v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated cursive Latin script that cannot be reliably read from the image resolution provided; individual words are not distinguishable with confidence.",
+      "translator_notes": "Page contains multiple rubricated (red) initials/paragraph marks and marginal notes in red and brown ink, including what appears to be a marginal annotation near the middle of the page ('de moto Kepleri' or similar, difficult to confirm) and another marginal note at the bottom left. These marginalia and the main text would require higher resolution or in-person examination to transcribe accurately. Declining detailed transcription due to low confidence in reading the specific abbreviations and letterforms.",
+      "_label": "VI_F_7-fol-10v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page (dense abbreviated Latin text)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated medieval cursive script with dense ligatures that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page contains continuous prose text with rubricated (red) initial letters and paragraph marks scattered throughout; some marginal notations visible on left edge but too faint/cropped to read. A fuller transcription would require higher resolution imaging and specialist paleographic examination of this 15th-century Prague scientific manuscript hand.",
+      "_label": "VI_F_7-fol-11r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise text (dense Latin prose with rubricated headings)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Latin script with dense ligatures that cannot be reliably transcribed from the image resolution provided",
+      "translator_notes": "Page contains extensive marginal notes in red ink (rubrication) with paragraph marks, a rubricated heading roughly midway down the page, and several red interlinear/marginal annotations; the base text appears to be a continuous scholarly discussion (possibly astrological/astronomical in nature given the manuscript context) but individual words could not be confidently resolved due to script density and abbreviation.",
+      "_label": "VI_F_7-fol-11v"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page with rubricated headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive Latin script that cannot be reliably transcribed from the image resolution and compression artifacts present.",
+      "translator_notes": "Page shows dense Gothic cursive text with red rubrication (paragraph marks and highlighted words) typical of medieval astrological/medical manuscripts. Several words appear underlined or marked in red ink for emphasis. A marginal note or catchword may be present at bottom right ('pe' or similar). Full transcription would require higher resolution imaging and specialist paleographic examination to resolve heavy abbreviations and ligatures characteristic of this hand.",
+      "_label": "VI_F_7-fol-12r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page (on diameters and celestial motion)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is a heavily abbreviated 15th-century cursive Latin script with dense text and small size, making a reliable full transcription impossible from the image alone.]\n[Illegible in detail due to dense abbreviation and small hand; partial reading only]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive Latin script with dense text and small size, making a reliable full transcription impossible from the image alone.",
+      "translator_notes": "Page contains red rubricated section headings and initials (e.g., a heading beginning 'de motu' or similar visible in red near the middle of the page). Marginal notation visible at bottom right corner appears to be a catchword or foliation note. Some words such as 'diameter', 'circulus', 'planeta', and 'motus' appear plausible but cannot be confirmed with confidence given the resolution and script density.",
+      "_label": "VI_F_7-fol-12v"
+    },
+    {
+      "title_inferred": "Astronomical/optical treatise on refraction and visibility through media (fol. 13r)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is a dense, heavily abbreviated cursive script and the image resolution is insufficient to confidently resolve individual words and lines.]\n[Densely written Latin text in a 15th-century cursive book hand, with two rubricated section headings visible, one beginning 'Secundum...' and a later one beginning 'Quod ha...'. The text discusses concepts such as 'aqua', 'aer', 'diaphanum', 'medium', 'visibile', 'radios', 'refractio', and geometric/optical reasoning typical of medieval perspectiva or astronomical treatises. Due to the density of abbreviations, ligatures, and the small scale of the reproduction, a reliable full transcription of individual words and lines cannot be responsibly produced.]",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is a dense, heavily abbreviated cursive script and the image resolution is insufficient to confidently resolve individual words and lines.]\n[A faithful translation cannot be provided without a reliable transcription of the underlying Latin text. The passage appears to concern the behavior of light, vision, or celestial rays passing through different media (water, air, diaphanous bodies), a common topic in medieval optical and astronomical treatises, but the precise argument cannot be determined from the image alone.]",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated cursive script and the image resolution is insufficient to confidently resolve individual words and lines.",
+      "translator_notes": "Two rubricated (red-touched) section-initial words are visible, one near the top reading roughly 'Secundum...' and another lower on the page reading roughly 'Quod ha[bet]...'. There appear to be marginal notes/catchwords in the left margin and at the top corner (partially cropped by the binding) that are not transcribed here. Overall legibility is too low for confident word-by-word transcription given the image quality.",
+      "_label": "VI_F_7-fol-13r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page (geometry of spheres and shapes)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is dense abbreviated Latin cursive with heavy use of scribal abbreviations, and the image resolution is insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "Text appears to discuss geometric/astronomical concepts (rotundum, perimetro, sphaera, latum, dilatatum) with a rubricated heading 'Mora est' or similar in the left margin; red paraph marks and marginal notations are present but not confidently legible; bottom of page has a later ownership or scribal note in different ink.",
+      "_label": "VI_F_7-fol-13v"
+    },
+    {
+      "title_inferred": "Astronomical treatise page (on apparent size and position of stars/planets)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavily abbreviated Gothic cursive script with dense ligatures and small size prevents reliable word-by-word transcription from the image alone.]\n[Illegible/partial abbreviated Latin text in a dense astronomical hand, with red rubric heading and initial capital, continuing in two columns; specific words cannot be reliably transcribed due to heavy abbreviation and small script.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated Gothic cursive script with dense ligatures and small size prevents reliable word-by-word transcription from the image alone.",
+      "translator_notes": "Red rubricated heading and decorated initial visible near top of main text block; marginal notes appear in left margin but are too faint/cropped to read; catchwords not clearly visible.",
+      "_label": "VI_F_7-fol-14r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise on planetary and stellar aspects",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Handwriting is a dense abbreviated medieval cursive script that cannot be reliably transcribed from the image alone",
+      "translator_notes": "Page contains a red rubric heading (possibly 'Nota de...') and a large decorated initial 'Q' beginning a paragraph discussing celestial bodies, stars, and their appearance/occultation ('...quod si stella sit turbida sic..., signa et stelle non equaliter oriuntur et occidunt...'). A small diagram or sketch (possibly astronomical/geometric) appears in the lower left margin with faint captions. Full transcription not attempted due to low confidence in accurately rendering the abbreviated Gothic cursive script; a specialist paleographer with higher resolution imagery would be needed for a reliable reading.",
+      "_label": "VI_F_7-fol-14v"
+    },
+    {
+      "title_inferred": "Astronomical/medical treatise fragment (inserted slip, fol. 15r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Latin script photographed at insufficient resolution to reliably distinguish individual letterforms and abbreviations.",
+      "translator_notes": "This appears to be a small inserted parchment slip with a rubricated (red) initial/heading at top and scattered red highlighting throughout the text (likely marking key terms or planetary/medical notations typical of the manuscript). The main codex text is visible in the left margin but is cut off/out of frame. Without higher resolution or magnification, specific words cannot be confidently transcribed; a full paleographic reading would require direct examination of the original or a higher-quality image.",
+      "_label": "VI_F_7-fol-15r"
+    },
+    {
+      "title_inferred": "Fragment of medical/astrological recipe text (small inserted leaf)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is extremely abbreviated cursive with heavy use of scribal shorthand, and the image resolution does not allow confident letter-by-letter reading.]\n[Illegible abbreviated Latin text, several lines of heavily abbreviated cursive script, not reliably transcribable]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely abbreviated cursive with heavy use of scribal shorthand, and the image resolution does not allow confident letter-by-letter reading.",
+      "translator_notes": "This appears to be a small inserted or loose leaf attached to the main codex, containing a short passage of six lines in brownish ink with some red (rubricated) initial letters, likely medical or astrological in nature given the manuscript's context. The text uses heavy medieval Latin abbreviations that would require higher resolution or in-person examination to transcribe accurately. The rest of the page is blank parchment/paper. Part of the adjacent main text block of the codex is visible on the right edge of the image but is cut off and not part of this leaf.",
+      "_label": "VI_F_7-fol-15v"
+    },
+    {
+      "title_inferred": "Astronomical treatise on the fixed stars/celestial sphere (discussion of eclipses and star positions), with diagram",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The script is extremely dense, abbreviated Gothic cursive with tironian notes, making word-level transcription unreliable at this resolution.]\nDe stellis fixis ... [text largely illegible due to dense abbreviation and small hand] ... Fundamentum sequitur ...",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The script is extremely dense, abbreviated Gothic cursive with tironian notes, making word-level transcription unreliable at this resolution.]\nThe page appears to concern the fixed stars and celestial phenomena (possibly discussing eclipses, the position of stars relative to the sun/moon, and diameters), followed by a section headed 'The foundation follows,' introducing further astronomical/astrological reasoning. The dense, heavily abbreviated Gothic cursive text could not be reliably transcribed word-for-word.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The script is extremely dense, abbreviated Gothic cursive with tironian notes, making word-level transcription unreliable at this resolution.",
+      "translator_notes": "Two rubricated section headers are visible: one beginning 'De ... sit ...' (possibly 'De stellis fixis' or similar) and another 'Fundamentum sequitur'. There is a small circular astronomical diagram in the upper left margin and marginal annotations (partly illegible) running down the left side of the page, including red ink marks/symbols. The main body text uses heavy scribal abbreviation typical of 15th-century Latin scientific manuscripts, precluding confident full transcription.",
+      "_label": "VI_F_7-fol-16r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with rubricated headings",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Dense abbreviated gothic cursive script with small size and heavy contractions cannot be reliably transcribed at this resolution.]\n[Heavily abbreviated Latin text in a dense gothic cursive hand, with red rubrication marking section headings such as 'Quod ala luna in...' and 'nec eam mouetur' and 'Quod ad aqua stat...'. The text is too abbreviated and the image resolution too limited to produce a reliable full transcription.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense abbreviated gothic cursive script with small size and heavy contractions cannot be reliably transcribed at this resolution.",
+      "translator_notes": "Red rubricated headings visible mid-page ('Quod ...luna...', 'nec eam mouetur', 'Quod ad aqua...') suggest section divisions typical of astronomical/astrological treatise; marginal red marks and paragraph marks (¶) appear throughout but are not reliably legible for transcription.",
+      "_label": "VI_F_7-fol-16v"
+    },
+    {
+      "title_inferred": "Astronomical/mathematical treatise page (circle measurement text)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is a heavily abbreviated Latin cursive with many suspension marks and ligatures that cannot be reliably resolved at this image resolution.]\n[Text is written in a dense, heavily abbreviated 15th-century Latin cursive hand with numerous scribal abbreviations, red rubricated headings and paragraph marks. The page contains continuous prose with interlinear/marginal corrections. Due to the density of abbreviation marks and the small scale of the reproduction, a reliable full transcription cannot be produced.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated Latin cursive with many suspension marks and ligatures that cannot be reliably resolved at this image resolution.",
+      "translator_notes": "Two rubricated section headings appear (one beginning 'Punctus...' or similar, another beginning with a red initial), along with red paragraph marks (¶) scattered through the text and marginal annotations in a different, smaller hand along the left margin. A catchword or note appears in red at the top right corner. Without higher resolution or specialist paleographic examination, a confident transcription of the main text cannot be offered.",
+      "_label": "VI_F_7-fol-17r"
+    },
+    {
+      "title_inferred": "Astronomical/computational text with abbreviated Latin, rubricated section headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated Gothic cursive script with dense ligatures and small image resolution prevent reliable letter-by-letter transcription",
+      "translator_notes": "Page shows a densely written Latin text with a rubricated (red) heading beginning 'Cōhis īl mō ...' and scattered red paragraph marks and numerals throughout the text, likely astronomical/computational tables or calendar-related material. Right margin shows partial text from facing page (bleed-through or adjacent folio). Some marginal notes in a different, later hand appear on the right edge but are illegible at this resolution. Due to the complexity of the abbreviations (common in medieval Latin scientific manuscripts) and image quality, a confident transcription cannot be produced without higher resolution or specialist paleographic consultation.",
+      "_label": "VI_F_7-fol-17v"
+    },
+    {
+      "title_inferred": "Astrological/medical text page (fol. 20)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Text is a densely abbreviated cursive Latin hand with heavy use of scribal abbreviations that cannot be reliably read from the image at this resolution.",
+      "translator_notes": "Page shows red paraph marks and rubricated initials scattered throughout; folio number '20' visible in upper right corner; text appears to be continuous prose with astrological/medical terminology but individual words are not confidently legible.",
+      "_label": "VI_F_7-fol-18r"
+    },
+    {
+      "title_inferred": "Medical/astrological treatise page with abbreviated Latin gloss (heading marks visible)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is written in a heavily abbreviated medieval Latin cursive hand with dense scribal abbreviations; the image resolution is insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "Two rubricated headings are visible ('Nota de...' and 'Inter [i]stos tractatus...' style openings), and marginal red-ink annotations/paragraph marks appear throughout; right margin shows continuation of adjacent column text (partially cropped) and catchword-like marks at top and bottom of page. Full transcription not attempted due to low legibility at this resolution.",
+      "_label": "VI_F_7-fol-18v"
+    },
+    {
+      "title_inferred": "Astrological treatise page with dense abbreviated Latin text",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated medieval Latin cursive script with dense ligatures cannot be reliably transcribed at this resolution",
+      "translator_notes": "The page contains two columns of densely written Latin text with numerous scribal abbreviations typical of astrological/astronomical treatises, with red rubrication marks and paragraph markers (some in red ink) scattered throughout. Marginal notes appear in the left margin in a different, smaller hand. A catchword or note appears at the bottom right corner. The text discusses what appears to be astrological conjunctions or planetary positions based on visible terms, but precise transcription is not possible given the script density and image resolution.",
+      "_label": "VI_F_7-fol-19r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical text with rubricated capitals (medieval Latin, unidentified topic)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, abbreviated Latin cursive with heavy use of scribal abbreviations that cannot be reliably resolved from the image resolution provided; individual words are not confidently decipherable.",
+      "translator_notes": "Page shows red rubricated initials (e.g., 'h') and interlinear/marginal annotations in red ink; several red paragraph marks and a stain/discoloration in the upper-middle portion of the page obscure some lines. Without higher resolution or paleographic specialization in this specific scribal hand, a reliable line-by-line transcription cannot be produced; declining detailed transcription to avoid presenting guesses as fact.",
+      "_label": "VI_F_7-fol-19v"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page with rubricated headings",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting uses dense Gothic cursive with heavy scribal abbreviation typical of 15th-century Latin manuscripts, and the image resolution is insufficient to reliably resolve individual letterforms and abbreviation marks needed for accurate transcription.]\n[Latin text in heavily abbreviated Gothic cursive script with red rubricated initials and section headings; text too small and compressed with extensive scribal abbreviations to transcribe reliably letter-by-letter]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting uses dense Gothic cursive with heavy scribal abbreviation typical of 15th-century Latin manuscripts, and the image resolution is insufficient to reliably resolve individual letterforms and abbreviation marks needed for accurate transcription.",
+      "translator_notes": "Page contains two rubricated section headings (in red, larger script) that appear to mark distinct topics, likely astrological/medical content given the manuscript's subject matter. There are marginal notes in a different, more cursive hand running down the left margin. A full transcription would require higher resolution imaging or direct manuscript examination to properly resolve the abbreviations and script.",
+      "_label": "VI_F_7-fol-20r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text (sphere theory, poles, and celestial motion)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is written in a heavily abbreviated Gothic cursive Latin hand typical of 15th-century astronomical texts, with dense scribal abbreviations that cannot be reliably resolved from the image alone.",
+      "translator_notes": "Text appears to discuss celestial spheres, poles (polus borealis/australis), planetary motion, and possibly a zodiacal sign heading ('Aries' visible in the left margin near the bottom). Red rubrication marks (paragraph marks and highlighted letters) are used throughout to mark section divisions. A partial rubricated heading appears near the bottom of the main column. Marginal notes in red ink appear at multiple points along the left margin but are too small/faint to transcribe confidently. Right-hand column visible at page edge belongs to the facing folio and is only partially visible. Given the density of abbreviation marks (macrons, superscript letters, tironian notes) typical of scholastic Latin astronomical treatises, a reliable line-by-line transcription would require higher resolution imaging or physical examination.",
+      "_label": "VI_F_7-fol-20v"
+    },
+    {
+      "title_inferred": "Astrological treatise on zodiac signs and planetary influences",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in heavily abbreviated medieval Latin cursive script with small, dense handwriting that cannot be reliably transcribed letter-for-letter from the image alone.]\n[Page contains dense abbreviated Latin text in a 15th-century cursive hand, with rubricated (red) sign markers and initials for zodiac signs (e.g., Taurus, Leo, Libra, Sagittarius, Scorpio noted in margin). Due to the density of scribal abbreviations and small script, a reliable full transcription cannot be produced from the image alone.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is written in heavily abbreviated medieval Latin cursive script with small, dense handwriting that cannot be reliably transcribed letter-for-letter from the image alone.",
+      "translator_notes": "Marginal rubricated notes appear to mark zodiac sign names (Taurus, Leo, Libra, Sagittarius, Scorpio) alongside the main text, suggesting this page discusses planetary or astrological influences associated with the zodiac signs. Two rubricated paragraph markers with red initials appear mid-page and near the bottom, possibly marking section headings (one reading something like 'Quicquid ad sig[na]...' and another 'Sunt vocatus in...'). The right margin is cropped in the image, and the top of the facing page (partial column of another folio) is visible on the left edge. Full paleographic transcription would require higher resolution imaging and specialist review.",
+      "_label": "VI_F_7-fol-21r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise page on zodiac signs and planetary aspects",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated Gothic cursive that cannot be reliably deciphered from the image at this resolution.",
+      "translator_notes": "Two rubricated (red) headings/section titles are visible mid-page and near bottom of page, likely marking new sections of astrological text; a small diagram (possibly a geometric/astronomical figure) appears at the bottom left margin. Right-hand page edge shows continuation of another column of text from an adjacent leaf. Due to the complexity of the abbreviations and cursive ligatures, a confident line-by-line transcription is not possible without higher resolution imagery or specialist paleographic collation.",
+      "_label": "VI_F_7-fol-21v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with marginal glosses",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated Latin cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "The page contains a main column of densely abbreviated Latin text with red rubricated initials and paragraph marks, along with an extensive marginal gloss/commentary column on the right side written in a smaller, similarly abbreviated hand. Without higher resolution or specialist paleographic examination, individual words cannot be confidently identified beyond isolated fragments (e.g., what appear to be terms like 'signum', 'planeta', 'circulo'). A full transcription is not possible at this confidence level.",
+      "_label": "VI_F_7-fol-22r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise text (folio 22v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated Latin cursive script with heavy scribal abbreviations is not reliably legible from the image resolution provided.",
+      "translator_notes": "Page contains rubricated initial letters (red paragraph marks) and marginal notation (red 'ns' or similar in left margin near top). Right edge shows text from adjacent folio bleeding into view. Full paleographic transcription would require higher resolution image and closer expert examination of the abbreviation system used.",
+      "_label": "VI_F_7-fol-22v"
+    },
+    {
+      "title_inferred": "Astronomical treatise on colures and equinoctial circles",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is heavily abbreviated Latin astronomical prose with many technical Latin astronomical terms (colurus, equinoctialis) legible in fragments, but the overall dense abbreviation and small script prevent a confident full transcription.]\n[The text is written in a heavily abbreviated Latin scholastic hand, typical of astronomical treatises, discussing 'colurus equinoctialis' and 'colurus solisticialis' (colures - the great circles passing through celestial poles and equinox/solstice points), with red rubricated headings including 'Alter qui colurus...' and marginal notes in red ink marking key terms. Due to the density of abbreviations and the small scale of the reproduction, a reliable word-by-word transcription cannot be confidently produced.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is heavily abbreviated Latin astronomical prose with many technical Latin astronomical terms (colurus, equinoctialis) legible in fragments, but the overall dense abbreviation and small script prevent a confident full transcription.",
+      "translator_notes": "Marginal red rubrics visible including 'Alter qui colurus...' as a section heading; red paragraph marks (pilcrows) appear throughout the text marking subsections; a large brown stain occupies the lower right portion of the page; catchword or marginal annotations on the left edge are cut off/illegible due to page trimming.",
+      "_label": "VI_F_7-fol-23r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with heavily abbreviated Latin text",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is written in dense, heavily abbreviated medieval Latin script that cannot be reliably transcribed from the image resolution and handwriting style available",
+      "translator_notes": "Page contains a large block of main text in brown ink with red rubrication/paragraph marks and interlinear/marginal annotations in a different, smaller hand visible on the right edge margin (partially cut off by page trimming). Some initial words appear to read 'Qui Aut Ab Iuli...' at top but the bulk of the text involves technical astronomical/astrological vocabulary (references to planets, medius, aspectus) that would require higher resolution imaging or specialist paleographic examination to transcribe accurately. Declining detailed transcription due to low confidence in accuracy.",
+      "_label": "VI_F_7-fol-23v"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page with rubricated headings (De prandio, De luna decima..., Unde alius palter...)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense abbreviated cursive Latin script that cannot be reliably transcribed from the image resolution and heavy use of scribal abbreviations",
+      "translator_notes": "Red rubricated section headers are visible, including phrases resembling 'De prandio', a heading with 'luna' referencing a lunar day, and 'Unde alius' followed by 'palter' or similar; these suggest astrological-medical prognostication tied to lunar days, but individual word forms are too uncertain for confident line-by-line transcription. Marginal notes on the left page edge (partially visible, different hand) are not transcribed.",
+      "_label": "VI_F_7-fol-24r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with heavily abbreviated Latin text",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting uses extremely dense medieval Latin abbreviations in a cursive gothic hand that cannot be reliably transcribed at this resolution.",
+      "translator_notes": "Page contains heavy scribal abbreviations typical of astrological/astronomical texts; red rubricated letters and paragraph marks are visible throughout; a marginal note appears on the right edge in a different, later or contemporary hand. Folio number '110' or similar appears at top left, with '133' at bottom left, suggesting foliation issues or cross-references. Without higher resolution or specialist paleographic access, a confident transcription is not possible; this is offered as a declined/low-confidence assessment rather than a guessed reading.",
+      "_label": "VI_F_7-fol-24v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with rubricated heading",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense Gothic cursive script with heavy scribal abbreviation cannot be reliably transcribed from the image alone without higher resolution or specialist paleographic comparison.]\n[Heavily abbreviated Latin cursive script, mostly illegible due to dense abbreviation and handwriting style. A rubricated heading appears partway down the page reading approximately 'Dico q[uod] ...lis n...'. The text is arranged in a single column on the left and a narrower column on the right with occasional red ink annotations (rubrics) marking sections, including what appears to be numerals or symbols in red at right margin.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense Gothic cursive script with heavy scribal abbreviation cannot be reliably transcribed from the image alone without higher resolution or specialist paleographic comparison.",
+      "translator_notes": "A red rubricated heading beginning 'Dico...' is visible mid-page; several red marginal marks/numerals appear on the right side, possibly section markers or corrections; left margin shows earlier page text bleeding through from facing folio.",
+      "_label": "VI_F_7-fol-25r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise on zodiac signs and planetary motions",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense abbreviations, small cursive hand, and image resolution prevent a reliable word-by-word transcription of this technical astronomical Latin text.]\n[Heavily abbreviated Latin astronomical text in a 15th-century Gothic cursive hand, with rubricated (red) initials and section headings. The text is too densely abbreviated and the image resolution too limited to produce a reliable letter-by-letter transcription. A red rubric heading appears partway down the page, and another red-highlighted heading near the middle of the lower section (possibly reading something like 'Incipit de motu...' or similar), consistent with a new chapter or section on zodiac signs ('zodiacus') and planetary declination.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviations, small cursive hand, and image resolution prevent a reliable word-by-word transcription of this technical astronomical Latin text.",
+      "translator_notes": "Page contains two rubricated (red) section headings, one near the top-middle and one in the lower half, likely marking chapter divisions in a treatise on the zodiac and planetary motions. Marginal red marks (paragraph markers) appear throughout. Right margin shows a catchword or continuation notes from the facing page. Full transcription would require higher resolution imaging and specialist paleographic collation.",
+      "_label": "VI_F_7-fol-25v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise text (fol. 26r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense abbreviated Latin cursive with heavy use of scribal abbreviations; image resolution insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "Page contains marginal annotations in a different hand alongside the main text, plus red rubricated initials/paragraph marks; these marginal notes were not transcribed. The main body appears to discuss astronomical/astrological terms (e.g., 'meridianum', 'oriz[on]' possibly abbreviated for horizon) but specific word-level readings could not be confirmed reliably.",
+      "_label": "VI_F_7-fol-26r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text with marginal annotations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated medieval Latin cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page contains extensive marginal annotations in a different (smaller) hand alongside the main text block, with red rubrication marks and a decorative red initial/marker in the left margin partway down the page. Some interlinear glosses also appear above certain words. The right edge shows text from the facing page bleeding through. Due to the compressed cursive script with heavy use of scribal abbreviations typical of 15th-century Latin manuscripts, individual words could not be confidently identified without higher resolution imaging or specialist paleographic consultation.",
+      "_label": "VI_F_7-fol-26v"
+    },
+    {
+      "title_inferred": "Astronomical treatise on the poles of the zodiac and equator (with marginal notes)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is highly abbreviated cursive with many contractions and the image resolution is insufficient to confidently resolve individual words of this technical astronomical text.]\n[Densely written Latin astronomical text with heavy abbreviation, red paragraph marks, and marginal annotations; individual words cannot be reliably deciphered from the image at this resolution.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is highly abbreviated cursive with many contractions and the image resolution is insufficient to confidently resolve individual words of this technical astronomical text.",
+      "translator_notes": "Numerous marginal notes and red-ink highlighted words (nota signs, interlinear glosses) appear throughout the page; these are not transcribed as they are secondary annotations. The text appears to discuss the poles of the zodiac (polus zodiaci) and the equator/horizon (polus mundi), likely part of a treatise on the astrolabe or spherical astronomy, but a reliable full transcription is not possible without higher resolution or additional context.",
+      "_label": "VI_F_7-fol-27r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page (planetary computation text)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated Latin cursive with dense scribal contractions that cannot be reliably deciphered from the image alone.",
+      "translator_notes": "Page contains a large rubricated initial ('Sunt anni...' or similar) beginning a new section, red paragraph marks (pilcrows) throughout, and marginal annotations in a different, smaller hand (e.g., words that appear to read 'coniunctio' or similar astronomical terms) which were excluded from the main transcription per instructions. Image resolution and abbreviation density make a confident line-by-line transcription impossible; a specialist with direct manuscript access would be needed for accurate reading.",
+      "_label": "VI_F_7-fol-27v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise text (fol. 28r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated 15th-century Latin cursive with many suspensions and marginal interlinear glosses that cannot be reliably resolved from the image alone.",
+      "translator_notes": "Page bears the folio number '28' (or similar) in upper right corner; extensive marginal annotations in a different, smaller hand appear along the left margin and interlinearly, along with red-ink corrections/rubrication marks (paraph marks and touches of red) throughout the main text; these marginalia are not transcribed here due to illegibility at this resolution.",
+      "_label": "VI_F_7-fol-28r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise on celestial zones and habitability (climata), fol. 28v",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated Latin cursive script that cannot be reliably transcribed from the image resolution provided; only isolated words (e.g., 'habitabilis', 'plaga', 'zona', 'artico', 'antartico', 'capricorni') are discernible amid extensive abbreviation marks.",
+      "translator_notes": "Right margin contains additional marginal annotations in a different, smaller hand, not included in main transcription. Red rubricated initial 'K' begins a section titled something like 'kondicoq(ue) paccelli' or similar, marking a new chapter heading. Numerous red interlinear/marginal marks (possibly correction signs or paragraph markers) appear throughout. Text appears to concern astronomical zones (zona, plaga) and habitability relative to celestial poles (artico/antartico) and zodiacal signs (capricorni). Due to script density and abbreviation, a full reliable transcription is not possible without higher resolution or specialist paleographic tools.",
+      "_label": "VI_F_7-fol-28v"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise on planetary regions and habitation (fol. 29r)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense abbreviations, cursive ligatures, and image resolution make a reliable line-by-line transcription impossible without higher-resolution imaging or additional context.]\n[Heavily abbreviated Latin text in a 15th-century Bohemian cursive hand, densely written with numerous scribal abbreviations and interlinear/marginal notes in red and brown ink. The text is too abbreviated and the image resolution too limited to produce a reliable continuous transcription. A large decorated initial (red, bifoliate design) marks the beginning of a new section partway down the page.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviations, cursive ligatures, and image resolution make a reliable line-by-line transcription impossible without higher-resolution imaging or additional context.",
+      "translator_notes": "Numerous marginal annotations in red ink appear throughout (possibly section markers or 'nota' signs), and a large decorated initial letter begins a new paragraph roughly one-third down the page. Catchwords or owner's notes, if present, are not clearly distinguishable at this resolution.",
+      "_label": "VI_F_7-fol-29r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with heavy abbreviation, dense marginal annotations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, abbreviated with numerous suspensions, and the image resolution is insufficient to reliably resolve individual words with confidence",
+      "translator_notes": "This page shows a heavily abbreviated Latin manuscript hand typical of 15th-century academic/medical texts, with red rubrication marks (paragraph marks and initials) scattered throughout, and extensive marginal annotations in a smaller hand running down both margins. Without higher resolution imaging, individual words cannot be transcribed reliably enough to avoid guessing. The text appears to be continuous prose (possibly astrological/medical commentary) with interlinear and marginal glosses. A catchword or note appears at the bottom of the page. Declining detailed transcription due to illegibility at this resolution.",
+      "_label": "VI_F_7-fol-29v"
+    },
+    {
+      "title_inferred": "Medieval Latin astrological/medical treatise page with rubricated headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated cursive Gothic script with heavy use of scribal abbreviations cannot be reliably transcribed from the image resolution provided",
+      "translator_notes": "Page contains a large red rubricated heading/initial partway down the page, marginal red annotations (numbers or symbols) at the right margin, and marginal notes in a different hand on the left edge (partially cut off, belonging to the facing folio). The main body text is written in a compact, heavily abbreviated cursive bookhand typical of 15th-century Latin scientific manuscripts, but individual words cannot be confidently resolved at this resolution. A full transcription would require higher-resolution imaging or direct manuscript examination.",
+      "_label": "VI_F_7-fol-30r"
+    },
+    {
+      "title_inferred": "Astrological/medical text on planetary influences (folio 30v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Densely abbreviated cursive Latin script with heavy scribal ligatures and interlinear notes that cannot be reliably transcribed from the image alone",
+      "translator_notes": "Page shows dense abbreviated medieval Latin cursive with rubricated initials and red paragraph marks; marginal annotations and interlinear glosses visible along top and side margins; text appears to concern astrological influences of stars/planets and possibly a medical recipe ('Contra dolorem...' or similar heading near bottom left); resolution and handwriting complexity prevent confident line-by-line transcription.",
+      "_label": "VI_F_7-fol-30v"
+    },
+    {
+      "title_inferred": "Astrological/medical text with heavy abbreviations (folio 31r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is dense, highly abbreviated Latin cursive with numerous marginal insertions (some in red ink); resolution and script complexity prevent a reliable line-by-line transcription.",
+      "translator_notes": "Page contains extensive marginal annotations, including red-ink insertions marked 'nb' (nota bene) in the right margin, and what appears to be a later scribal or ownership note at the bottom of the page beginning 'Purgacio aqua per...'; text density and cursive ligatures make confident reading impossible from the image alone.",
+      "_label": "VI_F_7-fol-31r"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise text (heavily abbreviated Latin, cursive gothic hand)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is densely written in a highly abbreviated cursive gothic hand at low resolution, making reliable letter-by-letter transcription impossible.",
+      "translator_notes": "Red rubricated initials and paragraph marks appear throughout; marginal notes visible on right edge in different, smaller hand; folio number '113' or similar visible in red in left margin. Text appears to concern astrological influences (mentions of planetary/zodiacal terms possible) but cannot be confidently transcribed given image quality and script density.",
+      "_label": "VI_F_7-fol-31v"
+    },
+    {
+      "title_inferred": "Medical recipe collection (folio 32r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive with extensive use of scribal contractions, making a reliable line-by-line transcription impossible from the image alone.",
+      "translator_notes": "Page contains dense Latin medical/recipe text with red rubricated initials and headings (some marked 'recipe' or similar), interspersed with red-ink markers (possibly 'pro pes' or similar recurring abbreviation) indicating individual remedies or prescriptions. Numerous suspension marks and ligatures throughout prevent confident word-level transcription without higher resolution or specialist paleographic collation with parallel manuscripts. No marginalia distinct from main text block is clearly visible; a catchword may be present at the bottom but is not legible in this reproduction.",
+      "_label": "VI_F_7-fol-32r"
+    },
+    {
+      "title_inferred": "Medical/astrological text page (recipe or prognostication section) in dense Latin cursive",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive script with dense ligatures that cannot be reliably deciphered from the image alone.",
+      "translator_notes": "Page shows a full column of text with red rubricated initials/paragraph marks scattered throughout, and a marginal annotation in a different hand near the left margin around the middle of the page. Without higher resolution or specialist paleographic examination, individual words cannot be confidently transcribed; the abbreviations typical of medical/astrological Latin manuscripts (suspensions, tironian notes, superscript marks) are visible but not resolvable to specific text.",
+      "_label": "VI_F_7-fol-32v"
+    },
+    {
+      "title_inferred": "Astrological/medical text page (illegible dense abbreviated Latin script)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely abbreviated, cursive, and dense, making reliable transcription impossible from the image alone",
+      "translator_notes": "Text shows heavy use of scribal abbreviations and red rubrication marks (paragraph markers, initials) typical of medieval Latin astronomical/medical manuscripts; some marginal notes on the left edge are cropped and not legible; overall image resolution insufficient for confident letter-by-letter transcription.",
+      "_label": "VI_F_7-fol-33r"
+    },
+    {
+      "title_inferred": "Latin astrological/medical treatise, dense cursive text page",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive with many suspensions and contractions, and the image resolution is insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "Page contains dense running text in a compressed Gothic cursive hand with numerous abbreviation marks; several words are highlighted or initialed in red rubrication throughout. Marginal notes appear on the right edge of the page (partially cut off by binding) but are illegible from this image. Given the difficulty of reading the microfilm/photograph quality reproduction, a full transcription would risk significant inaccuracy; a specialist with higher-resolution imaging or direct manuscript access would be needed for a reliable reading.",
+      "_label": "VI_F_7-fol-33v"
+    },
+    {
+      "title_inferred": "Astrological/medical text with abbreviated Latin script (fol. 34r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is densely written in heavily abbreviated cursive Latin with many contractions typical of 15th-century scientific manuscripts, but the handwriting and abbreviation system are too compressed and the image resolution too limited for reliable line-by-line transcription.",
+      "translator_notes": "Page contains dense abbreviated cursive text with red rubricated initials/marks at several points (paragraph markers, likely astrological/planetary notations given manuscript context); some drawings or symbols appear at top of page; a marginal note is visible on the left edge. Without higher resolution or specialist paleographic collation, a confident transcription cannot be produced.",
+      "_label": "VI_F_7-fol-34r"
+    },
+    {
+      "title_inferred": "Medical/astrological text page with rubricated headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense cursive Latin script with abbreviations that cannot be reliably read from the image resolution provided",
+      "translator_notes": "Page contains two red rubricated headings/paragraph marks visible, one near top ('...ua aut edinon...') and one mid-page ('...oue oder q sit...'), with red paragraph marks (pilcrows) scattered through the text; text appears to be medical or astrological in nature based on manuscript context, but individual words cannot be confidently transcribed due to script density and abbreviation marks.",
+      "_label": "VI_F_7-fol-34v"
+    },
+    {
+      "title_inferred": "Astrological/medical text with rubricated headings (fol. 35r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a densely abbreviated medieval cursive script that cannot be reliably transcribed from the image resolution provided, though rubricated headings and red paragraph marks are visible.",
+      "translator_notes": "Two red rubricated headings are visible in the left column, the first partially reading something like 'de spolus' or similar, and a second reading 'in regula' or similar; both are too abbreviated/stylized to confidently transcribe. There are numerous red paragraph marks (pilcrows) throughout the text and a small red marginal notation near the top right. Without higher resolution or specialist paleographic review, a full transcription would risk significant inaccuracy.",
+      "_label": "VI_F_7-fol-35r"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise text with red-ink rubric heading",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense cursive Latin script is too small and blurred in the image to reliably transcribe individual words, though a rubricated heading (partially reading something like 'Nota de...') is visible.",
+      "translator_notes": "Page contains a red-ink initial and rubric heading mid-page (appears to begin 'Nota de...'), with numerous red paragraph marks (pilcrows) scattered throughout the text block; a partial column of another leaf is visible at right edge. Marginal red marks and catchword area not legible enough to transcribe reliably.",
+      "_label": "VI_F_7-fol-35v"
+    },
+    {
+      "title_inferred": "Astronomical/medical text page with rubricated headings (unidentified content)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a densely abbreviated cursive Latin script whose individual words cannot be reliably resolved from the image resolution provided.",
+      "translator_notes": "Page shows dense two-column-like continuous text in brown ink with red (rubricated) initials and paragraph marks (paraphs) scattered throughout, including a red-underlined heading near the bottom ('...quos aliqui' or similar) and another rubricated line mid-page ('In...ho...' partially legible). A large red decorated initial begins the page ('Ihs' or similar abbreviation, possibly invoking 'Jesus'). Marginal red marks and a catchword-like element appear at the bottom right. Due to the cursive gothic hand and image quality, a confident word-by-word transcription is not possible; a full paleographic transcription would require higher resolution imaging or specialist in-person examination.",
+      "_label": "VI_F_7-fol-36r"
+    },
+    {
+      "title_inferred": "Medical recipe collection with rubricated section headings",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The handwriting is a heavily abbreviated 15th-century cursive with dense Latin medical/astrological content that cannot be reliably transcribed from the image resolution provided; only the rubricated section headers are partially distinguishable.]\n[Illegible due to dense abbreviated cursive script; two rubricated headings partially legible:] Item ad quos [...] eme[...] / Item vosq[...] uu[...]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive with dense Latin medical/astrological content that cannot be reliably transcribed from the image resolution provided; only the rubricated section headers are partially distinguishable.",
+      "translator_notes": "Two red-ink rubricated headings appear mid-page ('Item ad quos ...eme' and 'Item vosq... u...tibus'), likely marking new recipe or prognostication sections. Small red paragraph marks (pilcrows) appear throughout in the margins. A catchword or marginal note may exist at the top left ('cn' abbreviation visible) but is not confidently legible. The right edge shows the start of the facing page (fol. 37r) with more red rubrics, not transcribed here as it belongs to a separate leaf.",
+      "_label": "VI_F_7-fol-36v"
+    },
+    {
+      "title_inferred": "Astrological/medical treatise page with rubricated headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense cursive Latin abbreviations with heavy scribal ligatures are not reliably legible at this resolution",
+      "translator_notes": "Two rubricated (red-touched) headings are visible, one beginning with 'De lu philie...' or similar and another 'Item quo/quid quor...', suggesting section divisions typical of astrological-medical compilations; red paragraph marks (pilcrows) and marginal red notations appear throughout, including 'nota' marks in the margins. The main body text is too small and compressed in this image to transcribe reliably word-for-word; a higher resolution image would be needed for a confident transcription.",
+      "_label": "VI_F_7-fol-37r"
+    },
+    {
+      "title_inferred": "Astrological/medical text page with rubricated headings (fol. 37v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Latin script that cannot be reliably deciphered from the image alone.",
+      "translator_notes": "Two rubricated section headings are visible (in red ink), likely reading something like 'Ius et q[ui]s erit e[cl]i[psis]' or similar astrological formula, but the exact wording cannot be confirmed without higher resolution. Marginal red paragraph marks and catchword-like notations appear in the outer margin. The right edge shows the beginning of the facing folio with additional rubricated text, not part of this page. Given the density of abbreviations typical of 15th-century scholastic/medical Latin, a confident line-by-line transcription is not possible from this image.",
+      "_label": "VI_F_7-fol-37v"
+    },
+    {
+      "title_inferred": "Medical/astrological recipe text with rubricated section headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense cursive Latin abbreviations in a highly compressed medieval hand are not reliably legible from the image resolution provided",
+      "translator_notes": "The page shows three red rubricated section headings (incipits), each beginning a paragraph of continuous Latin text written in a heavily abbreviated gothic cursive hand typical of 15th-century medical/astrological compendia. There is a folio number '40' in the upper right corner and small marginal red paragraph marks/notations throughout the text. Without higher resolution or specialist familiarity with this specific scribal hand's abbreviation conventions, a reliable word-by-word transcription cannot be produced; guessing at specific readings would risk introducing false text into the record.",
+      "_label": "VI_F_7-fol-38r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with rubricated section headings (fol. 38v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Latin script that cannot be reliably deciphered from the image resolution provided.",
+      "translator_notes": "Several rubricated (red) headings are visible, each beginning with 'De' followed by an abbreviated word (e.g., 'De qua...', 'De com...'), suggesting a series of short thematic sections, likely astrological or medical in nature. The right margin contains a table with numerical entries, possibly astronomical/calendrical data. Full transcription is not attempted due to low legibility of the cursive script at this resolution; a higher-resolution image or specialist paleographic review would be needed for accurate rendering.",
+      "_label": "VI_F_7-fol-38v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text with planetary tables",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated medieval cursive script combined with numerical tables that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page contains a block of continuous prose text at top, followed by two columns: a numerical/astronomical table with red and brown ink entries (likely planetary positions or dates), and a right-hand column of dense abbreviated Latin prose with red rubricated headings (appears to read something like 'Altitudo...' and 'Ascensiones' as section titles). Red ink used for headings and some numerals suggests rubrication typical of astronomical tables. Due to image resolution and heavy abbreviation, a reliable word-by-word transcription is not possible; a specialist with higher-resolution imaging would be needed for accurate reading.",
+      "_label": "VI_F_7-fol-39r"
+    },
+    {
+      "title_inferred": "Page of dense Latin cursive text with rubricated headings (astronomical/medical treatise)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a densely abbreviated 15th-century cursive script that cannot be reliably transcribed from the image resolution provided",
+      "translator_notes": "A rubricated heading beginning 'Ronum...quod...' appears in red ink partway down the page, along with red paragraph marks (paraphs) scattered throughout the text; the right margin shows text from an adjacent folio bleeding through/visible from the facing page. Full transcription would require higher resolution imaging and closer paleographic examination.",
+      "_label": "VI_F_7-fol-39v"
+    },
+    {
+      "title_inferred": "Astrological/medical text with rubricated headings (fol. 40r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Handwriting is heavily abbreviated cursive Latin with significant staining/damage, making a reliable transcription impossible from the image alone.",
+      "translator_notes": "Page contains two rubricated (red) headings, one beginning 'Dies...' and another 'Fine...planeta', suggesting sections on days/planets in astrological medicine; there are stains and a red paragraph mark; text density is high but resolution insufficient for confident line-by-line transcription.",
+      "_label": "VI_F_7-fol-40r"
+    },
+    {
+      "title_inferred": "Astronomical diagram of planetary orbs/spheres with accompanying explanatory text",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense abbreviated medieval cursive script that cannot be reliably transcribed letter-by-letter from the image resolution provided; individual words are not confidently legible.",
+      "translator_notes": "Page contains two circular diagrams: a simple two-ring circle diagram at left with small labels (possibly planetary/orbital scheme), and a larger concentric-ring diagram at right colored in red and black/brown representing planetary spheres, with small captions inside each ring (illegible at this resolution). Below the diagrams is a block of continuous Latin prose text, heavily abbreviated in a 15th-century cursive hand, discussing planetary orbits and spheres (visible words suggest terms like 'orbis', 'planeta', 'circulus', 'quadratura'), but individual words could not be confidently read. A large paragraph mark and red rubrication appear at the start of the text block ('¶ ...'). Marginal notes appear cropped at right edge of the page (partially visible text in the adjacent folio bleeding through). Given the low resolution and complexity of the abbreviations, a full transcription is not attempted; a specialist with higher-resolution images or direct manuscript access would be needed for accurate transcription.",
+      "_label": "VI_F_7-fol-40v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with marginal diagrams",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense abbreviated medieval Latin cursive with numerous interlinear and marginal glosses, planetary symbols, and technical astronomical abbreviations that cannot be reliably deciphered from the image alone",
+      "translator_notes": "Page contains marginal drawings (a red hand/pointer symbol, planetary or zodiacal glyphs) and interlinear glosses added in a different, smaller hand; text appears to concern astronomical/astrological calculations (references to circles, poles, zodiac visible in a few legible words like 'zodiacum', 'circulus', 'polus') but the bulk of the heavily abbreviated Latin script resists confident transcription without higher resolution or specialist paleographic tools.",
+      "_label": "VI_F_7-fol-44r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise page (stars and their influences)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Latin astronomical/astrological hand with dense contractions and interlinear glosses that cannot be reliably read from the image resolution provided.",
+      "translator_notes": "Numerous marginal and interlinear annotations in red and brown ink are visible alongside the main text; these appear to be glosses or corrections but are too small/faint to transcribe reliably. Red pilcrow-like marks (resembling small hearts or clover shapes) punctuate sections of the text, likely paragraph markers.",
+      "_label": "VI_F_7-fol-44v"
+    },
+    {
+      "title_inferred": "Astronomical text on climata (climate zones) and dies/noctes",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in extremely abbreviated medieval Latin cursive script with numerous suspensions and contractions typical of astronomical tables, making reliable word-by-word transcription impossible without higher resolution or specialized paleographic comparison.]\n[Heavily abbreviated Latin astronomical text, largely illegible due to dense scribal abbreviations and cursive hand]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is written in extremely abbreviated medieval Latin cursive script with numerous suspensions and contractions typical of astronomical tables, making reliable word-by-word transcription impossible without higher resolution or specialized paleographic comparison.",
+      "translator_notes": "Marginal red and black annotations appear throughout, including numerals and short notae (possibly cross-references or corrections). Page numbered '50' in later hand at top right. Text appears to discuss 'climata' (climate zones), degrees, and celestial measurements common to astronomical treatises, but specific readings could not be confirmed with confidence.",
+      "_label": "VI_F_7-fol-48r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text on celestial circles and latitude",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Heavy scribal abbreviation and small cramped hand make continuous reading unreliable without higher resolution or specialist paleographic comparison.]\n[Illegible dense abbreviated Latin text, heavily contracted with scribal abbreviations, discussing circulus, latitudo, longitudo, and related astronomical terminology]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Heavy scribal abbreviation and small cramped hand make continuous reading unreliable without higher resolution or specialist paleographic comparison.",
+      "translator_notes": "Marginal annotations and a wax/ink circular stamp or seal visible on left margin near line 8-9; catchword or note possibly present at bottom margin; red paragraph marks (pilcrow-like) and a red triangular symbol appear mid-page and near bottom, likely marking section divisions in the astronomical treatise. Right edge shows another column of text (continuation on facing page) not transcribed here.",
+      "_label": "VI_F_7-fol-48v"
+    },
+    {
+      "title_inferred": "Astrological/medical text with dense Latin abbreviations (fol. 52r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Gothic script with extensive use of scribal contractions, and the image resolution does not allow reliable letter-by-letter transcription of the dense text.",
+      "translator_notes": "Page contains numerous red (rubricated) paragraph marks and interlinear/marginal annotations, including what appear to be later numeric or reference notes in the margins (e.g., 'fol.' notations bottom right). The main body text appears to be Latin prose in an academic/scholastic hand typical of 15th-century Prague codices, likely astrological or medical in content given the manuscript's known contents, but specific words cannot be confidently read from the available image quality.",
+      "_label": "VI_F_7-fol-52r"
+    },
+    {
+      "title_inferred": "Medical/astrological recipe text with marginal notes (Nota, De Oleo, De signis, etc.)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated cursive gothic script that cannot be reliably transcribed from the image resolution and compression artifacts visible.",
+      "translator_notes": "Marginal rubricated headings are visible including 'No[ta]', 'Nota', 'De monte', 'De vitro', 'De oleo', 'De sig[nis]', suggesting sections on medical/astrological topics, but the body text is too small and cursive to transcribe with confidence at this resolution. A partial second column of text appears at the right edge of the page, likely from the facing folio, also illegible at this resolution.",
+      "_label": "VI_F_7-fol-52v"
+    },
+    {
+      "title_inferred": "Astrological/astronomical text with marginal star names (Calor, Frigo, Sepe, Corbo, Aquila, Testudo, Stellio)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated cursive Latin script that cannot be reliably transcribed at this resolution.",
+      "translator_notes": "Marginal red-ink annotations appear to name constellations or celestial bodies (e.g., 'Calor', 'Frigo', 'Sepe', 'Corbo', 'Aquila', 'Testudo', 'Stellio'), suggesting the main text discusses astrological/astronomical influences; however, the body text itself is too compressed and abbreviated to transcribe with confidence from the image provided.",
+      "_label": "VI_F_7-fol-56r"
+    },
+    {
+      "title_inferred": "Medical/astrological recipe text with red rubrics (Latin), folio 56v",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a densely abbreviated cursive Gothic script that cannot be reliably deciphered from the image resolution provided.",
+      "translator_notes": "Page contains left-margin rubric headings in red/orange ink (e.g. 'Verruce', 'Amidos ubior[?]', 'Syrenes' or similar plant/remedy names) marking sections of what appears to be a medical recipe collection. Numerous words in the main text are marked with orange interlinear marks, likely highlighting key terms. A second column of text is visible on the adjoining page to the right. Due to the compressed abbreviations typical of 15th-century Latin medical manuscripts and image resolution limits, a confident line-by-line transcription is not possible; a specialist with higher-resolution imagery or in-person access would be needed for accurate transcription.",
+      "_label": "VI_F_7-fol-56v"
+    },
+    {
+      "title_inferred": "Astrological text on the Sun in Leo and effects of planetary conjunctions",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated cursive Latin script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Marginal red-ink headings are visible, including phrases resembling 'Sol[is] in Leone', 'De effectib[us]...', and 'de coniunctio[ne]...'; these suggest astrological subject matter (solar position in Leo, planetary conjunctions and their effects) but the main body text is too small and abbreviated for confident transcription. Full paleographic review with higher resolution imaging would be needed for accurate transcription.",
+      "_label": "VI_F_7-fol-60r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with marginal heading 'De Marte' (On Mars)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense abbreviated Latin cursive with heavy use of scribal contractions and red highlighting is not reliably legible from the image at this resolution.",
+      "translator_notes": "Marginal note reading approximately 'De Marte' (or 'De Mercurio') visible on left margin near middle of page, marking a section heading. Right edge shows another column of text from adjacent folio bleeding into view. The main hand uses many suspension marks and ligatures typical of 15th-century Latin scientific/astrological manuscripts; a confident full transcription would require higher resolution imaging or direct manuscript examination.",
+      "_label": "VI_F_7-fol-60v"
+    },
+    {
+      "title_inferred": "Latin medical/astrological treatise page (dense abbreviated text)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated 15th-century cursive script with dense ligatures that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Text contains numerous red rubricated paragraph marks and highlighted words/phrases throughout, suggesting section divisions or emphasized terms (possibly names of remedies, planets, or authorities). Without higher resolution or specialist paleographic review, individual words cannot be confidently read; a full transcription would risk significant inaccuracy.",
+      "_label": "VI_F_7-fol-64r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with planetary sign markers (untranscribable in detail)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense heavily abbreviated Latin cursive with numerous astrological symbols is not reliably legible at this resolution",
+      "translator_notes": "Page shows a full column of medieval Latin cursive text with red rubrication (paragraph marks and planetary/zodiacal symbols in orange-red ink) interspersed throughout; a second column of text is visible at the right edge of the image belonging to the facing/adjacent page. The heavy abbreviation and small hand prevent a confident word-by-word transcription; specific readings would be guesses.",
+      "_label": "VI_F_7-fol-64v"
+    },
+    {
+      "title_inferred": "Medical text with rubricated headings (De apostemate / De ... plagarum) — page 70",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Handwriting is a dense abbreviated medieval cursive that cannot be reliably read from the available image resolution",
+      "translator_notes": "Two rubricated (red) headings are visible mid-page and near bottom, one reading approximately 'De apostemate' and another partially legible word possibly related to 'plagarum' or similar medical term; the text appears to be a continuous medical/recipe passage in heavily abbreviated Latin cursive script typical of 15th-century Prague medical manuscripts. Marginal red marks (paragraph marks) appear at several points in the left margin. Folio number '70' in upper right corner. Due to image resolution and script density, a confident line-by-line transcription is not possible.",
+      "_label": "VI_F_7-fol-68r"
+    },
+    {
+      "title_inferred": "Latin medical/astrological text with rubricated headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated medieval cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page contains numerous red (rubricated) initial letters/paragraph marks interspersed throughout dense black-ink cursive text; a partial line of text is visible on the right edge from the facing page. Without higher resolution or specialist paleographic examination, individual words cannot be confidently read.",
+      "_label": "VI_F_7-fol-68v"
+    },
+    {
+      "title_inferred": "Astrological/medical text page (Latin, heavily abbreviated cursive)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated Gothic cursive with many scribal contractions that cannot be reliably resolved from the image alone.",
+      "translator_notes": "The page contains continuous dense text with red (rubricated) initials and paragraph marks throughout; a folio number '71' or '72' appears in the upper right corner. Without higher resolution or specialist paleographic reference, individual words cannot be confidently transcribed—this appears to be standard astrological/medical prose consistent with the codex's content, but a full reading would require expert in-person examination or much higher image quality.",
+      "_label": "VI_F_7-fol-72r"
+    },
+    {
+      "title_inferred": "Densely abbreviated Latin text (medical/astrological) with red rubric marks and marginal annotations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, abbreviated cursive with heavy use of medieval Latin ligatures and contractions, making reliable letter-by-letter transcription impossible from the image alone",
+      "translator_notes": "Page contains a long block of continuous cursive Latin text with several red paragraph markers (rubricated pilcrow-like signs) inserted throughout, likely marking section divisions. There is additional marginal text in a similar hand running down the right edge of the page, and a small marginal note near the top left margin (possibly a catchword or reader's annotation). Without higher resolution or specialist paleographic collation with known parallel texts from this codex, a confident transcription cannot be produced; a low-confidence guess would risk introducing fabricated readings.",
+      "_label": "VI_F_7-fol-72v"
+    },
+    {
+      "title_inferred": "Medical/astrological text page with rubricated headings",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a densely abbreviated cursive Latin script that cannot be reliably transcribed from the image resolution provided",
+      "translator_notes": "Page contains numerous red (rubricated) initials and paragraph markers scattered throughout the text, suggesting section headings typical of medical or astrological compendia; several marginal notations appear in the left margin but are too small/faded to read reliably; a small tear or hole is visible in the right margin partway down the page.",
+      "_label": "VI_F_7-fol-76r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with heavy abbreviation (folio 76v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is written in a heavily abbreviated medieval Latin cursive hand with numerous scribal contractions; the resolution and script density prevent a reliable word-by-word transcription.",
+      "translator_notes": "Red paragraph marks (rubrication) and interlinear/marginal annotations are visible but not decipherable at this resolution; a facing column of shorter notes (possibly marginalia or a table) appears at the right edge of the image but is cut off and illegible.",
+      "_label": "VI_F_7-fol-76v"
+    },
+    {
+      "title_inferred": "Medical/astrological recipe text (heavily abbreviated Latin, with red highlighting)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, cursive, and heavily abbreviated with frequent brevigraphs, and the image resolution does not permit reliable letter-by-letter reading",
+      "translator_notes": "Text appears to be a continuous Latin medical/astrological treatise written in a fast Gothic cursive hand typical of 15th-century Prague codices, with numerous suspension marks and interlinear/marginal red-ink highlights (rubricated words or symbols) scattered throughout, likely marking key terms (e.g., planetary or herbal names). Without higher resolution or side-by-side comparison with known parallel texts, a confident transcription cannot be produced; a specialist familiar with this specific scribal hand and the manuscript's known content would be needed for accurate reading.",
+      "_label": "VI_F_7-fol-80r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological or medical text, densely abbreviated (folio 80v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, highly abbreviated Latin cursive with numerous scribal contractions, and the image resolution is insufficient to reliably resolve individual words.",
+      "translator_notes": "Page contains heavy scribal abbreviations, red-ink paragraph marks (paraphs) and underlining scattered throughout the text block, consistent with an astrological or medical compilation. No marginalia or catchwords clearly distinguishable from the main text at this resolution. A confident word-by-word transcription is not possible without higher resolution imaging or physical examination of the manuscript.",
+      "_label": "VI_F_7-fol-80v"
+    },
+    {
+      "title_inferred": "Astrological/medical text page (Latin manuscript, 15th c.)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Handwriting is a dense, heavily abbreviated cursive Gothic script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page shows continuous Latin prose with red paragraph marks (paraphs) inserted throughout the text, suggesting structured or itemized content (possibly astrological or medical prognostications). No marginalia or catchwords are clearly distinguishable from the main text at this resolution. A confident line-by-line transcription would require higher image resolution or direct manuscript access.",
+      "_label": "VI_F_7-fol-84r"
+    },
+    {
+      "title_inferred": "Medical/astrological text, page of dense abbreviated Latin prose",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, heavily abbreviated cursive with many red paragraph marks, and the image resolution does not allow reliable letter-by-letter reading.",
+      "translator_notes": "The page contains continuous Latin cursive text with numerous red pilcrow/paragraph marks and interlinear insertions; catchword or marginal notes may be present at the top/bottom margins but are not legible at this resolution. A high-resolution image or expert paleographic review would be needed for accurate transcription.",
+      "_label": "VI_F_7-fol-84v"
+    },
+    {
+      "title_inferred": "Astrological/medical text with heavy abbreviation (folio 90)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely abbreviated Latin cursive with heavy use of scribal contractions, and the image resolution is insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "Page shows dense heavily-abbreviated Latin script typical of medical/astrological recipe collections, with several words highlighted in red/orange ink (rubrication) interspersed throughout, likely marking key terms such as planetary or herbal names. A marginal note in red appears near the lower right ('...tenens ave' or similar) but is too small/unclear to transcribe reliably. Given the heavy abbreviation system used (common in medieval Latin medical manuscripts) and image quality, a full accurate transcription cannot be responsibly produced without higher resolution or specialist paleographic tools. Folio number '90' visible in upper right corner.",
+      "_label": "VI_F_7-fol-88r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with rubricated section headings (De Sanitate, De Securitate)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated cursive Latin script that cannot be reliably read from the image resolution provided, beyond isolated rubricated headings.",
+      "translator_notes": "Two rubricated (red-ink) section headers are legible: 'De Sanitate' (On Health) and what appears to be 'De Securitate' (On Safety/Security) further down the page, both typical of astrological prognostication texts organizing content by topical categories. The surrounding black-ink text consists of dense abbreviated Latin cursive that would require higher resolution or in-person examination to transcribe accurately; attempting a full transcription would risk significant inaccuracy.",
+      "_label": "VI_F_7-fol-88v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological or medical text, heavily abbreviated Latin (fol. 92r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting uses heavy medieval Latin abbreviations in a dense cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Page shows a full column of dense abbreviated Latin cursive text with red paragraph marks (paragraphus/rubrication) scattered throughout, likely marking section divisions. Some marginal notes appear cropped at the left edge of the image. Without higher resolution or specialist paleographic examination, individual words and abbreviations cannot be confidently resolved.",
+      "_label": "VI_F_7-fol-92r"
+    },
+    {
+      "title_inferred": "Astrological/medical text with abbreviated Latin (planetary/medical notes)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated Latin cursive script with dense ligatures cannot be reliably transcribed from the image at this resolution.",
+      "translator_notes": "Marginal rubric in red ink reads something like 'de sapientia' or similar heading near the left margin; several interlinear/marginal red-ink annotations and paragraph marks (¶) appear throughout the text but are too small/faint to confidently transcribe. The page contains dense abbreviated scholastic Latin script typical of astrological-medical treatises, with numerous suspension marks and ligatures that would require higher resolution or specialist paleographic study to render accurately.",
+      "_label": "VI_F_7-fol-92v"
+    },
+    {
+      "title_inferred": "Latin medical/astrological text, heavily abbreviated manuscript page",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is extremely dense, heavily abbreviated Gothic cursive with numerous suspensions and contractions, and the image resolution is insufficient to reliably resolve individual words with confidence.",
+      "translator_notes": "This page contains a full column of tightly written Latin text with red rubrication marks (paragraph marks and interlinear highlights) scattered throughout, suggesting a structured medical or astrological compendium (possibly recipes or prognostications tied to planetary influences, consistent with the codex's known content). Marginal notes appear in the left margin in a smaller hand. Without higher resolution imagery, a reliable word-by-word transcription cannot be produced; attempting to guess specific readings would risk introducing fabricated text. Recommend consulting higher-resolution scans or the original manuscript for accurate transcription.",
+      "_label": "VI_F_7-fol-96r"
+    },
+    {
+      "title_inferred": "Colophon and medical/astronomical text (heavily abbreviated Gothic cursive)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The page is written in a highly abbreviated, cramped Gothic cursive hand that resists confident letter-by-letter transcription except for a few words in the red colophon.]\n[Black text, upper lines, largely illegible due to heavy abbreviation and cursive ligatures]\n\n[Red colophon, partially legible:]\nEt fi[nit] ... hec ... mea scripta ac collecta p[er]\nme Andream de Osten... Bauaru[m] Cracouien[sis]\n... studio in Buda ... God[efridi] libri de\ntitulat[is] liber d[e] altitudine ... ob[iit] ... an[n]o\n[Domini] m[illesim]o cccc xl[v]\n\n[Black text continues below, dense abbreviated Latin, largely illegible]",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The page is written in a highly abbreviated, cramped Gothic cursive hand that resists confident letter-by-letter transcription except for a few words in the red colophon.]\nThe upper portion is in black ink and consists of dense, heavily abbreviated Latin prose (likely astronomical/medical content) that could not be reliably deciphered from the image.\n\nThe red-ink colophon, partially legible, appears to record authorship/compilation information, naming a scribe (possibly 'Andreas de Osten...', described as Bavarian, of Cracow) and referencing a work titled concerning 'altitude' (an astronomical treatise), with a date in the 1440s (Anno Domini 1445 or similar).\n\nThe remaining black text below the colophon continues with further dense Latin content that is not confidently legible.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is written in a highly abbreviated, cramped Gothic cursive hand that resists confident letter-by-letter transcription except for a few words in the red colophon.",
+      "translator_notes": "The red-ink colophon block (lines beginning 'Et finit...') seems to name a scribe/compiler ('Andream de Osten...'), reference Cracow ('Cracouiensis'), and give a date in the form 'Anno Domini M CCCC XL...' but exact numerals and full names could not be confirmed with confidence. Marginal folio number '98' (or similar) is visible in the upper left corner. No marginalia beyond this were clearly identifiable; the right edge of the page shows bleed-through or a partial adjacent leaf of text, not part of this page's content.",
+      "_label": "VI_F_7-fol-96v"
+    },
+    {
+      "title_inferred": "End of astrological treatise on planetary dispositions and beginning of list of stars appearing throughout the months",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in extremely abbreviated, technical astrological Latin with heavy scribal contractions that resist confident letter-by-letter transcription from the image alone.]\nsignu et pars in q° gradu scorpi° 25 e coniuncto apud eo anno stelle q\ntradunt et testis venus si vult predicas in punctis q pl alie et g stelle\nsi peragunt et p qua ratione in q anno arctutis stelle vocat aliqui\nsuffradii vel testimoniu wing i na p° hoc impe°  a stella gradu in ipso\ngradu apud arcus testimonio 226 p° 3 testimonio 1 est q p ipa\nq° gra q°quam 2 6 fundabit  ff mart 128 5 aqui arde stella\nmonym ty in ordine 2 puplang   sap oritis alqus prat stab 3 an\ncalibo 2 fero apparuit auxilio  ac plyd 21 26 gor mut caeli testimonio\nrei die aug in fide 2 fudalq  a marte de auxilio testimonia sunt\nifpry grae aquatico et testis illius  a marte prob apparuit signa graf 129\niste equimones i qua patie in and  minus quingum calore i in penipu\nrei propriae volunt sponta pla°  aldoro plica testimonia et hic\nrei do apposito volut co ple  anno 1229 mes uala fort come cete\nzefo si dupenet do ipas et testimo et pro pplae  fata z in penipu\nib zebulanes voluit et p°  formuens misqm calore i\nlei syniale plane volut testimonia fordo  odem plutina om\nedelidia anno 1277 fatig e m soma i in ap°como  omib\nsam pud calore z etates velid impcte  Bhieme grabi 129\nvim prad calore z etates velid impcte iuv apado om ple opinam\nquid nempedet firmud maputandu tuedis z anonis  hi galonda\naq plumaco pinspras volut planeto stad°  testimonia grab\net comphaeg z estimallet secret q q°qnebas ni acuma p q9 appa\net q ce sofie aquod   confaraneia16\n\nExplicit liber haly de dispositio dey Kunto Palndrea Dostan\nardich Catalazium in bur28 apparuit  mo die Sanchtpriznis\n\nSequent Stelle sive apparentibus in singul menb\n\nIn Ianuario quarto die orta stella delphin  9 nginta die oradit stella\nardo in a e pe et sta imbao et wpstat in ac et an ptus stella\nintabat  ad  in die 29 stella defphi oradit devpe et pnus stella\nlua in acadere et m 27 D° zapabad quntar ach p3 defoby\nIn fecradio pista pe zeplony stabit  et in die 21 stella wadit\nrepe in aclt et t tempestas in ac et 27 die stella adftrico anum\nin vepe in oleate et t die apnt ymodmb\n\nIn martio in 3 die mane orbu stella prob gen in 23 die aftrat ma\nqua tempestatem aet in septimo nocte stabit vetg magt et e mediur\naptle in ipma die stella covntabit vngulas playbad apunt et in 3 die in\nplavd ab feddomit playstab et in 28 die budov puo ol ple z aftempe\nlna magina et it in 26 stella lua olaot in olate 2 medld dyG\nlat aby\n\nIn Mayo w 6 die mane olem stella yros p vlde defiat aeh et ma\nSte int aprnt playastb mopdes acm sirena et in 19 die apnt fed\nvade in mane mapadeb turbas ach fapi vino tst fe pnob in v\nin 12 die aefodmt yare et in pnob it fepubat aeh\n\nAnno stella arctos in pod fte view ad ppam in olente et in 6 die\nstella in 29 die stella prior mart orivi in mane 2 tnd pnob acr in\net ny p9 fepubat om",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in extremely abbreviated, technical astrological Latin with heavy scribal contractions that resist confident letter-by-letter transcription from the image alone.]\nDue to the abbreviated and highly abbreviated Latin scribal style, and heavy use of tironian notes and contractions typical of astrological/astronomical tables, a reliable full English translation cannot be produced with confidence. The text appears to conclude a treatise attributed to 'Haly' concerning astrological dispositions and testimonies of planets (with references to Mars, Venus, degrees, signs, and calendar dates), followed by a colophon ('Explicit liber Haly de dispositione...') and the beginning of a new section titled 'Sequuntur stellae sive apparentia in singulis mensibus' (Here follow the stars or apparitions in each month), which then lists astronomical/astrological observations organized by month (January, February, March, May), noting the rising and setting of specific stars (e.g., 'stella delphin', 'stella prob', 'stella lua') and associated weather or astrological effects on particular days.",
+      "legibility": "full",
+      "confidence": "low",
+      "confidence_reason": "The text is written in extremely abbreviated, technical astrological Latin with heavy scribal contractions that resist confident letter-by-letter transcription from the image alone.",
+      "translator_notes": "Red rubrication marks the colophon 'Explicit liber Haly de dispositione...' and the new heading 'Sequuntur stelle sive apparentibus in singulis mensibus'. Many words are contracted with suspension marks and tironian signs (e.g., 'et', 'z' for 'et', 'p' abbreviations) that could not be fully resolved; numerals for days and degrees (e.g., 26, 29, 21, 27) are relatively clear but surrounding text is uncertain. This transcription should be treated as a best-effort approximation only.",
+      "_label": "VI_F_7-fol-100r"
+    },
+    {
+      "title_inferred": "Astrological-meteorological calendar (monthly prognostications, July–December)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The script uses extremely heavy scribal abbreviation typical of astronomical/medical shorthand, making a reliable word-by-word transcription impossible from the image alone.]\nIn Iulio in die 3 stella orion oritur eo mareq3 et in die 2 stella pl[uvi]osa amdum in mane et in 8 die stella claro obm in mane et in 27 tempestas magna et sepe in an vnd obm ad duos et in 27 die stella ardet vadit in mane 2 post duos dies manet aer\nIn Augusto in 26 die stella lux vadit in mane p9 pas ferdit m[u]l[t]o\net eo die stella clart obm dr in vege 2 stella gr9 pl9 et eiiam mat ena\nnepe 3 stez in 2 6 die pl9 gni obm ad calore\nIn Septembre in die 1 stella crat obm in vge et in die 9? stella catos\nautem in vlate et in circis actem it et in die 9? stella maculis sit\nin mane at monebit 9an duos dies et in 27 die abat sunt ac scipio\naer p exeunt et sepiin an duos dies in mora 2 pagraibus nd nime\nnevit pngare et bre ant valono corp enaude 2 sta custodia\nnetu 8 die iiii ad 25 diem\nIn octobre in die 6 obm stella zephiretis in mane 2 alida vinta vao\nzin d9 ama stella lehiripiy antw in vege et in duos stella vadis o\nzimbre pl9 et magna tempestas ad die 27 in plodim pli\nvadet vo cabint in oratile et de man ad? vio due imtaco actio\nIn nonebre in dis 6 orbit in mane pleiades maplides vni cald sanave\nz in dies 2 stella lux abin in mane 2 stella pl9 vadis o\nstabile in mane appetiam tempestas ad abol pl9 et in 28 die\nadriang abin in vege in olde 2 stella preditus? cadit in duente\nIn decembre in 8 pa stella actiyon cadit in mane in acmelinm et pluis\nprientes plane 2 valid9, ale um dis pt me sing me tepstas9\nne p monlant ipla ad 26 diem et pla stella cadit ad in mane\net in d9 21 stella vsq in mane at abal aer m in duente aer",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The script uses extremely heavy scribal abbreviation typical of astronomical/medical shorthand, making a reliable word-by-word transcription impossible from the image alone.]\nDue to extreme cursive abbreviation and manuscript difficulty, only a general sense can be given: this page contains an astrological-meteorological calendar describing celestial and weather phenomena for the months of July through December, noting for specific days of each month the rising or influence of certain stars (e.g., Orion, the Pleiades) and associated weather conditions (rain, storms, heat, clear skies) expected to occur. A second block of text below appears to concern medical/astrological prognostication tied to bodily fluids or humors, but is too abbreviated to render reliably into continuous English.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The script uses extremely heavy scribal abbreviation typical of astronomical/medical shorthand, making a reliable word-by-word transcription impossible from the image alone.",
+      "translator_notes": "Marginal notes and foliation numbers appear in the right margin (partially cut off, likely later archival numbering). The lower paragraph, beginning 'religi sme...', is a distinct block possibly medical/astrological in nature but too abbreviated and faded to transcribe with confidence. Overall reading should be treated as tentative and revisited with higher-resolution imaging or codicological expertise.",
+      "_label": "VI_F_7-fol-100v"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary aspects and significations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a heavily abbreviated medieval Latin cursive script with extensive suspensions and ligatures that cannot be reliably deciphered from the image alone without higher resolution or specialized paleographic collation against known parallel texts.",
+      "translator_notes": "Page contains red rubricated marginal headings (appears to read something like 'veq', 'ven', 'ven marcurius', 'iu iouis', 'saturnus') marking sections, likely referring to planets (Venus, Mercury, Jupiter, Saturn) discussed in the astrological text. Main body text is written in dense abbreviated Latin cursive typical of 15th-century astronomical/astrological manuscripts; individual words could not be confidently transcribed due to the density of abbreviations and image resolution limits. A full transcription would require expert in-person paleographic examination.",
+      "_label": "VI_F_7-fol-104r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with planetary symbols and marginal notes ('Luna', 'de eclipsi', 'de plagam')",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in heavily abbreviated Latin cursive with astrological symbols interspersed, making reliable word-by-word transcription infeasible from the image alone.]\n[Illegible dense abbreviated Latin text with interlinear planetary symbols; marginal rubricated notes read approximately: 'Luna' and 'de eclipsi q(uae) plagam']",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is written in heavily abbreviated Latin cursive with astrological symbols interspersed, making reliable word-by-word transcription infeasible from the image alone.",
+      "translator_notes": "Marginal rubricated (red) notes appear to read 'Luna' (Moon) and possibly 'de eclipsi q[uae] plagam' relating to eclipses and their effects. Numerous planetary/zodiacal symbols are interspersed throughout the text, consistent with astrological-medical content. The right margin shows text from the facing page bleeding through. Full transcription would require higher resolution imaging and specialist paleographic analysis of this particular scribal hand and its abbreviation system.",
+      "_label": "VI_F_7-fol-104v"
+    },
+    {
+      "title_inferred": "Astrological text on planetary influences and weather prognostication (Albumasar)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated Latin cursive that cannot be reliably transcribed from the image resolution provided; only isolated words (e.g., 'Albumasar', 'signo', 'planeta') are decipherable.",
+      "translator_notes": "Page numbered '110' in upper right corner (later pagination); red rubricated headings/initials visible mid-page including what appears to read 'Albumasar' - likely referencing the astrologer Abu Ma'shar (Albumasar). Text appears to concern planetary positions, signs, and weather/rain prognostication ('pluvia', 'ventos'). Marginal notation visible on left side, partially cropped. Full transcription not attempted due to low confidence in reading the abbreviated Gothic cursive script.",
+      "_label": "VI_F_7-fol-108r"
+    },
+    {
+      "title_inferred": "Astrological/medical text on lunar and planetary influence (rain/pluvia)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavily abbreviated Gothic cursive script with extensive use of contractions and the small image resolution make a reliable line-by-line transcription and translation impossible.]\n[Heavily abbreviated Latin text in a difficult 15th-century cursive hand, with rubricated headings and marginal notes. The main text discusses matters relating to 'pluvia' (rain) and planetary/lunar influences, with red marginal headings including 'quis pl(uvia)... de aqua...', 'pro aliis...', 'aliud pro pluvia...', and a heading beginning 'Signa pluviae...']",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavily abbreviated Gothic cursive script with extensive use of contractions and the small image resolution make a reliable line-by-line transcription and translation impossible.]\n[Unable to produce a reliable full translation due to the density of abbreviations and difficulty of the script; the text appears to concern astrological signs and prognostications related to rain and weather, likely connected to lunar phases and planetary positions, in keeping with the astronomical/astrological character of this codex]",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated Gothic cursive script with extensive use of contractions and the small image resolution make a reliable line-by-line transcription and translation impossible.",
+      "translator_notes": "Red rubricated marginal notes appear at several points down the left margin (e.g. 'quis pl... de aqua...', 'pro pluvia...'), likely serving as topic markers for the adjacent text; these are marginalia rather than main text. A catchword or continuation may exist at the bottom of the page but is not clearly legible. Confidence in exact word forms is low; general subject matter (rain/weather prognostication tied to lunar/planetary influence) is inferred from repeated occurrences of 'pluvia' and related terms.",
+      "_label": "VI_F_7-fol-108v"
+    },
+    {
+      "title_inferred": "Astrological text on planetary heat/calidity, elongation, and combustion",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Extremely dense scribal abbreviations and cursive hand make a reliable word-by-word transcription impossible from the available image quality.]\nnatura⁹ que assimabo in q̃ calo de q̃o q̃ q̃t a caplia... vi 15 caput lible ent in p̃mo calidita[te] pne et eſt aplicio... p̃ termpitate prior in secut[a] ec calidita[te] forzan... calidita[te] pna aliter c due 9r off aptent pn ad opion vd... calidita[te] et alioqp ad ſtabty ftany ad retrograday facore... quo calidite vincente que q̃3 fine faciat facore ad... facory metaphica in calidite et ap eqo valde⁹ apa mo... na prowā et met[ri] duas facione ad addito et co... minoṛ ſp ſnud illa duel dbilitat pna pr... [line with red mark]... et fredmit in due et notre pdte p mocio epiate... facory z9 ſ facon z abstond p brady p9 et cale... pha dbileat que pt donec anadt q̃ vo apadat in ebra... howat effonr day qo abstandum pha fubrady poba... vlongonoy pha atra q̃ q̃ntas eqpmite et vue... valor vmat lume et calone lm dua pto ad abfonone... ad pacony pmd meqpt pla equipite adroh et addit... in calidite mtiy q̃ dep̃mit mila greote tue z fua qmiotate... et q̃ dep̃mit fole q̃ apromat the potmt qmd... [rest illegible]",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Extremely dense scribal abbreviations and cursive hand make a reliable word-by-word transcription impossible from the available image quality.]\nThis page discusses in detail the astrological concept of planetary heat (\"calidity\"), stating rules about a planet's degree of heat in its first house/position, its relation to retrogradation, combustion, and elongation from the sun, and how these factors affect its influence and \"debility.\" Owing to the extremely dense abbreviation and cursive hand, only isolated words and phrases can be made out with confidence, and a continuous, reliable translation of the passage cannot be produced.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Extremely dense scribal abbreviations and cursive hand make a reliable word-by-word transcription impossible from the available image quality.",
+      "translator_notes": "Red paragraph marks (pilcrows) appear at several points in the text marking new sections. Marginal notes visible on the left edge of the facing page are cropped/cut off and not transcribed. Overall text appears to be a continuation of an astrological treatise on planetary calidity, retrogradation, and combustion; a full accurate transcription would require higher resolution imagery or expert consultation of the manuscript.",
+      "_label": "VI_F_7-fol-112r"
+    },
+    {
+      "title_inferred": "Astronomical/astrological text on seasonal winds and planetary influences (fol. 112v)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense cursive gothic script with heavy, non-standard abbreviations and small image resolution make a reliable line-by-line transcription impossible; only isolated words (e.g. 'meridionali', 'septentrionales', 'retrogradi', 'planete') can be tentatively made out.",
+      "translator_notes": "Text contains numerous red paragraph marks (pilcrows) separating short astrological statements, likely concerning planetary retrogradation, winds (meridional/septentrional), heat and cold qualities, and seasonal effects. A confident transcription would require higher resolution imagery and closer paleographic study of the scribe's abbreviation system.",
+      "_label": "VI_F_7-fol-112v"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary influences and seasonal qualities (fol. 116r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated Latin cursive with heavy scribal shorthand is not reliably legible from the image at this resolution.",
+      "translator_notes": "Page contains extensive marginal notes on the left margin; red rubrication marks (paragraph marks and interlinear corrections) appear throughout the main text; folio number '61' visible in lower right margin in red. Text appears to concern planetary retrogradation, seasonal qualities (heat, cold, moisture), and astrological effects, but individual words could not be confidently transcribed due to heavy abbreviation and cramped hand.",
+      "_label": "VI_F_7-fol-116r"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary aspects and applications",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavy abbreviation, cursive ligatures, and technical astrological shorthand make precise word-by-word transcription unreliable despite partial legibility of individual terms.]\n[Illegible in full due to heavy abbreviation and cursive ligatures; partial reconstruction only]\n... in signo ad ... prope planetas et lune p... in loco stando et ap-\nlicat gen ad ... si cadet a sole et planete ad ascensionem\nrimarum et ap[erationem] aliquorum ne aliquo illud a signo bono\nplume in illo signo quod asserit ... si stande venit alia\nasserit sup [aliud] etc ... arte in ... telu ... et sic pro\nsignato alii cum tota luna in qua illa tangit se fine qui fuit\nlanent super quos asserebat in loco et si aliqua equatus dixit...\n[continues with astrological terminology on planetary conjunctions, applications, and aspects, mentioning sol, luna, ascendens, angulos, gradus, etc.]",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavy abbreviation, cursive ligatures, and technical astrological shorthand make precise word-by-word transcription unreliable despite partial legibility of individual terms.]\nThis page contains dense astrological text discussing planetary positions, aspects, and applications (i.e., when one planet approaches another), particularly involving the Sun and Moon in relation to the ascendant and angles of the horoscope. It appears to discuss rules for determining favorable or unfavorable configurations based on the Moon's separation from and application to other planets, degrees of signs, and their significations. Due to the extremely abbreviated and cursive Latin script typical of astrological manuscripts, a reliable word-for-word translation cannot be confidently produced; the general subject matter concerns technical astrological doctrine on planetary aspects, degrees, and their interpretive significance.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavy abbreviation, cursive ligatures, and technical astrological shorthand make precise word-by-word transcription unreliable despite partial legibility of individual terms.",
+      "translator_notes": "Red paragraph marks (rubrication) divide sections of the text. Marginal/right-edge text from facing page bleeds into image but is not part of this folio's main text. Many words are heavily abbreviated per standard scribal conventions for astrological/astronomical Latin (e.g., 'sig' for signum, 'pl' for planeta), making a fully confident transcription impossible without higher resolution imaging or specialist paleographic comparison.",
+      "_label": "VI_F_7-fol-116v"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary conjunctions and their effects",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Heavily abbreviated cursive Latin script with numerous suspensions and red marginal marks makes reliable word-by-word transcription impossible at this resolution.]\n[Densely abbreviated Latin astrological text, heavily contracted with suspension marks and red paragraph markers (pilcrows); the script is a cursive gothic hand typical of 15th-century Prague scientific manuscripts, discussing planetary conjunctions, signs, qualities (calidus, humidus etc.), and their effects on weather and generation. Individual words are too abbreviated and the resolution too limited to produce a reliable continuous transcription.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Heavily abbreviated cursive Latin script with numerous suspensions and red marginal marks makes reliable word-by-word transcription impossible at this resolution.",
+      "translator_notes": "Text appears to be part of a continuous astrological/astronomical treatise discussing planetary qualities, conjunctions, and their meteorological or generative effects (terms like 'calidus', 'humidus', 'generacio', 'signis' are discernible). Red pilcrows mark paragraph divisions. A small hand-drawn pointing finger (manicule) appears in the right margin near the middle of the page, indicating a marginal note of interest, but no separate marginal text is clearly legible. No catchwords or owner's notes are visible.",
+      "_label": "VI_F_7-fol-120r"
+    },
+    {
+      "title_inferred": "Astrological text on planetary conjunctions and revolutions (Mars, Saturn, Jupiter)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is extremely abbreviated in a compressed cursive hand, making many individual words uncertain despite the overall astrological subject being discernible.]\nEt ſi fuit lu[na] Marte patiens fatue ſi fuit celi et ipſius alie et reſpexit mezaraū et cadit fortud alias audient tramoueat de et ſint peſtiferū et apellūd aq̃ igne Ista et alia; Et ſi fuit in aq̃ariis et pluūia in angulo de e[re]; abit deo fortūd et reſpuit medio mãs aq̃ mnoꝛs et putoꝛz et fortū et corpſ alio aq̃ et alia p̃t iūs; et igitur aliꝙ in augeb the ad alio abit fortūd et ve preit mūdo abit ee moꝛs ſed fuit lãerudꝭ | et ſi nõ credid deo p̃na allemate ſiquãd poꝛtoꝛz in aq̃ p̃t ee ſtale zos yſurpoꝛs in aliã in ſtoꝛi in coꝛpe mo 2 in mãdo qñ mor arreptē niſi ad appliquã doꝛs et in p̃ſory mãdoꝛe alius doꝛt Meſſahalac ſedig imprue in reuolucionã in ad aſpectū et ad angulos et lo̅a plã et p̃oꝛ repta timate ſup ee alud et vegitalū et ſeparant modꝛe fuoꝛ diſ imutatū pble in figme et natulis ſtal in ad? imutaū in 2 aphi ſ ver ſtal Antipuī grem̄ deo̅ fuit ſig ad natinē pnē qñ mars maſit in aliã abit taloꝛis fue paturug aud minet Ϧ qi paturug et in troꝛ addit fuigdole fue mars at ni et Ϧ mars in ao aleit fue abutica bo̅ mit qõa Rating in agd addit qꝛdati et mars mit qñ ſe imutat abd pboꝛ Ϧ de pata net in reuolucionã dm̄ pd radge Ϧ eplendꝭ timate ſui et orzcūi modoꝛe pleꝙ ecc et fuiē eclandi | b Andrea iudei d̄ epho dixow Baaldini in vigilia | Aragazithe onmis 1221 in burſa pampe̅",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is extremely abbreviated in a compressed cursive hand, making many individual words uncertain despite the overall astrological subject being discernible.]\nThis page contains a densely abbreviated astrological/astronomical passage discussing planetary conjunctions and their effects — referencing Mars, the moon, Aquarius, and celestial 'angles,' as well as omens, births ('nativitates'), pestilence, and revolutions (astrological conjunction cycles). Named authorities appear to include Messahalah (a famous medieval astrologer) and possibly Ptolemy or 'Baaldini,' with a closing note mentioning 'Andreas the Jew' and a date reference (1221) associated with a vigil. Due to the extreme abbreviation and compression of the script, a reliable word-for-word translation is not possible; the passage broadly concerns astrological doctrine on planetary positions, aspects, and their influence on human fate, birth, and mortality.",
+      "legibility": "full",
+      "confidence": "low",
+      "confidence_reason": "The text is extremely abbreviated in a compressed cursive hand, making many individual words uncertain despite the overall astrological subject being discernible.",
+      "translator_notes": "Marginal red rubrication marks (paragraph marks/rubrics) appear throughout; several proper names such as 'Messahalac' (Messahalah), 'Baaldini', and 'Andrea Iudei' suggest citation of astrological authorities. A date '1221' and reference to a 'vigilia' appear near the end, possibly a colophon or dating note rather than part of the main astrological text. Given the heavy abbreviation, this transcription should be treated as tentative and reviewed against the original for verification.",
+      "_label": "VI_F_7-fol-120v"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise fragment (planetary positions and aspects)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated 15th-century Latin cursive script that cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Text appears to be astronomical/astrological in nature, with numerous red-ink paragraph marks and highlighted words interspersed throughout; marginal notes are present on the left edge but are too faint/cropped to read; without higher resolution or specialist paleographic review, a confident transcription cannot be produced.",
+      "_label": "VI_F_7-fol-124r"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary conjunctions and stellar significations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated Gothic cursive script with heavy use of scribal abbreviations is not reliably legible from the image at this resolution",
+      "translator_notes": "Marginal notes visible in red and brown ink at left margin (appear to be nota marks or short annotations, possibly reading 'nota bene' type marks); red paragraph marks (pilcrows) scattered throughout the main text block; text appears to concern astrological matters relating to planets, stars, and their significations/effects, but specific word-level transcription could not be confidently established due to the compressed abbreviated script typical of 15th century Latin astronomical manuscripts.",
+      "_label": "VI_F_7-fol-124v"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary significations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated Latin cursive that cannot be reliably transcribed from the image at this resolution.",
+      "translator_notes": "Page numbered '150' in later hand at top right; text contains numerous red-ink paragraph markers (rubrication) throughout; marginal notes visible on the left edge of the page but too faint/cropped to read; heavy use of scribal abbreviations typical of 15th-century astrological/astronomical texts makes confident transcription impossible without higher resolution or specialist collation with known text.",
+      "_label": "VI_F_7-fol-128r"
+    },
+    {
+      "title_inferred": "Astrological treatise on nativities and planetary significations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated medieval Latin cursive with dense scribal contractions cannot be reliably transcribed from the available image resolution.",
+      "translator_notes": "This page contains dense abbreviated Latin astrological/astronomical text (references to 'nativitas', 'astrologus', 'domus', 'signa', and planetary terminology are discernible), with red paragraph marks (pilcrows) scattered throughout, but the specific word-level readings are too uncertain to transcribe accurately given the heavy abbreviation and cursive hand. A specialist with direct manuscript access or higher-resolution imaging would be needed for a reliable transcription.",
+      "_label": "VI_F_7-fol-128v"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary influences (fol. 132r)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviated cursive Latin text with heavy scribal shorthand cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Text shows numerous red paragraph marks (paraphs) interspersed throughout; heavy use of Latin scribal abbreviations typical of 15th-century astrological/medical manuscripts, likely discussing planetary conjunctions and their effects. A full reliable transcription would require higher resolution imaging or in-person examination.",
+      "_label": "VI_F_7-fol-132r"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary conjunctions and their effects",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The heavily abbreviated Latin cursive script with dense ligatures cannot be reliably transcribed at this resolution without risking significant inaccuracy.]\n[Heavily abbreviated Latin astrological text in a 15th-century cursive hand, with red paragraph marks (rubrication) throughout. The text discusses planetary conjunctions, their significations, and effects, using extensive scribal abbreviations typical of medieval astronomical/astrological manuscripts. Due to the density of abbreviations and the resolution of the image, a reliable word-by-word transcription cannot be confidently produced.]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated Latin cursive script with dense ligatures cannot be reliably transcribed at this resolution without risking significant inaccuracy.",
+      "translator_notes": "Text contains numerous red paragraph marks (pilcrows) marking new sections, consistent with astrological prognostication text discussing planetary conjunctions. Some recognizable Latin word fragments include references to 'coniunctio', 'planet-', and similar astrological terminology, but full transcription is not achievable with confidence given the script density and abbreviation marks (superscript strokes, tittles) that require higher resolution or specialist paleographic tools to resolve accurately.",
+      "_label": "VI_F_7-fol-132v"
+    },
+    {
+      "title_inferred": "Latin medical/astrological treatise text (page 138)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Handwriting is dense abbreviated Latin cursive with heavy use of scribal abbreviations, and the image resolution is insufficient for reliable letter-by-letter transcription.",
+      "translator_notes": "Page shows continuous prose text with red rubricated initials/paragraph marks and interlinear insertions; folio numbered '138' at top right; text appears to be a continuation of a medical or astrological treatise but individual words could not be confidently deciphered from the image.",
+      "_label": "VI_F_7-fol-136r"
+    },
+    {
+      "title_inferred": "Medical/anatomical treatise text (heavily abbreviated Latin, likely on cranial or bodily divisions)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense medieval Latin abbreviations and cursive hand cannot be reliably transcribed at this resolution",
+      "translator_notes": "Text is written in heavily abbreviated scholastic Latin with red paragraph marks (rubrication) throughout; the script style and abbreviation marks suggest a technical medical or anatomical treatise, but individual words cannot be confidently deciphered from the image provided.",
+      "_label": "VI_F_7-fol-136v"
+    },
+    {
+      "title_inferred": "End of a medical/anatomical treatise (Explicit quaestiones Galeni)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense abbreviations and small cursive script make most of the running text unreadable with confidence, though the closing rubric is discernible.]\n[heavily abbreviated Latin text in cursive gothic bookhand, largely illegible due to extensive abbreviation and small script]\n\n... Explicit quaestiones Galeni",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense abbreviations and small cursive script make most of the running text unreadable with confidence, though the closing rubric is discernible.]\n[The text concerns a scholastic medical discussion, likely questions on Galenic medicine, ending with the colophon: 'Here end the questions of Galen.']",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense abbreviations and small cursive script make most of the running text unreadable with confidence, though the closing rubric is discernible.",
+      "translator_notes": "Red rubrication marks section breaks and highlights certain letters throughout the text; the closing line 'Explicat quastiones Galeni' (rendered here as read) is in red ink and appears to be a colophon marking the end of a set of questions attributed to Galen. Marginal text on the left edge belongs to the facing/previous folio and is cut off in this image.",
+      "_label": "VI_F_7-fol-140r"
+    },
+    {
+      "title_inferred": "Treatise of Master Arnoldus, Doctor of Medicine (medical/herbal text)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The page is written in a heavily abbreviated Gothic cursive hand with many suspended letters, making continuous accurate transcription unreliable beyond the rubricated incipit line.]\nIncipit tractatus magistri Arnoldi doctoris medicine ... [text largely illegible due to dense abbreviation and cursive hand]",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The page is written in a heavily abbreviated Gothic cursive hand with many suspended letters, making continuous accurate transcription unreliable beyond the rubricated incipit line.]\nHere begins the treatise of Master Arnoldus, doctor of medicine ... [remainder of text could not be reliably transcribed]",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is written in a heavily abbreviated Gothic cursive hand with many suspended letters, making continuous accurate transcription unreliable beyond the rubricated incipit line.",
+      "translator_notes": "Only the opening rubricated line ('Incipit tractatus magistri Arnoldi doctoris medicine...') can be read with reasonable confidence; the body text appears to concern properties of a tree/plant (arbore) and its uses in medicine, but individual words are too abbreviated and cursive to transcribe reliably without higher resolution or specialist paleographic comparison.",
+      "_label": "VI_F_7-fol-140v"
+    },
+    {
+      "title_inferred": "Astrological/medical prognostication text with abbreviated Latin script",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated cursive Latin script with dense ligatures and contractions cannot be reliably transcribed from the image resolution provided.",
+      "translator_notes": "Text appears to be written in a typical 15th-century Prague scribal hand with extensive use of abbreviation marks (suspensions, tildes) common to astrological/medical treatises. Faint marginal marks or stains visible on the page but no clear separate marginalia identifiable. A brownish stain/blot is visible mid-page. Without higher resolution or specialist paleographic examination, individual words cannot be confidently distinguished from the abbreviated forms typical of this genre (planetary influences, medical prognostication based on humoral/astrological correspondences appears to be the subject matter based on recurring terms that resemble 'malis', 'bona', 'logum' patterns, but this is speculative).",
+      "_label": "VI_F_7-fol-144r"
+    },
+    {
+      "title_inferred": "Astrological prognostication text (heavily abbreviated Latin)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is written in extremely dense, heavily abbreviated medieval Latin cursive script with many scribal contractions and ligatures that cannot be reliably deciphered from the image alone without extensive paleographic comparison.",
+      "translator_notes": "Text appears to be a continuous astrological/astronomical treatise, likely discussing planetary conjunctions (mentions of 'malo', 'aspectu', 'signo' suggest astrological terminology regarding malefic aspects). The heavy use of scribal abbreviations (suspensions, contractions with tittles and superscript letters) typical of 15th-century Latin manuscript hands makes a confident line-by-line transcription unreliable without higher resolution imaging or specialist paleographic analysis. A partial attempt at individual words is unreliable and risks introducing fabricated readings, so it has been omitted per instructions favoring honesty over false confidence.",
+      "_label": "VI_F_7-fol-144v"
+    },
+    {
+      "title_inferred": "Astronomical treatise, incipit (on the sphere/zodiac)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Dense, heavily abbreviated 15th-century Latin cursive script that resists reliable full transcription at this resolution.]\nIncipit tractatus Astronomie Erhardi de [...] Lunaria\nSicque que putant admiranda unius [...] vel incipit huius\ntractatus introductorii ad veram astronomiam quam primo admiranda\nintroductorio tam quid quam methodo in principio de polygenda [...]\nvocalis Sphera Lunaria\n[C]ircha signa vulgi sphenda vulgum quibus continue celestis [...]\n[...] non sunt mundana quia stelis in globo per [...] et est [...]\n[...] mutuum firmatur [...] eius signa ...\n[...]",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: Dense, heavily abbreviated 15th-century Latin cursive script that resists reliable full transcription at this resolution.]\nHere begins the treatise on Astronomy by Erhard of [...], on the Lunar Sphere. And thus those who consider [it] admirable... or here begins this introductory treatise to true astronomy, which first [treats] the admirable introduction, both as to content and method, at the beginning concerning the ... called the Lunar Sphere. Concerning the common signs of the sphere ... which continually [move through] the celestial [bodies] ... these are not [merely] worldly things, since the stars in the globe through ... are fixed mutually ... its signs ...",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Dense, heavily abbreviated 15th-century Latin cursive script that resists reliable full transcription at this resolution.",
+      "translator_notes": "This page opens a new treatise with a large rubricated initial 'C' and red paragraph marks (pilcrows) throughout the text; the author's name in the incipit is uncertain (rendered tentatively as 'Erhardi'), and many abbreviations could not be resolved with confidence. Marginal red notation visible in upper right corner appears to be a folio/section number ('150').",
+      "_label": "VI_F_7-fol-148r"
+    },
+    {
+      "title_inferred": "Astrological treatise on the twelve zodiac signs and their qualities",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in extremely abbreviated Latin astrological shorthand with tight, cramped script that resists confident letter-by-letter transcription.]\nNota qui zodiaco sunt 12 sig gratia figuras vel signa alia ad signa suefa sibi p<oss>unt... [text heavily abbreviated, partially illegible]... et duotā signa apnario libra q<uae> p sunt aequinoxio antinquales et p totum sorpi<us> et p totum sagitario penes aut divat per totum signu vello mistantur mistas signe apnario aquorii q<ue>s et p totum destuo pemale per totum aquolodio q<ui>... Aries sa deordine et de septo pisis p p dictus quae signu signa g<ui>? aut aves g<enus>?? sunt aequinoxialia ipso... Cancer scorpius etc pisces...",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text is written in extremely abbreviated Latin astrological shorthand with tight, cramped script that resists confident letter-by-letter transcription.]\nThe text discusses the twelve signs of the zodiac, their figures and how they correspond to other signs; it treats certain signs as equinoctial and others as governing particular periods, referring to Libra, Scorpio, Sagittarius, Aquarius, Pisces, Aries, Cancer and other signs and their qualities (heat, cold, mobility, fixedness). The passage appears to continue with astrological reasoning about the temperaments and properties associated with each sign, including remarks on their moisture, heat, and coldness, and how these relate to bodily complexions.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text is written in extremely abbreviated Latin astrological shorthand with tight, cramped script that resists confident letter-by-letter transcription.",
+      "translator_notes": "Marginal red rubrication marks section headings (large red initials for 'N', 'P', 'S', 'A' etc.) not included in main transcription. Right margin contains additional marginal notes not transcribed due to illegibility. Overall confidence is low due to dense abbreviation typical of astronomical/astrological treatises.",
+      "_label": "VI_F_7-fol-148v"
+    },
+    {
+      "title_inferred": "Astrological text on planetary aspects and prognostication",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, abbreviated medieval cursive script that cannot be reliably transcribed from the image resolution provided, though rubricated initials and Latin abbreviation marks are visible throughout.",
+      "translator_notes": "Page shows heavy use of red (rubricated) paragraph marks/initials interspersed with brown ink text in a highly abbreviated astrological/astronomical Latin hand, likely concerning planetary conjunctions, houses, and their effects. Folio number '151' (or similar) visible in upper right corner. A stain or damage mark appears on the right margin partway down the page. Without higher resolution or specialist paleographic review, a word-level transcription would be unreliable and is not attempted here.",
+      "_label": "VI_F_7-fol-152r"
+    },
+    {
+      "title_inferred": "Astrological medical text on planetary influences and the Moon",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text uses extremely heavy medieval Latin scribal abbreviation that cannot be reliably expanded from the image alone, so much of the transcription is tentative.]\nquo hoc habeo intelligi nisi quod quia medias quas p° innuit in ope\nnigropiacena p paria aptioz et quo medante colores intellectibiles\naliqua quo ad hec no ostendit\n\nO Mniam ab medica practica no p p° habe da loca planetaz\nab anima particula da q° oz habet mauoz effacana quo\nadmodum quoq et quodam ep ides sut nota qi aliqua monet q\nfilo dispositio lune p aliqua planetas partenus q°d q° p pmi\nalia adtenda uigilat vt p° in oz corpore epiendo se p°\naptas qi viget talis oi ip iuod q° in hic p impgnabilis et p\nsimo ta et posterior quo aliqe et in ip signo Similit\nsigne 8 opertari lima e in signo cado et qui et epherida\nmuat sub sui qui hab dig in signo et gado t q p ip inelegit\naptre no aidt e mota ipo podg dat pl otra oper vt p\nno confortat epfda dedo ini con caxand vieti dei p m\nplumad lime opab ad valora fortificado in ip alia\nb vet q p ave dio d valg mfebra dur aliqd lag t iiepe ml\nsipe rele T dtead q p aque volent papraconi p opio ml\ndup umfrue vinis getrend p ie diget q ali in p ipo\nrit p et q i mudo eq p° ime uf amispgo pgeni p ni p\ntanto effacacig et melg spal T in q lielt jmagebus put ip\npretes lapdro pardomit nec ad alicq qi vinte inp id afpearn\nplanetaz in q p qmo aducstoz jn od dcow p vid ni metallia\npopte no meno pnt actiome pns p vid dedore celesti p ist\nin qte facco et vardnat q e dicoftancomq quibus qme\ndug capo ft paulo mij grt oht confocante p in illo qmatu\nqui epante nti oegna compomum n confancd franchis\nad confaracoq acadme dut ft p q p zvic vosa\nea firatontou dyapapari amia at alia q ant velit qme\nimportar viont epimd dibet infacado mad pmac lima q\nple in q no ft et q no id iq p et q telie regno p ut atada\nad qui valet g int compno inguctoal g opima ut p onl coplat\nlaxatum vt no plu op arocl exq p f emat p octind alpli\nmiseri q vd sui plarce fnrgd qi caplant op alede q\nqi alqmi male oe tuq et alegi qevr q ivq p a planta lo qud avi\nacve male p et alt dibleida q notas q balug np wit meldalol\nqi illa qat ai ovat et alia meldalola q ipva laktua droad\ndeat repat colon quan quat e augmenta pol imprca et va oth\nqui reper ab pagromed q iud alpral fecg q op p q oh gied\nnota in mudona laxata da dibleida et qui do fua idnt et fua\ndum est in ond alia ptracoi profa dutorado ant in oz d ope\nfracoq in q qi plane qu ptalery in pgis tabu p oda a\nlmude opabon and q e ivq alle otpe smp de dpporv vzo\nead q ei lima e in q retrogd qom e dul medina\nponmea vel in mecio pl q dic medcma lima e xpuit",
+      "translation": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The text uses extremely heavy medieval Latin scribal abbreviation that cannot be reliably expanded from the image alone, so much of the transcription is tentative.]\nThis page contains a dense, heavily abbreviated Latin astrological-medical text concerning the influence of the Moon and planets upon medical practice, planetary positions, and the efficacy of remedies according to celestial dispositions. The extreme density of scribal abbreviation (notae, ligatures, and Tironian-style shorthand) prevents a reliable full transcription and therefore a confident translation cannot be offered for most passages; the general subject is clear (planetary and lunar influence on medicine, effects of signs and their aspects on bodily virtues and pharmacological efficacy) but individual clauses cannot be rendered with confidence.",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The text uses extremely heavy medieval Latin scribal abbreviation that cannot be reliably expanded from the image alone, so much of the transcription is tentative.",
+      "translator_notes": "Marginal folio number 'v.o' (152v) visible at left margin; red paragraph marks (¶) and initial 'O' rubricated at top of main text; several red interlinear/marginal marks scattered through the text likely indicating important passages; text appears to concern planetary and lunar influence on medicaments, degrees of efficacy, and astrological timing for medical treatment.",
+      "_label": "VI_F_7-fol-152v"
+    },
+    {
+      "title_inferred": "[SEGMENT FAILED]",
+      "original_text": "",
+      "translation": "[Translation failed for this segment: HTTPSConnectionPool(host='imagines.manuscriptorium.com', port=443): Max retries exceeded with url: /loris/AIPDIG-NKCR__VI_F_7______3IGGBSD-cs/ID0156R/full/600,/0/default.jpg (Caused by NameResolutionError(\"HTTPSConnection(host='imagines.manuscriptorium.com', port=443): Failed to resolve 'imagines.manuscriptorium.com' ([Errno -3] Temporary failure in name resolution)\"))]",
+      "entities_mentioned": [],
+      "translator_notes": null,
+      "_label": "VI_F_7-fol-156r",
+      "_error": "HTTPSConnectionPool(host='imagines.manuscriptorium.com', port=443): Max retries exceeded with url: /loris/AIPDIG-NKCR__VI_F_7______3IGGBSD-cs/ID0156R/full/600,/0/default.jpg (Caused by NameResolutionError(\"HTTPSConnection(host='imagines.manuscriptorium.com', port=443): Failed to resolve 'imagines.manuscriptorium.com' ([Errno -3] Temporary failure in name resolution)\"))"
+    },
+    {
+      "title_inferred": "Astrological treatise on planetary testimonies and aspects",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "Heavily abbreviated Latin cursive with dense scribal ligatures makes precise word-level transcription unreliable from the image alone",
+      "translator_notes": "The page contains dense astrological/astronomical Latin text with numerous red rubricated initials and paragraph marks (e.g., large 'T' and 'E' initials in red), likely discussing planetary testimonies, aspects, and tables (references to 'domus', 'aspectus', 'testimonio', 'tabula' are discernible), but the heavy use of scribal abbreviations and tight cursive script prevent a confident full transcription without higher resolution or specialized paleographic tools.",
+      "_label": "VI_F_7-fol-156v"
+    },
+    {
+      "title_inferred": "Astrological text on zodiac signs and planetary significations",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The abbreviated cursive Latin script with heavy astrological shorthand and symbols is too dense and unclear from the image to produce a reliable line-by-line transcription.",
+      "translator_notes": "Page contains numerous rubricated initials and interlinear planetary/zodiacal abbreviations typical of astrological tables; left margin contains additional marginal notes not transcribed. A full transcription would require higher resolution imaging and specialist review of the abbreviation system used.",
+      "_label": "VI_F_7-fol-160r"
+    },
+    {
+      "title_inferred": "Astrological text on planetary conjunctions (heavily abbreviated Latin)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The page is written in extremely dense medieval Latin abbreviations that cannot be reliably deciphered from the image alone",
+      "translator_notes": "Text contains numerous red-highlighted paragraph marks and abbreviated astrological/astronomical terminology referencing planetary positions and zodiac signs (e.g. references resembling 'Scorpionis', degree/minute notations). A partial rubricated colophon-like line appears near the bottom ('Explicit ... finit...'). Right margin contains additional marginal notes in a different, also abbreviated hand, not transcribed here. Given the density of scribal abbreviations and image resolution, a confident line-by-line transcription is not possible without higher resolution or specialist paleographic study.",
+      "_label": "VI_F_7-fol-160v"
+    },
+    {
+      "title_inferred": "Treatise on properties of waters and remedies (medical/natural philosophy text)",
+      "original_text": "[AI TRANSCRIPTION, LOW CONFIDENCE -- NEEDS SCHOLARLY REVIEW: The dense Gothic cursive with heavy Latin abbreviation marks and the image resolution prevent a reliable word-by-word transcription; only isolated words (e.g. 'Sunt aque quedam', 'fontes', 'aqua', 'corpore') can be made out with any confidence.]\n[Manuscript in heavily abbreviated Latin cursive script, not reliably transcribable character-by-character due to extensive scribal abbreviations and image resolution limits]",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The dense Gothic cursive with heavy Latin abbreviation marks and the image resolution prevent a reliable word-by-word transcription; only isolated words (e.g. 'Sunt aque quedam', 'fontes', 'aqua', 'corpore') can be made out with any confidence.",
+      "translator_notes": "There is marginalia/notes in a different hand along the left margin, partially cut off by the image edge, which is not included in the main transcription. A red-ink corrector's mark or paragraph sign appears mid-page on the right side. Overall text appears to discuss properties of waters ('sunt aque quedam') and related natural-philosophical or medical topics, but confident line-by-line transcription is not possible from this image.",
+      "_label": "VI_F_7-fol-164r"
+    },
+    {
+      "title_inferred": "Astrological/astronomical treatise page with dense abbreviated Latin text",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated medieval Latin cursive script with extensive contractions cannot be reliably transcribed at this resolution without risking fabricated readings",
+      "translator_notes": "Page contains dense main text in brown ink with red rubrication/paragraph marks (some in red pigment) scattered throughout; right margin shows additional marginal notes in a different, smaller hand that are cropped off in the image. Text appears to be continuous prose, likely astrological/astronomical or medical content given the manuscript's known subject matter, but individual words cannot be confidently resolved due to heavy abbreviation typical of 15th-century scribal hands and image resolution limits.",
+      "_label": "VI_F_7-fol-164v"
+    },
+    {
+      "title_inferred": "Blank ruled page",
+      "original_text": "",
+      "translation": "",
+      "legibility": "blank",
+      "confidence": "high",
+      "confidence_reason": "Page shows only ruling lines and staining, no text",
+      "translator_notes": "Faint ruling lines visible; a small smudge/mark near left margin, no legible writing present.",
+      "_label": "VI_F_7-fol-168r"
+    },
+    {
+      "title_inferred": "Blank ruled page",
+      "original_text": "",
+      "translation": "",
+      "legibility": "blank",
+      "confidence": "high",
+      "confidence_reason": "Page shows only ruling lines, a small ink smudge, and a faint offset floral impression from a facing page; no text present.",
+      "translator_notes": "Faint bleed-through of a decorative floral motif (likely offset from an illuminated initial on the facing folio) visible near the top right; small ink smudge at bottom left margin.",
+      "_label": "VI_F_7-fol-168v"
+    },
+    {
+      "title_inferred": "Blank ruled page",
+      "original_text": "",
+      "translation": "",
+      "legibility": "blank",
+      "confidence": "high",
+      "confidence_reason": "The page shows only ruled lines with no visible writing or illustration.",
+      "translator_notes": null,
+      "_label": "VI_F_7-fol-172r"
+    },
+    {
+      "title_inferred": "Blank ruled page with adjacent text visible from following folio",
+      "original_text": "",
+      "translation": "",
+      "legibility": "blank",
+      "confidence": "high",
+      "confidence_reason": "The main page is ruled but contains no written text; only faint offset or edge text from the facing folio is visible at the right margin.",
+      "translator_notes": "A sliver of text from the following folio (fol. 173r) is visible along the right edge, but it is cropped and not part of this page; too fragmentary to transcribe reliably.",
+      "_label": "VI_F_7-fol-172v"
+    },
+    {
+      "title_inferred": "Astronomical/astrological treatise page with heavy abbreviation (Latin scholastic text)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The heavily abbreviated cursive Latin script with dense scholastic shorthand cannot be reliably transcribed at this resolution without risking fabrication of content.",
+      "translator_notes": "Text is written in a small, heavily abbreviated Gothic cursive hand typical of 15th-century scholastic astronomical/medical manuscripts, with red rubrication marks (paragraph marks and highlighted letters) scattered throughout. Folio numbered '173' (or similar) in upper right corner in a later hand. Without higher resolution or specialist familiarity with this specific scribe's abbreviation system, a confident line-by-line transcription is not possible; providing a guessed reading would risk introducing invented text not actually present.",
+      "_label": "VI_F_7-fol-176r"
+    },
+    {
+      "title_inferred": "Latin astronomical/astrological treatise text (untranscribable in detail)",
+      "original_text": "",
+      "translation": "",
+      "legibility": "partial",
+      "confidence": "low",
+      "confidence_reason": "The handwriting is a dense, heavily abbreviated cursive Latin script with many contractions typical of 15th-century academic manuscripts, which cannot be reliably read from the image at this resolution.",
+      "translator_notes": "Page shows a full page of continuous text in brown ink with red rubricated initials/paragraph marks scattered throughout (e.g., a large red initial near the middle of the page). Marginal notes appear cropped on the right edge of the page but are not legible. Without higher resolution or specialist paleographic access to this specific hand, a reliable line-by-line transcription cannot be produced; providing a guessed transcription would risk fabricating content not actually present.",
+      "_label": "VI_F_7-fol-176v"
+    },
+    {
+      "title_inferred": "Blank ruled page with faint watermark",
+      "original_text": "",
+      "translation": "",
+      "legibility": "blank",
+      "confidence": "high",
+      "confidence_reason": "The page shows only ruling lines and a faint watermark, with no visible text.",
+      "translator_notes": "A faint decorative watermark (flower-like design) is visible in the paper near the left margin; small offset marks from the facing page's writing are faintly visible at the far left edge, but no text is present on this page itself.",
+      "_label": "VI_F_7-fol-180r"
+    },
+    {
+      "title_inferred": "Blank ruled page with faint decorative flourish",
+      "original_text": "",
+      "translation": "",
+      "legibility": "blank",
+      "confidence": "high",
+      "confidence_reason": "Page shows only ruling lines and a faint pencil floral flourish, no text present",
+      "translator_notes": "A small faint pencil-drawn flourish or decorative sketch (flower/pen-trial) appears near the right margin, but no actual writing is present.",
+      "_label": "VI_F_7-fol-180v"
+    }
+  ]
+}
