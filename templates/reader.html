@@ -1010,12 +1010,12 @@ let currentLang = 'translation'; // for dual-language books; 'translation' or 'o
 function attachFacsimileRetry(img, page, onReattach) {
   let attempts = 0;
   let settled = false;
-  const MAX_AUTO_RETRIES = 3;
+  const MAX_AUTO_RETRIES = 2;
   // archive.org's IIIF server doesn't always fail cleanly with an HTTP error --
   // sometimes the request just hangs with no response at all. A pure
   // error-event listener never fires for a hang, so this also treats "still
   // not loaded after N seconds" as a failure worth retrying.
-  const HANG_TIMEOUT_MS = 8000;
+  const HANG_TIMEOUT_MS = 4000;
   const bust = (src) => src + (src.includes('?') ? '&' : '?') + 'retry=' + Date.now();
 
   function showFailedState() {
