@@ -1000,6 +1000,48 @@ function flagPossiblyGarbled(text) {
 
 let currentLang = 'translation'; // for dual-language books; 'translation' or 'original'
 
+// Scan images are hotlinked from the Internet Archive's IIIF server, which
+// occasionally times out (504) for a specific page even when neighboring
+// pages load fine. A failed <img> silently renders as blank space with no
+// indication to the reader whether the page is genuinely missing or the
+// source is just having a bad moment. This retries automatically a few
+// times, then falls back to a visible, manually-retryable message instead
+// of silence.
+function attachFacsimileRetry(img, page, onReattach) {
+  let attempts = 0;
+  const MAX_AUTO_RETRIES = 3;
+  const bust = (src) => src + (src.includes('?') ? '&' : '?') + 'retry=' + Date.now();
+
+  function showFailedState() {
+    const wrap = document.createElement('div');
+    wrap.className = 'reader-scan-failed';
+    wrap.style.cssText = 'padding:1.5rem; text-align:center; border:1px dashed rgba(255,255,255,.25); border-radius:6px; color:rgba(255,255,255,.7); font-size:0.85rem;';
+    wrap.innerHTML = `Scan temporarily unavailable (page ${page}) &mdash; the source archive may be busy.<br>` +
+      `<button type="button" class="reader-scan-retry-btn" style="margin-top:0.5rem; padding:0.3rem 0.8rem; border-radius:4px; border:1px solid rgba(255,255,255,.3); background:transparent; color:inherit; cursor:pointer;">Retry</button>`;
+    wrap.querySelector('.reader-scan-retry-btn').addEventListener('click', () => {
+      const newImg = document.createElement('img');
+      newImg.className = img.className;
+      newImg.alt = img.alt;
+      newImg.style.cssText = img.style.cssText;
+      newImg.loading = 'lazy';
+      newImg.src = bust(img.dataset.originalSrc);
+      newImg.dataset.originalSrc = img.dataset.originalSrc;
+      wrap.replaceWith(newImg);
+      onReattach(newImg);
+    });
+    img.replaceWith(wrap);
+  }
+
+  img.addEventListener('error', () => {
+    attempts++;
+    if (attempts <= MAX_AUTO_RETRIES) {
+      setTimeout(() => { img.src = bust(img.dataset.originalSrc); }, attempts * 1200);
+    } else {
+      showFailedState();
+    }
+  });
+}
+
 function renderBlock(p) {
   if (FACSIMILE) {
     const block = document.createElement('div');
@@ -1009,13 +1051,22 @@ function renderBlock(p) {
     block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div>` +
       `<img class="reader-facsimile-img" src="${p.image}" alt="Page ${p.page}" loading="lazy"
         style="width:100%; border-radius:6px; cursor:zoom-in; box-shadow:0 2px 8px rgba(0,0,0,.4);" />`;
-    block.querySelector('img').addEventListener('click', () => {
-      zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
-      openZoomOverlay();
-      showZoomPage(zoomCurrentIdx);
-      history.pushState({ readerZoom: true }, '');
-      zoomOpenedViaHistory = true;
-    });
+    const facImg = block.querySelector('img');
+    facImg.dataset.originalSrc = p.image;
+    const attachZoomClick = (imgEl) => {
+      imgEl.addEventListener('click', () => {
+        zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+        openZoomOverlay();
+        showZoomPage(zoomCurrentIdx);
+        history.pushState({ readerZoom: true }, '');
+        zoomOpenedViaHistory = true;
+      });
+    };
+    function setupFacsimileImg(imgEl) {
+      attachZoomClick(imgEl);
+      attachFacsimileRetry(imgEl, p.page, setupFacsimileImg);
+    }
+    setupFacsimileImg(facImg);
     return block;
   }
   if (!p.text || p.text.trim().length < 3) {
