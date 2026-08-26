@@ -332,22 +332,35 @@ window.addEventListener('popstate', (e) => {
     currentAngle += dx * 0.35; velocity = (dx * 0.35) * (16 / dt);
     lastX = x; lastT = now; apply();
   }
-  function pointerUp(target) {
+  function pointerUp(target, x, y) {
     if (!dragging) return;
     dragging = false; stage.classList.remove('grabbing');
     if (Math.abs(velocity) > 0.15) runMomentum();
     fadeHint();
     if (moved < 6) {
-      const spine = target && target.closest ? target.closest('.mr-spine') : null;
+      // The 3D perspective transform on this stage can make a browser's
+      // event.target hit-test resolve to the flat outer container instead
+      // of the individual rotated spine at that screen position (seen
+      // reliably in headless Chromium; real-browser impact unconfirmed).
+      // elementFromPoint checks what's actually rendered at the release
+      // coordinates as a fallback, so a click lands correctly either way.
+      let spine = target && target.closest ? target.closest('.mr-spine') : null;
+      if (!spine && x != null && y != null) {
+        const atPoint = document.elementFromPoint(x, y);
+        spine = atPoint && atPoint.closest ? atPoint.closest('.mr-spine') : null;
+      }
       if (spine) openSpine(spine);
     }
   }
   stage.addEventListener('mousedown', e => { pointerDown(e.clientX); e.preventDefault(); });
   window.addEventListener('mousemove', e => pointerMove(e.clientX));
-  window.addEventListener('mouseup', e => pointerUp(e.target));
+  window.addEventListener('mouseup', e => pointerUp(e.target, e.clientX, e.clientY));
   stage.addEventListener('touchstart', e => { if (e.touches.length === 1) pointerDown(e.touches[0].clientX); }, { passive: true });
   stage.addEventListener('touchmove', e => { if (e.touches.length === 1) pointerMove(e.touches[0].clientX); }, { passive: true });
-  stage.addEventListener('touchend', e => pointerUp(e.target));
+  stage.addEventListener('touchend', e => {
+    const t = e.changedTouches && e.changedTouches[0];
+    pointerUp(e.target, t ? t.clientX : null, t ? t.clientY : null);
+  });
 
   function openSpine(spine) {
     if (spine.classList.contains('pulling')) return;
