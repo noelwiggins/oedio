@@ -1009,7 +1009,13 @@ let currentLang = 'translation'; // for dual-language books; 'translation' or 'o
 // of silence.
 function attachFacsimileRetry(img, page, onReattach) {
   let attempts = 0;
+  let settled = false;
   const MAX_AUTO_RETRIES = 3;
+  // archive.org's IIIF server doesn't always fail cleanly with an HTTP error --
+  // sometimes the request just hangs with no response at all. A pure
+  // error-event listener never fires for a hang, so this also treats "still
+  // not loaded after N seconds" as a failure worth retrying.
+  const HANG_TIMEOUT_MS = 8000;
   const bust = (src) => src + (src.includes('?') ? '&' : '?') + 'retry=' + Date.now();
 
   function showFailedState() {
@@ -1024,22 +1030,33 @@ function attachFacsimileRetry(img, page, onReattach) {
       newImg.alt = img.alt;
       newImg.style.cssText = img.style.cssText;
       newImg.loading = 'eager'; // user explicitly clicked retry — don't gate this one behind lazy-load
-      newImg.src = bust(img.dataset.originalSrc);
       newImg.dataset.originalSrc = img.dataset.originalSrc;
       wrap.replaceWith(newImg);
       onReattach(newImg);
+      newImg.src = bust(img.dataset.originalSrc);
     });
     img.replaceWith(wrap);
   }
 
-  img.addEventListener('error', () => {
+  function handleFailure() {
     attempts++;
     if (attempts <= MAX_AUTO_RETRIES) {
-      setTimeout(() => { img.src = bust(img.dataset.originalSrc); }, attempts * 1200);
+      setTimeout(() => { armWatchers(); img.src = bust(img.dataset.originalSrc); }, attempts * 1200);
     } else {
       showFailedState();
     }
-  });
+  }
+
+  function armWatchers() {
+    settled = false;
+    const timer = setTimeout(() => { if (!settled) { settled = true; handleFailure(); } }, HANG_TIMEOUT_MS);
+    img.addEventListener('load', () => { settled = true; clearTimeout(timer); }, { once: true });
+    img.addEventListener('error', () => {
+      if (!settled) { settled = true; clearTimeout(timer); handleFailure(); }
+    }, { once: true });
+  }
+
+  armWatchers();
 }
 
 function renderBlock(p) {
