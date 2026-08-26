@@ -1023,7 +1023,7 @@ function attachFacsimileRetry(img, page, onReattach) {
       newImg.className = img.className;
       newImg.alt = img.alt;
       newImg.style.cssText = img.style.cssText;
-      newImg.loading = 'lazy';
+      newImg.loading = 'eager'; // user explicitly clicked retry — don't gate this one behind lazy-load
       newImg.src = bust(img.dataset.originalSrc);
       newImg.dataset.originalSrc = img.dataset.originalSrc;
       wrap.replaceWith(newImg);
