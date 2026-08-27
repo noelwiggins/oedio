@@ -639,11 +639,19 @@ audio.addEventListener('timeupdate', function() {
 });
 audio.addEventListener('pause', function() {
   document.getElementById('mp-toggle-ic').textContent = 'play_arrow';
-  if (currentChip) currentChip.classList.remove('playing');
+  if (currentChip) {
+    currentChip.classList.remove('playing');
+    var icon = currentChip.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'play_arrow';
+  }
 });
 audio.addEventListener('play', function() {
   document.getElementById('mp-toggle-ic').textContent = 'pause';
-  if (currentChip) currentChip.classList.add('playing');
+  if (currentChip) {
+    currentChip.classList.add('playing');
+    var icon = currentChip.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = 'pause';
+  }
 });
 document.getElementById('mp-toggle').addEventListener('click', function() {
   if (audio.paused) audio.play(); else audio.pause();
@@ -672,7 +680,18 @@ if (window.innerWidth >= 1180) sheet.classList.add('open');
 sheet.querySelectorAll('input[data-layer]').forEach(function(inp) {
   inp.checked = !!layers[inp.dataset.layer];
   inp.addEventListener('change', function() {
-    layers[this.dataset.layer] = this.checked; saveLayers();
+    var key = this.dataset.layer;
+    var isTextLayer = (key === 'bl' || key === 'ng');
+    if (isTextLayer && !this.checked && enabledTextLayers().length === 0) {
+      // Refuse to leave the reader with zero text layers active -- this
+      // was producing a silent, unexplained blank 'No text layer enabled'
+      // dead-end, confirmed repeatedly by testing as confusing for a
+      // feature explicitly marketed as 'layered' reading. Snap back on
+      // instead of allowing that state to happen at all.
+      this.checked = true;
+      return;
+    }
+    layers[key] = this.checked; saveLayers();
     cycleIdx = 0; updateCycleBtn();
     root.querySelectorAll('.book-section').forEach(function(s) {
       var r = s.getBoundingClientRect();
