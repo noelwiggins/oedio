@@ -2385,9 +2385,16 @@ function buildZoomStream() {
   allPages.forEach((p, idx) => {
     const wrap = document.createElement('div');
     wrap.className = 'zoom-page'; wrap.dataset.idx = idx;
-    wrap.innerHTML = `<img loading="lazy" src="${p.image}" alt="Page ${p.page}" draggable="false">` +
+    wrap.innerHTML = `<img loading="lazy" alt="Page ${p.page}" draggable="false">` +
                      `<div class="zp-num">p. ${p.page}</div>`;
-    wrap.querySelector('img').addEventListener('contextmenu', e => e.preventDefault());
+    const zoomImg = wrap.querySelector('img');
+    zoomImg.dataset.originalSrc = p.image;
+    function setupZoomImg(imgEl) {
+      imgEl.addEventListener('contextmenu', e => e.preventDefault());
+      attachFacsimileRetry(imgEl, p.page, setupZoomImg);
+    }
+    setupZoomImg(zoomImg);
+    zoomImg.src = p.image;
     frag.appendChild(wrap);
   });
   zoomScroll.appendChild(frag);
