@@ -2098,6 +2098,47 @@ if (noteToggle) {
     aaOverlay.addEventListener('click', (e) => { if (e.target === aaOverlay) aaOverlay.classList.remove('open'); });
 })();
 
+// Long-press any toolbar icon to see what it does, before committing to
+// tapping it -- the existing title attributes were already accurate, but
+// hover tooltips don't help on touch devices, and a non-technical reader
+// won't necessarily think to try hovering. This is the same convention
+// both iOS and Android already use for their own icon-only buttons, so
+// it should feel familiar rather than like a new thing to learn.
+(function () {
+  let pressTimer = null;
+  let toast = null;
+  function showLabelToast(text, x, y) {
+    if (toast) toast.remove();
+    toast = document.createElement('div');
+    toast.textContent = text;
+    toast.style.cssText = 'position:fixed;z-index:2000;background:rgba(20,20,20,.95);color:#fff;' +
+      'font-family:Roboto,sans-serif;font-size:12.5px;padding:6px 12px;border-radius:6px;' +
+      'pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.4);' +
+      'transform:translateX(-50%);left:' + x + 'px;top:' + (y - 40) + 'px;';
+    document.body.appendChild(toast);
+    setTimeout(() => { if (toast) { toast.remove(); toast = null; } }, 1800);
+  }
+  document.querySelectorAll('.reader-icon-btn[title]').forEach(btn => {
+    let longPressed = false;
+    const start = (e) => {
+      longPressed = false;
+      const touch = e.touches ? e.touches[0] : e;
+      const rect = btn.getBoundingClientRect();
+      pressTimer = setTimeout(() => {
+        longPressed = true;
+        showLabelToast(btn.getAttribute('title'), rect.left + rect.width / 2, rect.top);
+      }, 450);
+    };
+    const cancel = () => clearTimeout(pressTimer);
+    btn.addEventListener('touchstart', start, { passive: true });
+    btn.addEventListener('touchend', cancel, { passive: true });
+    btn.addEventListener('touchmove', cancel, { passive: true });
+    btn.addEventListener('click', (e) => {
+      if (longPressed) { e.preventDefault(); e.stopPropagation(); longPressed = false; }
+    }, true);
+  });
+})();
+
 document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   panel.classList.toggle('sepia');
   e.currentTarget.classList.toggle('active');

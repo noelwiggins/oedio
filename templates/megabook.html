@@ -188,9 +188,9 @@
   <button class="open-reader-cta" id="open-reader-btn" type="button">
     <span class="material-symbols-outlined orc-icon">auto_stories</span>
     <div class="orc-text">
-      <div class="orc-title">Open Reader</div>
+      <div class="orc-title">Choose an Edition</div>
       <div class="orc-sub">
-        Choose which title to read &mdash; every edition, translation, and source scan is here.
+        Every edition, translation, and source scan is here.
         Once you're in, switch between that title's own layers from the picker inside the reader.
       </div>
     </div>
@@ -254,7 +254,7 @@ window.addEventListener('popstate', (e) => {
   const COMPS = {{ mb.components|tojson }};
   const GROUPED = {{ grouped|tojson }};
   const SPINE_COLOR = {{ mb.spine_color|tojson }};
-  const MB_EMBLEM = {{ mb.emblem|tojson }};
+  const MB_EMBLEM = {{ (mb.emblem or 'em-book')|tojson }};
   const MEGA_SLUG = {{ mb.slug|tojson }};
 
   const ordered = [];
