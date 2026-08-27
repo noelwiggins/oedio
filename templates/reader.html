@@ -741,7 +741,7 @@
       {% if oedio_map %}
       <div class="vc-section">
         <div class="vc-section-label">Where this takes place</div>
-        <img class="vc-map-img" src="{{ oedio_map.image }}" alt="{{ oedio_map.caption }}" loading="lazy" />
+        <img class="vc-map-img" data-original-src="{{ oedio_map.image }}" alt="{{ oedio_map.caption }}" loading="lazy" />
         <div class="vc-caption">{{ oedio_map.caption }}</div>
         {% if oedio_map.source_label %}<div class="vc-source">{{ oedio_map.source_label }}</div>{% endif %}
       </div>
@@ -752,7 +752,7 @@
         <div class="vc-illustration-grid">
           {% for ill in oedio_illustrations %}
           <div class="vc-illustration">
-            <img src="{{ ill.image }}" alt="{{ ill.caption }}" loading="lazy" />
+            <img class="vc-context-img" data-original-src="{{ ill.image }}" alt="{{ ill.caption }}" loading="lazy" />
             <div class="vc-caption">{{ ill.caption }}</div>
           </div>
           {% endfor %}
@@ -1059,6 +1059,20 @@ function attachFacsimileRetry(img, page, onReattach) {
   armWatchers();
 }
 
+// The "Where this takes place" map and per-book illustrations are
+// server-rendered once (not built per-page like the reader images above),
+// but hit the same external-source reliability problem. Their src is held
+// in data-original-src instead of src so this can attach retry handling
+// before the browser's first fetch attempt, same as everywhere else.
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.vc-map-img, .vc-context-img').forEach(img => {
+    const src = img.dataset.originalSrc;
+    if (!src) return;
+    (function setupContextImg(imgEl) { attachFacsimileRetry(imgEl, imgEl.alt || 'image', setupContextImg); })(img);
+    img.src = src;
+  });
+});
+
 function renderBlock(p) {
   if (FACSIMILE) {
     const block = document.createElement('div');
@@ -1096,15 +1110,21 @@ function renderBlock(p) {
     block.dataset.page = p.page;
     block.innerHTML = `<div class="reader-page-number">Page ${p.page}</div>` +
       `<div class="reader-blank-note">No transcribed text on this page &mdash; likely a plate, blank leaf, or illustration.</div>` +
-      (p.image ? `<img class="reader-blank-thumb" src="${p.image}" alt="Page ${p.page} scan" loading="lazy" />` : '');
+      (p.image ? `<img class="reader-blank-thumb" alt="Page ${p.page} scan" loading="lazy" />` : '');
     if (p.image) {
-      block.querySelector('.reader-blank-thumb').addEventListener('click', () => {
-        zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
-        openZoomOverlay();
-        showZoomPage(zoomCurrentIdx);
-        history.pushState({ readerZoom: true }, '');
-        zoomOpenedViaHistory = true;
-      });
+      const blankImg = block.querySelector('.reader-blank-thumb');
+      blankImg.dataset.originalSrc = p.image;
+      (function setupBlankThumb(imgEl) {
+        imgEl.addEventListener('click', () => {
+          zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
+          openZoomOverlay();
+          showZoomPage(zoomCurrentIdx);
+          history.pushState({ readerZoom: true }, '');
+          zoomOpenedViaHistory = true;
+        });
+        attachFacsimileRetry(imgEl, p.page, setupBlankThumb);
+      })(blankImg);
+      blankImg.src = p.image;
     }
     return block;
   }
@@ -1129,8 +1149,12 @@ function renderBlock(p) {
   if (!TEXT_ONLY && p.text.trim().length < avgTextLength * 0.15 && p.text.trim().length < 200) {
     const thumb = document.createElement('div');
     thumb.className = 'reader-illustration-thumb';
-    thumb.innerHTML = `<img src="${p.image}" alt="Illustration on page ${p.page}" loading="lazy" />` +
+    thumb.innerHTML = `<img alt="Illustration on page ${p.page}" loading="lazy" />` +
       `<span class="material-symbols-outlined">image</span> Illustration on this page -- tap to view full size`;
+    const illImg = thumb.querySelector('img');
+    illImg.dataset.originalSrc = p.image;
+    (function setupIllThumb(imgEl) { attachFacsimileRetry(imgEl, p.page, setupIllThumb); })(illImg);
+    illImg.src = p.image;
     thumb.addEventListener('click', () => {
       zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
       openZoomOverlay();
@@ -1150,8 +1174,12 @@ function renderImageBlock(p) {
   const block = document.createElement('div');
   block.className = 'reader-image-block';
   block.dataset.page = p.page;
-  block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
-  trackImageLoad(block.querySelector('img'));
+  block.innerHTML = `<img alt="Scanned original of page ${p.page}" loading="lazy" />`;
+  const imgBlockImg = block.querySelector('img');
+  imgBlockImg.dataset.originalSrc = p.image;
+  trackImageLoad(imgBlockImg);
+  (function setupImageBlockImg(imgEl) { attachFacsimileRetry(imgEl, p.page, setupImageBlockImg); })(imgBlockImg);
+  imgBlockImg.src = p.image;
   block.addEventListener('click', () => {
     zoomCurrentIdx = allPages.findIndex(pg => pg.page === p.page);
     openZoomOverlay();
@@ -1467,8 +1495,12 @@ function buildLeftImageBlock(p) {
   const block = document.createElement('div');
   block.className = 'reader-image-block';
   block.dataset.page = p.page;
-  block.innerHTML = `<img src="${p.image}" alt="Scanned original of page ${p.page}" loading="lazy" />`;
-  trackImageLoad(block.querySelector('img'));
+  block.innerHTML = `<img alt="Scanned original of page ${p.page}" loading="lazy" />`;
+  const leftImg = block.querySelector('img');
+  leftImg.dataset.originalSrc = p.image;
+  trackImageLoad(leftImg);
+  (function setupLeftImg(imgEl) { attachFacsimileRetry(imgEl, p.page, setupLeftImg); })(leftImg);
+  leftImg.src = p.image;
   block.addEventListener('click', () => {
     const idx = allPages.findIndex(pg => pg.page === p.page);
     if (idx < 0) return;
@@ -2098,47 +2130,6 @@ if (noteToggle) {
     aaOverlay.addEventListener('click', (e) => { if (e.target === aaOverlay) aaOverlay.classList.remove('open'); });
 })();
 
-// Long-press any toolbar icon to see what it does, before committing to
-// tapping it -- the existing title attributes were already accurate, but
-// hover tooltips don't help on touch devices, and a non-technical reader
-// won't necessarily think to try hovering. This is the same convention
-// both iOS and Android already use for their own icon-only buttons, so
-// it should feel familiar rather than like a new thing to learn.
-(function () {
-  let pressTimer = null;
-  let toast = null;
-  function showLabelToast(text, x, y) {
-    if (toast) toast.remove();
-    toast = document.createElement('div');
-    toast.textContent = text;
-    toast.style.cssText = 'position:fixed;z-index:2000;background:rgba(20,20,20,.95);color:#fff;' +
-      'font-family:Roboto,sans-serif;font-size:12.5px;padding:6px 12px;border-radius:6px;' +
-      'pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.4);' +
-      'transform:translateX(-50%);left:' + x + 'px;top:' + (y - 40) + 'px;';
-    document.body.appendChild(toast);
-    setTimeout(() => { if (toast) { toast.remove(); toast = null; } }, 1800);
-  }
-  document.querySelectorAll('.reader-icon-btn[title]').forEach(btn => {
-    let longPressed = false;
-    const start = (e) => {
-      longPressed = false;
-      const touch = e.touches ? e.touches[0] : e;
-      const rect = btn.getBoundingClientRect();
-      pressTimer = setTimeout(() => {
-        longPressed = true;
-        showLabelToast(btn.getAttribute('title'), rect.left + rect.width / 2, rect.top);
-      }, 450);
-    };
-    const cancel = () => clearTimeout(pressTimer);
-    btn.addEventListener('touchstart', start, { passive: true });
-    btn.addEventListener('touchend', cancel, { passive: true });
-    btn.addEventListener('touchmove', cancel, { passive: true });
-    btn.addEventListener('click', (e) => {
-      if (longPressed) { e.preventDefault(); e.stopPropagation(); longPressed = false; }
-    }, true);
-  });
-})();
-
 document.getElementById('reader-sepia-btn').addEventListener('click', (e) => {
   panel.classList.toggle('sepia');
   e.currentTarget.classList.toggle('active');
@@ -2366,8 +2357,12 @@ if (gridBtn) gridBtn.addEventListener('click', () => {
     allPages.forEach(p => {
       const thumb = document.createElement('div');
       thumb.className = 'reader-grid-thumb';
-      thumb.innerHTML = `<img src="${p.image}" alt="Page ${p.page}" loading="lazy" />` +
+      thumb.innerHTML = `<img alt="Page ${p.page}" loading="lazy" />` +
         `<span>Page ${p.page}</span>`;
+      const gridImg = thumb.querySelector('img');
+      gridImg.dataset.originalSrc = p.image;
+      (function setupGridThumb(imgEl) { attachFacsimileRetry(imgEl, p.page, setupGridThumb); })(gridImg);
+      gridImg.src = p.image;
       thumb.addEventListener('click', () => {
         renderUpTo(p.page);
         setTimeout(() => {
