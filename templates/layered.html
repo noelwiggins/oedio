@@ -387,6 +387,7 @@ function fillSection(sec) {
       }
       strip.innerHTML = '<div class="filmstrip-label"><span class="material-symbols-outlined" style="font-size:15px">wall_art</span>Flaxman edition \u00b7 pages ' + range[0] + '\u2013' + range[1] + '</div><div class="filmstrip">' + imgs + '</div>';
       extras.appendChild(strip);
+      strip.querySelectorAll('img').forEach(attachScanImgRetry);
     });
   }
   if (layers.gk && bk.greek_facsimile) {
@@ -437,6 +438,56 @@ function buildTextBlock(k, bk) {
     '<div class="tb-text">' + textForRange(m.slug, range) + '</div>';
   return block;
 }
+// Scan images are hotlinked from an external IIIF server that sometimes
+// fails outright (error event) or just hangs with no response at all
+// (never fires error). This retries briefly on either failure mode, then
+// swaps in a small inline "unavailable, tap to retry" placeholder instead
+// of leaving a silent gap in the filmstrip, source panel, or zoom view.
+function attachScanImgRetry(img) {
+  if (img.dataset.retryAttached) return;
+  img.dataset.retryAttached = '1';
+  var originalSrc = img.getAttribute('src');
+  var attempts = 0;
+  var settled = false;
+  var MAX_RETRIES = 2;
+  var TIMEOUT_MS = 4000;
+  function bust(src) { return src + (src.indexOf('?') > -1 ? '&' : '?') + 'retry=' + Date.now(); }
+
+  function showFailed() {
+    var wrap = document.createElement('div');
+    wrap.className = 'scan-img-failed';
+    wrap.style.cssText = 'display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.3;color:rgba(255,255,255,.6);border:1px dashed rgba(255,255,255,.25);border-radius:4px;padding:8px;min-height:60px;cursor:pointer;';
+    wrap.textContent = 'Scan unavailable \u2014 tap to retry';
+    wrap.addEventListener('click', function() {
+      var newImg = document.createElement('img');
+      newImg.className = img.className;
+      newImg.alt = img.alt;
+      if (img.getAttribute('data-slug')) newImg.setAttribute('data-slug', img.getAttribute('data-slug'));
+      if (img.getAttribute('data-page')) newImg.setAttribute('data-page', img.getAttribute('data-page'));
+      newImg.loading = 'eager';
+      wrap.replaceWith(newImg);
+      attachScanImgRetry(newImg);
+      newImg.src = bust(originalSrc);
+    });
+    img.replaceWith(wrap);
+  }
+  function handleFailure() {
+    attempts++;
+    if (attempts <= MAX_RETRIES) {
+      setTimeout(function() { arm(); img.src = bust(originalSrc); }, attempts * 1200);
+    } else {
+      showFailed();
+    }
+  }
+  function arm() {
+    settled = false;
+    var timer = setTimeout(function() { if (!settled) { settled = true; handleFailure(); } }, TIMEOUT_MS);
+    img.addEventListener('load', function() { settled = true; clearTimeout(timer); }, { once: true });
+    img.addEventListener('error', function() { if (!settled) { settled = true; clearTimeout(timer); handleFailure(); } }, { once: true });
+  }
+  arm();
+}
+
 function buildSourceBlock(bk) {
   var k = lastTextLayer || enabledTextLayers()[0] || 'bl';
   var m = EDITION_META[k];
@@ -450,6 +501,7 @@ function buildSourceBlock(bk) {
     if (p && p.image) imgs += '<img class="src-page-img" loading="lazy" src="' + p.image + '" data-slug="' + m.slug + '" data-page="' + pg + '" alt="Page ' + pg + '">';
   }
   block.innerHTML = '<div class="tb-chip"><span class="material-symbols-outlined" style="font-size:14px">history_edu</span>Source scans \u00b7 ' + m.label + '</div>' + imgs;
+  block.querySelectorAll('.src-page-img').forEach(attachScanImgRetry);
   return block;
 }
 
@@ -670,6 +722,7 @@ function openZoomList(list, idx, title) {
       w.innerHTML = '<img loading="lazy" src="' + p.image + '" alt="Page ' + it.page + '" draggable="false">' +
                     '<div class="zp-num">p. ' + it.page + '</div>';
       w.querySelector('img').addEventListener('contextmenu', function(e){ e.preventDefault(); });
+      attachScanImgRetry(w.querySelector('img'));
       frag.appendChild(w);
     });
     lzScroll.appendChild(frag);
