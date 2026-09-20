@@ -46,7 +46,11 @@
     background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); }
   .audio-chip:hover { filter: brightness(1.2); }
   .audio-chip.playing { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+  .audio-chip.loading { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); opacity: .75; }
+  .audio-chip.errored { background: var(--md-sys-color-error, #b3261e); color: #fff; }
   .audio-chip .material-symbols-outlined { font-size: 16px; }
+  .audio-chip .material-symbols-outlined.spin { animation: audio-spin 0.9s linear infinite; }
+  @keyframes audio-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
   .layer-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
   @media (min-width: 900px) { .layer-grid.two-col { grid-template-columns: 1fr 1fr; } }
@@ -70,7 +74,7 @@
     color: var(--md-sys-color-tertiary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
   .filmstrip { display: flex; gap: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch;
     padding-bottom: 6px; }
-  .filmstrip img { height: 130px; border-radius: 8px; cursor: zoom-in; flex: 0 0 auto;
+  .filmstrip img { height: 130px; aspect-ratio: 2 / 3; object-fit: contain; border-radius: 8px; cursor: zoom-in; flex: 0 0 auto;
     box-shadow: 0 2px 6px rgba(0,0,0,.45); background: #222; }
 
   /* ---- Greek facsimile card ---- */
@@ -98,8 +102,13 @@
     transform: translateY(105%); transition: transform .25s cubic-bezier(.2,0,0,1);
     max-height: 70vh; overflow-y: auto; }
   .layer-sheet.open { transform: translateY(0); }
-  .layer-sheet .grabber { width: 36px; height: 4px; border-radius: 2px; margin: 6px auto 14px;
-    background: var(--md-sys-color-outline-variant); }
+  .layer-sheet .grabber { display: block; width: 36px; height: 4px; border-radius: 2px; margin: 6px auto 14px;
+    background: var(--md-sys-color-outline-variant); border: none; padding: 0; cursor: pointer;
+    /* generous invisible hit area -- a 4px-tall bar is otherwise a hard target to tap precisely */
+    position: relative; }
+  .layer-sheet .grabber::after { content: ''; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%); width: 64px; height: 32px; }
+  .layer-sheet .grabber:hover { background: var(--md-sys-color-outline); }
   .sheet-title { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
     color: var(--md-sys-color-primary); margin: 12px 0 4px; }
   .sheet-header-row { display: flex; align-items: center; justify-content: space-between; }
@@ -129,9 +138,19 @@
   @media (min-width: 1180px) {
     .layer-fab { display: none; }
     .sheet-scrim { display: none !important; }
+    /* On mobile, open/closed is driven by translateY (sliding up from the
+       bottom). That transform doesn't apply at this width (the panel sits
+       as a floating card near the top-right instead), but the .open class
+       toggle is still the only thing JS flips -- so without its own
+       closed state here, removing .open did nothing visible: the panel
+       was always full-opacity and still absorbing clicks underneath it,
+       which is exactly the "closing takes multiple clicks" bug. */
     .layer-sheet { left: auto; right: 18px; bottom: auto; top: 132px; width: 280px;
-      border-radius: 18px; transform: none; max-height: calc(100vh - 240px);
-      box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+      border-radius: 18px; max-height: calc(100vh - 240px);
+      box-shadow: 0 4px 14px rgba(0,0,0,.5);
+      transform: translateY(-8px); opacity: 0; pointer-events: none;
+      transition: transform .18s ease, opacity .18s ease; }
+    .layer-sheet.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
     .layer-sheet .grabber { display: none; }
   }
 
@@ -158,8 +177,9 @@
   .tissue-fading-out { transition: opacity 370ms ease; opacity: 0 !important; }
   .tissue-fading-in-hold { transition: opacity 370ms ease; opacity: .55 !important; }
   .tissue-fading-in { transition: opacity 370ms ease; opacity: .92 !important; }
-  .src-block .src-page-img { width: 100%; border-radius: 8px; margin: 0 0 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.45); cursor: zoom-in; display: block; }
+  .src-block .src-page-img { width: 100%; aspect-ratio: 2 / 3; object-fit: contain; border-radius: 8px; margin: 0 0 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.45); cursor: zoom-in; display: block;
+    background: var(--md-sys-color-surface-container-high); }
 
   /* ---- Mini audio player ---- */
   .mini-player { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
@@ -218,7 +238,7 @@
 
 <div class="sheet-scrim" id="sheet-scrim"></div>
 <div class="layer-sheet" id="layer-sheet">
-  <div class="grabber"></div>
+  <button class="grabber" id="sheet-grabber" aria-label="Close layers panel" title="Close"></button>
   <div class="sheet-header-row">
     <div class="sheet-title">Text layers</div>
     <button class="sheet-close-btn" id="sheet-close" aria-label="Close layers panel" title="Close">
@@ -296,6 +316,14 @@ var rail = document.getElementById('chip-rail');
 var greekPagesAll = null;
 
 function saveLayers() { try { localStorage.setItem('oedio-odyssey-layers', JSON.stringify(layers)); } catch(e) {} }
+
+// Library of Congress IIIF scans are blocked by the browser when hotlinked
+// directly (CORP header), so route those through our same-origin proxy.
+function proxyImg(url) {
+  if (!url) return url;
+  if (url.indexOf('tile.loc.gov') !== -1) return '/img-proxy?u=' + encodeURIComponent(url);
+  return url;
+}
 
 function loadEdition(slug) {
   if (editionLoaded[slug]) return Promise.resolve();
@@ -395,7 +423,7 @@ function fillSection(sec) {
       var imgs = '';
       for (var pg = range[0]; pg <= range[1]; pg += 2) {
         var p = editionPages['flaxman-1853'][pg];
-        if (p && p.image) imgs += '<img loading="lazy" src="' + p.image + '" data-slug="flaxman-1853" data-page="' + pg + '" alt="Flaxman edition p.' + pg + '">';
+        if (p && p.image) imgs += '<img loading="lazy" src="' + proxyImg(p.image) + '" data-slug="flaxman-1853" data-page="' + pg + '" alt="Flaxman edition p.' + pg + '">';
       }
       strip.innerHTML = '<div class="filmstrip-label"><span class="material-symbols-outlined" style="font-size:15px">wall_art</span>Flaxman edition \u00b7 pages ' + range[0] + '\u2013' + range[1] + '</div><div class="filmstrip">' + imgs + '</div>';
       extras.appendChild(strip);
@@ -510,7 +538,7 @@ function buildSourceBlock(bk) {
   var imgs = '';
   for (var pg = range[0]; pg <= range[1]; pg++) {
     var p = editionPages[m.slug][pg];
-    if (p && p.image) imgs += '<img class="src-page-img" loading="lazy" src="' + p.image + '" data-slug="' + m.slug + '" data-page="' + pg + '" alt="Page ' + pg + '">';
+    if (p && p.image) imgs += '<img class="src-page-img" loading="lazy" src="' + proxyImg(p.image) + '" data-slug="' + m.slug + '" data-page="' + pg + '" alt="Page ' + pg + '">';
   }
   block.innerHTML = '<div class="tb-chip"><span class="material-symbols-outlined" style="font-size:14px">history_edu</span>Source scans \u00b7 ' + m.label + '</div>' + imgs;
   block.querySelectorAll('.src-page-img').forEach(attachScanImgRetry);
@@ -630,40 +658,70 @@ var mpTitle = document.getElementById('mp-title');
 var mpFill = document.getElementById('mp-fill');
 var currentChip = null;
 
+function setChipState(btn, state) {
+  // state: 'idle' | 'loading' | 'playing' | 'error'
+  btn.classList.remove('playing', 'loading', 'errored');
+  var icon = btn.querySelector('.material-symbols-outlined');
+  if (!icon) return;
+  icon.classList.remove('spin');
+  if (state === 'loading') {
+    btn.classList.add('loading');
+    icon.textContent = 'progress_activity';
+    icon.classList.add('spin');
+  } else if (state === 'playing') {
+    btn.classList.add('playing');
+    icon.textContent = 'pause';
+  } else if (state === 'error') {
+    btn.classList.add('errored');
+    icon.textContent = 'error_outline';
+  } else {
+    icon.textContent = 'play_arrow';
+  }
+}
+
 function audioChip(label, url, title) {
   var btn = document.createElement('button');
   btn.className = 'audio-chip';
   btn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span>' + label;
   btn.addEventListener('click', function() {
     if (currentChip === btn && !audio.paused) { audio.pause(); return; }
-    if (currentChip) currentChip.classList.remove('playing');
+    if (currentChip && currentChip !== btn) setChipState(currentChip, 'idle');
     currentChip = btn;
-    audio.src = url; audio.play();
-    btn.classList.add('playing');
+    // Immediate, synchronous feedback -- don't wait on the network fetch
+    // (preload="none" means play() has to fetch data first, which can take
+    // several seconds) before the button visibly reacts to the click.
+    setChipState(btn, 'loading');
     mpTitle.textContent = title;
     mp.classList.add('on');
     document.body.classList.add('has-audio');
+    audio.src = url;
+    var playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(function() {
+        if (currentChip === btn) setChipState(btn, 'error');
+      });
+    }
   });
   return btn;
 }
 audio.addEventListener('timeupdate', function() {
   if (audio.duration) mpFill.style.width = (audio.currentTime / audio.duration * 100) + '%';
 });
+audio.addEventListener('waiting', function() {
+  document.getElementById('mp-toggle-ic').textContent = 'progress_activity';
+  if (currentChip) setChipState(currentChip, 'loading');
+});
 audio.addEventListener('pause', function() {
   document.getElementById('mp-toggle-ic').textContent = 'play_arrow';
-  if (currentChip) {
-    currentChip.classList.remove('playing');
-    var icon = currentChip.querySelector('.material-symbols-outlined');
-    if (icon) icon.textContent = 'play_arrow';
-  }
+  if (currentChip) setChipState(currentChip, 'idle');
 });
-audio.addEventListener('play', function() {
+audio.addEventListener('playing', function() {
   document.getElementById('mp-toggle-ic').textContent = 'pause';
-  if (currentChip) {
-    currentChip.classList.add('playing');
-    var icon = currentChip.querySelector('.material-symbols-outlined');
-    if (icon) icon.textContent = 'pause';
-  }
+  if (currentChip) setChipState(currentChip, 'playing');
+});
+audio.addEventListener('error', function() {
+  document.getElementById('mp-toggle-ic').textContent = 'error_outline';
+  if (currentChip) setChipState(currentChip, 'error');
 });
 document.getElementById('mp-toggle').addEventListener('click', function() {
   if (audio.paused) audio.play(); else audio.pause();
@@ -692,6 +750,11 @@ document.getElementById('layers-open').addEventListener('click', function(){
 });
 scrim.addEventListener('click', function(){ openSheet(false); layers.sheetOpen = false; saveLayers(); });
 document.getElementById('sheet-close').addEventListener('click', function(){ openSheet(false); layers.sheetOpen = false; saveLayers(); });
+// The grabber pill at the top of the sheet is the classic bottom-sheet drag
+// handle, and visually reads as the obvious "dismiss this" control even
+// though its only real job elsewhere is decorative -- give it the same
+// close behavior as the labeled X button rather than leaving it inert.
+document.getElementById('sheet-grabber').addEventListener('click', function(){ openSheet(false); layers.sheetOpen = false; saveLayers(); });
 if (window.innerWidth >= 1180 && layers.sheetOpen !== false) sheet.classList.add('open');
 
 sheet.querySelectorAll('input[data-layer]').forEach(function(inp) {
@@ -766,7 +829,7 @@ function openZoomList(list, idx, title) {
       var p = editionPages[it.slug][it.page];
       var w = document.createElement('div');
       w.className = 'zoom-page'; w.dataset.idx = i;
-      w.innerHTML = '<img loading="lazy" src="' + p.image + '" alt="Page ' + it.page + '" draggable="false">' +
+      w.innerHTML = '<img loading="lazy" src="' + proxyImg(p.image) + '" alt="Page ' + it.page + '" draggable="false">' +
                     '<div class="zp-num">p. ' + it.page + '</div>';
       w.querySelector('img').addEventListener('contextmenu', function(e){ e.preventDefault(); });
       attachScanImgRetry(w.querySelector('img'));

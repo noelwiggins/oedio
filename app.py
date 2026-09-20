@@ -16,7 +16,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime
 
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, Response, abort, jsonify, render_template, request
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
@@ -825,6 +825,61 @@ def about():
 @app.route("/api/manifest")
 def api_manifest():
     return jsonify(MANIFEST)
+
+
+# Scan images for several books are hotlinked from the Library of Congress's
+# IIIF tile server. LOC now sends a Cross-Origin-Resource-Policy header that
+# blocks the browser from loading those images directly into an oedio.com
+# page (net::ERR_BLOCKED_BY_RESPONSE.NotSameOrigin) -- the request succeeds
+# server-side but the browser refuses to render it client-side. Fetching the
+# bytes here and re-serving them same-origin sidesteps that. Restricted to a
+# small allowlist of known-safe hosts so this can't become an open proxy.
+IMG_PROXY_ALLOWED_HOSTS = {"tile.loc.gov"}
+IMG_PROXY_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".img_proxy_cache")
+
+
+@app.route("/img-proxy")
+def img_proxy():
+    import hashlib
+    from urllib.parse import urlparse
+
+    url = request.args.get("u", "")
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.hostname not in IMG_PROXY_ALLOWED_HOSTS:
+        abort(403)
+
+    cache_key = hashlib.sha256(url.encode("utf-8")).hexdigest()
+    cache_path = os.path.join(IMG_PROXY_CACHE_DIR, cache_key)
+    content_type = "image/jpeg"
+
+    data = None
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "rb") as f:
+                data = f.read()
+        except OSError:
+            data = None
+
+    if data is None:
+        try:
+            req = urllib.request.Request(
+                url, headers={"User-Agent": "oedio.com megabook builder (noel@harmonyball.com)"}
+            )
+            resp = urllib.request.urlopen(req, timeout=15)
+            data = resp.read()
+            content_type = resp.headers.get("Content-Type", "image/jpeg")
+        except Exception:
+            abort(502)
+        try:
+            os.makedirs(IMG_PROXY_CACHE_DIR, exist_ok=True)
+            with open(cache_path, "wb") as f:
+                f.write(data)
+        except OSError:
+            pass  # cache is a best-effort optimization, not required for correctness
+
+    resp = Response(data, mimetype=content_type)
+    resp.headers["Cache-Control"] = "public, max-age=604800"
+    return resp
 
 
 @app.route("/api/network-probe")
