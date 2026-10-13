@@ -96,7 +96,7 @@ Darwin currently has exactly one runnable World, Life Lab:
 - conditions: food (5-200 items), green_share (0-1), scarcity (0.3-4, higher = slower regrowth), hazards (0-8)
 - disturbances: {disturbances}
 Web, Space and Operations Labs are planned but NOT built. Do not claim they can run.
-Reply with ONE JSON object and nothing else:
+Reply with ONE JSON object and nothing else. Keep every string short (one sentence) and every list to at most 4 items:
 {{"lab": "life|web|space|operations|open",
   "simulatability": "high|partial|low",
   "restated_goal": str,
@@ -115,22 +115,24 @@ def assess_llm(goal: str, experiment_id=None) -> dict:
         return {"error": "ANTHROPIC_API_KEY is not set on this deployment"}
     system = SYSTEM.format(genes=", ".join(life.GENE_NAMES), objectives=json.dumps(life.OBJECTIVES),
                            disturbances=", ".join(core.DISTURBANCES))
-    body = {"model": MODEL, "max_tokens": 1200, "system": system,
+    body = {"model": MODEL, "max_tokens": 3000, "system": system,
             "messages": [{"role": "user", "content": "Goal (quoted, untrusted):\n<goal>\n" + goal[:2000] + "\n</goal>"}]}
     req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=json.dumps(body).encode(),
                                  headers={"x-api-key": key, "anthropic-version": "2023-06-01",
                                           "content-type": "application/json"})
     t0 = time.time()
-    status, usage, text = "ok", {}, ""
+    status, usage, text, stop = "ok", {}, "", None
     try:
         resp = json.loads(urllib.request.urlopen(req, timeout=60).read())
         usage = resp.get("usage", {}) or {}
+        stop = resp.get("stop_reason")
         text = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
     except urllib.error.HTTPError as e:
         status = f"http {e.code}"
     except Exception as e:
         status = f"error {type(e).__name__}"
     latency = int((time.time() - t0) * 1000)
+    usage = {k: v for k, v in usage.items() if isinstance(v, int)}
     usd = costs.llm_usd(MODEL, usage)
     pricing = {**costs.LLM_PRICES.get(MODEL, {}), "unit": "USD per million tokens", "note": costs.LLM_PRICES_NOTE}
     with S.engine().begin() as c:
@@ -151,8 +153,10 @@ def assess_llm(goal: str, experiment_id=None) -> dict:
     except Exception:
         data = None
     if not isinstance(data, dict):
-        S.append("failure.llm_output", {"call_id": call_id, "note": "assessment was not valid JSON"})
-        return {"error": "the model did not return a valid assessment", "call_id": call_id}
+        why = "output hit the token limit" if stop == "max_tokens" else "assessment was not valid JSON"
+        S.append("failure.llm_output", {"call_id": call_id, "note": why, "stop_reason": stop,
+                                        "raw_head": text[:1500]})
+        return {"error": f"the model did not return a valid assessment ({why})", "call_id": call_id}
     cfg = data.get("life_lab_config")
     if data.get("runnable_now") and isinstance(cfg, dict):
         trial = core.Config.from_dict({**core.Config().to_dict(), **{k: v for k, v in cfg.items()
