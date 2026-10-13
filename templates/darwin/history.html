@@ -1,0 +1,68 @@
+{% extends "darwin/base.html" %}
+{% block title %}History — DARWIN{% endblock %}
+{% block content %}
+{% set t = snap.totals %}
+<p class="eyebrow">Darwin History</p>
+<h1 class="page">Does $10 of computation buy more validated discovery today than yesterday?</h1>
+<p class="lede">Not answerable yet, and this page says so. What Darwin can show today: what it ran, what it spent, which claims survived
+  held-out and adversarial tests, which failed, and what each validated claim cost.</p>
+{% if snap.warnings %}<div class="card flat warn small" style="margin-bottom:14px">{% for w in snap.warnings %}<div>⚠ {{ w }}</div>{% endfor %}</div>{% endif %}
+<div class="grid g4">
+  <div class="card flat metric"><div class="k">Experiments</div><div class="v">{{ t.experiments }}</div><div class="n">{{ t.generations }} generations · {{ '{:,}'.format(t.candidates) }} candidates</div></div>
+  <div class="card flat metric"><div class="k">Spent</div><div class="v">${{ '%.4f' % t.total_usd }}</div><div class="n">${{ '%.6f' % t.compute_usd_estimated }} compute (est.) · ${{ '%.6f' % t.llm_usd_billed }} LLM (billed)</div></div>
+  <div class="card flat metric"><div class="k">Validated claims</div><div class="v">{{ t.validated_claims }}</div><div class="n">replicated or robust, of {{ t.claims }} claims</div></div>
+  <div class="card flat metric"><div class="k">Cost per validated claim</div><div class="v">{{ ('$%.5f' % t.usd_per_validated_claim) if t.usd_per_validated_claim is not none else '—' }}</div><div class="n">all spending ÷ validated claims</div></div>
+</div>
+<div class="grid g4 section">
+  {% for st in ['candidate', 'observed', 'replicated', 'robust', 'failed replication', 'transferred', 'real-world validated', 'retracted'] %}
+  <div class="card flat"><span class="pill s-{{ st|replace(' ', '-') }}">{{ st }}</span><div class="metric"><div class="v">{{ t.claims_by_status.get(st, 0) }}</div></div></div>
+  {% endfor %}
+</div>
+
+<section class="section card scroll-x">
+  <h2>Experiments</h2>
+  {% if experiments %}
+  <table class="t">
+    <tr><th>id</th><th>title</th><th>status</th><th>gens</th><th>gen-0 → final (train)</th><th>held-out</th><th>CPU s</th><th>est. $</th><th>when</th></tr>
+    {% for e in experiments %}
+    {% set h = (e.summary.get('validation') or {}).get('holdout') %}
+    <tr>
+      <td><a class="mono" href="/darwin/experiment/{{ e.id }}">{{ e.label }}</a></td>
+      <td>{{ e.title }}{% if e.kind == 'replay' %} <span class="small muted">({{ 'match' if (e.summary.get('replay') or {}).get('match') else ('mismatch' if e.summary.get('replay') else '') }})</span>{% endif %}</td>
+      <td><span class="pill s-{{ e.status }}">{{ e.status }}</span></td>
+      <td>{{ e.summary.get('generations_run') or '—' }}</td>
+      <td class="mono small">{% if e.summary.get('gen0_best') and e.summary.get('final_best') %}{{ '%.2f' % e.summary.gen0_best.fitness }} → {{ '%.2f' % e.summary.final_best.fitness }}{% else %}—{% endif %}</td>
+      <td class="small">{% if h %}{{ h.wins }}/{{ h.wins + h.losses + h.ties }} (p={{ h.p_sign_test }}){% else %}—{% endif %}</td>
+      <td>{{ '%.1f' % e.cost.cpu_s if e.cost.get('cpu_s') is not none else '—' }}</td>
+      <td class="small">{{ ('$%.6f' % e.cost.compute_usd_estimated) if e.cost.get('compute_usd_estimated') is not none else '—' }}</td>
+      <td class="small muted">{{ e.created_at[:16].replace('T', ' ') }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No experiments yet.</p>{% endif %}
+</section>
+
+<section class="section card" id="claims">
+  <h2>Claims</h2>
+  {% for c in claims %}
+  <div class="claim s-{{ c.status|replace(' ', '-') }}">
+    <span class="mono small">{{ c.label }}</span> <span class="pill s-{{ c.status|replace(' ', '-') }}">{{ c.status }}</span>
+    <span class="small muted">{{ c.kind }} · <a href="/darwin/experiment/{{ c.experiment_id }}">{{ fmt_exp(c.experiment_id) }}</a></span>
+    <div style="margin-top:4px">{{ c.statement }}</div>
+    <ol class="hist">{% for h in c.history %}<li>{{ h.status }} — {{ h.reason }} <span class="mono">{{ h.ts[:19].replace('T', ' ') }}</span></li>{% endfor %}</ol>
+  </div>
+  {% else %}<p class="muted">No claims yet.</p>{% endfor %}
+  <p class="note">All Phase 1 claims are <b>optimization</b> claims: an evolved genome beat its starting point in one World. None is labelled a discovery. That would need a reusable mechanism that transfers to an unseen World, and only one World exists so far.</p>
+</section>
+
+<section class="section grid g2">
+  <div class="card"><h2>Failures recorded</h2>
+    {% if snap.failures %}<table class="t">{% for k, v in snap.failures.items() %}<tr><td class="mono small">{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table>
+    <p class="small muted" style="margin-top:8px"><a href="/darwin/ledger?type=failure.*">See each failure in the Ledger →</a></p>
+    {% else %}<p class="muted small">None recorded.</p>{% endif %}
+  </div>
+  <div class="card"><h2>Not yet measured</h2>
+    <ul class="small" style="margin:0;padding-left:18px">{% for k, v in snap.missing.items() %}<li><b>{{ k.replace('_', ' ') }}</b>: {{ v }}</li>{% endfor %}</ul>
+  </div>
+</section>
+{% endblock %}

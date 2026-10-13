@@ -1,0 +1,52 @@
+{% extends "darwin/base.html" %}
+{% block title %}Snapshots — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Darwin Snapshot</p>
+<h1 class="page">A self-contained review report, at any moment</h1>
+<p class="lede">Each snapshot freezes the system state: experiments, claims and their histories, spending, failures, Ledger integrity,
+  capability status and what has not been measured. Download it as a ZIP (Markdown, JSON, Ledger CSV, benchmarks CSV, graphs) and
+  compare it with the previous one to see what improved, regressed or was retracted.</p>
+<button class="btn big" id="create">Create Darwin Snapshot</button>
+<span id="msg" class="small muted" style="margin-left:10px"></span>
+
+<section class="section card scroll-x">
+  <h2>Snapshots</h2>
+  {% if snaps %}
+  <table class="t">
+    <tr><th>id</th><th>created</th><th></th><th></th><th></th></tr>
+    {% for s in snaps %}
+    <tr><td class="mono">{{ s.label }}</td><td class="small">{{ s.created_at[:19].replace('T', ' ') }} UTC</td>
+      <td><a class="btn text" href="/darwin/snapshots/{{ s.id }}.zip">ZIP</a></td>
+      <td><a class="btn text" href="/darwin/snapshots/{{ s.id }}.md" target="_blank" rel="noopener">Markdown</a></td>
+      <td>{% if not loop.last %}<button class="btn text" data-cmp="{{ s.id }}">Compare with previous</button>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">No snapshots yet.</p>{% endif %}
+</section>
+<section class="section" id="cmp"></section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin;
+  document.getElementById('create').onclick = async e => {
+    e.target.disabled = true; document.getElementById('msg').textContent = 'Building…';
+    try { const d = await D.api('/darwin/api/snapshots', { method: 'POST' }); location.href = d.zip; setTimeout(() => location.reload(), 900); }
+    catch (err) { document.getElementById('msg').textContent = err.message; e.target.disabled = false; }
+  };
+  document.querySelectorAll('[data-cmp]').forEach(b => b.onclick = async () => {
+    const out = document.getElementById('cmp');
+    try {
+      const c = await D.api(`/darwin/api/snapshots/${b.dataset.cmp}/compare`);
+      const rows = Object.entries(c.totals).map(([k, v]) => `<tr><td>${k.replace(/_/g, ' ')}</td><td>${D.num(v.before, 6)}</td><td>${D.num(v.after, 6)}</td><td class="${v.change > 0 && k.includes('usd') ? 'warn' : ''}">${v.change == null ? '—' : (v.change > 0 ? '+' : '') + D.num(v.change, 6)}</td></tr>`).join('');
+      out.innerHTML = `<div class="card"><h2>${c.from_id} → ${c.to_id}</h2><p class="small muted">${c.code_changed ? 'Code changed between these snapshots.' : 'Same code version.'}</p>
+        <div class="scroll-x"><table class="t"><tr><th>measure</th><th>before</th><th>after</th><th>change</th></tr>${rows}</table></div>
+        <h3 style="margin-top:14px">Claim status changes</h3>${c.claim_changes.length ? '<ul class="small">' + c.claim_changes.map(x => `<li><span class="mono">${x.claim}</span>: ${x.before || 'new'} → ${x.after}</li>`).join('') + '</ul>' : '<p class="small muted">None.</p>'}
+        <h3>New failures</h3>${Object.keys(c.new_failures).length ? '<ul class="small">' + Object.entries(c.new_failures).map(([k, v]) => `<li class="mono">${k}: +${v}</li>`).join('') + '</ul>' : '<p class="small muted">None.</p>'}
+        <h3>Retractions and failed replications</h3>${c.retractions.length ? '<ul class="small">' + c.retractions.map(x => `<li class="mono">${x.claim}: ${x.after}</li>`).join('') + '</ul>' : '<p class="small muted">None.</p>'}</div>`;
+      out.scrollIntoView({ behavior: 'smooth' });
+    } catch (e) { out.innerHTML = `<div class="card err">${D.esc(e.message)}</div>`; }
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends "darwin/base.html" %}
+{% block title %}{{ label }} — DARWIN{% endblock %}
+{% block content %}
+<div class="row" style="justify-content:space-between;align-items:flex-start">
+  <div>
+    <p class="eyebrow" id="eyebrow">{{ label }}</p>
+    <h1 class="page" id="title">Experiment</h1>
+    <p class="lede" id="goal" style="margin-bottom:8px"></p>
+  </div>
+  <div class="row" id="actions"></div>
+</div>
+<div class="card flat" id="status-card">
+  <div class="row" style="justify-content:space-between"><div id="status-line" class="small"></div><div id="queue" class="small muted"></div></div>
+  <div class="progress" style="margin-top:10px"><div id="bar" style="width:0"></div></div>
+  <div id="warnings" class="small warn" style="margin-top:8px"></div>
+</div>
+
+<div id="replay-box"></div>
+
+<section class="section grid g4" id="metrics"></section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2>Fitness by generation</h2>
+    <div class="legend" id="fit-legend"></div>
+    <svg class="chart" id="fit-chart"></svg>
+    <p class="small muted" style="margin:6px 0 0">Scores on the training seeds. Held-out performance is below, under Validation.</p>
+  </div>
+  <div class="card">
+    <h2>Diversity</h2>
+    <div class="legend" id="div-legend"></div>
+    <svg class="chart" id="div-chart"></svg>
+    <p class="small muted" style="margin:6px 0 0">Mean pairwise genome distance (0–1) and the share of the population descended from the single most successful founder.</p>
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card" id="claims-card"><h2>Claims</h2><div id="claims" class="small muted">None yet.</div></div>
+  <div class="card"><h2>Validation</h2><div id="validation" class="small muted">Runs after evolution stops.</div></div>
+</section>
+
+<section class="section grid g2">
+  <div class="card"><h2>What evolved</h2><div id="genome-cmp" class="genome-bars small muted">Waiting for results.</div></div>
+  <div class="card"><h2>Variation operators</h2><div id="ops" class="small muted">Waiting for results.</div></div>
+</section>
+
+<section class="section card" id="tm">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Time Machine</h2>
+    <div class="row small"><span class="muted">Generation</span><input type="range" id="gen" min="0" max="0" value="0" style="width:220px"><b class="mono" id="gen-v">0</b></div>
+  </div>
+  <p class="small muted" style="margin:6px 0 12px">Every candidate is stored with its parents, operator and scores. Pick one to re-simulate it: the episode is re-run from its recorded genome and seed, so on a training seed the score should match the recorded one exactly.</p>
+  <div class="grid g2">
+    <div class="scroll-x" style="max-height:420px;overflow:auto"><table class="t" id="cands"></table></div>
+    <div>
+      <div class="terrarium" style="aspect-ratio:1"><canvas id="ep"></canvas><div class="terra-tag" id="ep-tag"><i></i><span>select a candidate</span></div></div>
+      <div class="row small" style="margin-top:8px;justify-content:space-between">
+        <div class="row"><button class="chip on" data-seed="train">training seed</button><button class="chip" data-seed="holdout">held-out seed</button></div>
+        <span id="ep-score" class="mono muted"></span>
+      </div>
+    </div>
+  </div>
+  <h3 style="margin-top:18px">Ancestry</h3>
+  <div class="legend" id="lin-legend"></div>
+  <div class="scroll-x"><svg id="lineage" style="width:100%;height:260px;display:block"></svg></div>
+</section>
+
+<section class="section card">
+  <h2>Reproducibility</h2>
+  <div class="grid g2">
+    <div class="small" id="repro"></div>
+    <details><summary class="small">Full configuration</summary><pre class="json" id="cfg"></pre></details>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin, ID = {{ exp_id }};
+  const GENES = {{ genes|tojson }};
+  const OPS = {{ operators|tojson }}, NA = {{ not_applicable|tojson }};
+  let data = null, timer = null, selected = null, seedSet = 'train', epFrames = null, epRAF = null, gensShown = -1;
+  const opColor = { random: '#89938d', elite: '#bec9c3', point_mutation: '#e9bf6d', multi_mutation: '#f0a35e',
+    uniform_crossover: '#7dd8b5', blend_crossover: '#5fb7d6', distant_recombination: '#b49cf0', migration: '#ff8a7a', mutation_burst: '#ff5d8f' };
+
+  async function load() {
+    try { data = await D.api('/darwin/api/experiments/' + ID); render(); }
+    catch (e) { document.getElementById('status-line').innerHTML = `<span class="err">${D.esc(e.message)}</span>`; }
+    clearTimeout(timer);
+    if (!data || ['queued', 'running'].includes(data.status) || (data.replays || []).some(r => ['queued', 'running'].includes(r.status)))
+      timer = setTimeout(load, 2000);
+  }
+
+  function render() {
+    const d = data, p = d.progress || {}, s = d.summary || {}, c = d.cost || {};
+    document.getElementById('eyebrow').textContent = `${d.label} · ${d.kind === 'replay' ? 'replay' : 'Life Lab'} · ${d.owner_run ? 'owner run' : 'visitor run'}`;
+    document.getElementById('title').textContent = d.title || 'Experiment';
+    document.getElementById('goal').textContent = d.goal || (d.kind === 'replay' ? '' : '');
+    const st = `${D.pill(d.status)} <span class="muted">${p.phase ? 'phase: ' + p.phase : ''}${p.gen != null ? ` · generation ${p.gen + 1} of ${p.of}` : ''}${d.stop_reason ? ' · stopped because: ' + D.esc(d.stop_reason) : ''}</span>`;
+    document.getElementById('status-line').innerHTML = st;
+    document.getElementById('queue').textContent = d.status === 'queued' ? (d.queue_position ? `${d.queue_position} experiment(s) ahead` : 'next in line') : (d.started_at ? 'started ' + D.when(d.started_at) : '');
+    document.getElementById('bar').style.width = (d.status === 'completed' ? 100 : p.gen != null ? Math.round((p.gen + 1) / p.of * 100) : 0) + '%';
+
+    const acts = [];
+    if (d.can_stop) acts.push(`<button class="btn danger" id="stop">Stop</button>`);
+    if (d.kind === 'evolve' && ['completed', 'stopped'].includes(d.status)) acts.push(`<button class="btn tonal" id="replay">Replay experiment</button>`);
+    acts.push(`<a class="btn outline" href="/darwin/ledger?experiment=${ID}">Ledger</a>`);
+    document.getElementById('actions').innerHTML = acts.join('');
+    const sb = document.getElementById('stop'); if (sb) sb.onclick = async () => { sb.disabled = true; try { await D.api(`/darwin/api/experiments/${ID}/stop`, { method: 'POST' }); load(); } catch (e) { alert(e.message); } };
+    const rb = document.getElementById('replay'); if (rb) rb.onclick = async () => { rb.disabled = true; try { await D.api(`/darwin/api/experiments/${ID}/replay`, { method: 'POST' }); load(); } catch (e) { alert(e.message); rb.disabled = false; } };
+
+    // Replay result (on a replay experiment, or replays of this one)
+    let rh = '';
+    const showReplay = (r, label) => r ? `<div class="card flat" style="margin-top:12px"><div class="row">${D.pill(r.match ? 'completed' : 'failed')}<b>${label}: ${r.match ? 'exact reproduction' : 'did not reproduce'}</b></div>
+      <div class="small mono muted" style="margin-top:6px">original ${D.esc((r.original_digest || '').slice(0, 16))} · replay ${D.esc((r.replay_digest || '').slice(0, 16))}</div>
+      ${r.explanation && r.explanation.length ? `<ul class="small">${r.explanation.map(x => `<li>${D.esc(x)}</li>`).join('')}</ul>` : ''}</div>` : '';
+    if (d.kind === 'replay') rh += d.replay_of ? `<p class="small" style="margin-top:12px">Replay of <a href="/darwin/experiment/${d.replay_of}">${'E-' + String(d.replay_of).padStart(6, '0')}</a></p>` + showReplay(s.replay, 'Result') : '';
+    (d.replays || []).forEach(r => { rh += r.result ? showReplay(r.result, `Replay ${r.label}`) : `<p class="small muted" style="margin-top:12px">Replay <a href="/darwin/experiment/${r.id}">${r.label}</a>: ${r.status}</p>`; });
+    document.getElementById('replay-box').innerHTML = rh;
+
+    const g = d.generations || [];
+    const last = g[g.length - 1] || {};
+    document.getElementById('warnings').textContent = (last.warnings || []).join(' · ');
+    const hold = (s.validation || {}).holdout;
+    const m = [
+      ['Generations', g.length, `of ${d.config.generations} max`],
+      ['Best (training)', last.best != null ? D.num(last.best, 3) : '—', s.gen0_best ? `gen-0 best ${D.num(s.gen0_best.fitness, 3)}` : d.config.objective],
+      ['Held-out', hold ? `${hold.wins}/${hold.wins + hold.losses + hold.ties}` : '—', hold ? `${D.pct(hold.relative_gain)} vs gen-0 best · p=${hold.p_sign_test}` : 'wins vs initial best'],
+      ['Compute', c.cpu_s != null ? D.num(c.cpu_s, 1) + ' s' : '—', c.compute_usd_estimated != null ? `${D.usd(c.compute_usd_estimated)} estimated` : ''],
+      ['Simulation', c.sim_steps != null ? D.num(c.sim_steps / 1e6, 2) + 'M' : '—', 'world-ticks simulated'],
+      ['Evaluations', c.evaluations != null ? D.num(c.evaluations, 0) : '—', `${c.candidates != null ? D.num(c.candidates, 0) : '—'} candidates generated`],
+      ['LLM', D.usd(c.llm_usd_billed || 0), 'billed tokens (none used by evolution)'],
+      ['Diversity', last.diversity != null ? D.num(last.diversity, 3) : '—', last.lineages != null ? `${last.lineages} founder lineages alive` : ''],
+    ];
+    document.getElementById('metrics').innerHTML = m.map(([k, v, n]) => `<div class="card flat metric"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+
+    if (g.length !== gensShown) {
+      gensShown = g.length;
+      const markers = d.config.disturbance !== 'none' && d.config.disturbance_gen < d.config.generations ? [{ x: d.config.disturbance_gen, label: d.config.disturbance.replace('_', ' ') }] : [];
+      const P = D.css('--md-sys-color-primary'), T = D.css('--md-sys-color-tertiary'), V = D.css('--md-sys-color-on-surface-variant');
+      D.lineChart(document.getElementById('fit-chart'), [
+        { name: 'best', color: P, values: g.map(x => x.best) },
+        { name: 'mean', color: T, values: g.map(x => x.mean) },
+        { name: 'median', color: V, values: g.map(x => x.median), dash: '4 4', width: 1.5 }], { xLabel: 'gen', markers, empty: 'Waiting for generation 0' });
+      document.getElementById('fit-legend').innerHTML = `<span><i style="--c:${P}"></i>best</span><span><i style="--c:${T}"></i>mean</span><span><i style="--c:${V}"></i>median</span>`;
+      D.lineChart(document.getElementById('div-chart'), [
+        { name: 'diversity', color: P, values: g.map(x => x.diversity) },
+        { name: 'dominant', color: T, values: g.map(x => x.dominant_share) }], { xLabel: 'gen', yMin: 0, yMax: 1, markers });
+      document.getElementById('div-legend').innerHTML = `<span><i style="--c:${P}"></i>diversity</span><span><i style="--c:${T}"></i>largest founder lineage share</span>`;
+      const slider = document.getElementById('gen');
+      const wasMax = +slider.value === +slider.max;
+      slider.max = Math.max(0, g.length - 1);
+      if (wasMax || selected == null) { slider.value = slider.max; showGen(+slider.value); }
+    }
+
+    // Claims
+    document.getElementById('claims').innerHTML = (d.claims || []).length ? d.claims.map(cl => `
+      <div class="claim ${D.statusClass(cl.status)}"><span class="mono">${cl.id}</span> ${D.pill(cl.status)}
+        <div style="margin-top:4px;color:var(--md-sys-color-on-surface)">${D.esc(cl.statement)}</div>
+        <ol class="hist">${cl.history.map(h => `<li>${D.esc(h.status)} — ${D.esc(h.reason || '')} <span class="mono">${D.when(h.ts)}</span></li>`).join('')}</ol></div>`).join('')
+      : (['queued', 'running'].includes(d.status) ? 'Claims are proposed when evolution stops.' : 'No claims.');
+
+    // Validation tables
+    const v = s.validation || {};
+    const tbl = (t, r, an, bn) => r ? `<h3>${t}</h3><div class="small muted">${r.wins} wins · ${r.losses} losses · ${r.ties} ties · one-sided sign test p=${r.p_sign_test} · mean ${D.num(r.a_mean, 3)} vs ${D.num(r.b_mean, 3)} (${D.pct(r.relative_gain)})</div>
+      <div class="scroll-x"><table class="t" style="margin:6px 0 14px"><tr><th>seed</th><th>${an}</th><th>${bn}</th><th></th></tr>${r.seeds.map((sd, i) => `<tr><td class="mono">${sd}</td><td>${D.num(r.a[i], 3)}</td><td>${D.num(r.b[i], 3)}</td><td>${r.a[i] > r.b[i] ? '✓' : r.a[i] < r.b[i] ? '✗' : '='}</td></tr>`).join('')}</table></div>` : '';
+    let vh = tbl('Held-out seeds', v.holdout, 'evolved', 'gen-0 best') +
+      tbl('Adversarial conditions', v.adversarial, 'evolved', 'gen-0 best') +
+      tbl(v.baseline_random ? `Random-search baseline (best of ${v.baseline_random.random_candidates})` : '', v.baseline_random, 'evolved', 'random best');
+    if (v.error) vh += `<p class="err">Validation interrupted: ${D.esc(v.error)}</p>`;
+    if (vh) document.getElementById('validation').innerHTML = vh;
+    else if (d.status === 'completed' && !v.holdout) document.getElementById('validation').textContent = 'Not run: evolution did not improve on the initial best, so there was nothing to validate.';
+
+    if (s.final_best && s.gen0_best) D.genomeBars(document.getElementById('genome-cmp'), GENES, s.final_best.genome, s.gen0_best.genome, [`evolved ${s.final_best.cid}`, `gen-0 best ${s.gen0_best.cid}`]);
+    if (s.operator_stats) {
+      const rows = Object.entries(s.operator_stats).filter(([k, o]) => o.produced).map(([k, o]) =>
+        `<tr><td><span style="color:${opColor[k]}">●</span> ${k.replace(/_/g, ' ')}</td><td>${o.produced}</td><td>${['elite', 'random', 'migration', 'mutation_burst'].includes(k) ? '—' : (o.produced ? (o.improved_on_parent / o.produced * 100).toFixed(1) + '%' : '—')}</td></tr>`).join('');
+      document.getElementById('ops').innerHTML = `<table class="t"><tr><th>operator</th><th>produced</th><th>beat best parent</th></tr>${rows}</table>
+        <p class="small muted" style="margin-top:10px">Not applicable to this genome: ${Object.entries(NA).map(([k, v]) => `<b>${k}</b> (${D.esc(v)})`).join('; ')}.</p>`;
+    }
+
+    const env = d.environment || {};
+    document.getElementById('repro').innerHTML = `
+      <div><span class="muted">Seed</span> <span class="mono">${d.seed}</span></div>
+      <div><span class="muted">Training seeds</span> <span class="mono">${d.train_seeds.join(', ')}</span></div>
+      <div><span class="muted">Held-out seeds</span> <span class="mono">${d.holdout_seeds.join(', ')}</span></div>
+      <div><span class="muted">Code</span> <span class="mono">${D.esc(d.code_version || '—')}</span> · <span class="muted">world</span> <span class="mono">${D.esc(env.world || '—')}</span></div>
+      <div><span class="muted">Python / numpy</span> <span class="mono">${D.esc(env.python || '—')} / ${D.esc(env.numpy || '—')}</span></div>
+      <div><span class="muted">Result digest</span> <span class="mono">${D.esc((d.digest || '—').slice(0, 24))}</span></div>
+      <div><span class="muted">Budget</span> ${D.usd(d.budget_usd)} · <span class="muted">CPU cap</span> ${D.num(d.max_cpu_s, 1)} s</div>
+      <p class="small muted">Determinism: one seeded generator, element-wise float64 maths, and every random field drawn independently of batch position. Same code + seed + config + numpy on the same platform reproduces the run; REPLAY checks this.</p>`;
+    document.getElementById('cfg').textContent = JSON.stringify(d.config, null, 2);
+  }
+
+  // ── Time Machine ───────────────────────────────────────
+  async function showGen(gen) {
+    document.getElementById('gen-v').textContent = gen;
+    const rows = await D.api(`/darwin/api/experiments/${ID}/candidates?gen=${gen}`);
+    document.getElementById('cands').innerHTML = `<tr><th>candidate</th><th>fitness</th><th>operator</th><th>parents</th><th>sel.</th></tr>` +
+      rows.map(r => `<tr data-cid="${r.cid}" style="cursor:pointer${selected === r.cid ? ';background:var(--dw-glass)' : ''}"><td class="mono">${r.cid}</td><td>${D.num(r.fitness, 3)}</td>
+        <td><span style="color:${opColor[r.operator]}">●</span> ${r.operator.replace(/_/g, ' ')}</td><td class="mono small">${r.parents.join(', ') || '—'}</td><td>${r.selected ? '✓' : ''}</td></tr>`).join('');
+    document.querySelectorAll('#cands tr[data-cid]').forEach(tr => tr.onclick = () => pick(tr.dataset.cid));
+    if (rows.length && (selected == null || !rows.find(r => r.cid === selected))) pick(rows[0].cid);
+  }
+  document.getElementById('gen').addEventListener('input', e => { selected = null; showGen(+e.target.value); });
+  document.querySelectorAll('[data-seed]').forEach(b => b.onclick = () => {
+    document.querySelectorAll('[data-seed]').forEach(x => x.classList.remove('on')); b.classList.add('on');
+    seedSet = b.dataset.seed; if (selected) episode(selected);
+  });
+
+  function pick(cid) {
+    selected = cid;
+    document.querySelectorAll('#cands tr[data-cid]').forEach(tr => tr.style.background = tr.dataset.cid === cid ? 'var(--dw-glass)' : '');
+    episode(cid); lineage(cid);
+  }
+
+  async function episode(cid) {
+    const tag = document.getElementById('ep-tag');
+    tag.className = 'terra-tag'; tag.querySelector('span').textContent = 're-simulating ' + cid + '…';
+    try {
+      const ep = await D.api(`/darwin/api/experiments/${ID}/episode/${cid}?seed=${seedSet}`);
+      epFrames = ep;
+      tag.className = 'terra-tag live'; tag.querySelector('span').textContent = `re-simulation · ${cid} · seed ${ep.seed}`;
+      const rec = ep.recorded_score;
+      document.getElementById('ep-score').innerHTML = `score ${D.num(ep.score, 3)}` + (rec != null ? ` · recorded ${D.num(rec, 3)} ${Math.abs(rec - ep.score) < 1e-6 ? '<span style="color:var(--md-sys-color-primary)">✓ identical</span>' : '<span class="err">✗ differs</span>'}` : ' · held-out (not seen in training)');
+      playEpisode();
+    } catch (e) { tag.querySelector('span').textContent = e.message; }
+  }
+
+  function playEpisode() {
+    cancelAnimationFrame(epRAF);
+    const cv = document.getElementById('ep'), ctx = cv.getContext('2d');
+    const r = { width: cv.clientWidth, height: cv.clientHeight }, dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = r.width * dpr; cv.height = r.height * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const ep = epFrames, s = r.width / 1000, rad = Math.max(3.5, ep.size * 5.5 * r.width / 400);
+    let i = 0, acc = 0, last = null;
+    function frame(ts) {
+      acc += last ? (ts - last) : 0; last = ts;
+      while (acc > 33) { i = (i + 1) % ep.frames.length; acc -= 33; }
+      const f = ep.frames[i];
+      ctx.clearRect(0, 0, r.width, r.height);
+      f.h.forEach(([x, y]) => { ctx.fillStyle = 'rgba(255,110,90,.18)'; ctx.beginPath(); ctx.arc(x * s, y * s, ep.hazard_radius * 10 * s, 0, 7); ctx.fill(); });
+      f.f.forEach(([x, y, t]) => { ctx.fillStyle = t ? 'rgba(125,216,181,.7)' : 'rgba(233,191,109,.75)'; ctx.fillRect(x * s - 2, y * s - 2, 4, 4); });
+      f.c.forEach(([slot, x, y, e]) => {
+        ctx.fillStyle = D.dietColor(ep.pref, .95); ctx.beginPath(); ctx.arc(x * s, y * s, rad, 0, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(x * s, y * s, rad + 1.5, -1.57, -1.57 + Math.min(1, e / 90) * 6.283); ctx.stroke();
+      });
+      ctx.fillStyle = 'rgba(207,233,220,.8)'; ctx.font = '11px IBM Plex Mono, monospace';
+      ctx.fillText(`tick ${f.t} · alive ${f.c.length}`, 10, r.height - 10);
+      epRAF = requestAnimationFrame(frame);
+    }
+    epRAF = requestAnimationFrame(frame);
+  }
+
+  async function lineage(cid) {
+    const svg = document.getElementById('lineage');
+    try {
+      const L = await D.api(`/darwin/api/experiments/${ID}/lineage/${cid}`);
+      const byGen = {};
+      L.nodes.forEach(n => (byGen[n.gen] = byGen[n.gen] || []).push(n));
+      const gens = Object.keys(byGen).map(Number).sort((a, b) => a - b);
+      const W = Math.max(svg.clientWidth, gens.length * 34 + 40), H = 260, maxN = Math.max(...gens.map(g => byGen[g].length));
+      svg.style.width = W + 'px'; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const pos = {};
+      gens.forEach((g, gi) => byGen[g].sort((a, b) => b.fitness - a.fitness).forEach((n, i) => {
+        pos[n.cid] = [20 + gi * ((W - 40) / Math.max(1, gens.length - 1)), 16 + (i + 0.5) * ((H - 32) / Math.max(byGen[g].length, 1))];
+      }));
+      let h = '';
+      const line = D.css('--md-sys-color-outline');
+      L.edges.forEach(([a, b]) => { if (pos[a] && pos[b]) h += `<line x1="${pos[a][0]}" y1="${pos[a][1]}" x2="${pos[b][0]}" y2="${pos[b][1]}" stroke="${line}" stroke-width="1" opacity=".55"/>`; });
+      L.nodes.forEach(n => { const [x, y] = pos[n.cid]; h += `<circle cx="${x}" cy="${y}" r="${n.cid === cid ? 6 : 4}" fill="${opColor[n.operator] || '#888'}" ${n.cid === cid ? `stroke="${D.css('--md-sys-color-on-surface')}" stroke-width="2"` : ''}><title>${n.cid} · gen ${n.gen} · ${n.operator} · ${D.num(n.fitness, 3)}</title></circle>`; });
+      svg.innerHTML = h;
+      document.getElementById('lin-legend').innerHTML = `<span class="muted">${L.nodes.length} ancestors across ${gens.length} generations${L.nodes.length >= 400 ? ' (truncated at 400)' : ''} · left = generation 0 · hover a node</span>` +
+        [...new Set(L.nodes.map(n => n.operator))].map(o => `<span><i style="--c:${opColor[o]}"></i>${o.replace(/_/g, ' ')}</span>`).join('');
+    } catch (e) { svg.innerHTML = ''; }
+  }
+
+  load();
+})();
+</script>
+{% endblock %}

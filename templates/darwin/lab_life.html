@@ -1,0 +1,158 @@
+{% extends "darwin/base.html" %}
+{% block title %}Life Lab — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Life Lab · operational</p>
+<h1 class="page">Design an experiment</h1>
+<p class="lede">Darwin evolves creature genomes in the Life World. Each candidate is tested as a cohort of clones in its own copy of
+  the world, on fixed training seeds. When evolution stops, the winner is challenged on held-out seeds it never saw and under harsher conditions,
+  and every result goes into the Ledger.</p>
+
+<form id="f" class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start">
+  <div class="grid" style="gap:14px">
+    <div class="card">
+      <h2>Question</h2>
+      <label class="f" for="title">Title</label>
+      <input class="f" id="title" maxlength="120" placeholder="Life Lab · forage">
+      <label class="f" for="goal" style="margin-top:12px">What are you trying to find out? (optional, recorded in the Ledger)</label>
+      <textarea class="f" id="goal" rows="2" maxlength="1000"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Objective</h2>
+      <div class="grid g3" id="objs">
+        {% for k, v in objectives.items() %}
+        <label class="card flat" style="cursor:pointer"><input type="radio" name="objective" value="{{ k }}" {{ 'checked' if k == defaults.objective }}>
+          <b style="text-transform:capitalize">{{ k }}</b><div class="small muted">{{ v }}</div></label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>World conditions</h2>
+      <div class="grid g4">
+        <div><label class="f">Food items</label><input class="f" type="number" id="food" min="5" max="200" value="{{ defaults.conditions.food }}"><div class="help">5–200 per world</div></div>
+        <div><label class="f">Green share</label><input class="f" type="number" id="green_share" min="0" max="1" step="0.05" value="{{ defaults.conditions.green_share }}"><div class="help">green food is worth more</div></div>
+        <div><label class="f">Scarcity</label><input class="f" type="number" id="scarcity" min="0.3" max="4" step="0.1" value="{{ defaults.conditions.scarcity }}"><div class="help">higher = slower regrowth</div></div>
+        <div><label class="f">Hazards</label><input class="f" type="number" id="hazards" min="0" max="8" value="{{ defaults.conditions.hazards }}"><div class="help">drifting zones that drain energy</div></div>
+      </div>
+      <div class="grid g2" style="margin-top:12px">
+        <div><label class="f">Disturbance</label><select class="f" id="disturbance">
+          {% for k, v in disturbances.items() %}<option value="{{ k }}" {{ 'selected' if k == 'none' }}>{{ k.replace('_', ' ') }} — {{ v }}</option>{% endfor %}
+        </select></div>
+        <div><label class="f">Disturbance at generation</label><input class="f" type="number" id="disturbance_gen" min="1" value="{{ defaults.disturbance_gen }}"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Search</h2>
+      <div class="grid g4">
+        <div><label class="f">Population</label><input class="f" type="number" id="population" min="6" value="{{ defaults.population }}"></div>
+        <div><label class="f">Generations (max)</label><input class="f" type="number" id="generations" min="1" value="{{ defaults.generations }}"></div>
+        <div><label class="f">Islands</label><input class="f" type="number" id="islands" min="1" max="4" value="{{ defaults.islands }}"><div class="help">isolated sub-populations; migrate every {{ defaults.migration_every }} gens</div></div>
+        <div><label class="f">Cohort size</label><input class="f" type="number" id="cohort" min="2" max="16" value="{{ defaults.cohort }}"><div class="help">clones per evaluation world</div></div>
+        <div><label class="f">Episode ticks</label><input class="f" type="number" id="ticks" min="100" max="600" step="50" value="{{ defaults.ticks }}"></div>
+        <div><label class="f">Training seeds</label><input class="f" type="number" id="train_seeds" min="1" max="5" value="{{ defaults.train_seeds }}"></div>
+        <div><label class="f">Held-out seeds</label><input class="f" type="number" id="holdout_seeds" min="4" max="16" value="{{ defaults.holdout_seeds }}"><div class="help">never used during evolution</div></div>
+        <div><label class="f">Stop after stagnant gens</label><input class="f" type="number" id="stagnation" min="2" value="{{ defaults.stagnation }}"></div>
+        <div><label class="f">Mutation rate</label><input class="f" type="number" id="mutation_rate" min="0" max="1" step="0.05" value="{{ defaults.mutation_rate }}"></div>
+        <div><label class="f">Mutation size</label><input class="f" type="number" id="mutation_sigma" min="0.005" max="0.5" step="0.01" value="{{ defaults.mutation_sigma }}"><div class="help">fraction of gene range</div></div>
+        <div><label class="f">Crossover rate</label><input class="f" type="number" id="crossover_rate" min="0" max="0.9" step="0.05" value="{{ defaults.crossover_rate }}"></div>
+        <div><label class="f">Seed</label><input class="f" type="number" id="seed" min="1" placeholder="random"><div class="help">same seed + config = same run</div></div>
+      </div>
+      <label class="row small" style="margin-top:12px"><input type="checkbox" id="baseline_random"> Also run a random-search baseline with the same number of evaluations (roughly doubles cost)</label>
+    </div>
+  </div>
+
+  <div class="grid" style="gap:14px;position:sticky;top:76px">
+    <div class="card">
+      <h2>Budget</h2>
+      <div class="row" id="budgets">
+        {% for b in presets %}
+          {% set allowed = (b <= 0.1) or (is_owner and b <= 10) %}
+          <button type="button" class="chip {{ 'on' if b == 0.1 }}" data-b="{{ b }}" {% if not allowed %}disabled title="{{ 'needs owner passphrase' if b <= 10 else 'not enabled on this deployment' }}"{% endif %}>${{ '%g' % b if b >= 1 else '%.2f' % b }}</button>
+        {% endfor %}
+      </div>
+      <p class="help" style="margin-top:8px">
+        {% if is_owner %}Owner caps: up to {{ ownerlim.max_cpu_s|int }} CPU-s per experiment, ${{ '%g' % 10 }} max.
+        {% else %}Visitors: $0.10 preset, hard cap {{ public.max_cpu_s|int }} CPU-seconds per experiment, {{ public.per_ip_per_hour }} per hour, population ≤ {{ public.max_population }}, generations ≤ {{ public.max_generations }}.{% endif %}
+        Compute is priced at {{ rate.provider }}'s published rate (${{ '%.8f' % rate.usd_per_vcpu_second }} per vCPU-second). These are estimates; the hosting bill is not itemised per experiment.
+      </p>
+      <div class="card flat" style="margin-top:10px" id="estimate"></div>
+      <button class="btn big" style="width:100%;margin-top:12px;justify-content:center" type="submit" id="go">Start experiment</button>
+      <div id="msg" class="small" style="margin-top:10px"></div>
+    </div>
+    <div class="note">Darwin never fabricates generations. If a run is stopped by its cap before validation, the claim stays at <b>observed</b> or lower and the Ledger says why.</div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin, f = document.getElementById('f');
+  const owner = {{ 'true' if is_owner else 'false' }};
+  const cap = owner ? {{ ownerlim.max_cpu_s }} : {{ public.max_cpu_s }};
+  const rate = {{ rate.usd_per_vcpu_second }};
+  const preset = {{ preset|tojson }};
+  let budget = 0.10;
+  const num = id => Number(document.getElementById(id).value);
+  const val = id => document.getElementById(id).value;
+
+  // Apply a preset from the question box or an LLM assessment.
+  if (preset.goal) document.getElementById('goal').value = preset.goal;
+  if (preset.objective) { const r = f.querySelector(`input[name=objective][value="${preset.objective}"]`); if (r) r.checked = true; }
+  ['generations', 'population', 'disturbance'].forEach(k => { if (preset[k] != null) document.getElementById(k).value = preset[k]; });
+  Object.entries(preset.conditions || {}).forEach(([k, v]) => { const el = document.getElementById(k); if (el) el.value = v; });
+  if (!owner) { document.getElementById('population').max = {{ public.max_population }}; document.getElementById('generations').max = {{ public.max_generations }}; }
+
+  document.querySelectorAll('#budgets .chip').forEach(b => b.addEventListener('click', () => {
+    if (b.disabled) return;
+    document.querySelectorAll('#budgets .chip').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); budget = Number(b.dataset.b); estimate();
+  }));
+
+  function config() {
+    return {
+      objective: f.querySelector('input[name=objective]:checked').value,
+      population: num('population'), generations: num('generations'), islands: num('islands'),
+      cohort: num('cohort'), ticks: num('ticks'), train_seeds: num('train_seeds'), holdout_seeds: num('holdout_seeds'),
+      stagnation: num('stagnation'), mutation_rate: num('mutation_rate'), mutation_sigma: num('mutation_sigma'),
+      crossover_rate: num('crossover_rate'), disturbance: val('disturbance'), disturbance_gen: num('disturbance_gen'),
+      baseline_random: document.getElementById('baseline_random').checked,
+      seed: val('seed') ? num('seed') : null,
+      conditions: { food: num('food'), green_share: num('green_share'), scarcity: num('scarcity'), hazards: num('hazards') },
+    };
+  }
+
+  // Rough CPU estimate from measured throughput (~8 ms per candidate-seed at cohort 8, 300 ticks, 30 food).
+  function estimate() {
+    const c = config();
+    const perEval = 0.008 * (c.ticks / 300) * (0.4 + 0.6 * c.cohort / 8) * (0.6 + 0.4 * c.conditions.food / 30) * (c.objective === 'thrive' ? 3.5 : 1);
+    const evo = c.population * c.generations * c.train_seeds * perEval * 0.85;
+    const val = 4 * c.holdout_seeds * perEval;
+    const base = c.baseline_random ? evo : 0;
+    const total = evo + val + base;
+    const limit = Math.min(cap, budget / rate);
+    const fits = total <= limit * 0.95;
+    document.getElementById('estimate').innerHTML =
+      `<div class="metric"><div class="k">Estimated compute</div><div class="v">${total < 1 ? total.toFixed(2) : total.toFixed(0)} CPU-s</div>
+       <div class="n">≈ ${D.usd(total * rate)} · cap ${Math.round(limit)} CPU-s (${D.usd(limit * rate)})</div></div>
+       <p class="small ${fits ? 'muted' : 'warn'}" style="margin:8px 0 0">${fits ? 'Fits within the cap.' : 'Likely to hit the cap: evolution will stop early (60% of the cap is for evolution, 40% reserved for validation). That is recorded, not hidden.'}</p>`;
+  }
+  f.addEventListener('input', estimate); estimate();
+
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('go'), msg = document.getElementById('msg');
+    btn.disabled = true; msg.textContent = 'Queuing…'; msg.className = 'small muted';
+    try {
+      const d = await D.api('/darwin/api/experiments', { method: 'POST', body: {
+        title: val('title'), goal: val('goal'), budget_usd: budget, config: config() } });
+      location.href = d.url;
+    } catch (err) {
+      msg.className = 'small err'; msg.textContent = err.message; btn.disabled = false;
+    }
+  });
+})();
+</script>
+{% endblock %}

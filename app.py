@@ -60,6 +60,9 @@ app = Flask(__name__)
 from studio import bp as studio_bp  # noqa: E402  (Book Studio: print-to-PDF designer + hosted viewer)
 app.register_blueprint(studio_bp)
 
+from darwin.web import bp as darwin_bp  # noqa: E402  (Darwin: the engine behind the secret book)
+app.register_blueprint(darwin_bp)
+
 
 @app.after_request
 def add_cache_headers(response):

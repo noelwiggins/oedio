@@ -1,0 +1,19 @@
+{% extends "darwin/base.html" %}
+{% block title %}Owner — DARWIN{% endblock %}
+{% block content %}
+<div class="card" style="max-width:460px;margin:30px auto">
+  <p class="eyebrow">Owner mode</p>
+  {% if msg %}<p class="small {{ 'err' if not ok and 'off' not in msg else '' }}">{{ msg }}</p>{% endif %}
+  {% if ok %}
+    <p>Owner mode is on in this browser. You can run larger experiments (up to $10), request LLM feasibility assessments, and stop any experiment.</p>
+    <a class="btn outline" href="/darwin/owner?logout=1">Turn off</a>
+  {% else %}
+    <p class="small muted">Visitors can watch Darwin World, run capped Life Lab experiments and read everything. The owner passphrase unlocks larger budgets and LLM calls.</p>
+    <form method="post">
+      <label class="f" for="key">Passphrase</label>
+      <input class="f" type="password" id="key" name="key" autocomplete="current-password" required>
+      <button class="btn" style="margin-top:12px" type="submit">Enter</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "darwin/base.html" %}
+{% block title %}Ledger — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Darwin Ledger · append-only</p>
+<h1 class="page">What Darwin knew, tried, observed, concluded and spent</h1>
+<p class="lede">Every event is permanent. The database refuses updates and deletes on this table, and each event's SHA-256 hash covers the
+  previous event's hash, so any edit to history breaks the chain from that point on. Corrections are new events.</p>
+<div class="card flat row" style="justify-content:space-between">
+  <div class="row">
+    <input class="f" id="type" placeholder="filter by type, e.g. claim.* or failure.*" style="width:280px">
+    <input class="f" id="exp" type="number" placeholder="experiment #" style="width:140px">
+    <button class="btn tonal" id="apply">Filter</button>
+  </div>
+  <div class="row"><span id="verify-out" class="small muted"></span><button class="btn outline" id="verify">Verify chain</button></div>
+</div>
+<div class="grid g4 section" id="totals"></div>
+<div class="card section scroll-x" style="padding:0"><table class="t" id="ev"></table></div>
+<div style="text-align:center;margin-top:14px"><button class="btn text" id="more">Older events</button></div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin, qs = new URLSearchParams(location.search);
+  document.getElementById('type').value = qs.get('type') || '';
+  document.getElementById('exp').value = qs.get('experiment') || '';
+  let oldest = null;
+  async function load(reset) {
+    const p = new URLSearchParams();
+    const t = document.getElementById('type').value.trim(), e = document.getElementById('exp').value.trim();
+    if (t) p.set('type', t); if (e) p.set('experiment', e);
+    if (!reset && oldest) p.set('before', oldest);
+    const d = await D.api('/darwin/api/ledger?' + p);
+    const tb = document.getElementById('ev');
+    if (reset) {
+      tb.innerHTML = '<tr><th>#</th><th>time</th><th>type</th><th>experiment</th><th>details</th><th>cost</th><th>hash</th></tr>';
+      const sp = d.spent || {};
+      document.getElementById('totals').innerHTML = [
+        ['Events', D.num(d.total, 0), 'all time'],
+        ['Compute (estimated)', D.usd(sp.estimated || 0), 'priced at hosting rate'],
+        ['LLM (billed)', D.usd(sp.billed || 0), 'provider-reported tokens'],
+        ['Showing', d.events.length + (d.events.length === 100 ? '+' : ''), t || e ? 'filtered' : 'newest first']
+      ].map(([k, v, n]) => `<div class="card flat metric"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+    }
+    d.events.forEach(ev => {
+      const pl = JSON.stringify(ev.payload);
+      tb.insertAdjacentHTML('beforeend', `<tr><td class="mono">${ev.id}</td><td class="small mono">${D.when(ev.ts)}</td>
+        <td class="mono small ${ev.type.startsWith('failure') ? 'err' : ev.type.startsWith('claim') ? 'warn' : ''}">${D.esc(ev.type)}</td>
+        <td>${ev.experiment ? `<a class="mono small" href="/darwin/experiment/${ev.experiment_id}">${ev.experiment}</a>` : ''}</td>
+        <td><details><summary class="small">${D.esc(pl.slice(0, 90))}${pl.length > 90 ? '…' : ''}</summary><pre class="json">${D.esc(JSON.stringify({ payload: ev.payload, provenance: ev.provenance, version: ev.version, parent: ev.parent_id, prev_hash: ev.prev_hash }, null, 2))}</pre></details></td>
+        <td class="small">${ev.cost_usd ? D.usd(ev.cost_usd) + ' <span class="muted">' + ev.cost_kind + '</span>' : ''}</td>
+        <td class="mono small muted" title="${ev.hash}">${ev.hash.slice(0, 10)}</td></tr>`);
+      oldest = ev.id;
+    });
+    document.getElementById('more').style.display = d.events.length === 100 ? '' : 'none';
+  }
+  document.getElementById('apply').onclick = () => { oldest = null; load(true); };
+  document.getElementById('more').onclick = () => load(false);
+  document.getElementById('verify').onclick = async () => {
+    const o = document.getElementById('verify-out'); o.textContent = 'verifying…';
+    try { const v = await D.api('/darwin/api/ledger/verify'); o.innerHTML = v.ok ? `<span style="color:var(--md-sys-color-primary)">✓ ${v.checked} events, chain intact</span>` : `<span class="err">✗ chain breaks at event ${v.bad_event}</span>`; }
+    catch (e) { o.textContent = e.message; }
+  };
+  load(true);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends "darwin/base.html" %}
+{% block title %}DARWIN — Watch Darwin learn{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <div class="terrarium" id="terra">
+      <canvas id="world" aria-label="Darwin World, a live artificial-life simulation"></canvas>
+      <div class="terra-tag" id="terra-tag"><i></i><span>connecting</span></div>
+      <div class="terra-legend"><span style="--c:var(--dw-amber)">amber diet</span><span style="--c:var(--dw-green)">green diet</span><span style="--c:var(--dw-hazard)">hazard</span></div>
+    </div>
+    <p class="small muted" style="margin:8px 2px 0">
+      Live, server-side simulation shared by every visitor. Each dot is a creature with a heritable genome;
+      size is body size, colour is diet. Nothing is scripted: offspring inherit mutated genes and the environment does the selecting.
+      The world advances while it is being watched.
+    </p>
+  </div>
+  <div>
+    <p class="eyebrow" id="era-line">Darwin World</p>
+    <h1 class="display"><span>Watch Darwin learn.</span><span>Give Darwin a problem.</span><span>See what evolves.</span></h1>
+    <div class="grid g4" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:6px">
+      <div class="card flat metric"><div class="k">Population</div><div class="v" id="m-pop">—</div><svg class="spark" id="sp-pop"></svg></div>
+      <div class="card flat metric"><div class="k">Deepest generation</div><div class="v" id="m-gen">—</div><div class="n" id="m-gen-n">descendants of the founders</div></div>
+      <div class="card flat metric"><div class="k">Births · deaths</div><div class="v" id="m-bd">—</div><div class="n">since this era began</div></div>
+      <div class="card flat metric"><div class="k">Grouping (Clark–Evans R)</div><div class="v" id="m-R">—</div><div class="n" id="m-R-n">&lt;1 clustered · 1 random · &gt;1 spaced</div></div>
+    </div>
+    <div class="card flat" style="margin-top:12px">
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">Diet mix</h3><span class="small muted" id="m-season">season</span></div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0 6px" id="diet-bar"></div>
+      <div class="small muted" id="diet-txt"></div>
+      <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px" id="trait-sparks"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section prompt">
+  <p class="prompt-q">WHAT DO YOU WANT DARWIN TO DISCOVER?</p>
+  <form class="box" id="ask">
+    <input id="goal" maxlength="2000" placeholder="e.g. how creatures should behave when food suddenly becomes scarce" autocomplete="off">
+    <button class="btn" type="submit">Ask Darwin</button>
+  </form>
+  <div class="row small muted" style="margin:8px 4px 0;gap:14px">
+    <span>Try:</span>
+    <a href="#" data-g="evolve creatures that survive among hazards">survival among hazards</a>
+    <a href="#" data-g="what diet wins when food becomes scarce">diet under scarcity</a>
+    <a href="#" data-g="organize my kitchen for faster cooking">organize a kitchen</a>
+    <a href="#" data-g="improve how visitors navigate my website">website navigation</a>
+    {% if is_owner %}<label style="margin-left:auto"><input type="checkbox" id="use-llm" checked> full LLM assessment (owner; billed)</label>{% endif %}
+  </div>
+  <div class="assess" id="assess"></div>
+</section>
+
+<section class="section">
+  <h2>One engine, many worlds</h2>
+  <div class="grid g3">
+    {% for key, lab in labs.items() %}
+    <div class="card lab-card">
+      <span class="pill s-{{ 'operational' if lab.status == 'operational' else ('experimental' if lab.status == 'experimental' else 'planned') }}">{{ lab.status.split(' ')[0] }}</span>
+      <h3>{{ lab.name }}</h3>
+      <p class="small muted" style="margin:0 0 10px;padding-right:80px">{{ lab.about }}</p>
+      {% if key == 'life' %}<a class="btn tonal" href="/darwin/lab/life">Design an experiment</a>
+      {% elif key == 'open' %}<span class="small muted">Use the question box above.</span>
+      {% else %}<span class="small muted">{{ lab.status }}. Not simulated yet; Darwin will say so rather than guess.</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Recent experiments</h2><a class="small" href="/darwin/history">All →</a></div>
+    {% if experiments %}
+    <table class="t" style="margin-top:8px"><tbody>
+      {% for e in experiments %}
+      <tr><td><a href="/darwin/experiment/{{ e.id }}" class="mono">{{ e.label }}</a></td><td>{{ e.title }}</td>
+        <td><span class="pill s-{{ e.status }}">{{ e.status }}</span></td></tr>
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="muted small">No experiments yet. <a href="/darwin/lab/life">Run the first one.</a></p>{% endif %}
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Latest claims</h2><a class="small" href="/darwin/history#claims">All →</a></div>
+    {% if claims %}
+    <div style="margin-top:10px">
+    {% for c in claims %}
+      <div class="claim s-{{ c.status|replace(' ', '-') }}"><span class="mono small">{{ c.label }}</span> <span class="pill s-{{ c.status|replace(' ', '-') }}">{{ c.status }}</span>
+        <div class="small" style="margin-top:4px">{{ c.statement }}</div></div>
+    {% endfor %}
+    </div>
+    {% else %}<p class="muted small">No claims yet. Claims appear only after an experiment produces evidence, and move through candidate → observed → replicated → robust only when tests pass.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin;
+  const canvas = document.getElementById('world');
+  const ctx = canvas.getContext('2d');
+  const tag = document.getElementById('terra-tag');
+  let frames = [], scene = null, arena = 100, tps = 10, lastTick = -1, playT = null, lastRAF = null, failures = 0;
+
+  // Layout size (clientWidth), not getBoundingClientRect: the page may still be
+  // mid-swing through the bookcase, and a transformed rect would squash the canvas.
+  function resize() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+  window.addEventListener('resize', resize); resize();
+
+  async function poll() {
+    try {
+      const d = await D.api('/darwin/api/world/frames?since=' + lastTick);
+      failures = 0;
+      arena = d.arena; tps = d.tps; scene = d.scene;
+      d.frames.forEach(f => { if (f.t > lastTick) { frames.push(f); lastTick = f.t; } });
+      if (frames.length > 80) frames = frames.slice(-80);
+      if (playT == null && frames.length) playT = frames[0].t;
+      tag.className = 'terra-tag live';
+      tag.querySelector('span').textContent = 'live · tick ' + d.stats.tick.toLocaleString();
+      stats(d.stats, d.resumed_from);
+    } catch (e) {
+      failures++;
+      tag.className = 'terra-tag';
+      tag.querySelector('span').textContent = 'paused: ' + (failures > 2 ? 'connection lost' : 'retrying');
+    }
+    setTimeout(poll, document.hidden ? 4000 : 900);
+  }
+
+  function lerpFrames(t) {
+    let i = frames.findIndex(f => f.t > t);
+    if (i === -1) return { a: frames[frames.length - 1], b: null, k: 0 };
+    if (i === 0) return { a: frames[0], b: null, k: 0 };
+    const a = frames[i - 1], b = frames[i];
+    return { a, b, k: (t - a.t) / (b.t - a.t) };
+  }
+
+  function draw(ts) {
+    const dt = lastRAF ? Math.min(0.1, (ts - lastRAF) / 1000) : 0; lastRAF = ts;
+    resize();
+    const W = canvas.clientWidth, H = canvas.clientHeight, s = W / (arena * 10);
+    ctx.clearRect(0, 0, W, H);
+    if (scene) {
+      scene.hazards.forEach(([x, y]) => {
+        const r = scene.hazard_radius * 10 * s;
+        const g = ctx.createRadialGradient(x * s, y * s, 0, x * s, y * s, r);
+        g.addColorStop(0, 'rgba(255,110,90,.28)'); g.addColorStop(1, 'rgba(255,110,90,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x * s, y * s, r, 0, 7); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,138,122,.45)'; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(x * s, y * s, r, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      });
+      scene.food.forEach(([x, y, t]) => {
+        ctx.fillStyle = t ? 'rgba(125,216,181,.55)' : 'rgba(233,191,109,.6)';
+        ctx.fillRect(x * s - 1.5, y * s - 1.5, 3, 3);
+      });
+    }
+    if (frames.length) {
+      // Play about 1.5 s behind the newest frame so motion stays smooth between polls.
+      const newest = frames[frames.length - 1].t;
+      playT = Math.max(frames[0].t, Math.min(newest, (playT || newest) + dt * tps));
+      if (newest - playT > tps * 4) playT = newest - tps * 1.5;
+      const { a, b, k } = lerpFrames(playT);
+      const nb = b ? new Map(b.c.map(c => [c[0], c])) : null;
+      a.c.forEach(c => {
+        let x = c[1], y = c[2], alpha = 1;
+        if (nb) { const n = nb.get(c[0]); if (n) { x += (n[1] - x) * k; y += (n[2] - y) * k; } else alpha = 1 - k; }
+        const r = Math.max(1.6, c[3] / 10 * 2.3 * s * 10 / 4);
+        ctx.fillStyle = D.dietColor(c[4] / 100, 0.9 * alpha);
+        ctx.beginPath(); ctx.arc(x * s, y * s, r, 0, 7); ctx.fill();
+        const e = Math.min(1, c[5] / 90);
+        ctx.strokeStyle = `rgba(255,255,255,${0.15 + 0.5 * e * alpha})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x * s, y * s, r + 1.2, -Math.PI / 2, -Math.PI / 2 + e * 6.283); ctx.stroke();
+      });
+    }
+    requestAnimationFrame(draw);
+  }
+
+  const hist = { population: [], speed: [], sense: [], size: [], w_crowd: [], w_hazard: [], pref: [] };
+  function stats(s, resumed) {
+    document.getElementById('era-line').textContent = `Darwin World · era ${s.era}` + (resumed != null ? ` · resumed from checkpoint at tick ${resumed.toLocaleString()}` : '');
+    document.getElementById('m-pop').textContent = s.population;
+    document.getElementById('m-gen').textContent = s.max_generation != null ? s.max_generation : '—';
+    document.getElementById('m-gen-n').textContent = s.mean_generation != null ? `mean generation ${s.mean_generation}` : '';
+    document.getElementById('m-bd').textContent = `${s.births.toLocaleString()} · ${s.deaths.toLocaleString()}`;
+    document.getElementById('m-R').textContent = s.clark_evans_R != null ? s.clark_evans_R.toFixed(2) : '—';
+    if (s.clark_evans_R != null) {
+      const R = s.clark_evans_R;
+      document.getElementById('m-R-n').textContent = R < 0.85 ? 'creatures are clustering' : R > 1.15 ? 'creatures are spacing out' : 'close to random placement';
+    }
+    document.getElementById('m-season').textContent = `season: ${Math.round(s.green_share * 100)}% of new food is green`;
+    if (s.population) {
+      const a = s.diet_amber_specialists, g = s.diet_green_specialists, m = s.diet_generalists;
+      document.getElementById('diet-bar').innerHTML =
+        `<div style="width:${a * 100}%;background:var(--dw-amber)"></div><div style="width:${m * 100}%;background:var(--md-sys-color-outline)"></div><div style="width:${g * 100}%;background:var(--dw-green)"></div>`;
+      document.getElementById('diet-txt').textContent = `${Math.round(a * 100)}% amber specialists · ${Math.round(m * 100)}% generalists · ${Math.round(g * 100)}% green specialists`;
+    }
+  }
+
+  async function loadHistory() {
+    try {
+      const h = await D.api('/darwin/api/world/history?limit=300');
+      const cur = h.length ? h[h.length - 1].era : null;
+      const rows = h.filter(r => r.era === cur);
+      D.spark(document.getElementById('sp-pop'), rows.map(r => r.population), D.css('--md-sys-color-primary'));
+      const box = document.getElementById('trait-sparks');
+      box.innerHTML = '';
+      ['speed', 'sense', 'size', 'pref', 'w_crowd', 'w_hazard'].forEach(k => {
+        const vals = rows.map(r => r.mean_genome ? r.mean_genome[k] : null);
+        const last = vals.length ? vals[vals.length - 1] : null;
+        const div = document.createElement('div');
+        div.innerHTML = `<div class="small mono muted">${k} <b style="color:var(--md-sys-color-on-surface)">${D.num(last, 2)}</b></div><svg class="spark"></svg>`;
+        box.appendChild(div);
+        D.spark(div.querySelector('svg'), vals, D.css('--md-sys-color-tertiary'));
+      });
+      if (rows.length < 2) box.insertAdjacentHTML('beforeend', '<div class="small muted" style="grid-column:1/-1">Mean-trait drift appears after a few minutes of watching (logged every 50 ticks).</div>');
+    } catch (e) { }
+    setTimeout(loadHistory, 15000);
+  }
+
+  // ── question box ─────────────────────────────────────
+  const form = document.getElementById('ask'), out = document.getElementById('assess');
+  document.querySelectorAll('[data-g]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); document.getElementById('goal').value = a.dataset.g; form.requestSubmit();
+  }));
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const goal = document.getElementById('goal').value.trim();
+    if (!goal) return;
+    const llm = !!(document.getElementById('use-llm') || {}).checked;
+    out.innerHTML = `<div class="card flat small muted">${llm ? 'Asking for a feasibility assessment…' : 'Routing…'}</div>`;
+    try {
+      const d = await D.api('/darwin/api/assess', { method: 'POST', body: { goal, llm } });
+      const r = d.routing;
+      let h = `<div class="card flat"><div class="row"><span class="pill ${D.statusClass(r.lab_status.split(' ')[0])}">${D.esc(r.lab_name)} · ${D.esc(r.lab_status)}</span><span class="small muted">${D.esc(r.method)}</span></div>
+        <p style="margin:10px 0 6px">${D.esc(r.message)}</p><div class="small muted">Simulatability: ${D.esc(r.simulatability)}</div>`;
+      if (r.suggested) h += `<div style="margin-top:12px"><a class="btn" href="/darwin/lab/life?preset=${encodeURIComponent(JSON.stringify(Object.assign({ goal }, r.suggested)))}">Set up this experiment</a></div>`;
+      h += `</div>`;
+      const a = d.assessment;
+      if (a && a.error) h += `<div class="card flat err" style="margin-top:10px">${D.esc(a.error)}</div>`;
+      else if (a) {
+        const list = (t, xs) => xs && xs.length ? `<h3 style="margin-top:12px">${t}</h3><ul class="small" style="margin:0;padding-left:18px">${xs.map(x => `<li>${D.esc(x)}</li>`).join('')}</ul>` : '';
+        h += `<div class="card" style="margin-top:10px"><div class="row"><span class="pill ${a.simulatability === 'high' ? 's-operational' : a.simulatability === 'partial' ? 's-experimental' : 's-failed'}">simulatability: ${D.esc(a.simulatability)}</span>
+          <span class="small muted">LLM assessment · ${D.esc(a.call.model)} · ${a.call.usage.input_tokens || 0}+${a.call.usage.output_tokens || 0} tokens · ${D.usd(a.call.cost_usd)} billed</span></div>
+          <p style="margin:10px 0 0"><b>${D.esc(a.restated_goal || '')}</b></p><p class="small" style="margin:6px 0">${D.esc(a.testable_hypothesis || '')}</p>
+          ${list('Assumptions', a.assumptions)}${list('Missing data', a.missing_data)}${list('Objective metrics', a.objective_metrics)}
+          ${list('Needs human input', a.required_human_input)}${list('Limits on conclusions', a.limits_on_conclusions)}${list('Research plan', a.research_plan)}
+          ${a.config_rejected ? `<p class="small err">Proposed config rejected: ${D.esc(a.config_rejected.join('; '))}</p>` : ''}
+          ${a.runnable_now && a.life_lab_config ? `<div style="margin-top:12px"><a class="btn" href="/darwin/lab/life?preset=${encodeURIComponent(JSON.stringify(Object.assign({ goal }, a.life_lab_config)))}">Run this in Life Lab</a></div>` : ''}
+        </div>`;
+      }
+      out.innerHTML = h;
+    } catch (err) { out.innerHTML = `<div class="card flat err">${D.esc(err.message)}</div>`; }
+  });
+
+  poll(); loadHistory(); requestAnimationFrame(draw);
+})();
+</script>
+{% endblock %}

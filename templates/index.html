@@ -174,6 +174,29 @@
   .cr-card .cr-page { font-size:10.5px; color:var(--md-sys-color-on-surface-variant); margin-top:8px;
     text-transform:uppercase; letter-spacing:.04em; }
 
+  /* ===================== The secret volume ===================== */
+  /* One slim spine, bound in green, filed beside Science. It is the
+     lever of a revolving bookcase: pull it and the library turns. */
+  .r-spine.r-secret { border-radius:2px 5px 5px 2px; transform-origin:50% 100%;
+    box-shadow:2px 2px 9px rgba(0,0,0,.6), inset 0 0 22px rgba(0,0,0,.5), inset 2px 0 0 rgba(0,0,0,.3); }
+  .r-spine.r-secret::before { border-color:rgba(205,169,79,.32); }
+  .r-spine.r-secret .rs-title { font-size:10px; letter-spacing:.12em; max-height:132px; opacity:.86; }
+  .r-spine.r-secret:hover { box-shadow:0 0 0 1px rgba(125,216,181,.25), 2px 2px 14px rgba(0,0,0,.6), inset 0 0 22px rgba(0,0,0,.5); }
+  .r-spine.r-secret.levering { transition:transform .45s cubic-bezier(.3,.7,.2,1); }
+  html.bookcase-turn { perspective:1600px; background:#050908;
+    background-image:radial-gradient(60% 50% at 50% 50%, rgba(125,216,181,.10), transparent 70%); overflow:hidden; }
+  html.bookcase-turn body { animation:bookcaseTurn .78s cubic-bezier(.55,0,.8,.3) both; }
+  @keyframes bookcaseTurn { to { transform:rotateY(88deg) translateZ(-120px); filter:brightness(.25); } }
+  html.bookcase-click body { animation:bookcaseClick .26s steps(6) both; }
+  @keyframes bookcaseClick { 0%,100% { transform:none; } 25% { transform:translate(1.5px,-1px); } 50% { transform:translate(-1.5px,1px); } 75% { transform:translate(1px,1px); } }
+  html.bookcase-return { perspective:1600px; background:#050908; overflow:hidden; }
+  html.bookcase-return body { animation:bookcaseReturn .95s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes bookcaseReturn { from { transform:rotateY(88deg) translateZ(-120px); filter:brightness(.25); } to { transform:none; filter:none; } }
+  @media (prefers-reduced-motion: reduce) {
+    html.bookcase-turn body, html.bookcase-return body, html.bookcase-click body { animation:none; }
+    html.bookcase-turn body { opacity:0; transition:opacity .25s; }
+  }
+
   .all-shelf-label { max-width:900px; margin:26px auto 0; padding:0 24px 8px;
     font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
     color:var(--md-sys-color-on-surface-variant); text-align:center; }
@@ -434,6 +457,63 @@
     rotunda.appendChild(el);
   });
 
+  // ── The secret volume: filed beside Science, opens the Darwin portal ──
+  (function addSecretVolume() {
+    const host = Array.from(rotunda.querySelectorAll('.r-spine')).find(e => e.dataset.slug === 'science')
+      || rotunda.querySelector('.r-spine:last-child');
+    if (!host) return;
+    const hostW = parseFloat(host.style.getPropertyValue('--w'));
+    const w = 30;
+    const angle = parseFloat(host.dataset.angle) + ((hostW / 2 + w / 2 + 3) / radius) * 180 / Math.PI;
+    const el = document.createElement('a');
+    el.className = 'r-spine r-secret';
+    el.href = '/darwin/';
+    el.setAttribute('aria-label', 'A slim green volume');
+    el.style.setProperty('--w', w);
+    el.style.background = '#1d3a2f';
+    el.style.height = '176px'; el.style.marginTop = '-81px';
+    el.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+    el.dataset.angle = angle;
+    el.dataset.secret = '1';
+    el.innerHTML = '<span class="rs-band-b"></span><span class="rs-title">ORIGIN OF SPECIES</span>';
+    el.addEventListener('click', e => { e.preventDefault(); openPortal(el); });
+    rotunda.appendChild(el);
+  })();
+
+  function openPortal(spine) {
+    if (spine.classList.contains('levering')) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const angle = parseFloat(spine.dataset.angle);
+    spine.classList.add('levering');
+    // 1. the book tips forward on its bottom edge, like a lever
+    spine.style.transform = `rotateY(${angle}deg) translateZ(${radius + 14}px) rotateX(22deg)`;
+    const html = document.documentElement, body = document.body;
+    const bar = document.querySelector('.top-app-bar');
+    setTimeout(() => {
+      // 2. the mechanism catches
+      if (!reduce) html.classList.add('bookcase-click');
+      setTimeout(() => {
+        html.classList.remove('bookcase-click');
+        // 3. the whole library turns on its pivot
+        body.style.transformOrigin = `50% ${window.scrollY + window.innerHeight / 2}px`;
+        if (bar) { bar.style.position = 'absolute'; bar.style.top = window.scrollY + 'px'; }
+        html.classList.add('bookcase-turn');
+        setTimeout(() => { location.href = '/darwin/?via=portal'; }, reduce ? 250 : 720);
+      }, reduce ? 0 : 280);
+    }, reduce ? 0 : 430);
+  }
+
+  // Returning from Darwin: the bookcase swings back around.
+  if (new URLSearchParams(location.search).get('from') === 'darwin') {
+    const html = document.documentElement;
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.body.style.transformOrigin = `50% ${window.innerHeight / 2}px`;
+      html.classList.add('bookcase-return');
+      setTimeout(() => { html.classList.remove('bookcase-return'); document.body.style.transformOrigin = ''; }, 1000);
+    }
+    history.replaceState(null, '', location.pathname);
+  }
+
   let currentAngle = -angleStep * 0.5;
   let scale = 1;
   let velocity = 0;
@@ -487,7 +567,8 @@
     if (moved < 6) {
       fadeHint();
       const spine = target && target.closest ? target.closest('.r-spine') : null;
-      if (spine) openSpine(spine);
+      if (spine && spine.dataset.secret) openPortal(spine);
+      else if (spine) openSpine(spine);
     } else {
       fadeHint();
     }

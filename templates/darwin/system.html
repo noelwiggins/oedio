@@ -1,0 +1,70 @@
+{% extends "darwin/base.html" %}
+{% block title %}System — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">System</p>
+<h1 class="page">Darwin is the engine. Worlds are what it enters.</h1>
+<p class="lede">This is Phase 1, the nucleus: the Core, one World (Life), lineage, cost, the Ledger, replay and snapshots.
+  Below is what works, what is experimental, what is planned and what is unsupported, with nothing implied beyond that.</p>
+
+<section class="card scroll-x">
+  <h2>Capability status</h2>
+  <table class="t">
+    {% for area, status, note in caps %}
+    <tr><td><span class="pill s-{{ status }}">{{ status }}</span></td><td>{{ area }}</td><td class="small muted">{{ note }}</td></tr>
+    {% endfor %}
+  </table>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2>Life World interface</h2>
+    <table class="t small">
+      {% for k in ['id', 'version', 'goal', 'actions', 'constraints', 'candidate_representation', 'evaluation', 'uncertainty', 'fidelity', 'validation', 'cost_model'] %}
+      <tr><td class="mono muted">{{ k }}</td><td>{{ spec[k] }}</td></tr>
+      {% endfor %}
+      <tr><td class="mono muted">entities</td><td>{{ spec.entities|join('; ') }}</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h2>Genome</h2>
+    <table class="t small">
+      <tr><th>gene</th><th>range</th><th>meaning</th></tr>
+      {% for g in spec.genes %}<tr><td class="mono">{{ g.name }}</td><td class="mono">{{ g.low }}–{{ g.high }}</td><td>{{ g.meaning }}</td></tr>{% endfor %}
+    </table>
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2>Variation operators</h2>
+    <table class="t small">{% for k, v in operators.items() %}<tr><td class="mono">{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}
+      {% for k, v in not_applicable.items() %}<tr><td class="mono muted">{{ k }}</td><td class="muted">not applicable: {{ v }}</td></tr>{% endfor %}</table>
+    <h3 style="margin-top:16px">Disturbances</h3>
+    <table class="t small">{% for k, v in disturbances.items() %}<tr><td class="mono">{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table>
+  </div>
+  <div class="card">
+    <h2>Costs and limits</h2>
+    <table class="t small">
+      <tr><td>Compute rate</td><td>${{ '%.8f' % rates.usd_per_vcpu_second }} per vCPU-second ({{ rates.provider }}, read {{ rates.read_on }})</td></tr>
+      <tr><td>Memory rate</td><td>${{ '%.8f' % rates.usd_per_gb_second }} per GB-second</td></tr>
+      <tr><td>Electricity estimate</td><td>{{ rates.watts_per_vcpu_estimate }} W per busy vCPU</td></tr>
+      {% for m, p in llm_prices.items() %}<tr><td>LLM {{ m }}</td><td>${{ p.input }} in · ${{ p.output }} out per million tokens</td></tr>{% endfor %}
+      <tr><td colspan="2" class="muted">{{ llm_note }}</td></tr>
+      <tr><td>Visitor experiments</td><td>{{ public.max_cpu_s|int }} CPU-s each · {{ public.per_ip_per_hour }}/hour · {{ public.daily_cpu_s|int }} CPU-s/day shared · queue ≤ {{ public.max_queue }}</td></tr>
+    </table>
+    <p class="note" style="margin-top:12px">Compute dollars are estimates of marginal resource use at the published rate, not invoices. LLM dollars come from provider-reported token counts. The two are never mixed. A billing cap cannot be guaranteed without provider-side controls; Darwin enforces its own CPU limits with budget checks plus a kernel CPU rlimit on the worker.</p>
+  </div>
+</section>
+
+<section class="section card">
+  <h2>Integrity rules in force</h2>
+  <ul class="small" style="margin:0;padding-left:18px;line-height:1.8">
+    <li>World simulation is genuine: no scripted behaviour, no fabricated generations. Re-simulations and replays are labelled as such.</li>
+    <li>Training and held-out seeds are disjoint by construction; claims move to <i>replicated</i> only on held-out evidence (≥ 7/8 wins, one-sided sign test p ≤ 0.05).</li>
+    <li>Stopping is never treated as success; every stop reason is recorded.</li>
+    <li>The Ledger and claim-status history are append-only (database triggers) and hash-chained (SHA-256).</li>
+    <li>Visitor goal text and imported text are untrusted. The LLM assessor has no tools, gets the goal as quoted data, and only validated JSON is accepted. Proposed configs are re-validated against limits.</li>
+    <li>Exports redact anything that looks like a credential; visitors are identified only by a salted hash.</li>
+  </ul>
+</section>
+{% endblock %}
