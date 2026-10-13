@@ -1345,14 +1345,26 @@ def _fetch_bytes(url):
         with open(os.path.join(BASE_DIR, url.lstrip("/")), "rb") as fh:
             return fh.read()
     last = None
-    for attempt in range(3):
+    for attempt in range(4):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": UA})
-            with urllib.request.urlopen(req, timeout=40) as r:
+            req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "image/*,*/*;q=0.8"})
+            with urllib.request.urlopen(req, timeout=45) as r:
                 return r.read(60_000_000)
+        except urllib.error.HTTPError as e:
+            last = e
+            wait = 2.0 * (attempt + 1)
+            if e.code in (429, 503):
+                try:
+                    wait = max(wait, min(20.0, float(e.headers.get("Retry-After", 0))))
+                except (TypeError, ValueError):
+                    pass
+            elif e.code in (400, 401, 403, 404):
+                if attempt >= 1:
+                    break
+            time.sleep(wait)
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(1.5 * (attempt + 1))
+            time.sleep(2.0 * (attempt + 1))
     raise last
 
 
@@ -1423,22 +1435,24 @@ def build_book(jobdir: str):
                 urls.append(u)
         urls = list(dict.fromkeys(urls))
         failed = 0
+        first_err = ""
         if urls:
             done = 0
-            with ThreadPoolExecutor(max_workers=6) as ex:
+            with ThreadPoolExecutor(max_workers=4) as ex:
                 futs = {ex.submit(prepare_image, u, ctx.spec["quality"]): u for u in urls}
                 for f in as_completed(futs):
                     u = futs[f]
                     try:
                         ctx.images[u] = f.result()
-                    except Exception:  # noqa: BLE001
+                    except Exception as e:  # noqa: BLE001
                         failed += 1
+                        first_err = first_err or f"{type(e).__name__}: {e}"[:160]
                     done += 1
                     if done % 3 == 0 or done == len(urls):
                         prog.update(stage=f"Fetching page scans ({done}/{len(urls)})",
                                     pct=5 + int(55 * done / len(urls)))
         if failed:
-            ctx.warnings.append(f"{failed} page scan(s) could not be fetched and appear as 'scan unavailable'.")
+            ctx.warnings.append(f"{failed} page scan(s) could not be fetched and appear as 'scan unavailable'. ({first_err})")
 
         # -- 2. render ---------------------------------------------------------
         from weasyprint import HTML
