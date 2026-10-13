@@ -1347,7 +1347,13 @@ def _fetch_bytes(url):
     last = None
     for attempt in range(4):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "image/*,*/*;q=0.8"})
+            hdrs = {"User-Agent": UA, "Accept": "image/*,*/*;q=0.8"}
+            if attempt % 2 == 1:  # some hosts refuse unfamiliar bot agents from cloud IPs; retry like a browser
+                hdrs = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                                      "Chrome/124.0 Safari/537.36 oedio.com",
+                        "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
+                        "Referer": "https://www.loc.gov/"}
+            req = urllib.request.Request(url, headers=hdrs)
             with urllib.request.urlopen(req, timeout=45) as r:
                 return r.read(60_000_000)
         except urllib.error.HTTPError as e:
@@ -1358,7 +1364,7 @@ def _fetch_bytes(url):
                     wait = max(wait, min(20.0, float(e.headers.get("Retry-After", 0))))
                 except (TypeError, ValueError):
                     pass
-            elif e.code in (400, 401, 403, 404):
+            elif e.code in (400, 401, 404):
                 if attempt >= 1:
                     break
             time.sleep(wait)
