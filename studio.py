@@ -168,25 +168,75 @@ def api_create_job():
     if _running_jobs() >= MAX_CONCURRENT:
         return _err("The studio is busy typesetting other books. Please try again in a minute.", 503)
     _cleanup()
+    try:
+        need, quality = bb.client_fetch_urls(spec)
+    except bb.SpecError as e:
+        return _err(str(e))
     job_id = secrets.token_hex(8)
     d = os.path.join(bb.export_root(), job_id)
     os.makedirs(d)
     with open(os.path.join(d, "spec.json"), "w", encoding="utf-8") as fh:
         json.dump(spec, fh)
+    hits.append(time.time())
+    _ip_hits[ip] = hits
+    if need:
+        # Some hosts (Library of Congress) refuse our server; the visitor's browser downloads
+        # those scans and uploads them here before the build starts.
+        with open(os.path.join(d, "needed.json"), "w", encoding="utf-8") as fh:
+            json.dump({"urls": need, "quality": quality}, fh)
+        bb.Progress(d).update(status="awaiting_images", stage="Collecting scans", pct=2)
+        return jsonify({"id": job_id, "need": need})
+    _spawn(d)
+    return jsonify({"id": job_id, "need": []})
+
+
+def _spawn(d):
     bb.Progress(d).update(status="queued", stage="Queued", pct=1)
     log = open(os.path.join(d, "log.txt"), "wb")
     subprocess.Popen([sys.executable, bb.__file__, "build", d], stdout=log, stderr=log,
                      start_new_session=True, cwd=bb.BASE_DIR)
-    hits.append(time.time())
-    _ip_hits[ip] = hits
-    return jsonify({"id": job_id})
+
+
+@bp.route("/api/studio/jobs/<job_id>/image", methods=["POST"])
+def api_job_image(job_id):
+    d = _jobdir(job_id)
+    needed = _read_json(os.path.join(d, "needed.json"))
+    pr = _read_json(os.path.join(d, "progress.json"), {})
+    if not needed or pr.get("status") != "awaiting_images":
+        abort(409)
+    url = request.args.get("u", "")
+    if url not in needed["urls"]:
+        abort(400)
+    if request.content_length and request.content_length > 40_000_000:
+        abort(413)
+    data = request.get_data(cache=False)
+    try:
+        bb.store_image(url, data, needed["quality"])
+    except Exception:  # noqa: BLE001
+        return _err("That image could not be read", 422)
+    done = sum(1 for u in needed["urls"] if bb._cached(u, needed["quality"]))
+    bb.Progress(d).update(status="awaiting_images", stage=f"Collecting scans ({done}/{len(needed['urls'])})",
+                          pct=2 + int(18 * done / max(1, len(needed["urls"]))))
+    return jsonify({"ok": True, "done": done})
+
+
+@bp.route("/api/studio/jobs/<job_id>/start", methods=["POST"])
+def api_job_start(job_id):
+    d = _jobdir(job_id)
+    pr = _read_json(os.path.join(d, "progress.json"), {})
+    if pr.get("status") != "awaiting_images":
+        return jsonify({"ok": True})
+    if _running_jobs() >= MAX_CONCURRENT + 1:
+        return _err("The studio is busy typesetting other books. Please try again in a minute.", 503)
+    _spawn(d)  # any scan the browser could not fetch is simply flagged as unavailable in the PDF
+    return jsonify({"ok": True})
 
 
 @bp.route("/api/studio/jobs/<job_id>")
 def api_job(job_id):
     d = _jobdir(job_id)
     pr = _read_json(os.path.join(d, "progress.json"), {"status": "queued", "stage": "Queued", "pct": 0})
-    if pr.get("status") in ("queued", "running") and time.time() - pr.get("updated", time.time()) > 300:
+    if pr.get("status") in ("queued", "running", "awaiting_images") and time.time() - pr.get("updated", time.time()) > 300:
         pr.update(status="error", stage="Failed", message="The build stalled. Please try again.")
     if pr.get("status") == "done":
         pr["meta"] = _read_json(os.path.join(d, "meta.json"), {})

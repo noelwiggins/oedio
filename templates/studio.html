@@ -619,9 +619,35 @@
     fetch("/api/studio/jobs", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(spec())})
       .then(r => r.json().then(j => ({ok: r.ok, j}))).then(({ok, j}) => {
         if (!ok) throw new Error(j.error || "Could not start the build");
+        if (j.need && j.need.length) return collect(j.id, j.need).then(() => poll(j.id));
         poll(j.id);
       }).catch(e => fail(e.message));
   };
+  // Some libraries (e.g. the Library of Congress) refuse our server but allow browser downloads:
+  // fetch those scans here and hand them to the builder before it starts.
+  async function collect(id, urls) {
+    let n = 0, i = 0, bad = 0;
+    const total = urls.length;
+    const one = async (u) => {
+      for (let a = 0; a < 3; a++) {
+        try {
+          const r = await fetch(u, {mode: "cors"}); if (!r.ok) throw new Error("HTTP " + r.status);
+          const blob = await r.blob();
+          const up = await fetch("/api/studio/jobs/" + id + "/image?u=" + encodeURIComponent(u), {method: "POST", body: blob});
+          if (!up.ok) throw new Error("upload " + up.status);
+          return true;
+        } catch (e) { await new Promise(res => setTimeout(res, 800 * (a + 1))); }
+      }
+      return false;
+    };
+    const worker = async () => {
+      while (i < total) { const u = urls[i++]; if (!(await one(u))) bad++; n++;
+        $("progbar").style.width = (2 + 18 * n / total) + "%";
+        $("progtxt").textContent = "Collecting page scans in your browser — " + n + " of " + total; }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    await fetch("/api/studio/jobs/" + id + "/start", {method: "POST"});
+  }
   function fail(m) { $("builderr").textContent = m; $("buildbtn").disabled = false; $("progbox").style.display = "none"; }
   function poll(id) {
     fetch("/api/studio/jobs/" + id).then(r => r.json()).then(p => {

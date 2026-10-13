@@ -1380,7 +1380,14 @@ def prepare_image(url, quality):
     path = os.path.join(image_cache_dir(quality), key + ".jpg")
     if os.path.exists(path) and os.path.getsize(path) > 0:
         return path
-    data = _fetch_bytes(url)
+    return store_image(url, _fetch_bytes(url), quality)
+
+
+def store_image(url, data, quality):
+    """Downscale/re-encode raw scan bytes into the shared cache (also used for browser-supplied scans)."""
+    q = QUALITY[quality]
+    key = hashlib.sha256(url.encode()).hexdigest()
+    path = os.path.join(image_cache_dir(quality), key + ".jpg")
     Image.MAX_IMAGE_PIXELS = 250_000_000
     im = Image.open(io.BytesIO(data))
     try:
@@ -1412,6 +1419,48 @@ class Progress:
         os.replace(tmp, self.path)
 
 
+def plan_image_urls(ctx, items):
+    """Every distinct scan URL the finished book will embed."""
+    urls = []
+    for it in items:
+        if it["kind"] == "body":
+            lay = ctx.layout_for(it["side"])
+            ids = [lay["src"]] if lay["layout"] == "full" else (lay["panels"] if lay["layout"] == "split" else [])
+            for sid in ids:
+                s = ctx.src[sid]
+                if s["view"] == "image":
+                    e = s["pages"].get(it["p"])
+                    if e and e.get("image"):
+                        urls.append(e["image"])
+    for ref in (ctx.spec["cover"]["image"], ctx.spec["frontispiece"]["image"]):
+        u = ctx.image_url_for(ref)
+        if u:
+            urls.append(u)
+    return list(dict.fromkeys(urls))
+
+
+# Hosts that refuse our cloud server's IP but allow browser downloads (CORS *): the visitor's
+# browser fetches these scans and hands them to the builder.
+CLIENT_FETCH_HOSTS = {"tile.loc.gov"}
+
+
+def client_fetch_urls(raw_spec):
+    ctx = Ctx(raw_spec, mode="pdf")
+    items, _, _ = build_plan(ctx, toc_entries(ctx))
+    out = []
+    for u in plan_image_urls(ctx, items):
+        h = urllib.parse.urlparse(u).hostname if u.startswith("http") else None
+        if h in CLIENT_FETCH_HOSTS and not _cached(u, ctx.spec["quality"]):
+            out.append(u)
+    return out, ctx.spec["quality"]
+
+
+def _cached(url, quality):
+    key = hashlib.sha256(url.encode()).hexdigest()
+    path = os.path.join(image_cache_dir(quality), key + ".jpg")
+    return os.path.exists(path) and os.path.getsize(path) > 0
+
+
 def build_book(jobdir: str):
     prog = Progress(jobdir)
     t0 = time.time()
@@ -1424,22 +1473,7 @@ def build_book(jobdir: str):
         items, body_start, _ = build_plan(ctx, entries)
 
         # -- 1. scans ----------------------------------------------------------
-        urls = []
-        for it in items:
-            if it["kind"] == "body":
-                lay = ctx.layout_for(it["side"])
-                ids = [lay["src"]] if lay["layout"] == "full" else (lay["panels"] if lay["layout"] == "split" else [])
-                for sid in ids:
-                    s = ctx.src[sid]
-                    if s["view"] == "image":
-                        e = s["pages"].get(it["p"])
-                        if e and e.get("image"):
-                            urls.append(e["image"])
-        for ref in (ctx.spec["cover"]["image"], ctx.spec["frontispiece"]["image"]):
-            u = ctx.image_url_for(ref)
-            if u:
-                urls.append(u)
-        urls = list(dict.fromkeys(urls))
+        urls = plan_image_urls(ctx, items)
         failed = 0
         first_err = ""
         if urls:
