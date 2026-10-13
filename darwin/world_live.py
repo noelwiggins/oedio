@@ -34,7 +34,7 @@ TPS = 10
 FRAME_EVERY = 2
 MAX_CATCHUP = 40          # ticks simulated per request at most
 STATS_EVERY = 50
-CHECKPOINT_EVERY = 1000
+CHECKPOINT_EVERY = 300
 SEASON_TICKS = 4000
 
 _lock = threading.Lock()
@@ -218,7 +218,12 @@ def get() -> World:
                 print(f"[darwin] checkpoint unreadable, starting a new era: {e}")
                 S.append("failure.world_checkpoint", {"error": repr(e)})
         if _state is None:
-            _state = _genesis(1)
+            # Eras are numbered from the Ledger, so a restart without a checkpoint
+            # starts a new era instead of reusing an old number.
+            with S.engine().connect() as c:
+                n = c.execute(sa.select(sa.func.count()).select_from(S.events).where(
+                    S.events.c.type == "world.genesis")).scalar() or 0
+            _state = _genesis(n + 1)
     return _state
 
 

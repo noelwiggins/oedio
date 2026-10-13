@@ -2,6 +2,66 @@
 
 Last updated: 2026-10-13
 
+## DARWIN (2026-10-13) — evolutionary discovery engine behind the secret volume
+
+Built from Noel's "Darwin Master LLM Build Command" brief (75 sections). **Phase 1 nucleus is live**
+at `/darwin/`; long-term plan: Oedio's domain may become Darwin's, with the book reader moving to its own URL.
+
+**Entry**: a slim green spine, "ORIGIN OF SPECIES", filed beside Science on the homepage rotunda
+(`templates/index.html`, `addSecretVolume` / `openPortal`). Click → it tips like a lever → the library
+swings round (revolving bookcase, `bookcase-turn`) → `/darwin/?via=portal` swings in. Footer link
+"Back through the bookcase" reverses it (`/?from=darwin`). Darwin pages send `noindex`.
+
+**Code** (`darwin/`): `life.py` (Life World simulator), `core.py` (Darwin Core loop, operators,
+validation helpers), `runner.py` (experiment worker subprocess), `store.py` (schema + Ledger),
+`world_live.py` (shared live terrarium), `snapshot.py`, `openlab.py` (goal → feasibility),
+`costs.py` (rates, caps), `web.py` (blueprint). Templates `templates/darwin/`, assets `static/darwin/`.
+Tests: `python -m pytest tests/test_darwin.py -q` (20 tests, throwaway SQLite).
+
+**How it works**
+- Life World: vectorised numpy, W independent worlds × M slots. Genome = 10 genes (speed, sense, size,
+  diet pref, 4 steering weights, repro threshold/share). Finite energy stores scale with size.
+  Objectives: forage (food eaten), survive (endurance through a famine: ticks alive + ticks the remaining
+  store would last), thrive (population with reproduction).
+- **Determinism is bit-exact and batch-independent**: every random field is drawn without the world axis
+  and broadcast; no sin/cos ever runs on world-shaped arrays (SIMD rounding differs with array length —
+  headings are unit vectors rotated by per-slot factors). Verified: a genome scores identically alone or
+  in a batch; REPLAY reproduces digests; production E-000001 matched a local run of the same seed.
+- Core: islands + migration, tournament, elitism, point/multi mutation, uniform/blend crossover, distant
+  recombination, immigrants, disturbances (scarcity/hazard shock, diet shift, mutation burst). Stops on
+  generation limit, stagnation, cancel, CPU cap or budget (60% of cap for evolution, 40% reserved for
+  validation). Fitness cache keyed by (genome, conditions).
+- Validation: evolved best vs gen-0 best on 8 disjoint held-out seeds (≥7/8 wins and sign-test p≤0.05 →
+  "replicated"), then perturbed conditions (→ "robust"); optional random-search baseline at equal
+  evaluation count. Claims are filed only when training improved; otherwise `failure.no_improvement`.
+- Ledger: `darwin_events`, append-only via DB triggers (SQLite + Postgres), SHA-256 chained,
+  `/darwin/api/ledger/verify`. Claim status history also append-only.
+- Worker: web spawns `python -m darwin.runner work`; one experiment per process (re-execs for the next),
+  kernel RLIMIT_CPU at 1.25× cap; stale "running" rows (no heartbeat) are marked failed, never deleted.
+- Live world: server-side, advances at 10 TPS while watched, frames every 2 ticks (client interpolates),
+  stats every 50 ticks, checkpoint every 300 ticks; eras numbered from `world.genesis` events.
+- Costs: compute = CPU-s × Railway $0.000463/vCPU-min (estimated); LLM = API token counts × price table
+  in `costs.py` (billed). Kept separate everywhere.
+
+**Access**: visitors can watch, read everything, run $0.10 experiments (45 CPU-s each, 3/hour/IP,
+1800 CPU-s/day shared, queue ≤4). Owner passphrase (Railway var `DARWIN_OWNER_KEY`, login at
+`/darwin/owner`) unlocks budgets to $10 and the LLM feasibility assessment (claude-sonnet-4-6).
+`DARWIN_SALT` hashes visitor IPs.
+
+**Status of brief sections**: see `/darwin/system` (capability table, also in every Snapshot).
+Operational: Core, Life Lab, lineage, costs, LLM accounting, Ledger, claims, validation, replay,
+Time Machine re-simulation, Snapshot ZIP + compare. Experimental: random baseline, Open Lab.
+Planned: pause/resume, Discovery/Failure Memory reuse (Phase 2), more baselines, holdout worlds,
+ablations; Web/Space/Operations Labs (Phase 3); meta-evolution, hybrid learning, transfer, external
+review import (Phase 4); Reality Gap.
+
+**Known / next**
+- Thrive evaluations are ~3.5× slower (Python reproduction loop); a visitor's thrive run hits the 45 CPU-s
+  cap early (shown in the estimate). Vectorising reproduction is the fix.
+- LLM price table in `darwin/costs.py` (Sonnet 4.6 $3/$15 per MTok) was not re-verified this session.
+- Gotcha: never put a literal `%` in SQL sent through `exec_driver_sql` with psycopg (read as a placeholder).
+
+
 ## Book Studio (2026-10-13) — print-to-PDF book designer
 
 Any megabook -> `/book/<mega>/studio` (entry points: "Make a book" card on the
@@ -169,21 +229,12 @@ distinct, coherent identities and grafting one onto the other would clash.
   illustration cycler) — would need curated illustration URLs per
   megabook, which don't exist yet; flagging as a possible follow-up.
 
-**Still pending: the Railway auto-deploy issue above.** Three commits
-now sit unpushed to production (`50a03a3`, `b96ea6f`, `90834c7`) —
-Gibbon's footnote section, the STATUS.md update, and this search/featured
-work are all built, tested locally, and on GitHub `main`, but the live
-site is still serving the older commit `6eef216`. Needs the manual
-reconnect in the Railway dashboard before any of this goes live.
-
+**Railway auto-deploy**: working again (pushes to `main` deploy; verified 2026-10-13 with Darwin).
 
 ## Live site
 - URL: oedio.com | Railway: web-production-0df99e.up.railway.app
 - 32 megabooks · 249 components (once the pending deploy above goes live)
 - 7 sections: Literature, Medicine, Travel, History & Society, Religion, Science, Philosophy
-- **NOTE**: the counts above reflect GitHub `main`, not necessarily what's
-  currently served — see the Railway deploy-stuck note above before
-  trusting oedio.com matches this file.
 
 ## Architecture — storage
 
