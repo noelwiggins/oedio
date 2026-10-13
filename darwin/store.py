@@ -188,8 +188,9 @@ def engine():
         kw = {"future": True, "pool_pre_ping": True}
         if url.startswith("sqlite"):
             kw["connect_args"] = {"timeout": 30}
-        _engine = sa.create_engine(url, **kw)
-        init(_engine)
+        eng = sa.create_engine(url, **kw)
+        init(eng)            # only cache the engine once the schema is in place
+        _engine = eng
     return _engine
 
 
@@ -212,7 +213,8 @@ def init(eng):
         elif eng.dialect.name == "postgresql":
             c.exec_driver_sql(
                 "CREATE OR REPLACE FUNCTION darwin_append_only() RETURNS trigger AS $$ "
-                "BEGIN RAISE EXCEPTION '% is append-only', TG_TABLE_NAME; END; $$ LANGUAGE plpgsql;")
+                "BEGIN RAISE EXCEPTION USING MESSAGE = TG_TABLE_NAME || ' is append-only'; END; "
+                "$$ LANGUAGE plpgsql;")  # no percent sign: the driver would read it as a placeholder
             for t in APPEND_ONLY:
                 c.exec_driver_sql(f"DROP TRIGGER IF EXISTS {t}_append_only ON {t};")
                 c.exec_driver_sql(
