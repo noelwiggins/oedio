@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title or "Book" }} — oedio.com{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  body { overflow:hidden; }
+  footer.site-footer { display:none; }
+  .bv { position:fixed; top:60px; left:0; right:0; bottom:0; display:flex; flex-direction:column; background:#15130f; }
+  .bv-bar { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--md-sys-color-surface-container);
+    border-bottom:1px solid var(--md-sys-color-outline-variant); flex-wrap:wrap; }
+  .bv-title { font-family:Georgia,serif; font-size:15px; font-weight:600; color:var(--md-sys-color-on-surface); min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 200px; }
+  .bv-title small { display:block; font-family:system-ui; font-weight:400; font-size:11.5px; color:var(--md-sys-color-on-surface-variant); }
+  .ib { border:0; background:none; color:var(--md-sys-color-on-surface); width:38px; height:38px; border-radius:50%; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
+  .ib:hover { background:var(--md-sys-color-surface-container-highest); }
+  .bv-pg { font-size:13px; color:var(--md-sys-color-on-surface-variant); min-width:96px; text-align:center; }
+  .bv-stage { flex:1; position:relative; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:16px; }
+  .bv-spread { display:flex; box-shadow:0 10px 40px rgba(0,0,0,.6); margin:auto; }
+  .bv-spread canvas { display:block; background:#fff; }
+  .bv-msg { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:14px; pointer-events:none; }
+  .bv-nav { position:absolute; top:0; bottom:0; width:12%; max-width:120px; cursor:pointer; z-index:2; background:none; border:0; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="bv" id="bv">
+  <div class="bv-bar">
+    <div class="bv-title">{{ meta.title or "Book" }}<small>{{ meta.byline }}{% if meta.megabook_title %} · from {{ meta.megabook_title }}{% endif %}</small></div>
+    <button class="ib" id="prev" title="Previous"><span class="material-symbols-outlined">chevron_left</span></button>
+    <span class="bv-pg" id="pg">&hellip;</span>
+    <button class="ib" id="next" title="Next"><span class="material-symbols-outlined">chevron_right</span></button>
+    <button class="ib" id="zout" title="Zoom out"><span class="material-symbols-outlined">remove</span></button>
+    <button class="ib" id="zin" title="Zoom in"><span class="material-symbols-outlined">add</span></button>
+    <button class="ib" id="fs" title="Full screen"><span class="material-symbols-outlined">fullscreen</span></button>
+    <button class="ib" id="copy" title="Copy link"><span class="material-symbols-outlined">link</span></button>
+    <a class="ib" href="mailto:?subject={{ (meta.title or 'A book for you')|urlencode }}&body=I made you a book — read it here: {{ request.url|urlencode }}" title="Email link"><span class="material-symbols-outlined">mail</span></a>
+    <a class="ib" href="/studio/book/{{ job_id }}/download" title="Download PDF"><span class="material-symbols-outlined">download</span></a>
+  </div>
+  <div class="bv-stage" id="stage">
+    <div class="bv-msg" id="msg">Opening the book&hellip;</div>
+    <div class="bv-spread" id="spread"></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function () {
+  const URL_PDF = "/studio/book/{{ job_id }}.pdf";
+  const SPREAD = {{ 'true' if meta.spread else 'false' }};
+  const $ = (id) => document.getElementById(id);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  let pdf = null, n = 0, cur = 0, zoom = 1, token = 0;
+  // Leaves: spread books show the front cover alone, then facing pairs [1,2],[3,4]...; last back cover alone.
+  function leaves() {
+    const out = [];
+    if (!SPREAD) { for (let i = 0; i < n; i++) out.push([i]); return out; }
+    out.push([0]);
+    for (let i = 1; i < n; i += 2) out.push(i + 1 < n ? [i, i + 1] : [i]);
+    return out;
+  }
+  let L = [];
+  const isWide = () => SPREAD && window.innerWidth > 760;
+  function plan() {
+    if (isWide() || !SPREAD) return L = leaves();
+    L = []; for (let i = 0; i < n; i++) L.push([i]); return L;
+  }
+  function idxFor(page) { const l = plan(); for (let i = 0; i < l.length; i++) if (l[i].includes(page)) return i; return 0; }
+  async function draw() {
+    const my = ++token; const l = plan(); cur = Math.max(0, Math.min(l.length - 1, cur));
+    const group = l[cur]; const st = $("stage"); const sp = $("spread");
+    const availW = st.clientWidth - 32, availH = st.clientHeight - 32;
+    const pages = await Promise.all(group.map(i => pdf.getPage(i + 1)));
+    if (my !== token) return;
+    const vp1 = pages[0].getViewport({scale: 1});
+    const totalW = vp1.width * (SPREAD && isWide() ? 2 : 1);
+    const fit = Math.min(availW / totalW, availH / vp1.height);
+    const scale = Math.max(0.2, fit * zoom);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    sp.innerHTML = "";
+    // single leaf on a spread book (cover) sits on the right half like a real book
+    if (SPREAD && isWide() && group.length === 1) {
+      if (group[0] === 0) { const ph = document.createElement("div"); ph.style.width = (vp1.width * scale) + "px"; sp.appendChild(ph); }
+    }
+    for (const pg of pages) {
+      const vp = pg.getViewport({scale: scale * dpr});
+      const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+      c.style.width = (vp.width / dpr) + "px"; c.style.height = (vp.height / dpr) + "px"; sp.appendChild(c);
+      await pg.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
+      if (my !== token) return;
+    }
+    if (SPREAD && isWide() && group.length === 1 && group[0] !== 0) { /* lone back cover on left */ }
+    $("msg").style.display = "none";
+    const lbl = group.map(i => i + 1).join("–");
+    $("pg").textContent = (group.length > 1 ? "Pages " : "Page ") + lbl + " of " + n;
+    history.replaceState(null, "", "#p" + (group[0] + 1));
+  }
+  function go(d) { cur += d; draw(); }
+  $("prev").onclick = () => go(-1); $("next").onclick = () => go(1);
+  $("zin").onclick = () => { zoom = Math.min(4, zoom * 1.25); draw(); };
+  $("zout").onclick = () => { zoom = Math.max(0.5, zoom / 1.25); draw(); };
+  $("fs").onclick = () => { const e = $("bv"); if (document.fullscreenElement) document.exitFullscreen(); else if (e.requestFullscreen) e.requestFullscreen(); };
+  $("copy").onclick = () => { navigator.clipboard.writeText(location.href.split("#")[0]).then(() => { $("copy").title = "Copied"; }); };
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(1); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(-1); }
+    else if (e.key === "Home") { cur = 0; draw(); } else if (e.key === "End") { cur = 1e6; draw(); }
+  });
+  let tx = null;
+  $("stage").addEventListener("touchstart", (e) => { tx = e.touches[0].clientX; }, {passive: true});
+  $("stage").addEventListener("touchend", (e) => { if (tx == null || zoom > 1) return; const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); tx = null; });
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { const pg = plan()[cur] ? plan()[cur][0] : 0; cur = idxFor(pg); draw(); }, 200); });
+  // rangeChunkSize + disableAutoFetch -> only the pages being viewed are downloaded (streaming)
+  pdfjsLib.getDocument({url: URL_PDF, rangeChunkSize: 262144, disableAutoFetch: true, disableStream: false}).promise.then((doc) => {
+    pdf = doc; n = doc.numPages;
+    const m = /^#p(\d+)/.exec(location.hash); cur = m ? idxFor(Math.max(0, parseInt(m[1]) - 1)) : 0;
+    draw();
+  }).catch(() => { $("msg").textContent = "Sorry — this book could not be opened. It may have expired."; });
+})();
+</script>
+{% endblock %}

@@ -1,6 +1,41 @@
 # Oedio STATUS — Library of Alexandria
 
-Last updated: 2026-08-19
+Last updated: 2026-10-13
+
+## Book Studio (2026-10-13) — print-to-PDF book designer
+
+Any megabook -> `/book/<mega>/studio` (entry points: "Make a book" card on the
+megabook page; book icon in the reader toolbar, preselects that edition's scan +
+English + transcription via `?base=<slug>`).
+
+- Pick up to 4 sources (scan / transcription / translation, AI-tagged), choose
+  page range, spread or single-page mode, per-side layout (full page, bleed, or 2
+  panels split h/v with auto-balanced ratio), covers (6 cloth colours, 5 foils),
+  frontispiece, title, colophon, dedication (inscription lines), contents
+  (ranges / detected headings / custom), foil monogram (4 styles), trim + quality.
+- Live preview uses the SAME HTML generators as the PDF (`bookbuilder.py`,
+  `mode="web"` vs `mode="pdf"`), posted into iframes via `/studio/preview`.
+- Build = subprocess per job (`python bookbuilder.py build <jobdir>`), WeasyPrint 70
+  (Persian/Arabic/Greek shaping) + pypdf (merge, bookmarks, two-page layout).
+  Limits: 4 sources, 800 body pages, 8 jobs/IP/hour, 2 concurrent.
+- Hosted viewer `/studio/book/<id>` (PDF.js 3.11.174 from cdnjs, HTTP Range
+  streaming, two-page spreads), `/studio/book/<id>.pdf`, `/studio/book/<id>/download`.
+  Job ids are unguessable 16-hex; books kept 60 days.
+- Files: `bookbuilder.py` (engine), `studio.py` (blueprint), `templates/studio.html`,
+  `templates/book_view.html`, `static/fonts/` (OFL TTFs).
+- Infra: Railway volume `web-volume` mounted at `/data` (exports in `/data/exports`,
+  falls back to `.exports/` locally; override with `OEDIO_EXPORT_DIR`).
+  `RAILPACK_DEPLOY_APT_PACKAGES` includes pango/harfbuzz/fontconfig libs for WeasyPrint.
+- Known: dense-text pages at 6x9 can drop under 6pt (warning shown, suggests larger trim);
+  contents page may show an extra dotted rule (cosmetic).
+
+## Forges (AI transcription/translation) — complete
+Persian 1866 (207/207), Persian 1565, Phaeacian Greek, Doré (pages 13-15 content-filter-blocked, marked).
+`scripts/forge_translate.py` (delimiter format, resumable). API key: `~/.anthropic_key` / env.
+
+## Open
+- Cloudflare apex CNAME must be added manually (`@`->ar9h7ehp.up.railway.app, `www`->02u348je.up.railway.app).
+- R2 migration of reader data; roadmap: accounts, tips rail, store, Lulu print.
 
 ## Gibbon's Decline and Fall — footnote-centric section (2026-08-19)
 

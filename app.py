@@ -57,6 +57,9 @@ def _reader_url(slug):
 
 app = Flask(__name__)
 
+from studio import bp as studio_bp  # noqa: E402  (Book Studio: print-to-PDF designer + hosted viewer)
+app.register_blueprint(studio_bp)
+
 
 @app.after_request
 def add_cache_headers(response):

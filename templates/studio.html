@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+{% block title %}Book Studio · {{ mb.title }} — oedio.com{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<style>
+  .st-wrap { max-width:1280px; margin:0 auto; padding:22px 20px 40px; }
+  .st-head h1 { font-family:Georgia,serif; font-size:28px; margin:0 0 4px; color:var(--md-sys-color-on-surface); }
+  .st-head p { margin:0; color:var(--md-sys-color-on-surface-variant); font-size:14px; max-width:720px; line-height:1.6; }
+  .st-head a { color:var(--md-sys-color-primary); }
+  .st-grid { display:grid; grid-template-columns:minmax(0,1fr) 440px; gap:24px; margin-top:22px; align-items:start; }
+  @media (max-width:1000px) { .st-grid { grid-template-columns:1fr; } .st-preview { position:static !important; order:-1; } }
+
+  .card { background:var(--md-sys-color-surface-container); border:1px solid var(--md-sys-color-outline-variant);
+    border-radius:16px; padding:18px 20px; margin-bottom:16px; }
+  .card h2 { font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--md-sys-color-primary); margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+  .card h2 .n { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); width:20px; height:20px;
+    border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+  .hint { color:var(--md-sys-color-on-surface-variant); font-size:12.5px; line-height:1.55; margin:0 0 12px; }
+  label.f { display:block; font-size:12px; color:var(--md-sys-color-on-surface-variant); margin:10px 0 4px; }
+  .st-wrap input[type=text], .st-wrap input[type=number], .st-wrap select, .st-wrap textarea {
+    width:100%; box-sizing:border-box; padding:9px 12px; border-radius:10px; font:inherit; font-size:14px;
+    border:1px solid var(--md-sys-color-outline-variant); background:var(--md-sys-color-surface-container-low);
+    color:var(--md-sys-color-on-surface); outline:none; }
+  .st-wrap textarea { resize:vertical; min-height:70px; }
+  .st-wrap input:focus, .st-wrap select:focus, .st-wrap textarea:focus { border-color:var(--md-sys-color-primary); }
+  .row { display:flex; gap:12px; flex-wrap:wrap; }
+  .row > * { flex:1 1 140px; min-width:0; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .chip { border:1px solid var(--md-sys-color-outline-variant); background:none; color:var(--md-sys-color-on-surface);
+    border-radius:10px; padding:6px 12px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .chip:hover { background:var(--md-sys-color-surface-container-highest); }
+  .chip.on { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container);
+    border-color:transparent; }
+  .seg { display:inline-flex; border:1px solid var(--md-sys-color-outline-variant); border-radius:20px; overflow:hidden; }
+  .seg button { border:0; background:none; color:var(--md-sys-color-on-surface); padding:7px 16px; cursor:pointer;
+    font:inherit; font-size:13px; }
+  .seg button.on { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font-weight:600; }
+  .check { display:flex; align-items:center; gap:8px; font-size:13.5px; margin:10px 0 0; cursor:pointer;
+    color:var(--md-sys-color-on-surface); }
+
+  /* sources */
+  .src-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+  .src { position:relative; display:flex; gap:10px; padding:10px; border-radius:12px; cursor:pointer; text-align:left;
+    border:1px solid var(--md-sys-color-outline-variant); background:var(--md-sys-color-surface-container-low);
+    color:var(--md-sys-color-on-surface); font:inherit; }
+  .src:hover { border-color:var(--md-sys-color-primary); }
+  .src.sel { border-color:var(--md-sys-color-primary); background:var(--md-sys-color-secondary-container);
+    color:var(--md-sys-color-on-secondary-container); }
+  .src .th { flex:0 0 52px; height:70px; border-radius:6px; background:var(--md-sys-color-surface-container-highest)
+    center/cover no-repeat; overflow:hidden; font-size:8px; line-height:1.3; padding:3px; box-sizing:border-box;
+    opacity:.9; word-break:break-word; }
+  .src .th.txt { background:#f4ecd8; color:#3b3226; }
+  .src .t { padding-right:22px; font-size:13px; font-weight:600; line-height:1.3; }
+  .src .m { font-size:11.5px; opacity:.75; margin-top:3px; }
+  .src .tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; margin:5px 4px 0 0;
+    background:var(--md-sys-color-surface-container-highest); color:var(--md-sys-color-on-surface); }
+  .src .tag.ai { background:var(--md-sys-color-tertiary-container); color:var(--md-sys-color-on-tertiary-container); }
+  .src .bd { position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%;
+    background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); font-weight:700; font-size:12px;
+    display:none; align-items:center; justify-content:center; }
+  .src.sel .bd { display:flex; }
+  .sel-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .sel-pill { display:flex; align-items:center; gap:8px; padding:5px 6px 5px 6px; border-radius:20px;
+    background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font-size:12.5px; }
+  .sel-pill b { background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); width:20px; height:20px;
+    border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+  .sel-pill button { border:0; background:none; cursor:pointer; color:inherit; padding:2px; font-size:15px; line-height:1; }
+  .warn { background:var(--md-sys-color-tertiary-container); color:var(--md-sys-color-on-tertiary-container);
+    border-radius:10px; padding:8px 12px; font-size:12.5px; margin-top:10px; }
+
+  /* page designer */
+  .side-card { border:1px dashed var(--md-sys-color-outline-variant); border-radius:12px; padding:12px 14px; margin-top:10px; }
+  .side-card h3 { margin:0 0 8px; font-size:13px; color:var(--md-sys-color-on-surface); }
+  .mini { display:flex; gap:6px; align-items:center; margin:8px 0 2px; }
+  .glyph { width:34px; height:46px; border:1.5px solid currentColor; border-radius:3px; display:flex; flex-direction:column;
+    overflow:hidden; opacity:.8; }
+  .glyph i { flex:1; background:currentColor; opacity:.35; }
+  .glyph i + i { border-top:1.5px solid currentColor; }
+  .swatches { display:flex; gap:8px; flex-wrap:wrap; }
+  .sw { width:34px; height:34px; border-radius:8px; cursor:pointer; border:2px solid transparent; outline:1px solid var(--md-sys-color-outline-variant); }
+  .sw.on { border-color:var(--md-sys-color-primary); outline-color:var(--md-sys-color-primary); }
+  .mono-styles { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:6px; }
+  .mono-styles button { border:2px solid transparent; border-radius:10px; padding:0; cursor:pointer; background:none; overflow:hidden; }
+  .mono-styles button.on { border-color:var(--md-sys-color-primary); }
+  .mono-styles img { width:100%; display:block; border-radius:8px; }
+  .toc-ta { font-family:ui-monospace,Menlo,monospace !important; font-size:12.5px !important; min-height:120px !important; }
+
+  /* output */
+  .btn { display:inline-flex; align-items:center; gap:8px; border:0; cursor:pointer; font:inherit; font-weight:600;
+    font-size:14px; padding:11px 22px; border-radius:24px; text-decoration:none;
+    background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
+  .btn.sec { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); }
+  .btn[disabled] { opacity:.5; cursor:default; }
+  .est { font-size:13px; color:var(--md-sys-color-on-surface-variant); margin:12px 0; line-height:1.6; }
+  .est b { color:var(--md-sys-color-on-surface); }
+  .prog { height:8px; border-radius:4px; background:var(--md-sys-color-surface-container-highest); overflow:hidden; margin:12px 0 6px; }
+  .prog > div { height:100%; width:0; background:var(--md-sys-color-primary); transition:width .5s; }
+  .result { display:none; }
+  .result.on { display:block; }
+  .result .acts { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .err { color:#ff8a80; font-size:13px; margin-top:8px; }
+
+  /* preview */
+  .st-preview { position:sticky; top:74px; }
+  .tabs { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
+  .tabs button { border:0; background:none; color:var(--md-sys-color-on-surface-variant); padding:7px 12px; border-radius:16px;
+    cursor:pointer; font:inherit; font-size:13px; }
+  .tabs button.on { background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); font-weight:600; }
+  .stage { background:var(--md-sys-color-surface-container-lowest, #0b0b0b); border-radius:14px; padding:14px;
+    display:flex; justify-content:center; align-items:center; gap:0; min-height:300px; overflow:hidden; }
+  .pv { position:relative; flex:0 0 auto; box-shadow:0 6px 22px rgba(0,0,0,.5); background:#fff; cursor:zoom-in; overflow:hidden; }
+  .pv iframe { position:absolute; left:0; top:0; border:0; transform-origin:0 0; pointer-events:none; background:#fff; }
+  .pv-nav { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px; font-size:13px;
+    color:var(--md-sys-color-on-surface-variant); }
+  .pv-nav button { border:0; background:var(--md-sys-color-surface-container-high); color:var(--md-sys-color-on-surface);
+    width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:16px; }
+  .pv-nav input { width:70px !important; text-align:center; }
+  .lightbox { display:none; position:fixed; inset:0; z-index:1500; background:rgba(0,0,0,.85); align-items:center;
+    justify-content:center; padding:20px; cursor:zoom-out; }
+  .lightbox.on { display:flex; }
+  .lightbox img { max-width:100%; max-height:100%; border-radius:6px; }
+  .lightbox .lbf { position:relative; background:#fff; box-shadow:0 10px 40px #000; }
+  .lightbox .lbf iframe { position:absolute; left:0; top:0; border:0; transform-origin:0 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="st-wrap">
+  <div class="st-head">
+    <h1><span class="material-symbols-outlined" style="vertical-align:-5px;margin-right:6px">menu_book</span>Book Studio</h1>
+    <p>Design your own printable book from <a href="/book/{{ mb.slug }}">{{ mb.title }}</a>: pick up to four sources
+       &mdash; scans, transcriptions, translations &mdash; lay them out as full pages or split panels, add covers, a dedication and
+       a monogram, then get a polished PDF you can email or stream online.</p>
+  </div>
+
+  <div class="st-grid">
+  <div class="st-form">
+
+    <div class="card">
+      <h2><span class="n">1</span>Sources <span style="font-weight:400;letter-spacing:0;text-transform:none;opacity:.7">(choose up to 4)</span></h2>
+      <div class="sel-bar" id="selbar"></div>
+      <div class="src-list" id="srclist"><p class="hint">Loading sources&hellip;</p></div>
+      <div class="warn" id="srcwarn" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">2</span>Pages</h2>
+      <div class="row">
+        <div><label class="f">From page</label><input type="number" id="pfrom" min="1" value="1"></div>
+        <div><label class="f">To page</label><input type="number" id="pto" min="1" value="20"></div>
+      </div>
+      <div class="chips" id="rangechips"></div>
+      <label class="f" style="margin-top:14px">Book format</label>
+      <div class="seg" id="modeseg">
+        <button data-v="spread" class="on">Facing pages (left &amp; right)</button>
+        <button data-v="single">One page per leaf</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">3</span>Page design</h2>
+      <p class="hint">For every page of the book choose what goes on it: a full page, or two panels split side by side or stacked.
+        Choose a scan for a full-bleed image page.</p>
+      <div class="chips" id="presets"></div>
+      <div id="sides"></div>
+      <div class="row" style="margin-top:6px">
+        <label class="check"><input type="checkbox" id="folios" checked> Page numbers</label>
+        <label class="check"><input type="checkbox" id="labels" checked> Source labels on panels</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">4</span>Covers &amp; front matter</h2>
+      <div class="row">
+        <div><label class="f">Title</label><input type="text" id="c_title" maxlength="140"></div>
+        <div><label class="f">Author / byline</label><input type="text" id="c_byline" maxlength="140"></div>
+      </div>
+      <label class="f">Subtitle</label><input type="text" id="c_subtitle" maxlength="200" placeholder="e.g. A reading edition with the original and a translation">
+      <label class="f">Cloth colour</label>
+      <div class="swatches" id="themes"></div>
+      <div class="row">
+        <div><label class="f">Foil stamping</label>
+          <select id="c_foil"><option value="gold">Gold</option><option value="silver">Silver</option>
+            <option value="copper">Copper</option><option value="cream">Cream</option><option value="blind">Blind (embossed)</option></select></div>
+        <div><label class="f">Cover medallion image</label><select id="c_image"></select></div>
+        <div><label class="f">Frontispiece (left of title)</label><select id="f_image"></select></div>
+      </div>
+      <label class="f">Back cover text</label>
+      <textarea id="back_text" maxlength="500" placeholder="Optional blurb for the back cover"></textarea>
+      <label class="check"><input type="checkbox" id="colophon" checked> Include a colophon page (sources &amp; credits)</label>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">5</span>Dedication &amp; inscription</h2>
+      <label class="check" style="margin-top:0"><input type="checkbox" id="d_on"> Add a dedication page</label>
+      <div id="d_fields" style="display:none">
+        <div class="row">
+          <div><label class="f">To</label><input type="text" id="d_to" maxlength="120" placeholder="For Eleanor"></div>
+          <div><label class="f">From</label><input type="text" id="d_from" maxlength="120" placeholder="With love, Noel"></div>
+          <div><label class="f">Date</label><input type="text" id="d_date" maxlength="60" placeholder="Christmas 2026"></div>
+        </div>
+        <label class="f">Message</label>
+        <textarea id="d_message" maxlength="700" placeholder="A few words to set the page&hellip;"></textarea>
+        <label class="f">Blank handwriting lines (for printing and inscribing by hand)</label>
+        <select id="d_lines"><option value="0">None</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">6</span>Contents</h2>
+      <div class="seg" id="tocseg">
+        <button data-v="none" class="on">None</button>
+        <button data-v="ranges">By page ranges</button>
+        <button data-v="headings">Detected headings</button>
+        <button data-v="custom">Custom</button>
+      </div>
+      <div id="toc_opts" style="display:none">
+        <div class="row" id="toc_every_row">
+          <div><label class="f">Group every N pages</label><input type="number" id="toc_every" min="1" max="500" value="25"></div>
+        </div>
+        <div id="toc_edit" style="display:none">
+          <div class="row">
+            <div><label class="f">Detect headings from</label><select id="toc_src"></select></div>
+            <div style="flex:0 0 auto;align-self:flex-end"><button class="chip" id="toc_detect" type="button">Detect from text</button></div>
+          </div>
+          <label class="f">Entries &mdash; one per line: <code>Title | page</code></label>
+          <textarea class="toc-ta" id="toc_text" placeholder="Book I | 1&#10;Book II | 14"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">7</span>Monogram <span style="font-weight:400;letter-spacing:0;text-transform:none;opacity:.7">(foil-stamped on the back, like a gift Bible)</span></h2>
+      <label class="check" style="margin-top:0"><input type="checkbox" id="m_on"> Add a monogram</label>
+      <div id="m_fields" style="display:none">
+        <div class="row">
+          <div><label class="f">Initials (up to 3)</label><input type="text" id="m_init" maxlength="3" placeholder="NRW" style="text-transform:uppercase"></div>
+          <div><label class="f">Position</label>
+            <select id="m_pos"><option value="back-center">Back cover &mdash; centre</option><option value="back-lower-right">Back cover &mdash; lower right</option></select></div>
+        </div>
+        <div class="mono-styles" id="m_styles"></div>
+        <label class="check"><input type="checkbox" id="m_front"> Also stamp it on the front cover</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="n">8</span>Make the book</h2>
+      <div class="row">
+        <div><label class="f">Page size</label>
+          <select id="trim"><option value="5.5x8.5">Digest 5.5 × 8.5 in</option><option value="6x9" selected>Trade 6 × 9 in</option>
+            <option value="7x10">7 × 10 in</option><option value="8x10">8 × 10 in</option><option value="8.5x11">Letter 8.5 × 11 in</option>
+            <option value="a5">A5</option><option value="a4">A4</option></select></div>
+        <div><label class="f">Image quality</label>
+          <select id="quality"><option value="email">Email-friendly (smallest)</option><option value="standard" selected>Standard</option><option value="high">High (best for print)</option></select></div>
+      </div>
+      <div class="est" id="est"></div>
+      <button class="btn" id="buildbtn"><span class="material-symbols-outlined">auto_stories</span>Build my book</button>
+      <div id="progbox" style="display:none">
+        <div class="prog"><div id="progbar"></div></div>
+        <div class="hint" id="progtxt"></div>
+      </div>
+      <div class="err" id="builderr"></div>
+      <div class="result card" id="result" style="margin:16px 0 0">
+        <h2 style="margin-bottom:6px">Your book is ready</h2>
+        <div class="hint" id="resinfo"></div>
+        <div id="reswarn"></div>
+        <div class="acts">
+          <a class="btn" id="res_open" target="_blank" rel="noopener"><span class="material-symbols-outlined">menu_book</span>Read online</a>
+          <a class="btn sec" id="res_dl"><span class="material-symbols-outlined">download</span>Download PDF</a>
+          <button class="btn sec" id="res_copy" type="button"><span class="material-symbols-outlined">link</span>Copy link</button>
+          <a class="btn sec" id="res_mail"><span class="material-symbols-outlined">mail</span>Email link</a>
+        </div>
+        <p class="hint" style="margin-top:12px" id="res_note"></p>
+      </div>
+    </div>
+  </div>
+
+  <aside class="st-preview">
+    <div class="card" style="padding:14px">
+      <div class="tabs" id="pvtabs">
+        <button data-k="front" class="on">Cover</button><button data-k="title">Title</button>
+        <button data-k="spread">Pages</button><button data-k="toc">Contents</button><button data-k="back">Back</button>
+      </div>
+      <div class="stage" id="stage"></div>
+      <div class="pv-nav" id="pvnav" style="display:none">
+        <button id="pv_prev" type="button">&lsaquo;</button><span>Page</span>
+        <input type="number" id="pv_p" min="1" value="1"><button id="pv_next" type="button">&rsaquo;</button>
+      </div>
+      <p class="hint" style="margin:10px 0 0;text-align:center">Live preview &mdash; exactly what will be typeset. Click a page to enlarge.</p>
+    </div>
+  </aside>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"></div>
+
+<form id="pvform" method="post" action="/studio/preview" style="display:none">
+  <input name="spec"><input name="kind"><input name="p"><input name="side">
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const MEGA = {{ mb.slug|tojson }};
+  const BASE = {{ base|tojson }};
+  const TRIMS = {"5.5x8.5":[396,612],"6x9":[432,648],"7x10":[504,720],"8x10":[576,720],"8.5x11":[612,792],"a5":[419.53,595.28],"a4":[595.28,841.89]};
+  const THEMES = {oxblood:"#5c1c1c",navy:"#16243f",forest:"#1f3b2b",charcoal:"#26262b",plum:"#40213f",ivory:"#eee4cc"};
+  const MSTYLES = ["circle","laurel","square","oval"];
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const IDS = ["A","B","C","D"];
+
+  const S = {
+    sources: [],            // keys, order = A..D
+    mode: "spread",
+    left:  {layout:"full", src:"A", fit:"fit", dir:"h", ratio:"auto", panels:["A","B"]},
+    right: {layout:"split", src:"B", fit:"fit", dir:"h", ratio:"auto", panels:["B","C"]},
+    theme: "oxblood", tocMode: "none", monoStyle: "circle", tab: "front", pvp: 1
+  };
+  let ALL = [], BYKEY = {}, MAXPAGES = 1;
+
+  // ---------- sources ----------
+  fetch("/api/studio/" + MEGA + "/sources").then(r => r.json()).then(d => {
+    ALL = d.sources || []; ALL.forEach(s => BYKEY[s.key] = s);
+    preselect(); renderSources(); renderAll(); $("c_title").value = $("c_title").value || "";
+    initDefaults();
+  });
+
+  function preselect() {
+    const img = ALL.filter(s => s.view === "image");
+    let first = BASE ? ALL.find(s => s.slug === BASE && s.view === "image") || ALL.find(s => s.slug === BASE) : null;
+    if (!first) first = img[0] || ALL[0];
+    if (!first) return;
+    const picks = [first];
+    const grp = ALL.filter(s => s.group === first.group && s.key !== first.key && s.view === "text");
+    grp.sort((a, b) => (b.ai ? 0 : 1) - (a.ai ? 0 : 1));
+    // prefer an English layer, then the transcription
+    const en = grp.find(s => /english|translat/i.test(s.title + s.short));
+    const tr = grp.find(s => /transcri/i.test(s.title + s.short));
+    [en, tr].forEach(s => { if (s && !picks.includes(s)) picks.push(s); });
+    grp.forEach(s => { if (picks.length < 3 && !picks.includes(s)) picks.push(s); });
+    if (picks.length < 2) { const alt = ALL.find(s => s.key !== first.key); if (alt) picks.push(alt); }
+    S.sources = picks.map(s => s.key);
+    // sensible default layout: scan left, translation + transcription split right
+    if (S.sources.length >= 3) { S.right.panels = ["B", "C"]; S.right.layout = "split"; }
+    else { S.right.layout = "full"; S.right.src = IDS[Math.min(1, S.sources.length - 1)]; }
+    S.left.layout = BYKEY[S.sources[0]].view === "image" ? "full" : "full"; S.left.src = "A";
+  }
+
+  function tagsFor(s) {
+    let t = '<span class="tag">' + (s.view === "image" ? "scan" : s.kind) + "</span>";
+    if (s.ai) t += '<span class="tag ai">AI</span>';
+    if (s.script && s.script !== "latin") t += '<span class="tag">' + esc(s.script) + "</span>";
+    return t;
+  }
+  function renderSources() {
+    const box = $("srclist"); box.innerHTML = "";
+    ALL.forEach(s => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "src";
+      const idx = S.sources.indexOf(s.key);
+      if (idx >= 0) b.classList.add("sel");
+      const th = s.view === "image"
+        ? '<div class="th" style="background-image:url(\'' + esc(s.thumb) + '\')"></div>'
+        : '<div class="th txt">' + esc((s.snippet || "").slice(0, 90)) + "</div>";
+      b.innerHTML = th + '<div><div class="t">' + esc(s.short || s.title) + '</div><div class="m">' + esc(s.title) +
+        (s.year ? " · " + esc(s.year) : "") + " · " + s.pages + " pp</div>" + tagsFor(s) + "</div>" +
+        '<span class="bd">' + (idx >= 0 ? IDS[idx] : "") + "</span>";
+      b.onclick = () => toggleSource(s.key);
+      box.appendChild(b);
+    });
+    const bar = $("selbar"); bar.innerHTML = "";
+    S.sources.forEach((k, i) => {
+      const s = BYKEY[k]; const p = document.createElement("span"); p.className = "sel-pill";
+      p.innerHTML = "<b>" + IDS[i] + "</b>" + esc(s.short || s.title) +
+        (i > 0 ? ' <button title="Move earlier" data-m="-1">&uarr;</button>' : "") +
+        (i < S.sources.length - 1 ? '<button title="Move later" data-m="1">&darr;</button>' : "") +
+        '<button title="Remove" data-m="x">&times;</button>';
+      p.querySelectorAll("button").forEach(bt => bt.onclick = () => {
+        const m = bt.dataset.m;
+        if (m === "x") toggleSource(k);
+        else { const j = i + parseInt(m); [S.sources[i], S.sources[j]] = [S.sources[j], S.sources[i]]; afterSourceChange(); }
+      });
+      bar.appendChild(p);
+    });
+    // warn when sources don't come from the same family
+    const grps = new Set(S.sources.map(k => BYKEY[k].group));
+    const warn = $("srcwarn");
+    const cnt = S.sources.map(k => BYKEY[k].pages);
+    if (grps.size > 1) {
+      warn.style.display = "block";
+      warn.textContent = "These sources come from different editions, so page N of one may not match page N of another. Sources from the same edition line up exactly.";
+    } else warn.style.display = "none";
+    MAXPAGES = S.sources.length ? BYKEY[S.sources[0]].pages : 1;
+  }
+  function toggleSource(k) {
+    const i = S.sources.indexOf(k);
+    if (i >= 0) { if (S.sources.length > 1) S.sources.splice(i, 1); }
+    else if (S.sources.length < 4) S.sources.push(k);
+    else { $("srcwarn").style.display = "block"; $("srcwarn").textContent = "You can choose up to four sources. Remove one first."; return; }
+    afterSourceChange();
+  }
+  function afterSourceChange() {
+    const n = S.sources.length;
+    [S.left, S.right].forEach(L => {
+      if (IDS.indexOf(L.src) >= n) L.src = "A";
+      L.panels = L.panels.map(p => IDS.indexOf(p) >= n ? IDS[Math.max(0, n - 1)] : p);
+    });
+    renderSources(); renderAll(); changed();
+  }
+
+  // ---------- chips, selects ----------
+  function initDefaults() {
+    const mb = ALL.length ? ALL[0] : null;
+    $("pto").value = Math.min(20, MAXPAGES);
+    $("c_title").value = "";
+    renderChips();
+    changed();
+  }
+  function renderChips() {
+    const c = $("rangechips"); c.innerHTML = "";
+    const add = (label, f, t) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label;
+      b.onclick = () => { $("pfrom").value = f; $("pto").value = t; changed(); }; c.appendChild(b); };
+    add("First 10", 1, Math.min(10, MAXPAGES)); add("First 40", 1, Math.min(40, MAXPAGES));
+    add("Whole book (" + MAXPAGES + " pp)", 1, Math.min(MAXPAGES, 800));
+  }
+  function imageOptions() {
+    const o = [["none","None"],["first","First page of range"]];
+    return o;
+  }
+  $("c_image").innerHTML = '<option value="none">None</option><option value="first">First page scan</option><option value="page:1">Page 1 scan</option>';
+  $("f_image").innerHTML = '<option value="none">None</option><option value="first">First page scan</option><option value="page:1">Page 1 scan</option>';
+  $("themes").innerHTML = Object.keys(THEMES).map(k => '<div class="sw' + (k === S.theme ? " on" : "") + '" data-k="' + k + '" title="' + k + '" style="background:' + THEMES[k] + '"></div>').join("");
+  $("themes").onclick = (e) => { const k = e.target.dataset && e.target.dataset.k; if (!k) return; S.theme = k;
+    $("themes").querySelectorAll(".sw").forEach(x => x.classList.toggle("on", x.dataset.k === k)); renderMonoStyles(); changed(); };
+
+  // ---------- page designer ----------
+  function srcOpts(sel) {
+    return S.sources.map((k, i) => '<option value="' + IDS[i] + '"' + (IDS[i] === sel ? " selected" : "") + ">" + IDS[i] + " · " + esc(BYKEY[k].short || BYKEY[k].title) + "</option>").join("");
+  }
+  function sideEditor(name, L, title) {
+    const d = document.createElement("div"); d.className = "side-card";
+    const isS = L.layout === "split", isF = L.layout === "full";
+    d.innerHTML = "<h3>" + title + "</h3>" +
+      '<div class="seg" data-role="kind"><button data-v="full" class="' + (isF ? "on" : "") + '">Full page</button><button data-v="split" class="' + (isS ? "on" : "") +
+      '">Two panels</button><button data-v="blank" class="' + (L.layout === "blank" ? "on" : "") + '">Blank</button></div>' +
+      (isF ? '<div class="row"><div><label class="f">Source</label><select data-role="src">' + srcOpts(L.src) + '</select></div>' +
+        '<div><label class="f">Images</label><select data-role="fit"><option value="fit"' + (L.fit === "fit" ? " selected" : "") + '>Fit inside margins</option><option value="bleed"' +
+        (L.fit === "bleed" ? " selected" : "") + ">Full bleed (edge to edge)</option></select></div></div>" : "") +
+      (isS ? '<div class="row"><div><label class="f">Top / left panel</label><select data-role="p0">' + srcOpts(L.panels[0]) + '</select></div>' +
+        '<div><label class="f">Bottom / right panel</label><select data-role="p1">' + srcOpts(L.panels[1]) + "</select></div></div>" +
+        '<div class="row"><div><label class="f">Arrangement</label><select data-role="dir"><option value="h"' + (L.dir === "h" ? " selected" : "") + '>Stacked (top / bottom)</option><option value="v"' +
+        (L.dir === "v" ? " selected" : "") + '>Side by side</option></select></div>' +
+        '<div><label class="f">Split <span data-role="rv">' + (L.ratio === "auto" ? "(auto-balanced)" : L.ratio + " / " + (100 - L.ratio)) + '</span></label>' +
+        '<div style="display:flex;gap:8px;align-items:center"><input type="range" data-role="ratio" min="25" max="75" value="' + (L.ratio === "auto" ? 50 : L.ratio) + '" style="flex:1">' +
+        '<button class="chip' + (L.ratio === "auto" ? " on" : "") + '" data-role="auto" type="button">Auto</button></div></div></div>' : "");
+    const q = (r) => d.querySelector('[data-role="' + r + '"]');
+    d.querySelectorAll('[data-role="kind"] button').forEach(b => b.onclick = () => { L.layout = b.dataset.v; renderSides(); changed(); });
+    if (q("src")) q("src").onchange = (e) => { L.src = e.target.value; changed(); };
+    if (q("fit")) q("fit").onchange = (e) => { L.fit = e.target.value; changed(); };
+    if (q("p0")) { q("p0").onchange = (e) => { L.panels[0] = e.target.value; changed(); }; q("p1").onchange = (e) => { L.panels[1] = e.target.value; changed(); };
+      q("dir").onchange = (e) => { L.dir = e.target.value; changed(); };
+      q("ratio").oninput = (e) => { L.ratio = parseInt(e.target.value); q("rv").textContent = L.ratio + " / " + (100 - L.ratio); q("auto").classList.remove("on"); changed(); };
+      q("auto").onclick = () => { L.ratio = "auto"; renderSides(); changed(); }; }
+    return d;
+  }
+  function renderSides() {
+    const box = $("sides"); box.innerHTML = "";
+    if (S.mode === "spread") { box.appendChild(sideEditor("left", S.left, "Left-hand page (verso)")); box.appendChild(sideEditor("right", S.right, "Right-hand page (recto)")); }
+    else box.appendChild(sideEditor("left", S.left, "Every page"));
+  }
+  function renderPresets() {
+    const n = S.sources.length, P = $("presets"); P.innerHTML = "";
+    const add = (label, fn) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label; b.onclick = () => { fn(); renderSides(); changed(); }; P.appendChild(b); };
+    const lastId = (i) => IDS[Math.min(i, n - 1)];
+    if (n >= 2) add("Scan left · text right", () => { S.mode = "spread"; syncMode(); S.left = {...S.left, layout:"full", src:"A"}; S.right = {...S.right, layout:"full", src: lastId(1)}; });
+    if (n >= 3) add("Scan left · two panels right", () => { S.mode = "spread"; syncMode(); S.left = {...S.left, layout:"full", src:"A"}; S.right = {...S.right, layout:"split", panels:["B","C"]}; });
+    if (n >= 3) add("Scan left · bleed", () => { S.mode = "spread"; syncMode(); S.left = {...S.left, layout:"full", src:"A", fit:"bleed"}; S.right = {...S.right, layout:"split", panels:["B","C"]}; });
+    if (n >= 2) add("Scan + text on each page", () => { S.mode = "single"; syncMode(); S.left = {...S.left, layout:"split", panels:["A", lastId(1)], dir:"h"}; });
+    add("Single source only", () => { S.mode = "single"; syncMode(); S.left = {...S.left, layout:"full", src:"A"}; });
+  }
+  function syncMode() { $("modeseg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === S.mode)); }
+  $("modeseg").onclick = (e) => { const v = e.target.dataset && e.target.dataset.v; if (!v) return; S.mode = v; syncMode(); renderSides(); renderTabs(); changed(); };
+
+  // ---------- monogram / toc / dedication UI ----------
+  function renderMonoStyles() {
+    const init = ($("m_init").value || "ABC").toUpperCase().replace(/[^A-Z]/g, "") || "AB";
+    $("m_styles").innerHTML = MSTYLES.map(s => '<button type="button" data-k="' + s + '" class="' + (S.monoStyle === s ? "on" : "") + '"><img alt="' + s + '" src="/api/studio/monogram.svg?initials=' +
+      encodeURIComponent(init) + "&style=" + s + "&foil=" + $("c_foil").value + "&theme=" + S.theme + '"></button>').join("");
+    $("m_styles").querySelectorAll("button").forEach(b => b.onclick = () => { S.monoStyle = b.dataset.k; renderMonoStyles(); changed(); });
+  }
+  $("m_on").onchange = () => { $("m_fields").style.display = $("m_on").checked ? "block" : "none"; if ($("m_on").checked) renderMonoStyles(); changed(); };
+  $("m_init").oninput = () => { renderMonoStyles(); changed(); };
+  $("c_foil").onchange = () => { renderMonoStyles(); changed(); };
+  $("d_on").onchange = () => { $("d_fields").style.display = $("d_on").checked ? "block" : "none"; changed(); };
+  $("tocseg").onclick = (e) => { const v = e.target.dataset && e.target.dataset.v; if (!v) return; S.tocMode = v;
+    $("tocseg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.v === v));
+    $("toc_opts").style.display = v === "none" ? "none" : "block";
+    $("toc_every_row").style.display = v === "ranges" ? "flex" : "none";
+    $("toc_edit").style.display = (v === "headings" || v === "custom") ? "block" : "none";
+    if (v === "headings" && !$("toc_text").value.trim()) detect();
+    changed(); };
+  function tocEntries() {
+    return $("toc_text").value.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+      const i = l.lastIndexOf("|"); if (i < 0) return null;
+      const pg = parseInt(l.slice(i + 1)); const t = l.slice(0, i).trim(); return t && pg ? {title: t, page: pg} : null; }).filter(Boolean);
+  }
+  function detect() {
+    $("toc_detect").textContent = "Detecting…";
+    fetch("/api/studio/headings", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({spec: spec(), source: $("toc_src").value})}).then(r => r.json()).then(d => {
+        $("toc_text").value = (d.entries || []).map(e => e.title + " | " + e.page).join("\n");
+        $("toc_detect").textContent = (d.entries || []).length ? "Detect from text" : "Nothing found";
+        S.tocMode = "custom"; changed(); }).catch(() => $("toc_detect").textContent = "Detect from text");
+  }
+  $("toc_detect").onclick = detect;
+  ["toc_text","toc_every","pfrom","pto","c_title","c_byline","c_subtitle","c_image","f_image","back_text","d_to","d_from","d_date","d_message","d_lines","m_pos","trim","quality"].forEach(id => $(id).addEventListener("input", changed));
+  ["folios","labels","colophon","m_front"].forEach(id => $(id).addEventListener("change", changed));
+  $("toc_src").onchange = changed;
+
+  function renderAll() {
+    renderPresets(); renderSides(); renderChips();
+    const txt = S.sources.map((k, i) => BYKEY[k].view === "text" ? '<option value="' + IDS[i] + '">' + IDS[i] + " · " + esc(BYKEY[k].short || BYKEY[k].title) + "</option>" : "").join("");
+    $("toc_src").innerHTML = txt || srcOpts("A");
+  }
+
+  // ---------- spec ----------
+  function spec() {
+    const toc = {mode: S.tocMode === "headings" ? "custom" : S.tocMode, every: parseInt($("toc_every").value) || 25, source: $("toc_src").value || "A", entries: tocEntries()};
+    return {
+      megabook: MEGA, sources: S.sources.map(k => ({key: k})),
+      range: {from: parseInt($("pfrom").value) || 1, to: parseInt($("pto").value) || 1},
+      mode: S.mode, left: S.left, right: S.right, trim: $("trim").value, quality: $("quality").value,
+      folios: $("folios").checked, labels: $("labels").checked,
+      cover: {title: $("c_title").value, subtitle: $("c_subtitle").value, byline: $("c_byline").value || undefined, theme: S.theme,
+        foil: $("c_foil").value, image: $("c_image").value},
+      frontispiece: {image: $("f_image").value},
+      toc: toc,
+      dedication: {enabled: $("d_on").checked, to: $("d_to").value, message: $("d_message").value, from: $("d_from").value,
+        date: $("d_date").value, lines: parseInt($("d_lines").value) || 0},
+      monogram: {enabled: $("m_on").checked, initials: $("m_init").value, style: S.monoStyle, position: $("m_pos").value, also_front: $("m_front").checked},
+      colophon: $("colophon").checked, back_text: $("back_text").value
+    };
+  }
+
+  // ---------- preview ----------
+  function renderTabs() {
+    const t = $("pvtabs").querySelector('[data-k="spread"]'); t.textContent = S.mode === "spread" ? "Spread" : "Page";
+  }
+  $("pvtabs").onclick = (e) => { const k = e.target.dataset && e.target.dataset.k; if (!k) return; S.tab = k;
+    $("pvtabs").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === k)); drawPreview(); };
+  $("pv_prev").onclick = () => { $("pv_p").value = Math.max(parseInt($("pfrom").value) || 1, (parseInt($("pv_p").value) || 1) - 1); drawPreview(); };
+  $("pv_next").onclick = () => { $("pv_p").value = Math.min(parseInt($("pto").value) || 1, (parseInt($("pv_p").value) || 1) + 1); drawPreview(); };
+  $("pv_p").onchange = drawPreview;
+  let pvSeq = 0;
+  function makePage(kind, side, p, widthPx, parent) {
+    const [W, H] = TRIMS[$("trim").value]; const pw = W * 4 / 3, ph = H * 4 / 3, sc = widthPx / pw;
+    const box = document.createElement("div"); box.className = "pv"; box.style.width = widthPx + "px"; box.style.height = (ph * sc) + "px";
+    const name = "pvf" + (++pvSeq);
+    const fr = document.createElement("iframe"); fr.name = name; fr.style.width = pw + "px"; fr.style.height = ph + "px";
+    fr.style.transform = "scale(" + sc + ")"; fr.setAttribute("sandbox", "allow-same-origin"); box.appendChild(fr); parent.appendChild(box);
+    const f = $("pvform"); f.target = name;
+    f.spec.value = JSON.stringify(spec()); f.kind.value = kind; f.p.value = p || ""; f.side.value = side || "L"; f.submit();
+    box.onclick = () => lightbox(kind, side, p);
+    return box;
+  }
+  function drawPreview() {
+    const st = $("stage"); st.innerHTML = ""; const nav = $("pvnav"); nav.style.display = "none";
+    if (!S.sources.length) return;
+    const k = S.tab; const avail = Math.min(404, st.clientWidth - 28 || 404);
+    if (k === "spread") {
+      nav.style.display = "flex";
+      let p = parseInt($("pv_p").value) || parseInt($("pfrom").value) || 1;
+      const from = parseInt($("pfrom").value) || 1, to = parseInt($("pto").value) || 1;
+      p = Math.max(from, Math.min(to, p)); $("pv_p").value = p;
+      if (S.mode === "spread") { const w = Math.floor((avail - 4) / 2); makePage("body", "L", p, w, st); makePage("body", "R", p, w, st); }
+      else makePage("body", "S", p, Math.floor(avail * 0.8), st);
+    } else makePage(k, "L", "", Math.floor(avail * 0.8), st);
+  }
+  function lightbox(kind, side, p) {
+    const lb = $("lightbox"); lb.innerHTML = ""; lb.classList.add("on");
+    const [W, H] = TRIMS[$("trim").value]; const pw = W * 4 / 3, ph = H * 4 / 3;
+    const hh = Math.min(window.innerHeight - 40, 1100); const sc = hh / ph;
+    const kinds = (kind === "body" && S.mode === "spread") ? [["body","L"],["body","R"]] : [[kind, side]];
+    kinds.forEach(([kd, sd]) => {
+      const box = document.createElement("div"); box.className = "lbf"; box.style.width = (pw * sc) + "px"; box.style.height = hh + "px";
+      const name = "lbf" + (++pvSeq); const fr = document.createElement("iframe"); fr.name = name;
+      fr.style.width = pw + "px"; fr.style.height = ph + "px"; fr.style.transform = "scale(" + sc + ")"; box.appendChild(fr); lb.appendChild(box);
+      const f = $("pvform"); f.target = name; f.spec.value = JSON.stringify(spec()); f.kind.value = kd; f.p.value = p || ""; f.side.value = sd; f.submit();
+    });
+  }
+  $("lightbox").onclick = () => { $("lightbox").classList.remove("on"); $("lightbox").innerHTML = ""; };
+
+  // ---------- estimate & change handling ----------
+  let tmr = null, tmr2 = null;
+  function changed() {
+    clearTimeout(tmr); tmr = setTimeout(drawPreview, 450);
+    clearTimeout(tmr2); tmr2 = setTimeout(estimate, 600);
+  }
+  function fmtBytes(n) { return n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.round(n / 1e3) + " KB"; }
+  function estimate() {
+    if (!S.sources.length) return;
+    fetch("/api/studio/estimate", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(spec())})
+      .then(r => r.json()).then(d => {
+        if (d.error) { $("est").innerHTML = '<span class="err">' + esc(d.error) + "</span>"; return; }
+        let h = "About <b>" + d.pdf_pages + " pages</b> · roughly <b>" + fmtBytes(d.est_bytes) + "</b> · build takes ~" + Math.max(10, Math.round(d.est_seconds / 5) * 5) + " s.";
+        h += d.email_ok ? " Small enough to email as an attachment." : " Too large for most email attachments — you'll get an online link to share, and you can still download the PDF.";
+        $("est").innerHTML = h;
+      }).catch(() => {});
+  }
+  window.addEventListener("resize", () => { clearTimeout(tmr); tmr = setTimeout(drawPreview, 300); });
+
+  // ---------- build ----------
+  $("buildbtn").onclick = () => {
+    $("builderr").textContent = ""; $("result").classList.remove("on");
+    $("buildbtn").disabled = true; $("progbox").style.display = "block"; $("progbar").style.width = "2%"; $("progtxt").textContent = "Starting…";
+    fetch("/api/studio/jobs", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(spec())})
+      .then(r => r.json().then(j => ({ok: r.ok, j}))).then(({ok, j}) => {
+        if (!ok) throw new Error(j.error || "Could not start the build");
+        poll(j.id);
+      }).catch(e => fail(e.message));
+  };
+  function fail(m) { $("builderr").textContent = m; $("buildbtn").disabled = false; $("progbox").style.display = "none"; }
+  function poll(id) {
+    fetch("/api/studio/jobs/" + id).then(r => r.json()).then(p => {
+      $("progbar").style.width = Math.max(2, p.pct || 0) + "%"; $("progtxt").textContent = (p.stage || "") + (p.pct ? " — " + Math.round(p.pct) + "%" : "");
+      if (p.status === "done") return done(id, p);
+      if (p.status === "error") return fail(p.message || "The build failed");
+      setTimeout(() => poll(id), 1500);
+    }).catch(() => setTimeout(() => poll(id), 3000));
+  }
+  function done(id, p) {
+    $("buildbtn").disabled = false; $("progbox").style.display = "none";
+    const m = p.meta || {}; const abs = location.origin + p.url;
+    $("resinfo").textContent = (m.title || "Your book") + " · " + (p.pages || m.pages) + " pages · " + fmtBytes(p.bytes || m.bytes || 0);
+    $("res_open").href = p.url; $("res_dl").href = p.url + "/download";
+    $("res_copy").onclick = () => { (navigator.clipboard ? navigator.clipboard.writeText(abs) : Promise.reject()).then(() => { $("res_copy").lastChild.textContent = "Copied"; }).catch(() => prompt("Copy this link", abs)); };
+    $("res_mail").href = "mailto:?subject=" + encodeURIComponent(m.title || "A book for you") + "&body=" + encodeURIComponent("I made you a book — read it here:\n" + abs + "\n");
+    $("res_note").textContent = (p.bytes || 0) > 20e6 ? "This file is too big for most email attachments. Share the link — it streams page by page, nothing to download." :
+      "Small enough to attach to an email: download the PDF, or share the link to read it online.";
+    $("reswarn").innerHTML = (p.warnings || []).map(w => '<div class="warn">' + esc(w) + "</div>").join("");
+    $("result").classList.add("on"); $("result").scrollIntoView({behavior:"smooth", block:"center"});
+  }
+})();
+</script>
+{% endblock %}
