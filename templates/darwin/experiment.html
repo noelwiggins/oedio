@@ -39,6 +39,8 @@
   <div class="card"><h2>Validation</h2><div id="validation" class="small muted">Runs after evolution stops.</div></div>
 </section>
 
+<section class="section card"><h2>Experience</h2><div id="memory-box" class="small muted">Shown when the run starts.</div></section>
+
 <section class="section grid g2">
   <div class="card"><h2>What evolved</h2><div id="genome-cmp" class="genome-bars small muted">Waiting for results.</div></div>
   <div class="card"><h2>Variation operators</h2><div id="ops" class="small muted">Waiting for results.</div></div>
@@ -82,7 +84,8 @@
   const OPS = {{ operators|tojson }}, NA = {{ not_applicable|tojson }};
   let data = null, timer = null, selected = null, seedSet = 'train', epFrames = null, epRAF = null, gensShown = -1;
   const opColor = { random: '#89938d', elite: '#bec9c3', point_mutation: '#e9bf6d', multi_mutation: '#f0a35e',
-    uniform_crossover: '#7dd8b5', blend_crossover: '#5fb7d6', distant_recombination: '#b49cf0', migration: '#ff8a7a', mutation_burst: '#ff5d8f' };
+    uniform_crossover: '#7dd8b5', blend_crossover: '#5fb7d6', distant_recombination: '#b49cf0', migration: '#ff8a7a', mutation_burst: '#ff5d8f',
+    memory: '#ffd166' };
 
   async function load() {
     try { data = await D.api('/darwin/api/experiments/' + ID); render(); }
@@ -94,7 +97,7 @@
 
   function render() {
     const d = data, p = d.progress || {}, s = d.summary || {}, c = d.cost || {};
-    document.getElementById('eyebrow').textContent = `${d.label} · ${d.kind === 'replay' ? 'replay' : 'Life Lab'} · ${d.owner_run ? 'owner run' : 'visitor run'}`;
+    document.getElementById('eyebrow').textContent = `${d.label} · ${d.kind === 'replay' ? 'replay' : 'Life Lab'} · ${d.world} · ${d.source || (d.owner_run ? 'owner' : 'visitor')} run`;
     document.getElementById('title').textContent = d.title || 'Experiment';
     document.getElementById('goal').textContent = d.goal || (d.kind === 'replay' ? '' : '');
     const st = `${D.pill(d.status)} <span class="muted">${p.phase ? 'phase: ' + p.phase : ''}${p.gen != null ? ` · generation ${p.gen + 1} of ${p.of}` : ''}${d.stop_reason ? ' · stopped because: ' + D.esc(d.stop_reason) : ''}</span>`;
@@ -172,7 +175,20 @@
     if (vh) document.getElementById('validation').innerHTML = vh;
     else if (d.status === 'completed' && !v.holdout) document.getElementById('validation').textContent = 'Not run: evolution did not improve on the initial best, so there was nothing to validate.';
 
-    if (s.final_best && s.gen0_best) D.genomeBars(document.getElementById('genome-cmp'), GENES, s.final_best.genome, s.gen0_best.genome, [`evolved ${s.final_best.cid}`, `gen-0 best ${s.gen0_best.cid}`]);
+    if (s.final_best && s.gen0_best) {
+      D.genomeBars(document.getElementById('genome-cmp'), d.display_genes || GENES, s.final_best.genome, s.gen0_best.genome, [`evolved ${s.final_best.cid}`, `gen-0 best ${s.gen0_best.cid}`]);
+      if (s.final_best.genome.controller_mean_abs_weight != null)
+        document.getElementById('genome-cmp').insertAdjacentHTML('beforeend', `<p class="small muted" style="margin-top:8px">Body genes shown. The ${D.esc(d.world)} neural controller (105 weights) is not drawn; mean |weight| ${D.num(s.final_best.genome.controller_mean_abs_weight, 3)} vs ${D.num(s.gen0_best.genome.controller_mean_abs_weight, 3)}.</p>`);
+    }
+    const mem = s.memory;
+    const mb = document.getElementById('memory-box');
+    if (mem) {
+      mb.innerHTML = !mem.used ? '<p class="muted">This experiment started from random genomes only (memory off).</p>' :
+        (mem.seeds.length ? `<p>Seeded from ${mem.seeds.length} memor${mem.seeds.length === 1 ? 'y' : 'ies'}:</p><table class="t"><tr><th>memory</th><th>problem distance</th><th>weight</th></tr>${mem.seeds.map(e => `<tr><td class="mono">${D.esc(e.memory)}</td><td>${D.num(e.distance, 3)}</td><td>${D.num(e.weight, 4)}</td></tr>`).join('')}</table>
+          <p style="margin-top:10px">${mem.winner_from_memory ? `The winning lineage was founded by <b class="mono">${D.esc(mem.winner_from_memory)}</b>.` : 'The winning lineage was founded by a random genome, not a memory.'}</p>`
+          : '<p class="muted">Memory was on, but Discovery Memory held no genomes for this world yet.</p>') +
+        (mem.admission ? `<p class="small" style="margin-top:8px">Admission to memory: ${mem.admitted ? `<b class="mono">${D.esc(mem.admitted)}</b> added` : D.esc(mem.admission)}</p>` : '');
+    } else if (['completed', 'stopped'].includes(d.status)) mb.innerHTML = '<p class="muted">Phase 1 experiment (before Discovery Memory existed).</p>';
     if (s.operator_stats) {
       const rows = Object.entries(s.operator_stats).filter(([k, o]) => o.produced).map(([k, o]) =>
         `<tr><td><span style="color:${opColor[k]}">●</span> ${k.replace(/_/g, ' ')}</td><td>${o.produced}</td><td>${['elite', 'random', 'migration', 'mutation_burst'].includes(k) ? '—' : (o.produced ? (o.improved_on_parent / o.produced * 100).toFixed(1) + '%' : '—')}</td></tr>`).join('');

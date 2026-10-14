@@ -69,6 +69,7 @@ experiments = sa.Table(
     sa.Column("code_version", T),
     sa.Column("environment", J),
     sa.Column("result_digest", T),
+    sa.Column("source", T),          # visitor | owner | practice | benchmark (added in Phase 2)
 )
 
 generations = sa.Table(
@@ -160,7 +161,88 @@ snapshots = sa.Table(
     sa.Column("data", J),
 )
 
-APPEND_ONLY = ("darwin_events", "darwin_claim_status")
+# ── Phase 2: Discovery Memory, Failure Memory, benchmark ─────────────────
+memory = sa.Table(
+    "darwin_memory", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("created_at", T, nullable=False),
+    sa.Column("experiment_id", sa.Integer, index=True),
+    sa.Column("claim_id", sa.Integer),
+    sa.Column("candidate", T),
+    sa.Column("world", T, nullable=False),
+    sa.Column("objective", T, nullable=False),
+    sa.Column("conditions", J),
+    sa.Column("genome", J),
+    sa.Column("train_fitness", sa.Float),
+    sa.Column("validation", J),
+    sa.Column("source", T),
+)
+
+memory_uses = sa.Table(
+    "darwin_memory_uses", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("memory_id", sa.Integer, index=True),
+    sa.Column("experiment_id", sa.Integer, index=True),
+    sa.Column("objective", T),
+    sa.Column("conditions", J),
+    sa.Column("distance", sa.Float),
+    sa.Column("helped", sa.Boolean),
+    sa.Column("detail", J),
+)
+
+failures = sa.Table(
+    "darwin_failures", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("experiment_id", sa.Integer, index=True),
+    sa.Column("kind", T, index=True),      # no_improvement | failed_replication | adversarial_failure | failed_transfer | ...
+    sa.Column("world", T),
+    sa.Column("objective", T),
+    sa.Column("conditions", J),
+    sa.Column("genome", J),
+    sa.Column("detail", J),
+)
+
+calibration = sa.Table(
+    "darwin_calibration", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("created_at", T, nullable=False),
+    sa.Column("suite", T, nullable=False),
+    sa.Column("problem", T, nullable=False),
+    sa.Column("world", T, nullable=False),
+    sa.Column("r0", sa.Float),
+    sa.Column("r1", sa.Float),
+    sa.Column("detail", J),
+)
+
+bench_results = sa.Table(
+    "darwin_bench_results", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("experiment_id", sa.Integer, index=True),
+    sa.Column("day", T, index=True),
+    sa.Column("split", T),
+    sa.Column("suite", T),
+    sa.Column("problem", T),
+    sa.Column("contestant", T),
+    sa.Column("replicate", sa.Integer),
+    sa.Column("evaluations", sa.Integer),
+    sa.Column("cpu_s", sa.Float),
+    sa.Column("cost_usd", sa.Float),
+    sa.Column("cost_kind", T),
+    sa.Column("score", sa.Float),
+    sa.Column("score_seeds", J),
+    sa.Column("normalized", sa.Float),
+    sa.Column("genome", J),
+    sa.Column("detail", J),
+    sa.Column("code_version", T),
+)
+
+APPEND_ONLY = ("darwin_events", "darwin_claim_status", "darwin_memory", "darwin_memory_uses", "darwin_failures",
+               "darwin_bench_results")
+
+# Columns added after the first deploy; created with ALTER TABLE when missing.
+ADDED_COLUMNS = [("darwin_experiments", "source", "TEXT")]
 
 
 def now() -> str:
@@ -204,6 +286,10 @@ def init(eng):
             # web process and worker may start together; serialise schema setup
             c.exec_driver_sql("SELECT pg_advisory_xact_lock(774412)")
         md.create_all(c)
+        insp = sa.inspect(c)
+        for table, col, typ in ADDED_COLUMNS:
+            if col not in {x["name"] for x in insp.get_columns(table)}:
+                c.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
         if eng.dialect.name == "sqlite":
             for t in APPEND_ONLY:
                 for op in ("UPDATE", "DELETE"):
@@ -359,6 +445,10 @@ def fmt_exp(i) -> str:
 
 def fmt_claim(i) -> str:
     return f"C-{int(i):06d}"
+
+
+def fmt_mem(i) -> str:
+    return f"M-{int(i):05d}"
 
 
 def fmt_snap(i) -> str:

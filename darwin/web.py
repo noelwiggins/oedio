@@ -16,7 +16,7 @@ import numpy as np
 import sqlalchemy as sa
 from flask import Blueprint, Response, abort, jsonify, make_response, render_template, request
 
-from . import core, costs, life, openlab, snapshot, store, world_live
+from . import bench, core, costs, life, memory, openlab, schedule, snapshot, store, suite, world_live
 
 S = store
 bp = Blueprint("darwin", __name__, url_prefix="/darwin")
@@ -57,6 +57,20 @@ def _limit(key: str, n: int, per_s: int) -> bool:
     q.append(now)
     _rate[key] = q
     return True
+
+
+def start_background():
+    """Called from the gunicorn post_worker_init hook, and lazily on the first request."""
+    world_live.ensure_background()
+
+
+@bp.before_app_request
+def _bg():
+    if request.path.startswith("/darwin"):
+        world_live.ensure_background()
+
+
+SYSTEM_SOURCES = ("practice", "benchmark", "dev", "final")
 
 
 @bp.context_processor
@@ -124,12 +138,14 @@ def home():
 @bp.route("/lab/life")
 def lab_life():
     preset = {}
+    worlds = [{"version": sp.version, "description": sp.description, "default": sp.version == life.DEFAULT_WORLD}
+              for sp in life.SPECS.values()]
     if request.args.get("preset"):
         try:
             preset = json.loads(request.args["preset"])
         except Exception:
             preset = {}
-    return render_template("darwin/lab_life.html", genes=life.GENES, objectives=life.OBJECTIVES,
+    return render_template("darwin/lab_life.html", genes=life.GENES, objectives=life.OBJECTIVES, worlds=worlds,
                            disturbances=core.DISTURBANCES, defaults=core.Config().to_dict(), preset=preset,
                            presets=costs.BUDGET_PRESETS, public=costs.PUBLIC_LIMITS, ownerlim=costs.OWNER_LIMITS,
                            rate=costs.COMPUTE_RATES)
@@ -142,6 +158,9 @@ def experiment_page(exp_id):
         row = c.execute(sa.select(S.experiments).where(S.experiments.c.id == exp_id)).mappings().first()
     if not row:
         abort(404)
+    if row["kind"] == "benchmark":
+        from flask import redirect
+        return redirect(f"/darwin/intelligence?run={exp_id}")
     return render_template("darwin/experiment.html", exp_id=exp_id, label=S.fmt_exp(exp_id),
                            genes=life.GENES, operators=core.OPERATORS, not_applicable=core.NOT_APPLICABLE)
 
@@ -202,12 +221,12 @@ def owner():
 @bp.route("/api/world/frames")
 def api_world_frames():
     since = request.args.get("since", type=int, default=-1)
-    return jsonify(world_live.advance_and_frames(since))
+    return jsonify(world_live.frames(since))
 
 
 @bp.route("/api/world/history")
 def api_world_history():
-    return jsonify(world_live.history(int(request.args.get("limit", 400))))
+    return jsonify(world_live.history(max(1, min(int(request.args.get("limit", 400)), 2000))))
 
 
 # ── open lab ─────────────────────────────────────────────────────────────
@@ -249,6 +268,7 @@ def api_create():
     seed = raw.get("seed")
     if seed in (None, "", 0):
         seed = random.SystemRandom().randint(1, 2 ** 31 - 1)
+    raw = {k: v for k, v in raw.items() if k != "seed_genomes"}   # memory seeds come only from Discovery Memory
     cfg = core.Config.from_dict({**raw, "seed": int(seed)})
     errs = cfg.validate(limits)
     budget = float(body.get("budget_usd") or 0.10)
@@ -265,7 +285,8 @@ def api_create():
             recent = c.execute(sa.select(sa.func.count()).select_from(S.experiments).where(
                 (S.experiments.c.requester == rid) & (S.experiments.c.created_at >= since))).scalar()
             queued = c.execute(sa.select(sa.func.count()).select_from(S.experiments).where(
-                S.experiments.c.status.in_(["queued", "running"]))).scalar()
+                S.experiments.c.status.in_(["queued", "running"]) &
+                sa.or_(S.experiments.c.source.is_(None), S.experiments.c.source.notin_(SYSTEM_SOURCES)))).scalar()
         if recent >= limits["per_ip_per_hour"]:
             errs.append(f"limit reached: {limits['per_ip_per_hour']} experiments per hour per visitor")
         if queued >= limits["max_queue"]:
@@ -284,11 +305,11 @@ def api_create():
         exp_id = c.execute(S.experiments.insert().values(
             created_at=S.now(), kind="evolve", lab="life", title=title, goal=goal, objective=cfg.objective,
             config=S.canon(cfg.to_dict()), seed=cfg.seed, status="queued", owner=owner, requester=rid,
-            budget_usd=budget, max_cpu_s=max_cpu, stop_requested=False,
+            budget_usd=budget, max_cpu_s=max_cpu, stop_requested=False, source="owner" if owner else "visitor",
             progress=S.canon({"phase": "queued"}))).inserted_primary_key[0]
         S.append("experiment.created", {"title": title, "goal": goal, "config": cfg.to_dict(),
                                         "budget_usd": budget, "max_cpu_s": round(max_cpu, 2),
-                                        "world": life.WORLD_VERSION},
+                                        "world": cfg.world},
                  experiment_id=exp_id, provenance={"requester": rid, "owner": owner}, conn=c)
     ensure_worker()
     return jsonify({"id": exp_id, "label": S.fmt_exp(exp_id), "url": f"/darwin/experiment/{exp_id}"})
@@ -319,7 +340,11 @@ def api_experiment(exp_id):
         llm = c.execute(sa.select(sa.func.coalesce(sa.func.sum(S.llm_calls.c.cost_usd), 0.0)).where(
             S.llm_calls.c.experiment_id == exp_id)).scalar()
     cfg = json.loads(e["config"])
+    spec = life.get_spec(cfg.get("world"))
+    disp = [[n, float(spec.LOW[spec.idx[n]]), float(spec.HIGH[spec.idx[n]])] for n in spec.body]
     return jsonify({
+        "world": spec.version, "world_description": spec.description, "display_genes": disp,
+        "source": e.get("source"),
         "id": exp_id, "label": S.fmt_exp(exp_id), "kind": e["kind"], "replay_of": e["replay_of"],
         "title": e["title"], "goal": e["goal"], "status": e["status"], "queue_position": pos,
         "created_at": e["created_at"], "started_at": e["started_at"], "finished_at": e["finished_at"],
@@ -392,12 +417,13 @@ def api_candidates(exp_id):
     return jsonify([_cand(r) for r in rows])
 
 
-def _cand(r):
+def _cand(r, spec=None):
     d = dict(r)
     for k in ("parents", "params", "genome", "fitness_seeds"):
         d[k] = S.loads(d[k], [])
     if isinstance(d["genome"], list):
-        d["genome_named"] = life.genome_dict(d["genome"])
+        spec = spec or (life.NEURAL if len(d["genome"]) == life.NEURAL.G else life.LINEAR)
+        d["genome_named"] = life.genome_summary(d["genome"], spec)
     return d
 
 
@@ -439,6 +465,7 @@ def api_episode(exp_id, cid):
         abort(404)
     d = _cand(r)
     cfg = core.Config.from_dict(json.loads(e["config"]))
+    spec = life.get_spec(cfg.world)
     which = request.args.get("seed", "train")
     seeds = cfg.holdout_seed_list() if which == "holdout" else cfg.train_seed_list()
     seed = seeds[0]
@@ -446,7 +473,7 @@ def api_episode(exp_id, cid):
     cond = life.Conditions(**{**cond.to_dict(), "reproduction": cfg.objective == "thrive"})
     rng = np.random.default_rng(seed)
     M = cfg.cohort * 4 if cfg.objective == "thrive" else cfg.cohort
-    sim = life.LifeSim(rng, 1, M, cond)
+    sim = life.LifeSim(rng, 1, M, cond, spec)
     start = rng.random((cfg.cohort, 2)) * life.ARENA
     sim.place(0, np.repeat(np.array(d["genome"])[None, :], cfg.cohort, 0), positions=start)
     frames = []
@@ -570,3 +597,87 @@ def api_snapshot_compare(sid):
     out = snapshot.compare(_snap(a), _snap(b))
     out["from_id"], out["to_id"] = S.fmt_snap(a), S.fmt_snap(b)
     return jsonify(out)
+
+
+# ── Phase 2: Intelligence (benchmarks) and Memory ────────────────────────
+@bp.route("/intelligence")
+def intelligence_page():
+    ensure_worker()
+    return render_template("darwin/intelligence.html", problems=suite.problems(), suite_version=suite.SUITE_VERSION,
+                           world=suite.WORLD, contestants=bench.CONTESTANTS, final_uses=bench.final_uses(),
+                           params=bench.DEFAULTS, run_id=request.args.get("run", type=int),
+                           hour=schedule.DAILY_HOUR_UTC, practice_per_day=schedule.PRACTICE_PER_DAY)
+
+
+def _bench_run(exp_id=None):
+    with S.engine().connect() as c:
+        q = sa.select(S.experiments).where(S.experiments.c.kind == "benchmark")
+        q = q.where(S.experiments.c.id == exp_id) if exp_id else q.order_by(S.experiments.c.id.desc()).limit(1)
+        e = c.execute(q).mappings().first()
+        if not e:
+            return None
+        rows = c.execute(sa.select(S.bench_results).where(S.bench_results.c.experiment_id == e["id"]).order_by(
+            S.bench_results.c.id)).mappings().all()
+    return {"id": e["id"], "label": S.fmt_exp(e["id"]), "title": e["title"], "status": e["status"],
+            "created_at": e["created_at"], "finished_at": e["finished_at"], "progress": S.loads(e["progress"], {}),
+            "stop_reason": e["stop_reason"], "config": S.loads(e["config"], {}),
+            "summary": (S.loads(e["summary"], {}) or {}).get("benchmark"), "code_version": e["code_version"],
+            "cells": [{"problem": r["problem"], "contestant": r["contestant"], "replicate": r["replicate"],
+                       "normalized": r["normalized"], "score": r["score"], "evaluations": r["evaluations"],
+                       "cpu_s": r["cpu_s"], "detail": S.loads(r["detail"], {})} for r in rows]}
+
+
+@bp.route("/api/benchmark")
+def api_benchmark():
+    return jsonify({"run": _bench_run(request.args.get("run", type=int)),
+                    "history": bench.history("holdout"), "versions": bench.versions("holdout"),
+                    "runs": _bench_runs(), "memory_size": memory.size(suite.WORLD), "final_uses": bench.final_uses(),
+                    "standing": [{"id": c["label"], "kind": c["kind"], "statement": c["statement"], "status": c["status"],
+                                  "history": [{"ts": h["ts"], "status": h["status"], "reason": h["reason"]}
+                                              for h in c["history"]]}
+                                 for c in S.all_claims() if (c["kind"] or "").startswith("standing:")]})
+
+
+def _bench_runs(limit=60):
+    with S.engine().connect() as c:
+        rows = c.execute(sa.select(S.experiments.c.id, S.experiments.c.title, S.experiments.c.status,
+                                   S.experiments.c.created_at, S.experiments.c.config).where(
+            S.experiments.c.kind == "benchmark").order_by(S.experiments.c.id.desc()).limit(limit)).all()
+    return [{"id": i, "label": S.fmt_exp(i), "title": t, "status": st, "created_at": ts,
+             "split": (S.loads(cf, {}) or {}).get("split")} for i, t, st, ts, cf in rows]
+
+
+@bp.route("/api/benchmark/run", methods=["POST"])
+def api_benchmark_run():
+    """Owner-only: dev benchmarks any time; the final never-seen set, recorded and counted."""
+    if not is_owner():
+        return jsonify({"error": "owner only"}), 403
+    split = (request.get_json(silent=True) or {}).get("split", "dev")
+    if split not in ("dev", "final"):
+        return jsonify({"error": "only dev and final can be run on demand; holdout runs daily on its own"}), 400
+    with S.engine().begin() as c:
+        busy = c.execute(sa.select(sa.func.count()).select_from(S.experiments).where(
+            (S.experiments.c.kind == "benchmark") & S.experiments.c.status.in_(["queued", "running"]))).scalar()
+        if busy:
+            return jsonify({"error": "a benchmark is already queued or running"}), 409
+        eid = schedule.queue_benchmark(split, S.now()[:10], c, requester="owner", source=split)
+    ensure_worker()
+    return jsonify({"id": eid, "label": S.fmt_exp(eid), "url": f"/darwin/intelligence?run={eid}"})
+
+
+@bp.route("/memory")
+def memory_page():
+    st = memory.stats()
+    ents = memory.entries()
+    for e in ents:
+        e["label"] = S.fmt_mem(e["id"])
+        e["uses"], e["helped"] = st.get(e["id"], (0, 0))
+        near = suite.protected_near(e["objective"], e["conditions"] or {})
+        e["nearest_protected"] = {"problem": near[0], "distance": round(near[1], 3)} if near else None
+        e["summary"] = life.genome_summary(e["genome"], life.get_spec(e["world"]))
+    with S.engine().connect() as c:
+        excluded = c.execute(sa.select(sa.func.count()).select_from(S.events).where(
+            S.events.c.type == "memory.excluded")).scalar()
+    return render_template("darwin/memory.html", entries=list(reversed(ents)), failures=memory.failures_list(),
+                           failure_counts=memory.failure_counts(), excluded=excluded, leak=suite.LEAK_DISTANCE,
+                           fmt_mem=S.fmt_mem)

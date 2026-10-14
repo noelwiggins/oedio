@@ -30,11 +30,12 @@ OPERATORS = {
     "distant_recombination": "crossover with the most genetically distant island member",
     "migration": "copy of another island's best, introduced every k generations",
     "mutation_burst": "disturbance: heavy mutation applied to the whole population",
+    "memory": "validated genome retrieved from Discovery Memory (copy, or lightly mutated copy)",
 }
 NOT_APPLICABLE = {
     "duplication": "fixed-length vector genome has no variable-length segments to duplicate",
     "deletion": "same reason; every gene is required by the controller",
-    "structural_change": "controller structure is fixed in Life World 1.0",
+    "structural_change": "controller structure is fixed within each Life World version",
 }
 
 DISTURBANCES = {
@@ -70,6 +71,13 @@ class Config:
     disturbance_gen: int = 15
     baseline_random: bool = False
     seed: int = 1
+    # Phase 2. Defaults keep every Phase 1 config (which lacks these keys) replaying identically.
+    world: str = "life-1.0"
+    max_evals: int = 0                    # stop when unique evaluations would exceed this (0 = no limit)
+    memory: bool = False                  # seed part of the initial population from Discovery Memory
+    memory_frac: float = 0.25
+    memory_failure_weighting: bool = True # down-weight memories whose past transfers did not help
+    seed_genomes: list = field(default_factory=list)   # filled at run start; replay reuses them
 
     @classmethod
     def from_dict(cls, d: dict) -> "Config":
@@ -85,6 +93,10 @@ class Config:
         errs = []
         if self.objective not in life.OBJECTIVES:
             errs.append(f"unknown objective {self.objective!r}")
+        if self.world not in life.SPECS:
+            errs.append(f"unknown world {self.world!r}")
+        if not (0.0 <= float(self.memory_frac) <= 0.5):
+            errs.append("memory share must be 0..0.5")
         if self.disturbance not in DISTURBANCES:
             errs.append(f"unknown disturbance {self.disturbance!r}")
         if not (6 <= self.population <= limits.get("max_population", 200)):
@@ -164,21 +176,24 @@ class Cand:
                 "selected": bool(self.selected)}
 
 
-def diversity(genomes: np.ndarray) -> float:
+def diversity(genomes: np.ndarray, spec: "life.Spec" = life.LINEAR) -> float:
     """Mean pairwise distance between genomes, each gene normalised to its range."""
     if len(genomes) < 2:
         return 0.0
-    z = (genomes - life.LOW) / life.SPAN
+    z = (genomes - spec.LOW) / spec.SPAN
     d = np.sqrt(((z[:, None, :] - z[None, :, :]) ** 2).sum(-1))
     n = len(z)
-    return float(d.sum() / (n * (n - 1)) / np.sqrt(life.G))
+    return float(d.sum() / (n * (n - 1)) / np.sqrt(spec.G))
 
 
 class Evolution:
     def __init__(self, cfg: Config, meter: Meter | None = None, on_generation=None, should_stop=None,
                  budget_usd: float | None = None, max_cpu_s: float | None = None):
         self.cfg = cfg
+        self.spec = life.get_spec(cfg.world)
         self.rng = np.random.default_rng(cfg.seed)
+        self._cache = {}
+        self.memory_roots = {}     # candidate id -> memory id, for seeds drawn from Discovery Memory
         self.meter = meter or Meter()
         self.on_generation = on_generation or (lambda *a, **k: None)
         self.should_stop = should_stop or (lambda: False)
@@ -196,21 +211,22 @@ class Evolution:
         self.serial += 1
         self.op_stats[op]["produced"] += 1
         self.meter.candidates += 1
-        return Cand(f"g{gen}-{self.serial}", gen, island, life.clip_genome(genome), parents, root, op, params)
+        return Cand(f"g{gen}-{self.serial}", gen, island, life.clip_genome(genome, self.spec), parents, root, op, params)
 
     # ── variation ─────────────────────────────────────────────────────
     def _mutate(self, g, rate, sigma):
-        mask = self.rng.random(life.G) < rate
+        S = self.spec
+        mask = self.rng.random(S.G) < rate
         if not mask.any():
-            mask[self.rng.integers(life.G)] = True
-        return g + mask * self.rng.normal(0, sigma, life.G) * life.SPAN, int(mask.sum())
+            mask[self.rng.integers(S.G)] = True
+        return g + mask * self.rng.normal(0, sigma, S.G) * S.SPAN, int(mask.sum())
 
     def _tournament(self, pop):
         idx = self.rng.choice(len(pop), size=min(self.cfg.tournament, len(pop)), replace=False)
         return max((pop[i] for i in idx), key=lambda c: c.fitness)
 
     def _offspring(self, island_pop, gen, island, burst=False) -> list:
-        cfg, rng = self.cfg, self.rng
+        cfg, rng, S = self.cfg, self.rng, self.spec
         n = len(island_pop)
         ranked = sorted(island_pop, key=lambda c: c.fitness, reverse=True)
         out = []
@@ -219,14 +235,14 @@ class Evolution:
         while len(out) < n:
             r = rng.random()
             if r < cfg.immigrant_rate:
-                g = life.random_genomes(rng, 1)[0]
+                g = life.random_genomes(rng, 1, S)[0]
                 c = self._new(gen, island, g, [], None, "random", {})
                 c.root = c.cid
             elif r < cfg.immigrant_rate + cfg.distant_rate:
                 a = self._tournament(island_pop)
-                z = lambda x: (x.genome - life.LOW) / life.SPAN
+                z = lambda x: (x.genome - S.LOW) / S.SPAN
                 b = max(island_pop, key=lambda o: float(((z(o) - z(a)) ** 2).sum()))
-                mask = rng.random(life.G) < 0.5
+                mask = rng.random(S.G) < 0.5
                 g, k = self._mutate(np.where(mask, a.genome, b.genome), cfg.mutation_rate * 0.5,
                                     cfg.mutation_sigma)
                 c = self._new(gen, island, g, [a.cid, b.cid], a.root, "distant_recombination",
@@ -234,12 +250,12 @@ class Evolution:
             elif r < cfg.immigrant_rate + cfg.distant_rate + cfg.crossover_rate:
                 a, b = self._tournament(island_pop), self._tournament(island_pop)
                 if rng.random() < 0.5:
-                    mask = rng.random(life.G) < 0.5
+                    mask = rng.random(S.G) < 0.5
                     g, k = self._mutate(np.where(mask, a.genome, b.genome), cfg.mutation_rate * 0.5,
                                         cfg.mutation_sigma)
                     op = "uniform_crossover"
                 else:
-                    t = rng.random(life.G)
+                    t = rng.random(S.G)
                     g, k = self._mutate(t * a.genome + (1 - t) * b.genome, cfg.mutation_rate * 0.5,
                                         cfg.mutation_sigma)
                     op = "blend_crossover"
@@ -248,16 +264,16 @@ class Evolution:
                 a = self._tournament(island_pop)
                 if rng.random() < 0.4:
                     g = a.genome.copy()
-                    i = int(rng.integers(life.G))
-                    g[i] += rng.normal(0, cfg.mutation_sigma * 1.5) * life.SPAN[i]
-                    c = self._new(gen, island, g, [a.cid], a.root, "point_mutation", {"gene": life.GENE_NAMES[i]})
+                    i = int(rng.integers(S.G))
+                    g[i] += rng.normal(0, cfg.mutation_sigma * 1.5) * S.SPAN[i]
+                    c = self._new(gen, island, g, [a.cid], a.root, "point_mutation", {"gene": S.names[i]})
                 else:
                     g, k = self._mutate(a.genome, cfg.mutation_rate, cfg.mutation_sigma)
                     c = self._new(gen, island, g, [a.cid], a.root, "multi_mutation", {"genes_mutated": k})
             out.append(c)
         if burst:
             for c in out[cfg.elite:]:
-                c.genome = life.clip_genome(c.genome + self.rng.normal(0, 0.25, life.G) * life.SPAN)
+                c.genome = life.clip_genome(c.genome + self.rng.normal(0, 0.25, S.G) * S.SPAN, S)
                 c.params = {**c.params, "burst": True}
                 self.op_stats["mutation_burst"]["produced"] += 1
         return out
@@ -269,7 +285,7 @@ class Evolution:
         reuse the recorded score instead of being re-simulated."""
         cond = conditions_at(self.cfg, gen)
         ckey = tuple(sorted(cond.to_dict().items()))
-        cache = self.__dict__.setdefault("_cache", {})
+        cache = self._cache
         todo = []
         for c in pop:
             if not np.isnan(c.fitness):
@@ -282,7 +298,7 @@ class Evolution:
         if not todo:
             return 0
         fit, steps = life.evaluate(np.stack([c.genome for c in todo]), self.cfg.objective, cond,
-                                   self.cfg.train_seed_list(), self.cfg.ticks, self.cfg.cohort)
+                                   self.cfg.train_seed_list(), self.cfg.ticks, self.cfg.cohort, self.spec)
         for c, f in zip(todo, fit):
             c.fitness_seeds = list(f)
             c.fitness = float(f.mean())
@@ -295,10 +311,28 @@ class Evolution:
     def run(self):
         cfg, rng = self.cfg, self.rng
         per = cfg.population // cfg.islands
+        S = self.spec
+        # Discovery Memory seeds (Phase 2): a share of the founders are validated
+        # genomes from earlier experiments; the rest are random as before.
+        seeded = [[] for _ in range(cfg.islands)]
+        mem = [e for e in (cfg.seed_genomes or []) if len(e.get("genome", [])) == S.G]
+        if cfg.memory and mem:
+            n_seed = min(int(round(cfg.memory_frac * cfg.population)), cfg.islands * (per - 1))
+            for k in range(n_seed):
+                e = mem[k % len(mem)]
+                g = np.asarray(e["genome"], dtype=np.float64)
+                if k >= len(mem):
+                    g = g + rng.normal(0, cfg.mutation_sigma * 0.5, S.G) * S.SPAN
+                seeded[k % cfg.islands].append((g, e.get("memory_id"), k >= len(mem)))
         islands = []
         for i in range(cfg.islands):
             pop = []
-            for g in life.random_genomes(rng, per):
+            for g, mid, mutated in seeded[i]:
+                c = self._new(0, i, g, [], None, "memory", {"memory_id": mid, "mutated": bool(mutated)})
+                c.root = c.cid
+                self.memory_roots[c.cid] = mid
+                pop.append(c)
+            for g in life.random_genomes(rng, per - len(pop), S):
                 c = self._new(0, i, g, [], None, "random", {})
                 c.root = c.cid
                 pop.append(c)
@@ -332,7 +366,7 @@ class Evolution:
             for c in flat:
                 roots[c.root] = roots.get(c.root, 0) + 1
             dom_root, dom_n = max(roots.items(), key=lambda kv: kv[1])
-            div = diversity(genomes)
+            div = diversity(genomes, S)
             if gen == 0:
                 self.gen0_best = best
             stats = {
@@ -344,8 +378,10 @@ class Evolution:
                 "collapsed_cohorts": int((fits <= 0).sum()),
                 "conditions": cond.to_dict(),
                 "operators": {k: sum(1 for c in flat if c.operator == k) for k in OPERATORS},
-                "mean_genome": life.genome_dict(genomes.mean(0)),
-                "best_genome": life.genome_dict(best.genome),
+                "mean_genome": life.genome_summary(genomes.mean(0), S),
+                "best_genome": life.genome_summary(best.genome, S),
+                "unique_evaluations": len(self._cache),
+                "memory_rooted_share": round(sum(1 for c in flat if c.root in self.memory_roots) / len(flat), 4),
                 "island_best": [round(float(max(p, key=lambda c: c.fitness).fitness), 6) for p in islands],
                 "cpu_s": round(self.meter.cpu_s() - cpu_before, 4), "sim_steps": int(steps),
             }
@@ -377,6 +413,8 @@ class Evolution:
                 self.stop_reason = "cancelled by request"
             elif gen + 1 >= cfg.generations:
                 self.stop_reason = "generation limit reached"
+            elif cfg.max_evals and len(self._cache) + (cfg.population - cfg.elite * cfg.islands) > cfg.max_evals:
+                self.stop_reason = f"evaluation budget reached ({len(self._cache)} of {cfg.max_evals} unique evaluations)"
             elif stale >= cfg.stagnation:
                 self.stop_reason = f"stagnation: no improvement for {stale} generations"
             elif self.max_cpu_s and self.meter.cpu_s() + per_gen_cpu * 1.5 > self.max_cpu_s * 0.6:
@@ -401,6 +439,10 @@ class Evolution:
         self.final_population = [c for pop in islands for c in pop]
         return self
 
+    def winner_memory_id(self):
+        """Memory entry whose seed founded the winning lineage, if any."""
+        return self.memory_roots.get(self.best.root) if self.best is not None else None
+
     def digest(self) -> str:
         """Fingerprint used by REPLAY to check exact reproduction (s.54)."""
         h = hashlib.sha256()
@@ -419,9 +461,9 @@ def sign_test_p(wins: int, n: int) -> float:
 
 
 def head_to_head(a: np.ndarray, b: np.ndarray, objective: str, cond: life.Conditions, seeds,
-                 ticks: int, cohort: int, meter: Meter | None = None) -> dict:
+                 ticks: int, cohort: int, meter: Meter | None = None, spec: "life.Spec" = life.LINEAR) -> dict:
     """Evaluate genomes a and b on the same seeds; report wins of a over b."""
-    fit, steps = life.evaluate(np.stack([a, b]), objective, cond, seeds, ticks, cohort)
+    fit, steps = life.evaluate(np.stack([a, b]), objective, cond, seeds, ticks, cohort, spec)
     if meter:
         meter.sim_steps += steps
         meter.evaluations += 2 * len(seeds)
@@ -450,8 +492,9 @@ def random_search(cfg: Config, n: int, meter: Meter | None = None) -> tuple:
     done = 0
     while done < n:
         k = min(chunk, n - done)
-        gs = life.random_genomes(rng, k)
-        fit, steps = life.evaluate(gs, cfg.objective, cond, cfg.train_seed_list(), cfg.ticks, cfg.cohort)
+        S = life.get_spec(cfg.world)
+        gs = life.random_genomes(rng, k, S)
+        fit, steps = life.evaluate(gs, cfg.objective, cond, cfg.train_seed_list(), cfg.ticks, cfg.cohort, S)
         if meter:
             meter.sim_steps += steps
             meter.evaluations += k * cfg.train_seeds

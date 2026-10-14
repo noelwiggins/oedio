@@ -1,0 +1,58 @@
+{% extends "darwin/base.html" %}
+{% block title %}Memory — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Discovery Memory · Failure Memory</p>
+<h1 class="page">What Darwin has learned, and what didn't work</h1>
+<p class="lede">A genome enters Discovery Memory only after its claim passes held-out validation. New experiments seed a quarter of their
+  starting population from the most similar memories. Whether that helps is a hypothesis, tested every day on the
+  <a href="/darwin/intelligence">Intelligence</a> page. Failure Memory keeps what did not work. With failure weighting on, memories that
+  keep failing to transfer are tried less often, but never ruled out.</p>
+
+<div class="grid g4">
+  <div class="card flat metric"><div class="k">Memories</div><div class="v">{{ entries|length }}</div><div class="n">validated genomes</div></div>
+  <div class="card flat metric"><div class="k">Transfers tried</div><div class="v">{{ entries|sum(attribute='uses') }}</div><div class="n">{{ entries|sum(attribute='helped') }} founded the winning lineage</div></div>
+  <div class="card flat metric"><div class="k">Failures recorded</div><div class="v">{{ failure_counts.values()|sum }}</div><div class="n">{% for k, v in failure_counts.items() %}{{ k.replace('_', ' ') }} {{ v }}{{ ' · ' if not loop.last }}{% endfor %}</div></div>
+  <div class="card flat metric"><div class="k">Refused (leakage guard)</div><div class="v">{{ excluded }}</div><div class="n">within {{ leak }} of a held-out or final problem</div></div>
+</div>
+
+<section class="section card scroll-x">
+  <h2>Discovery Memory</h2>
+  {% if entries %}
+  <table class="t">
+    <tr><th>memory</th><th>from</th><th>world</th><th>objective</th><th>conditions</th><th>fitness</th><th>held-out</th><th>transfers</th><th>nearest protected</th><th>body</th></tr>
+    {% for e in entries %}
+    {% set v = e.validation or {} %}
+    <tr>
+      <td class="mono">{{ e.label }}</td>
+      <td>{% if e.experiment_id %}<a class="mono" href="/darwin/experiment/{{ e.experiment_id }}">{{ fmt_exp(e.experiment_id) }}</a>{% endif %}<div class="small muted">{{ e.source }}</div></td>
+      <td class="mono small">{{ e.world }}</td>
+      <td>{{ e.objective }}</td>
+      <td class="small mono">food {{ e.conditions.food }} · green {{ e.conditions.green_share }} · scarcity {{ e.conditions.scarcity }} · hazards {{ e.conditions.hazards }}</td>
+      <td>{{ '%.3f' % e.train_fitness }}</td>
+      <td class="small">{% if v.wins is defined %}{{ v.wins }}/{{ v.wins + v.losses + v.ties }}{% else %}—{% endif %}</td>
+      <td>{{ e.helped }}/{{ e.uses }}</td>
+      <td class="small">{% if e.nearest_protected %}{{ e.nearest_protected.problem }} at {{ e.nearest_protected.distance }}{% endif %}</td>
+      <td class="small mono">{% for k in ['speed', 'sense', 'size', 'pref'] %}{{ k }} {{ '%.2f' % e.summary[k] }}{{ ' · ' if not loop.last }}{% endfor %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="muted">Empty. Memories arrive from daily practice runs and from any Life Lab experiment whose winner passes held-out validation.</p>
+  {% endif %}
+</section>
+
+<section class="section card scroll-x">
+  <h2>Failure Memory</h2>
+  {% if failures %}
+  <table class="t">
+    <tr><th>when</th><th>kind</th><th>experiment</th><th>objective</th><th>detail</th></tr>
+    {% for f in failures %}
+    <tr><td class="small mono">{{ f.ts[:16].replace('T', ' ') }}</td><td><span class="pill s-failed">{{ f.kind.replace('_', ' ') }}</span></td>
+      <td>{% if f.experiment_id %}<a class="mono" href="/darwin/experiment/{{ f.experiment_id }}">{{ fmt_exp(f.experiment_id) }}</a>{% endif %}</td>
+      <td>{{ f.objective or '' }}</td>
+      <td class="small">{% for k, v in (f.detail or {}).items() %}<span class="muted">{{ k.replace('_', ' ') }}</span> {{ v if v is string else (v|round(3) if v is number else v) }}{{ ' · ' if not loop.last }}{% endfor %}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">None recorded yet.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,10 +1,15 @@
 """DARWIN WORLD: the shared, open-ended terrarium on the Darwin homepage.
 
 One world, run server-side by the same simulator the experiments use, with
-reproduction and inheritance switched on. It advances while someone is
-watching (up to TPS ticks per wall-clock second), so every visitor sees the
-same population. Frames are sampled every FRAME_EVERY ticks and the browser
-interpolates between them; nothing on screen is invented by the client.
+reproduction and inheritance switched on. Since Phase 2 it runs continuously
+in a background thread at TPS ticks per second, whether or not anyone is
+watching, so every visitor sees a population with real history. Only one
+process may run it at a time (a Postgres advisory lock, or a file lock on
+SQLite); during a redeploy the new process waits for the old one to stop, then
+resumes from the latest checkpoint. Frames are sampled every FRAME_EVERY ticks
+and the browser interpolates between them; nothing on screen is invented by
+the client. The thread also runs the daily scheduler (practice + benchmark)
+and books its own CPU time to the Ledger every hour.
 
 The environment changes slowly by itself: the food mix cycles with a long
 "season", so the population's diet is under shifting selection. Population
@@ -23,7 +28,7 @@ import time
 import numpy as np
 import sqlalchemy as sa
 
-from . import life, store
+from . import costs, life, store
 
 S = store
 SLOTS = 220
@@ -32,13 +37,16 @@ FOOD = 200
 HAZARDS = 4
 TPS = 10
 FRAME_EVERY = 2
-MAX_CATCHUP = 40          # ticks simulated per request at most
-STATS_EVERY = 50
-CHECKPOINT_EVERY = 300
+STATS_EVERY = 600         # one sample a minute
+CHECKPOINT_EVERY = 600
 SEASON_TICKS = 4000
 
 _lock = threading.Lock()
 _state = None
+_thread = None
+_thread_pid = None
+_leader = {"conn": None, "fh": None, "since": None}
+LEADER_KEY = 774413
 
 
 def _conditions(tick: int) -> life.Conditions:
@@ -227,23 +235,124 @@ def get() -> World:
     return _state
 
 
-def advance_and_frames(since: int) -> dict:
-    """Advance the world in step with wall-clock time, return frames newer than `since`."""
-    global _state
+def frames(since: int) -> dict:
+    """Frames newer than `since` from the continuously running world."""
+    ensure_background()
     with _lock:
-        w = get()
-        nowt = time.time()
-        due = min(int((nowt - w.last_wall) * TPS), MAX_CATCHUP)
-        if due > 0:
-            w.last_wall = nowt if due < MAX_CATCHUP else nowt  # don't bank unwatched time
-            if w.step(due) == "extinct":
-                S.append("world.extinction", {"era": w.era, "tick": w.sim.tick, "births": w.births,
-                                              "deaths": w.deaths})
-                _state = _genesis(w.era + 1)
+        w = _state
+        if w is None:
+            return {"standby": True, "frames": [], "scene": None, "stats": None, "tps": TPS,
+                    "frame_every": FRAME_EVERY, "arena": life.ARENA,
+                    "note": "the world is starting or another process is handing it over"}
+        out = [f for f in w.frames if f["t"] > since]
+        return {"frames": out, "scene": w.scene(), "stats": w.stats(), "tps": TPS, "frame_every": FRAME_EVERY,
+                "arena": life.ARENA, "resumed_from": w.resumed_from, "running_since": _leader["since"]}
+
+
+# ── continuous running ───────────────────────────────────────────────────
+def _acquire_leader() -> bool:
+    eng = S.engine()
+    if eng.dialect.name == "postgresql":
+        conn = eng.connect()
+        try:
+            ok = bool(conn.exec_driver_sql(f"SELECT pg_try_advisory_lock({LEADER_KEY})").scalar())
+            conn.commit()
+        except Exception:
+            conn.close()
+            return False
+        if not ok:
+            conn.close()
+            return False
+        _leader["conn"] = conn
+    else:
+        import fcntl
+        fh = open(S.db_url()[len("sqlite:///"):] + ".leader", "w")
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            fh.close()
+            return False
+        _leader["fh"] = fh
+    _leader["since"] = S.now()
+    return True
+
+
+def _still_leader() -> bool:
+    conn = _leader["conn"]
+    if conn is None:
+        return _leader["fh"] is not None
+    try:
+        conn.exec_driver_sql("SELECT 1")
+        conn.commit()
+        return True
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        _leader["conn"] = None
+        return False
+
+
+def _loop():
+    global _state
+    period = 1.0 / TPS
+    last_minute = 0.0
+    last_compute = time.time()
+    cpu_mark = time.thread_time()
+    ticks_mark = 0
+    while True:
+        try:
+            if _leader["conn"] is None and _leader["fh"] is None:
+                if not _acquire_leader():
+                    time.sleep(15)
+                    continue
+                with _lock:
+                    _state = None
+                    get()
+                    ticks_mark = _state.sim.tick
+            t0 = time.time()
+            with _lock:
                 w = _state
-        frames = [f for f in w.frames if f["t"] > since]
-        return {"frames": frames, "scene": w.scene(), "stats": w.stats(), "tps": TPS,
-                "frame_every": FRAME_EVERY, "arena": life.ARENA, "resumed_from": w.resumed_from}
+                if w.step(1) == "extinct":
+                    S.append("world.extinction", {"era": w.era, "tick": w.sim.tick, "births": w.births,
+                                                  "deaths": w.deaths})
+                    _checkpoint(w)
+                    _state = _genesis(w.era + 1)
+            if t0 - last_minute >= 60:
+                last_minute = t0
+                if not _still_leader():
+                    with _lock:
+                        _state = None
+                    continue
+                try:
+                    from . import schedule
+                    schedule.tick()
+                except Exception as e:
+                    print(f"[darwin] scheduler error: {e!r}")
+            if t0 - last_compute >= 3600:
+                cpu = time.thread_time() - cpu_mark
+                with _lock:
+                    ticks = _state.sim.tick - ticks_mark if _state else 0
+                    ticks_mark = _state.sim.tick if _state else 0
+                S.append("world.compute", {"cpu_s": round(cpu, 2), "ticks": int(ticks), "period_s": round(t0 - last_compute)},
+                         cost_usd=costs.compute_usd(cpu), cost_kind="estimated")
+                cpu_mark, last_compute = time.thread_time(), t0
+            time.sleep(max(0.0, period - (time.time() - t0)))
+        except Exception as e:
+            print(f"[darwin] world loop error: {e!r}")
+            time.sleep(5)
+
+
+def ensure_background():
+    """Start the world thread once per process (idempotent; safe after fork)."""
+    global _thread, _thread_pid
+    import os
+    if _thread is not None and _thread_pid == os.getpid() and _thread.is_alive():
+        return
+    _thread_pid = os.getpid()
+    _thread = threading.Thread(target=_loop, name="darwin-world", daemon=True)
+    _thread.start()
 
 
 def history(limit=400):

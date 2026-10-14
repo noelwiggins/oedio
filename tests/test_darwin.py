@@ -17,6 +17,7 @@ sys.path.insert(0, ROOT)
 _tmp = tempfile.mkdtemp()
 os.environ["DARWIN_DB_URL"] = "sqlite:///" + os.path.join(_tmp, "t.sqlite")
 os.environ.pop("DATABASE_URL", None)
+os.environ["DARWIN_SCHEDULER"] = "off"   # tests drive the scheduler explicitly
 
 from darwin import core, life, runner, snapshot, store  # noqa: E402
 import sqlalchemy as sa  # noqa: E402
@@ -251,3 +252,130 @@ def test_survive_objective_is_not_saturated():
     assert m.max() > m.min() * 1.2, "the survive objective must separate good from poor survivors"
     s = np.sort(m)
     assert s[-1] > s[-2], "no ceiling: the best random genome must be strictly ahead"
+
+
+# ── Phase 2 ──────────────────────────────────────────────────────────────
+from darwin import baselines, bench, memory, suite  # noqa: E402
+
+
+def test_neural_world_is_batch_independent():
+    S_ = life.NEURAL
+    g = life.random_genomes(np.random.default_rng(4), 9, S_)
+    a, _ = life.evaluate(g, "forage", life.Conditions(hazards=3), [5], ticks=120, cohort=4, spec=S_)
+    for i in range(len(g)):
+        solo, _ = life.evaluate(g[i:i + 1], "forage", life.Conditions(hazards=3), [5], ticks=120, cohort=4, spec=S_)
+        assert np.array_equal(solo[0], a[i])
+
+
+def test_phase1_configs_replay_unchanged():
+    # A Phase 1 config (no world/memory keys) must still produce the Phase 1 digest.
+    ev = core.Evolution(core.Config(objective="forage", population=40, generations=30, seed=7)).run()
+    assert ev.digest()[:12] == "36e985e14e88"
+
+
+def test_suite_splits_and_leakage_geometry():
+    assert {p["split"] for p in suite.problems()} == set(suite.SPLITS)
+    for p in suite.problems("train"):
+        assert suite.protected_near(p["objective"], p["conditions"])[1] >= suite.LEAK_DISTANCE
+
+
+def test_max_evals_budget_and_baselines_exact():
+    cfg = core.Config.from_dict({**SMALL, "world": "life-2.0", "generations": 400, "stagnation": 400, "max_evals": 60})
+    ev = core.Evolution(cfg).run()
+    assert ev.stop_reason.startswith("evaluation budget") and len(ev._cache) <= 60
+    S_ = life.NEURAL
+    for fn in (baselines.random_search, baselines.hill_climb):
+        g, f, used = fn(S_, "forage", life.Conditions(), [1], 37, 3, ticks=60, cohort=2)
+        assert used == 37 and len(g) == S_.G
+
+
+def test_memory_admit_retrieve_seed_and_guard():
+    cond = suite.get("T1")["conditions"]
+    g = life.random_genomes(np.random.default_rng(1), 1, life.NEURAL)[0]
+    mid, why = memory.admit(None, None, "x", "life-2.0", "forage", cond, g, 1.0, {}, "test", "replicated")
+    assert mid and why == "admitted"
+    near = suite.get("H1")
+    mid2, why2 = memory.admit(None, None, "y", "life-2.0", near["objective"], near["conditions"], g, 1.0, {}, "test", "robust")
+    assert mid2 is None and "protected" in why2
+    mid3, _ = memory.admit(None, None, "z", "life-2.0", "forage", cond, g, 1.0, {}, "test", "observed")
+    assert mid3 is None
+    got = memory.retrieve("life-2.0", "forage", cond)
+    assert got and got[0]["memory_id"] == mid and got[0]["distance"] == 0.0
+    cfg = core.Config.from_dict({**SMALL, "world": "life-2.0", "memory": True,
+                                 "seed_genomes": [{"memory_id": mid, "genome": got[0]["genome"]}]})
+    ev = core.Evolution(cfg).run()
+    ops = [c.operator for c in ev.final_population] + [h["operators"].get("memory", 0) for h in ev.history[:1]]
+    assert ev.history[0]["operators"]["memory"] == round(0.25 * SMALL["population"])
+    assert core.Evolution(core.Config.from_dict(cfg.to_dict())).run().digest() == ev.digest()
+    memory.record_uses(None, "forage", cond, [{"memory_id": mid, "distance": 0.0}], None, 1.0)
+    assert memory.stats()[mid] == (1, 0)
+    w_fw = memory.retrieve("life-2.0", "forage", cond, failure_weighting=True)[0]["weight"]
+    w_no = memory.retrieve("life-2.0", "forage", cond, failure_weighting=False)[0]["weight"]
+    assert w_fw < w_no, "a failed transfer lowers the failure-weighted retrieval weight"
+
+
+def test_benchmark_end_to_end_tiny(monkeypatch):
+    monkeypatch.setattr(bench, "DEFAULTS", {"replicates": 2, "max_evals": 40, "population": 10, "train_seeds": 1,
+                                            "calibration_n": 30})
+    monkeypatch.setattr(suite, "TICKS", 60)
+    monkeypatch.setattr(suite, "SCORING_SEEDS", 3)
+    monkeypatch.setattr(bench, "_llm_reference", lambda *a, **k: None)
+    from darwin import schedule
+    with store.engine().begin() as c:
+        eid = schedule.queue_benchmark("holdout", store.now()[:10], c)
+    with store.engine().begin() as c:
+        c.execute(store.experiments.update().where(store.experiments.c.id == eid).values(
+            config=store.canon({"split": "holdout", "problems": ["H1"], **bench.DEFAULTS})))
+    assert runner.claim_next() == eid
+    runner.run_experiment(eid)
+    with store.engine().connect() as c:
+        row = dict(c.execute(sa.select(store.experiments).where(store.experiments.c.id == eid)).mappings().one())
+        n = c.execute(sa.select(sa.func.count()).select_from(store.bench_results).where(
+            store.bench_results.c.experiment_id == eid)).scalar()
+    assert row["status"] == "completed"
+    b = json.loads(row["summary"])["benchmark"]
+    assert n == 2 * 5 and set(b["contestants"]) == set(bench.SEARCH)
+    assert b["comparisons"]["darwin__vs__random"]["n"] == 2
+    assert set(b["claims"]) == {"memory", "random", "hillclimb"}
+    # benchmarks never write memory use statistics
+    with store.engine().connect() as c:
+        assert not c.execute(sa.select(sa.func.count()).select_from(store.memory_uses).where(
+            store.memory_uses.c.experiment_id == eid)).scalar()
+    # second run: controls must repeat exactly (determinism check)
+    with store.engine().begin() as c:
+        eid2 = schedule.queue_benchmark("holdout", store.now()[:10], c)
+        c.execute(store.experiments.update().where(store.experiments.c.id == eid2).values(
+            config=store.canon({"split": "holdout", "problems": ["H1"], **bench.DEFAULTS})))
+    assert runner.claim_next() == eid2
+    runner.run_experiment(eid2)
+    with store.engine().connect() as c:
+        b2 = json.loads(c.execute(sa.select(store.experiments.c.summary).where(
+            store.experiments.c.id == eid2)).scalar())["benchmark"]
+    assert b2["control_drift"]["checked"] and b2["control_drift"]["identical"]
+
+
+def test_phase2_pages_render(client):
+    for path in ("/darwin/intelligence", "/darwin/memory"):
+        r = client.get(path)
+        assert r.status_code == 200, path
+    d = client.get("/darwin/api/benchmark").get_json()
+    assert "history" in d and "standing" in d
+    r = client.post("/darwin/api/benchmark/run", json={"split": "final"})
+    assert r.status_code == 403
+
+
+def test_scheduler_queues_practice_then_benchmark(monkeypatch):
+    from datetime import datetime, timezone
+    from darwin import schedule
+    monkeypatch.setenv("DARWIN_SCHEDULER", "on")
+    monkeypatch.setattr("darwin.web.ensure_worker", lambda: None)
+    t = datetime(2031, 5, 4, 7, 0, tzinfo=timezone.utc)
+    with store.engine().begin() as c:   # keep the test independent of today's real date
+        c.execute(store.experiments.update().where(store.experiments.c.status == "queued").values(status="stopped"))
+    monkeypatch.setattr(store, "now", lambda: "2031-05-04T07:00:00.000+00:00")
+    schedule.tick(t)
+    schedule.tick(t)   # idempotent within the day
+    with store.engine().connect() as c:
+        rows = c.execute(sa.select(store.experiments.c.source, store.experiments.c.kind).where(
+            store.experiments.c.created_at >= "2031-05-04")).all()
+    assert sorted(r[0] for r in rows) == ["benchmark", "practice", "practice", "practice"]

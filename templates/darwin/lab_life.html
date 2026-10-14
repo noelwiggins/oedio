@@ -18,6 +18,19 @@
     </div>
 
     <div class="card">
+      <h2>World</h2>
+      <div class="grid g2" id="worlds">
+        {% for w in worlds %}
+        <label class="card flat" style="cursor:pointer"><input type="radio" name="world" value="{{ w.version }}" {{ 'checked' if w.default }}>
+          <b class="mono">{{ w.version }}</b>{% if w.default %} <span class="pill s-operational">default</span>{% endif %}<div class="small muted">{{ w.description }}</div></label>
+        {% endfor %}
+      </div>
+      <label class="row small" style="margin-top:12px"><input type="checkbox" id="memory" checked> Start from experience: seed
+        <input class="f" type="number" id="memory_frac" min="0" max="0.5" step="0.05" value="0.25" style="width:80px;display:inline-block;padding:4px 8px"> of the population from
+        <a href="/darwin/memory">Discovery Memory</a> (most similar validated genomes; failure-weighted)</label>
+    </div>
+
+    <div class="card">
       <h2>Objective</h2>
       <div class="grid g3" id="objs">
         {% for k, v in objectives.items() %}
@@ -101,6 +114,7 @@
   // Apply a preset from the question box or an LLM assessment.
   if (preset.goal) document.getElementById('goal').value = preset.goal;
   if (preset.objective) { const r = f.querySelector(`input[name=objective][value="${preset.objective}"]`); if (r) r.checked = true; }
+  if (preset.world) { const r = f.querySelector(`input[name=world][value="${preset.world}"]`); if (r) r.checked = true; }
   ['generations', 'population', 'disturbance'].forEach(k => { if (preset[k] != null) document.getElementById(k).value = preset[k]; });
   Object.entries(preset.conditions || {}).forEach(([k, v]) => { const el = document.getElementById(k); if (el) el.value = v; });
   if (!owner) { document.getElementById('population').max = {{ public.max_population }}; document.getElementById('generations').max = {{ public.max_generations }}; }
@@ -114,6 +128,8 @@
   function config() {
     return {
       objective: f.querySelector('input[name=objective]:checked').value,
+      world: f.querySelector('input[name=world]:checked').value,
+      memory: document.getElementById('memory').checked, memory_frac: num('memory_frac'), memory_failure_weighting: true,
       population: num('population'), generations: num('generations'), islands: num('islands'),
       cohort: num('cohort'), ticks: num('ticks'), train_seeds: num('train_seeds'), holdout_seeds: num('holdout_seeds'),
       stagnation: num('stagnation'), mutation_rate: num('mutation_rate'), mutation_sigma: num('mutation_sigma'),
@@ -127,7 +143,7 @@
   // Rough CPU estimate from measured throughput (~8 ms per candidate-seed at cohort 8, 300 ticks, 30 food).
   function estimate() {
     const c = config();
-    const perEval = 0.008 * (c.ticks / 300) * (0.4 + 0.6 * c.cohort / 8) * (0.6 + 0.4 * c.conditions.food / 30) * (c.objective === 'thrive' ? 3.5 : 1);
+    const perEval = (c.world === 'life-2.0' ? 0.016 : 0.008) * (c.ticks / 300) * (0.4 + 0.6 * c.cohort / 8) * (0.6 + 0.4 * c.conditions.food / 30) * (c.objective === 'thrive' ? 3.5 : 1);
     const evo = c.population * c.generations * c.train_seeds * perEval * 0.85;
     const val = 4 * c.holdout_seeds * perEval;
     const base = c.baseline_random ? evo : 0;

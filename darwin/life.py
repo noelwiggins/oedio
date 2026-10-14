@@ -8,9 +8,18 @@ One simulator serves two purposes:
   worlds in parallel, one per candidate, each holding a cohort of clones).
 
 Everything that happens here comes from the mechanics below. No behaviour is
-scripted: steering is a linear controller whose weights are genes, and any
-grouping, specialisation or avoidance seen in the world has to arise from
-selection acting on those genes (Brief s.26-29).
+scripted: steering is a controller whose weights are genes, and any grouping,
+specialisation or avoidance seen in the world has to arise from selection
+acting on those genes (Brief s.26-29).
+
+Two representations share the same physics:
+* life-1.0: a 10-gene linear controller (Phase 1; kept unchanged so every
+  Phase 1 experiment still replays exactly).
+* life-2.0: body genes plus a small neural controller (13 perceptions -> 6
+  hidden -> steer x, steer y, pace), 111 genes. Added in Phase 2 after the
+  equal-budget baselines showed the 10-gene space was too shallow for search
+  to beat random sampling. Activation is softsign (x / (1 + |x|)), which uses
+  only exactly-rounded arithmetic, so results stay batch-independent.
 
 Determinism: all randomness comes from one numpy Generator seeded by the
 caller, and only element-wise float64 operations are used, so a run with the
@@ -45,6 +54,52 @@ LOW = np.array([g[1] for g in GENES], dtype=np.float64)
 HIGH = np.array([g[2] for g in GENES], dtype=np.float64)
 SPAN = HIGH - LOW
 
+PERCEPTS = ["food_dx", "food_dy", "food_near", "food_match", "hazard_away_dx", "hazard_away_dy",
+            "hazard_near", "crowd_dx", "crowd_dy", "crowd_density", "energy", "heading_dx", "heading_dy"]
+NN_IN, NN_HID, NN_OUT = len(PERCEPTS), 6, 3
+NN_OUTPUTS = ["steer_x", "steer_y", "pace"]
+BODY_GENES = [GENES[0], GENES[1], GENES[2], GENES[3], GENES[8], GENES[9]]
+
+
+class Spec:
+    """A candidate representation for the Life World."""
+
+    def __init__(self, version, ctrl, genes, description):
+        self.version, self.ctrl, self.genes, self.description = version, ctrl, genes, description
+        self.names = [g[0] for g in genes]
+        self.LOW = np.array([g[1] for g in genes], dtype=np.float64)
+        self.HIGH = np.array([g[2] for g in genes], dtype=np.float64)
+        self.SPAN = self.HIGH - self.LOW
+        self.G = len(genes)
+        self.idx = {n: i for i, n in enumerate(self.names)}
+        self.body = [n for n in self.names if not n.startswith(("w1_", "b1_", "w2_", "b2_"))]
+
+
+def _nn_genes():
+    out = list(BODY_GENES)
+    for i, p in enumerate(PERCEPTS):
+        for j in range(NN_HID):
+            out.append((f"w1_{p}_{j}", -2.0, 2.0, f"weight from perception '{p}' to hidden unit {j}"))
+    for j in range(NN_HID):
+        out.append((f"b1_{j}", -2.0, 2.0, f"bias of hidden unit {j}"))
+    for j in range(NN_HID):
+        for k, o in enumerate(NN_OUTPUTS):
+            out.append((f"w2_{j}_{o}", -2.0, 2.0, f"weight from hidden unit {j} to output '{o}'"))
+    for o in NN_OUTPUTS:
+        out.append((f"b2_{o}", -2.0, 2.0, f"bias of output '{o}'"))
+    return out
+
+
+LINEAR = Spec("life-1.0", "linear", GENES, "10 genes: body plus a 4-weight linear steering rule")
+NEURAL = Spec("life-2.0", "nn", _nn_genes(),
+              f"{len(_nn_genes())} genes: 6 body genes plus a {NN_IN}-{NN_HID}-{NN_OUT} neural controller")
+SPECS = {LINEAR.version: LINEAR, NEURAL.version: NEURAL}
+DEFAULT_WORLD = NEURAL.version
+
+
+def get_spec(version: str | None) -> Spec:
+    return SPECS.get(version or LINEAR.version, LINEAR)
+
 # ── Physics constants (part of WORLD_VERSION; change => bump version) ────
 ARENA = 100.0
 FOOD_VALUE = np.array([14.0, 22.0])   # amber (type 0), green (type 1)
@@ -62,16 +117,31 @@ START_ENERGY = 40.0
 REGROW_MEAN = 90.0                    # ticks before an eaten food item returns
 
 
-def clip_genome(g: np.ndarray) -> np.ndarray:
-    return np.clip(g, LOW, HIGH)
+def clip_genome(g: np.ndarray, spec: Spec = LINEAR) -> np.ndarray:
+    return np.clip(g, spec.LOW, spec.HIGH)
 
 
-def random_genomes(rng: np.random.Generator, n: int) -> np.ndarray:
-    return LOW + rng.random((n, G)) * SPAN
+def random_genomes(rng: np.random.Generator, n: int, spec: Spec = LINEAR) -> np.ndarray:
+    return spec.LOW + rng.random((n, spec.G)) * spec.SPAN
 
 
-def genome_dict(g) -> dict:
-    return {name: round(float(v), 4) for name, v in zip(GENE_NAMES, g)}
+def genome_dict(g, spec: Spec = LINEAR) -> dict:
+    return {name: round(float(v), 4) for name, v in zip(spec.names, g)}
+
+
+def genome_summary(g, spec: Spec = LINEAR) -> dict:
+    """Body genes by name; for the neural controller, a compact description of the weights."""
+    d = genome_dict(g, spec)
+    if spec.ctrl == "linear":
+        return d
+    out = {k: d[k] for k in spec.body}
+    w = np.asarray(g[len(spec.body):], dtype=np.float64)
+    out["controller_mean_abs_weight"] = round(float(np.abs(w).mean()), 4)
+    return out
+
+
+def softsign(x):
+    return x / (1.0 + np.abs(x))
 
 
 @dataclass
@@ -103,8 +173,8 @@ class EpisodeResult:
 class LifeSim:
     """Vectorised simulation of W independent worlds with up to M creature slots each."""
 
-    def __init__(self, rng: np.random.Generator, W: int, M: int, cond: Conditions):
-        self.rng, self.W, self.M, self.cond = rng, W, M, cond
+    def __init__(self, rng: np.random.Generator, W: int, M: int, cond: Conditions, spec: Spec = LINEAR):
+        self.rng, self.W, self.M, self.cond, self.spec = rng, W, M, cond, spec
         F, H = cond.food, cond.hazards
         self.px = np.zeros((W, M)); self.py = np.zeros((W, M))
         # Every random field is drawn without the world axis and broadcast, so
@@ -120,7 +190,7 @@ class LifeSim:
         self.energy = np.zeros((W, M))
         self.alive = np.zeros((W, M), dtype=bool)
         self.age = np.zeros((W, M), dtype=np.int64)
-        self.genome = np.zeros((W, M, G))
+        self.genome = np.zeros((W, M, spec.G))
         self.uid = np.full((W, M), -1, dtype=np.int64)
         self.next_uid = 0
         self.fx = np.broadcast_to(rng.random(F) * ARENA, (W, F)).copy()
@@ -150,7 +220,7 @@ class LifeSim:
         uids = []
         for k in range(n):
             s = free[k]
-            self.genome[world, s] = clip_genome(genomes[k])
+            self.genome[world, s] = clip_genome(genomes[k], self.spec)
             if positions is not None:
                 self.px[world, s], self.py[world, s] = positions[k]
             else:
@@ -182,8 +252,11 @@ class LifeSim:
         W, M = self.W, self.M
         alive = self.alive
         g = self.genome
+        spec = self.spec
+        nn = spec.ctrl == "nn"
         speed, sense, size, pref = g[..., 0], g[..., 1], g[..., 2], g[..., 3]
-        w_food, w_haz, w_crowd, wander = g[..., 4], g[..., 5], g[..., 6], g[..., 7]
+        if not nn:
+            w_food, w_haz, w_crowd, wander = g[..., 4], g[..., 5], g[..., 6], g[..., 7]
         sense2 = sense * sense
         F, H = self.fx.shape[1], self.hx.shape[1]
         # Per-tick random fields, constant size whatever happens in the worlds.
@@ -192,7 +265,7 @@ class LifeSim:
         r_regrow = rng.exponential(REGROW_MEAN * cond.scarcity, F)
         r_fx, r_fy, r_ft = rng.random(F) * ARENA, rng.random(F) * ARENA, rng.random(F)
         r_hang = rng.normal(0, 0.15, H)
-        r_mut = rng.normal(0, 1.0, (M, G))
+        r_mut = rng.normal(0, 1.0, (M, spec.G))
         r_off = rng.normal(0, 1.5, (M, 2))
         r_hd = rng.random(M) * 2 * np.pi
         hd_c, hd_s = np.cos(r_hd), np.sin(r_hd)
@@ -222,13 +295,16 @@ class LifeSim:
         fdx, fdy = fdx * has_tgt, fdy * has_tgt
 
         # Hazard perception: steer away from hazards within sense range.
-        hzx = np.zeros((W, M)); hzy = np.zeros((W, M))
+        hzx = np.zeros((W, M)); hzy = np.zeros((W, M)); hnear = np.zeros((W, M))
         if cond.hazards:
             hx = self.px[:, :, None] - self.hx[:, None, :]
             hy = self.py[:, :, None] - self.hy[:, None, :]
             hr = sense[..., None] + HAZARD_RADIUS
-            near = (hx * hx + hy * hy) <= hr * hr
+            hd2 = hx * hx + hy * hy
+            near = hd2 <= hr * hr
             hzx, hzy = self._unit((hx * near).sum(-1), (hy * near).sum(-1))
+            if nn:
+                hnear = np.clip(1.0 - np.sqrt(hd2) / hr, 0.0, 1.0).max(-1)
 
         # Crowd perception: direction to the centroid of visible neighbours.
         cx = self.px[:, None, :] - self.px[:, :, None]                    # (W,M,M) j - i
@@ -241,12 +317,39 @@ class LifeSim:
         rc, rs = np.cos(r_head), np.sin(r_head)
         hdx, hdy = self._unit(self.hvx * rc - self.hvy * rs, self.hvx * rs + self.hvy * rc)
 
-        wa = wander + 0.05
-        vx = w_food * fdx + w_haz * hzx + w_crowd * crx + wa * hdx
-        vy = w_food * fdy + w_haz * hzy + w_crowd * cry + wa * hdy
-        vx, vy = self._unit(vx, vy)
-        step_len = np.minimum(speed, np.where(has_tgt, np.sqrt(tdx * tdx + tdy * tdy), np.inf))
-        step_len = np.where(has_tgt & (w_food > 0.3), step_len, speed) * alive
+        tdist = np.sqrt(tdx * tdx + tdy * tdy)
+        if not nn:
+            wa = wander + 0.05
+            vx = w_food * fdx + w_haz * hzx + w_crowd * crx + wa * hdx
+            vy = w_food * fdy + w_haz * hzy + w_crowd * cry + wa * hdy
+            vx, vy = self._unit(vx, vy)
+            step_len = np.minimum(speed, np.where(has_tgt, tdist, np.inf))
+            step_len = np.where(has_tgt & (w_food > 0.3), step_len, speed) * alive
+            move_cost = MOVE_COST * size * speed ** 2
+        else:
+            # Neural controller. Reductions run over a fixed small axis, and only
+            # +, *, / and abs are used, so every world computes bit-identically.
+            cap = ENERGY_CAP_BASE + ENERGY_CAP_SIZE * size
+            cnt = neigh.sum(-1)
+            feats = np.stack([
+                fdx, fdy, np.where(has_tgt, 1.0 - tdist / np.maximum(sense, 1e-9), 0.0), has_tgt * teff,
+                hzx, hzy, hnear, crx, cry, np.minimum(cnt / 5.0, 1.0),
+                np.clip(self.energy / cap, 0.0, 1.0), hdx, hdy], -1)            # (W,M,K)
+            o = 6
+            w1 = g[..., o:o + NN_IN * NN_HID].reshape(W, M, NN_IN, NN_HID); o += NN_IN * NN_HID
+            b1 = g[..., o:o + NN_HID]; o += NN_HID
+            w2 = g[..., o:o + NN_HID * NN_OUT].reshape(W, M, NN_HID, NN_OUT); o += NN_HID * NN_OUT
+            b2 = g[..., o:o + NN_OUT]
+            h = softsign((feats[..., :, None] * w1).sum(-2) + b1)
+            out = (h[..., :, None] * w2).sum(-2) + b2
+            mag = np.sqrt(out[..., 0] ** 2 + out[..., 1] ** 2)
+            vx = np.where(mag > 1e-6, out[..., 0] / np.where(mag > 1e-6, mag, 1.0), hdx)
+            vy = np.where(mag > 1e-6, out[..., 1] / np.where(mag > 1e-6, mag, 1.0), hdy)
+            pace = 0.5 * (softsign(out[..., 2]) + 1.0)
+            step_len = speed * pace
+            toward = has_tgt & ((vx * fdx + vy * fdy) > 0.9)
+            step_len = np.where(toward, np.minimum(step_len, tdist), step_len) * alive
+            move_cost = MOVE_COST * size * step_len ** 2
         nx = self.px + vx * step_len
         ny = self.py + vy * step_len
         # Reflect off the walls and turn back inward.
@@ -258,7 +361,7 @@ class LifeSim:
         self.hvy = np.where(bounce, -hdy, hdy)
 
         # Energy cost of living.
-        cost = BASE_COST + SIZE_COST * size + MOVE_COST * size * speed ** 2 + SENSE_COST * sense
+        cost = BASE_COST + SIZE_COST * size + move_cost + SENSE_COST * sense
         self.energy -= cost * alive
 
         # Eating: a creature that reaches the item it was steering toward eats it.
@@ -323,16 +426,17 @@ class LifeSim:
 
         # Reproduction (asexual, with mutation) into free slots of the same world.
         if cond.reproduction:
-            ready = self.alive & (self.energy >= g[..., 8])
+            i_at, i_share = spec.idx["repro_at"], spec.idx["repro_share"]
+            ready = self.alive & (self.energy >= g[..., i_at])
             for w in np.flatnonzero(ready.any(-1)):
                 for s in np.flatnonzero(ready[w]):
                     free = np.flatnonzero(~self.alive[w])
                     if not len(free):
                         break
                     c = free[0]
-                    share = self.energy[w, s] * g[w, s, 9]
+                    share = self.energy[w, s] * g[w, s, i_share]
                     self.energy[w, s] -= share + REPRO_COST
-                    child = clip_genome(g[w, s] + r_mut[s] * cond.mutation_sigma * SPAN)
+                    child = clip_genome(g[w, s] + r_mut[s] * cond.mutation_sigma * spec.SPAN, spec)
                     self.genome[w, c] = child
                     self.px[w, c] = np.clip(self.px[w, s] + r_off[s, 0], 0, ARENA)
                     self.py[w, c] = np.clip(self.py[w, s] + r_off[s, 1], 0, ARENA)
@@ -395,7 +499,7 @@ def famine(cond: Conditions, t: int, ticks: int) -> Conditions:
 
 
 def evaluate(genomes: np.ndarray, objective: str, cond: Conditions, seeds, ticks: int = 300,
-             cohort: int = 8):
+             cohort: int = 8, spec: Spec = LINEAR):
     """Evaluate each genome (P,G) on each seed. Returns (fitness (P,S), sim_steps).
 
     Each candidate gets its own world containing `cohort` clones. Worlds are
@@ -408,7 +512,7 @@ def evaluate(genomes: np.ndarray, objective: str, cond: Conditions, seeds, ticks
     M = cohort * 4 if objective == "thrive" else cohort
     for j, seed in enumerate(seeds):
         rng = np.random.default_rng(seed)
-        sim = LifeSim(rng, P, M, cond_run)
+        sim = LifeSim(rng, P, M, cond_run, spec)
         start = rng.random((cohort, 2)) * ARENA
         for w in range(P):
             sim.place(w, np.repeat(genomes[w][None, :], cohort, 0), positions=start)

@@ -252,3 +252,6 @@ html.portal-out body { transform-origin: 50% 50vh; animation: swingOut .75s cubi
 .chip:disabled { opacity: .4; cursor: not-allowed; }
 table.t td a.mono, table.t td .mono { white-space: nowrap; }
 .genome-bars .gb { grid-template-columns: 92px 1fr 96px; }
+.card, .grid > * { min-width: 0; }
+.dw-nav { min-width: 0; }
+table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; }

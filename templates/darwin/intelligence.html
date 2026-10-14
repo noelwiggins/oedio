@@ -1,0 +1,181 @@
+{% extends "darwin/base.html" %}
+{% block title %}Intelligence — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Intelligence History · {{ suite_version }} · {{ world }}</p>
+<h1 class="page">Is Darwin getting better at problems it has never seen?</h1>
+<p class="lede">Every day from {{ '%02d' % hour }}:00 UTC, Darwin practises on {{ practice_per_day }} training problems, and validated winners go into
+  Discovery Memory. Then, on held-out problems it never trains on, it races two baselines and its own memory-free self at the same
+  evaluation budget. If memory makes Darwin smarter, the gap between <b>Darwin + memory</b> and <b>Darwin</b> should open up over time.</p>
+
+<div class="grid g4" id="headline"></div>
+
+<section class="section card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Held-out score over time</h2>
+    <span class="small muted">normalised: 0 = median random genome, 1 = best of {{ params.calibration_n }} random genomes</span>
+  </div>
+  <div class="legend" id="hist-legend" style="margin-top:8px"></div>
+  <svg class="chart" id="hist-chart" style="height:260px"></svg>
+  <div class="grid g2" style="margin-top:12px">
+    <div><h3>Memory effect <span class="small muted">(Darwin + memory − Darwin, paired)</span></h3><svg class="chart" id="effect-chart" style="height:160px"></svg></div>
+    <div><h3>Discovery Memory size</h3><svg class="chart" id="mem-chart" style="height:160px"></svg></div>
+  </div>
+</section>
+
+<section class="section card" id="claims-card">
+  <h2>Standing claims</h2>
+  <p class="small muted" style="margin-top:-6px">Re-tested every day. Status changes are permanent history: a claim that later fails is marked so, not deleted.</p>
+  <div id="standing" class="small muted">Opened with the first holdout benchmark.</div>
+</section>
+
+<section class="section card">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0" id="run-title">Latest benchmark</h2>
+    <select class="f" id="run-pick" style="width:auto;max-width:100%"></select>
+  </div>
+  <div id="run-status" class="small" style="margin:10px 0"></div>
+  <div class="scroll-x"><table class="t" id="run-table"></table></div>
+  <h3 style="margin-top:18px">Paired comparisons</h3>
+  <div class="scroll-x"><table class="t" id="cmp-table"></table></div>
+  <div id="run-notes" class="small muted" style="margin-top:12px"></div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2>Problem suite</h2>
+    <div class="scroll-x"><table class="t small">
+      <tr><th>id</th><th>set</th><th>objective</th><th>food</th><th>green</th><th>scarcity</th><th>hazards</th></tr>
+      {% for p in problems %}
+      <tr><td class="mono">{{ p.id }}</td><td><span class="pill s-{{ {'train':'operational','dev':'experimental','holdout':'observed','final':'planned'}[p.split] }}">{{ p.split }}</span></td>
+        <td>{{ p.objective }}</td><td>{{ p.conditions.food }}</td><td>{{ p.conditions.green_share }}</td><td>{{ p.conditions.scarcity }}</td><td>{{ p.conditions.hazards }}</td></tr>
+      {% endfor %}
+    </table></div>
+    <p class="small muted" style="margin-top:10px"><b>train</b>: daily practice, feeds memory · <b>dev</b>: for tuning Darwin, run any time ·
+      <b>holdout</b>: daily benchmark, never written to memory · <b>final</b>: never seen; every use is recorded (used {{ final_uses }} time{{ '' if final_uses == 1 else 's' }}).</p>
+  </div>
+  <div class="card">
+    <h2>Contestants</h2>
+    <div class="scroll-x"><table class="t small">{% for k, v in contestants.items() %}<tr><td class="mono"><span class="dot" data-c="{{ k }}">●</span> {{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table></div>
+    <p class="small muted" style="margin-top:10px">Budget: {{ params.max_evals }} unique genome evaluations per search ({{ params.train_seeds }} training seeds each),
+      {{ params.replicates }} replicates per problem. Every winner is then scored on 8 seeds no search ever used.
+      Control searches use fixed seeds, so they must repeat exactly each day; any drift under unchanged code is logged as a failure.</p>
+    {% if is_owner %}
+    <div class="row" style="margin-top:12px">
+      <button class="btn tonal" data-split="dev">Run dev benchmark</button>
+      <button class="btn outline" data-split="final">Run final exam ({{ final_uses }} use{{ '' if final_uses == 1 else 's' }} so far)</button>
+      <span id="own-msg" class="small"></span>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section card scroll-x">
+  <h2>Version comparison</h2>
+  <p class="small muted" style="margin-top:-6px">Mean normalised held-out score by code version, same suite, same budget.</p>
+  <table class="t" id="ver-table"></table>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin, RUN = {{ run_id|tojson }}, IS_OWNER = {{ 'true' if is_owner else 'false' }};
+  const COL = { random: '#89938d', hillclimb: '#5fb7d6', darwin: '#e9bf6d', darwin_memory: '#b49cf0', darwin_memory_fw: '#7dd8b5', llm_direct: '#ff8a7a' };
+  const NAME = { random: 'random search', hillclimb: 'hill climber', darwin: 'Darwin', darwin_memory: 'Darwin + memory (no failure weighting)', darwin_memory_fw: 'Darwin + memory', llm_direct: 'LLM hand rule' };
+  const ORDER = ['darwin_memory_fw', 'darwin_memory', 'darwin', 'hillclimb', 'random', 'llm_direct'];
+  document.querySelectorAll('.dot').forEach(d => d.style.color = COL[d.dataset.c]);
+  let timer = null;
+
+  async function load(run) {
+    const d = await D.api('/darwin/api/benchmark' + (run ? '?run=' + run : ''));
+    headline(d); drawHistory(d.history); standing(d.standing); runs(d.runs, d.run); showRun(d.run); versions(d.versions);
+    clearTimeout(timer);
+    if (d.run && ['queued', 'running'].includes(d.run.status)) timer = setTimeout(() => load(d.run.id), 5000);
+  }
+
+  function headline(d) {
+    const h = d.history, last = h[h.length - 1];
+    const eff = last && last.comparisons['darwin_memory_fw__vs__darwin'];
+    const c = last ? last.contestants : {};
+    const tiles = [
+      ['Benchmark days', h.length, h.length ? `since ${h[0].day}` : 'first run pending'],
+      ['Discovery Memory', d.memory_size, 'validated genomes (life-2.0)'],
+      ['Memory effect today', eff ? (eff.mean_diff >= 0 ? '+' : '') + D.num(eff.mean_diff, 3) : '—', eff ? `${eff.wins}/${eff.n} paired wins · p=${eff.p_sign_test}` : 'needs a benchmark'],
+      ['Validated wins per $10', last && last.validated_wins_per_10usd != null ? D.num(last.validated_wins_per_10usd, 0) : '—',
+        last ? `${last.validated_wins.wins} of ${last.validated_wins.cells} cells ÷ ${D.usd(last.spend.total_usd)} spent` : ''],
+    ];
+    if (last) {
+      tiles.push(['Darwin + memory', D.num((c.darwin_memory_fw || {}).mean, 3), 'mean normalised, today']);
+      tiles.push(['Darwin', D.num((c.darwin || {}).mean, 3), 'no memory']);
+      tiles.push(['Hill climber', D.num((c.hillclimb || {}).mean, 3), 'equal budget']);
+      tiles.push(['Random search', D.num((c.random || {}).mean, 3), 'equal budget']);
+    }
+    document.getElementById('headline').innerHTML = tiles.map(([k, v, n]) => `<div class="card flat metric"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+  }
+
+  function drawHistory(h) {
+    const xs = h.map((_, i) => i);
+    const series = ORDER.filter(k => h.some(r => r.contestants[k])).map(k => ({ name: k, color: COL[k], values: h.map(r => r.contestants[k] ? r.contestants[k].mean : null), dash: k === 'llm_direct' ? '4 4' : null, width: k === 'darwin_memory_fw' ? 2.6 : 1.6 }));
+    D.lineChart(document.getElementById('hist-chart'), series.length ? series : [{ values: [] }], { xLabel: 'day', empty: 'The first daily benchmark has not finished yet.' });
+    document.getElementById('hist-legend').innerHTML = series.map(s => `<span><i style="--c:${s.color}"></i>${NAME[s.name]}</span>`).join('');
+    D.lineChart(document.getElementById('effect-chart'), [{ color: COL.darwin_memory_fw, values: h.map(r => (r.comparisons['darwin_memory_fw__vs__darwin'] || {}).mean_diff) }, { color: D.css('--md-sys-color-outline'), values: h.map(() => 0), dash: '3 3', width: 1 }], { xLabel: 'day', empty: 'No data yet' });
+    D.lineChart(document.getElementById('mem-chart'), [{ color: D.css('--md-sys-color-tertiary'), values: h.map(r => r.memory_size) }], { xLabel: 'day', yMin: 0, empty: 'No data yet' });
+  }
+
+  function standing(list) {
+    if (!list.length) return;
+    document.getElementById('standing').innerHTML = list.map(c => `<div class="claim ${D.statusClass(c.status)}"><span class="mono">${c.id}</span> ${D.pill(c.status)}
+      <div style="margin-top:4px;color:var(--md-sys-color-on-surface)">${D.esc(c.statement)}</div>
+      <ol class="hist">${c.history.slice(-6).map(h => `<li>${D.esc(h.status)} — ${D.esc(h.reason || '')}</li>`).join('')}</ol></div>`).join('');
+  }
+
+  function runs(list, cur) {
+    const sel = document.getElementById('run-pick');
+    sel.innerHTML = list.map(r => `<option value="${r.id}" ${cur && r.id === cur.id ? 'selected' : ''}>${r.label} · ${D.esc(r.split)} · ${D.esc(r.created_at.slice(0, 10))} · ${r.status}</option>`).join('') || '<option>no runs yet</option>';
+    sel.onchange = () => { window.history.replaceState(null, '', '?run=' + sel.value); load(+sel.value); };
+  }
+
+  function showRun(run) {
+    const st = document.getElementById('run-status'), tb = document.getElementById('run-table'), ct = document.getElementById('cmp-table'), notes = document.getElementById('run-notes');
+    if (!run) { st.innerHTML = '<span class="muted">No benchmark has run yet. The first one is queued automatically after the next scheduler check.</span>'; tb.innerHTML = ''; ct.innerHTML = ''; return; }
+    document.getElementById('run-title').textContent = run.title || run.label;
+    const p = run.progress || {};
+    st.innerHTML = `${D.pill(run.status)} <span class="muted">${run.label} · code ${D.esc(run.code_version || '—')} ${p.phase && run.status !== 'completed' ? '· ' + D.esc(p.phase) + (p.of ? ` (${p.cell}/${p.of} cells)` : '') : ''}${run.stop_reason && run.status === 'failed' ? ' · ' + D.esc(run.stop_reason) : ''}</span>`;
+    // per-problem table from cells (works while running too)
+    const by = {};
+    run.cells.forEach(c => { (by[c.problem] = by[c.problem] || {}); (by[c.problem][c.contestant] = by[c.problem][c.contestant] || []).push(c.normalized); });
+    const names = ORDER.filter(k => run.cells.some(c => c.contestant === k));
+    const probs = Object.keys(by);
+    const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+    tb.innerHTML = probs.length ? `<tr><th>problem</th>${names.map(n => `<th><span style="color:${COL[n]}">●</span> ${NAME[n]}</th>`).join('')}</tr>` +
+      probs.map(pid => { const row = by[pid]; const best = Math.max(...names.filter(n => n !== 'llm_direct' && row[n]).map(n => mean(row[n])));
+        return `<tr><td class="mono">${pid}</td>${names.map(n => row[n] ? `<td style="${mean(row[n]) === best ? 'font-weight:600;color:var(--md-sys-color-primary)' : ''}">${D.num(mean(row[n]), 3)}${row[n].length > 1 ? `<span class="muted small"> ±${D.num(Math.sqrt(row[n].reduce((s, x) => s + (x - mean(row[n])) ** 2, 0) / (row[n].length - 1)), 2)}</span>` : ''}</td>` : '<td class="muted">—</td>').join('')}</tr>`; }).join('')
+      : '<tr><td class="muted">No results yet.</td></tr>';
+    const s = run.summary;
+    if (!s) { ct.innerHTML = ''; notes.innerHTML = ''; return; }
+    ct.innerHTML = `<tr><th>comparison</th><th>paired wins</th><th>mean difference</th><th>p (sign test)</th><th></th></tr>` +
+      Object.values(s.comparisons).filter(Boolean).map(c => `<tr><td>${NAME[c.a]} vs ${NAME[c.b]}</td><td>${c.wins}/${c.n}${c.ties ? ` (${c.ties} tied)` : ''}</td>
+        <td>${c.mean_diff >= 0 ? '+' : ''}${D.num(c.mean_diff, 3)}</td><td>${c.p_sign_test}</td><td>${c.mean_diff > 0 && c.p_sign_test <= 0.05 ? '<span class="pill s-replicated">significant</span>' : ''}</td></tr>`).join('');
+    const drift = s.control_drift || {};
+    notes.innerHTML = `Memory frozen at ${D.esc(s.memory_frozen_at || 'empty')} (${s.memory_size} entries).
+      Spend: ${D.usd(s.spend.benchmark_compute_usd)} benchmark compute + ${D.usd(s.spend.practice_compute_usd)} practice + ${D.usd(s.spend.llm_usd)} LLM = <b>${D.usd(s.spend.total_usd)}</b> (${D.num(s.spend.cpu_s, 0)} CPU-s).
+      Validated wins: ${s.validated_wins.wins}/${s.validated_wins.cells} (${D.esc(s.validated_wins.definition)}).
+      Determinism: ${drift.checked ? (drift.identical ? `controls identical to ${drift.compared_with} ✓` : `<span class="err">${drift.differences} control scores differ from ${drift.compared_with}</span>`) : D.esc(drift.note || '')}.`;
+  }
+
+  function versions(v) {
+    const t = document.getElementById('ver-table');
+    if (!v.length) { t.innerHTML = '<tr><td class="muted">No completed benchmarks yet.</td></tr>'; return; }
+    const names = ORDER.filter(k => v.some(r => r.contestants[k]));
+    t.innerHTML = `<tr><th>code</th><th>days</th>${names.map(n => `<th>${NAME[n]}</th>`).join('')}</tr>` + v.map(r => `<tr><td class="mono">${D.esc(r.code_version)}</td><td class="small">${r.first_day} → ${r.last_day}</td>${names.map(n => `<td>${r.contestants[n] ? D.num(r.contestants[n].mean, 3) : '—'}</td>`).join('')}</tr>`).join('');
+  }
+
+  document.querySelectorAll('[data-split]').forEach(b => b.onclick = async () => {
+    b.disabled = true; const m = document.getElementById('own-msg');
+    try { const r = await D.api('/darwin/api/benchmark/run', { method: 'POST', body: { split: b.dataset.split } }); location.href = r.url; }
+    catch (e) { m.className = 'small err'; m.textContent = e.message; b.disabled = false; }
+  });
+  load(RUN);
+})();
+</script>
+{% endblock %}

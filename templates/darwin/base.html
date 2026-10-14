@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/darwin/darwin.css?v=2">
+<link rel="stylesheet" href="/static/darwin/darwin.css?v=4">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1513'/%3E%3Cpath d='M16 26V14M16 14c0-4 3-7 7-8M16 18c0-3-3-6-7-7M16 22c2-2 5-3 7-3' stroke='%237dd8b5' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 {% block head %}{% endblock %}
 </head>
@@ -22,6 +22,8 @@
     {% set here = request.path %}
     <a href="/darwin/" class="{{ 'on' if here == '/darwin/' }}">World</a>
     <a href="/darwin/lab/life" class="{{ 'on' if here.startswith('/darwin/lab') }}">Life Lab</a>
+    <a href="/darwin/intelligence" class="{{ 'on' if here.startswith('/darwin/intelligence') }}">Intelligence</a>
+    <a href="/darwin/memory" class="{{ 'on' if here.startswith('/darwin/memory') }}">Memory</a>
     <a href="/darwin/history" class="{{ 'on' if here.startswith('/darwin/history') or here.startswith('/darwin/experiment') }}">History</a>
     <a href="/darwin/ledger" class="{{ 'on' if here.startswith('/darwin/ledger') }}">Ledger</a>
     <a href="/darwin/snapshots" class="{{ 'on' if here.startswith('/darwin/snapshots') }}">Snapshots</a>
@@ -38,7 +40,7 @@
   <span>Every number here comes from a recorded run. Replays and re-simulations are labelled.</span>
   <a href="/" onclick="Darwin.exitToLibrary(event)">Back through the bookcase ↩</a>
 </footer>
-<script src="/static/darwin/darwin.js?v=2"></script>
+<script src="/static/darwin/darwin.js?v=4"></script>
 {% if portal %}
 <script>
   // Arrival through the bookcase: finish the swing, then drop the marker from the URL.

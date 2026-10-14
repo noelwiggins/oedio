@@ -32,6 +32,9 @@ CAPABILITIES = [
     # (area, status, note) — status: operational | experimental | planned | unsupported
     ("Darwin Core loop (generate, evaluate, select, vary, stop)", "operational", "core.py"),
     ("Life Lab world + Darwin World terrarium", "operational", "life.py, world_live.py"),
+    ("Darwin World runs continuously (single-owner thread, checkpointed)", "operational", "Phase 2"),
+    ("Life World 2.0: neural-controller representation (111 genes)", "operational",
+     "added after equal-budget baselines showed the 10-gene space was too shallow"),
     ("Variation: point/multi mutation, uniform/blend crossover, distant recombination, immigrants, island migration",
      "operational", "fit the fixed-length vector genome"),
     ("Variation: duplication, deletion, structural change", "unsupported",
@@ -46,15 +49,25 @@ CAPABILITIES = [
     ("Claims with status history (candidate→observed→replicated→robust / failed replication)",
      "operational", "automatic, evidence-linked"),
     ("Held-out seed validation, adversarial perturbation test", "operational", ""),
-    ("Random-search baseline", "experimental", "optional per experiment"),
+    ("Random-search baseline", "operational", "per experiment (optional) and in the daily benchmark"),
+    ("Hill-climber baseline at equal budget", "operational", "daily benchmark"),
+    ("Direct LLM solution baseline", "experimental", "LLM-designed life-1.0 hand rule, reference only"),
+    ("Problem suite: train / dev / holdout / final never-seen", "operational", "suite.py"),
+    ("Discovery Memory: validated genomes seed new experiments", "operational", "memory.py"),
+    ("Failure Memory: failed transfer, replication, adversarial; failure-weighted retrieval", "operational", ""),
+    ("Leakage guards (memory refuses near-holdout conditions; benchmarks never write memory)", "operational", ""),
+    ("Daily autonomous practice + holdout benchmark", "operational", "schedule.py, bench.py"),
+    ("Replication across seeds and replicates; paired sign tests", "operational", ""),
+    ("Ablations: memory on/off, failure weighting on/off", "operational", "daily benchmark"),
+    ("Intelligence History + version comparison", "operational", "/darwin/intelligence"),
+    ("Standing claims re-tested daily (memory, vs random, vs hill climber)", "operational", ""),
     ("REPLAY EXPERIMENT with digest comparison", "operational", ""),
     ("Time Machine: inspect generations, re-simulate any recorded candidate", "operational", ""),
     ("Snapshot export + comparison with previous snapshot", "operational", ""),
     ("Open Lab: natural-language goal → feasibility assessment", "experimental",
      "LLM assessment for owner; keyword routing for visitors"),
     ("Pause / resume from checkpoint", "planned", "stop is supported; resume is not"),
-    ("Discovery Memory, Failure Memory reuse across experiments", "planned", "Phase 2 (failures are recorded now)"),
-    ("Baselines beyond random search, holdout worlds, ablations", "planned", "Phase 2"),
+    ("Ablations of disturbances, LLM intervention, adaptive mutation", "planned", "need Phase 4 features first"),
     ("Web Lab, Space Lab, Operations Lab", "planned", "Phase 3"),
     ("Meta-evolution, hybrid gradient learning, transfer", "planned", "Phase 4"),
     ("External review import, reviewer accountability", "planned", "Phase 4"),
@@ -76,6 +89,8 @@ def build() -> dict:
         failures = c.execute(sa.select(S.events.c.type, sa.func.count()).where(
             S.events.c.type.like("failure.%")).group_by(S.events.c.type)).all()
         world_last = c.execute(sa.select(S.world_stats).order_by(S.world_stats.c.id.desc()).limit(1)).mappings().first()
+        n_memory = c.execute(sa.select(sa.func.count()).select_from(S.memory)).scalar()
+        fail_mem = {k: n for k, n in c.execute(sa.select(S.failures.c.kind, sa.func.count()).group_by(S.failures.c.kind))}
     claims = S.all_claims()
     chain = S.verify_chain()
 
@@ -139,16 +154,30 @@ def build() -> dict:
                     "history": [{"ts": h["ts"], "status": h["status"], "reason": h["reason"]} for h in cl["history"]]}
                    for cl in claims],
         "failures": {t: n for t, n in failures},
+        "memory": {"discovery_memory_size": n_memory, "failure_memory": fail_mem},
+        "intelligence_history": [{k: b.get(k) for k in ("day", "label", "code_version", "memory_size", "contestants",
+                                                          "validated_wins", "spend", "validated_wins_per_10usd",
+                                                          "control_drift")} | {
+                                  "memory_effect": (b.get("comparisons") or {}).get("darwin_memory_fw__vs__darwin")}
+                                 for b in _bench_history()],
         "world": json.loads(world_last["stats"]) if world_last else None,
         "warnings": warnings,
         "missing": {
-            "discovery_capability_per_10usd": "not measured: requires Phase 2 benchmark suite on unseen problems",
-            "transfer": "not measured: only one World exists",
+            "discovery_capability_per_10usd": "measured within Life World only, as validated holdout wins per $10 (see intelligence_history); no cross-World measure yet",
+            "transfer": "within-World transfer between problems measured daily (memory effect); cross-World transfer not measured: only one World exists",
             "reality_gap": "not measured: no real-world tests",
             "version_benchmarks": "not measured: no fixed benchmark set yet",
             "novelty": "not measured",
         },
     }
+
+
+def _bench_history():
+    try:
+        from . import bench
+        return bench.history("holdout")
+    except Exception:
+        return []
 
 
 def _svg_line(title, xs, ys, xlabel, ylabel, w=640, h=300):
@@ -193,6 +222,11 @@ def package(snap: dict, ledger_rows: list) -> bytes:
         wb.writerow([e["id"], e["objective"], e["status"], e["generations_run"], e["gen0_best"], e["final_best"],
                      h.get("wins", ""), h.get("losses", ""), h.get("p_sign_test", ""), h.get("relative_gain", ""),
                      e["cpu_s"], e["compute_usd_estimated"]])
+    wb.writerow([])
+    wb.writerow(["daily_benchmark_day", "contestant", "mean_normalized", "sd", "n", "memory_size", "code_version"])
+    for h in snap.get("intelligence_history") or []:
+        for k, v in (h.get("contestants") or {}).items():
+            wb.writerow([h["day"], k, v["mean"], v["sd"], v["n"], h["memory_size"], h["code_version"]])
     # Graphs from the ledger: cumulative cost and validated claims vs cumulative cost.
     cum, xs, ys = 0.0, [], []
     vx, vy, nval = [], [], 0
@@ -212,6 +246,11 @@ def package(snap: dict, ledger_rows: list) -> bytes:
         "graphs/cumulative_cost.svg": _svg_line("Cumulative recorded cost (USD)", xs, ys, "ledger event", "USD"),
         "graphs/validated_claims_vs_cost.svg": _svg_line(
             "Validated claim transitions vs cumulative cost", vx, vy, "cumulative USD", "validated claims"),
+        "graphs/memory_effect.svg": _svg_line(
+            "Memory effect on held-out problems (normalised, paired)",
+            list(range(len(snap.get("intelligence_history") or []))),
+            [((h.get("memory_effect") or {}).get("mean_diff") or 0.0) for h in (snap.get("intelligence_history") or [])],
+            "benchmark day", "Darwin+memory minus Darwin"),
         "README.txt": ("Darwin Snapshot package. Units: costs in USD (compute = estimated from published hosting "
                        "rates; LLM = provider-reported tokens x price table). Times in seconds. Ledger hashes are "
                        "SHA-256 over prev_hash + canonical JSON of the event (see darwin/store.py)."),
@@ -249,6 +288,22 @@ def render_md(s: dict) -> str:
         fmt = lambda v: f"{v:.3f}" if isinstance(v, (int, float)) else "—"
         L.append(f"| {e['id']} | {e['objective'] or e['kind']} | {e['status']} | {e['generations_run'] or '—'} | "
                  f"{fmt(e['gen0_best'])} | {fmt(e['final_best'])} | {hv} | {fmt(e['cpu_s'])} |")
+    ih = s.get("intelligence_history") or []
+    L += ["", "## Intelligence history (held-out benchmark)", ""]
+    if ih:
+        L += ["| day | memory | Darwin+memory | Darwin | hill climber | random | memory effect (p) | wins/$10 |",
+              "|---|---|---|---|---|---|---|---|"]
+        for h in ih:
+            c = h.get("contestants") or {}
+            e = h.get("memory_effect") or {}
+            g = lambda k: f"{c[k]['mean']:.3f}" if k in c else "—"
+            L.append(f"| {h['day']} | {h['memory_size']} | {g('darwin_memory_fw')} | {g('darwin')} | {g('hillclimb')} | "
+                     f"{g('random')} | {e.get('mean_diff', '—')} ({e.get('p_sign_test', '—')}) | "
+                     f"{h.get('validated_wins_per_10usd', '—')} |")
+    else:
+        L.append("- no benchmark has completed yet")
+    m = s.get("memory") or {}
+    L += ["", f"Discovery Memory: {m.get('discovery_memory_size', 0)} entries · Failure Memory: {m.get('failure_memory', {})}"]
     L += ["", "## Failures recorded", ""] + ([f"- {k}: {v}" for k, v in s["failures"].items()] or ["- none"])
     L += ["", "## Not yet measured", ""] + [f"- {k}: {v}" for k, v in s["missing"].items()]
     L += ["", "## Capability status", ""] + [f"- [{c['status']}] {c['area']}" for c in s["system"]["capabilities"]]

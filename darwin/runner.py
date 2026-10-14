@@ -21,7 +21,7 @@ import traceback
 import numpy as np
 import sqlalchemy as sa
 
-from . import core, life, store
+from . import core, life, memory, store
 from .costs import Meter, compute_usd
 
 S = store
@@ -60,15 +60,33 @@ def _update(exp_id, **vals):
 
 def run_experiment(exp_id: int):
     exp = _get(exp_id)
-    if exp["kind"] == "replay":
-        return run_replay(exp)
-    cfg = core.Config.from_dict(json.loads(exp["config"]))
-    meter = Meter()
     max_cpu = exp["max_cpu_s"]
     if max_cpu:
-        # Hard backstop: the kernel stops the process at 1.25x the cap.
+        # Hard backstop: the kernel stops the process at 1.25x the cap. Limits can only be
+        # lowered, never raised, so clamp to whatever this process already has.
         soft = int(time.process_time() + max_cpu * 1.25) + 1
-        resource.setrlimit(resource.RLIMIT_CPU, (soft, soft + 5))
+        cur_soft, cur_hard = resource.getrlimit(resource.RLIMIT_CPU)
+        hard = soft + 5 if cur_hard == resource.RLIM_INFINITY else min(soft + 5, cur_hard)
+        resource.setrlimit(resource.RLIMIT_CPU, (min(soft, hard), hard))
+    if exp["kind"] == "replay":
+        return run_replay(exp)
+    if exp["kind"] == "benchmark":
+        return run_benchmark(exp)
+    cfg = core.Config.from_dict(json.loads(exp["config"]))
+    spec = life.get_spec(cfg.world)
+    meter = Meter()
+    source = exp.get("source") or ("owner" if exp["owner"] else "visitor")
+
+    # Discovery Memory: retrieve once, store the exact seeds in the config so REPLAY reuses them.
+    if cfg.memory and not cfg.seed_genomes:
+        got = memory.retrieve(cfg.world, cfg.objective, cfg.conditions, failure_weighting=cfg.memory_failure_weighting)
+        cfg.seed_genomes = got
+        _update(exp_id, config=S.canon(cfg.to_dict()))
+        S.append("memory.retrieved", {"memories": [{"memory": S.fmt_mem(e["memory_id"]), "distance": e["distance"],
+                                                    "weight": e["weight"], "uses": e["uses"], "helped": e["helped"]}
+                                                   for e in got],
+                                      "failure_weighting": cfg.memory_failure_weighting,
+                                      "note": "memory empty" if not got else ""}, experiment_id=exp_id)
 
     S.append("experiment.started", {"config": cfg.to_dict(), "seed": cfg.seed,
                                     "environment": _env_record(),
@@ -110,10 +128,16 @@ def run_experiment(exp_id: int):
 
     summary = {"stop_reason": ev.stop_reason, "generations_run": len(ev.history),
                "gen0_best": {"cid": ev.gen0_best.cid, "fitness": ev.gen0_best.fitness,
-                             "genome": life.genome_dict(ev.gen0_best.genome)},
+                             "genome": life.genome_summary(ev.gen0_best.genome, spec)},
                "final_best": {"cid": ev.best.cid, "fitness": ev.best.fitness,
-                              "genome": life.genome_dict(ev.best.genome)},
-               "operator_stats": ev.op_stats, "digest": ev.digest(), "validation": {}}
+                              "genome": life.genome_summary(ev.best.genome, spec)},
+               "world": spec.version,
+               "operator_stats": ev.op_stats, "digest": ev.digest(), "validation": {},
+               "memory": {"used": bool(cfg.memory),
+                          "seeds": [{"memory": S.fmt_mem(e["memory_id"]), "memory_id": e["memory_id"],
+                                     "distance": e.get("distance"), "weight": e.get("weight")}
+                                    for e in cfg.seed_genomes],
+                          "winner_from_memory": S.fmt_mem(ev.winner_memory_id()) if ev.winner_memory_id() else None}}
     _update(exp_id, progress=S.canon({"gen": len(ev.history) - 1, "of": cfg.generations,
                                       "best": ev.best.fitness, "phase": "validating"}),
             heartbeat=S.now(), summary=S.canon(summary))
@@ -129,6 +153,7 @@ def run_experiment(exp_id: int):
     # A claim is filed only when there is an observation to claim. A run that did not
     # improve is recorded as a failure, not left as an orphaned candidate.
     claim_id = None
+    claim_status = None
     if improved_train:
         claim_id = S.add_claim(exp_id, "optimization", statement,
                                {"objective": cfg.objective, "a": ev.best.cid, "b": ev.gen0_best.cid,
@@ -137,16 +162,20 @@ def run_experiment(exp_id: int):
         S.set_claim_status(claim_id, "observed",
                            f"training seeds: {ev.best.fitness:.3f} vs {ev.gen0_best.fitness:.3f}",
                            experiment_id=exp_id)
+        claim_status = "observed"
     else:
         S.append("failure.no_improvement", {
             "note": "final best did not beat the initial best on training seeds; no claim filed",
             "gen0_best": ev.gen0_best.fitness, "final_best": ev.best.fitness}, experiment_id=exp_id)
+        memory.record_failure(exp_id, "no_improvement", spec.version, cfg.objective, cfg.conditions,
+                              ev.best.genome, {"gen0_best": ev.gen0_best.fitness, "final_best": ev.best.fitness,
+                                               "stop_reason": ev.stop_reason})
 
     stopped_by_cap = False
     try:
         if improved_train and not ev.stop_reason.startswith("cancelled"):
             h = core.head_to_head(ev.best.genome, ev.gen0_best.genome, cfg.objective, final_cond, hold,
-                                  cfg.ticks, cfg.cohort, meter)
+                                  cfg.ticks, cfg.cohort, meter, spec)
             validation["holdout"] = h
             S.append("validation.holdout", h, experiment_id=exp_id)
             need = max(1, int(np.ceil(0.875 * len(hold))))
@@ -154,9 +183,10 @@ def run_experiment(exp_id: int):
                 S.set_claim_status(claim_id, "replicated",
                                    f"held-out seeds: won {h['wins']}/{len(hold)}, p={h['p_sign_test']}",
                                    evidence=h, experiment_id=exp_id)
+                claim_status = "replicated"
                 pc = core.perturbed(final_cond)
                 h2 = core.head_to_head(ev.best.genome, ev.gen0_best.genome, cfg.objective, pc, hold,
-                                       cfg.ticks, cfg.cohort, meter)
+                                       cfg.ticks, cfg.cohort, meter, spec)
                 validation["adversarial"] = h2
                 S.append("validation.adversarial", h2, experiment_id=exp_id)
                 if h2["wins"] >= need and h2["p_sign_test"] <= 0.05:
@@ -164,20 +194,28 @@ def run_experiment(exp_id: int):
                                        f"perturbed conditions (scarcity x1.6, +2 hazards, diet flip): won "
                                        f"{h2['wins']}/{len(hold)}, p={h2['p_sign_test']}",
                                        evidence=h2, experiment_id=exp_id)
+                    claim_status = "robust"
                 else:
                     S.append("failure.adversarial", {"claim": S.fmt_claim(claim_id), "result": h2},
                              experiment_id=exp_id)
+                    memory.record_failure(exp_id, "adversarial_failure", spec.version, cfg.objective, cfg.conditions,
+                                          ev.best.genome, {"claim": S.fmt_claim(claim_id), "wins": h2["wins"],
+                                                           "losses": h2["losses"]})
             else:
                 S.set_claim_status(claim_id, "failed replication",
                                    f"held-out seeds: won {h['wins']}/{len(hold)}, p={h['p_sign_test']}",
                                    evidence=h, experiment_id=exp_id)
+                claim_status = "failed replication"
+                memory.record_failure(exp_id, "failed_replication", spec.version, cfg.objective, cfg.conditions,
+                                      ev.best.genome, {"claim": S.fmt_claim(claim_id), "wins": h["wins"],
+                                                       "losses": h["losses"], "note": "likely overfit to training seeds"})
 
         if cfg.baseline_random and not ev.stop_reason.startswith("cancelled"):
             # Equal budget: as many random genomes as Darwin actually simulated.
             n_eval = max(cfg.population, len(getattr(ev, "_cache", {})))
             bg, bf = core.random_search(cfg, n_eval, meter)
             hb = core.head_to_head(ev.best.genome, bg, cfg.objective, final_cond, hold, cfg.ticks,
-                                   cfg.cohort, meter)
+                                   cfg.cohort, meter, spec)
             hb["random_candidates"] = n_eval
             hb["random_best_train"] = bf
             validation["baseline_random"] = hb
@@ -196,6 +234,19 @@ def run_experiment(exp_id: int):
         validation["error"] = repr(e)
         S.append("failure.validation", {"error": repr(e)}, experiment_id=exp_id)
 
+    # Memory bookkeeping (never for benchmarks): use outcomes, then admission of a validated winner.
+    if cfg.memory and cfg.seed_genomes and not ev.stop_reason.startswith("cancelled"):
+        memory.record_uses(exp_id, cfg.objective, cfg.conditions, cfg.seed_genomes, ev.winner_memory_id(),
+                           ev.best.fitness)
+    if claim_status in memory.VALIDATED:
+        mid, why = memory.admit(exp_id, claim_id, ev.best.cid, spec.version, cfg.objective, cfg.conditions,
+                                ev.best.genome, ev.best.fitness, validation.get("holdout"), source, claim_status)
+        summary["memory"]["admitted"] = S.fmt_mem(mid) if mid else None
+        summary["memory"]["admission"] = why
+    else:
+        summary["memory"]["admitted"] = None
+        summary["memory"]["admission"] = ("not validated (claim " + (claim_status or "not filed") + ")")
+
     snap = meter.snapshot()
     summary["validation"] = validation
     status = "stopped" if ev.stop_reason.startswith("cancelled") else "completed"
@@ -203,8 +254,28 @@ def run_experiment(exp_id: int):
         "; validation interrupted" if stopped_by_cap else ""), summary=S.canon(summary), cost=S.canon(snap),
             result_digest=ev.digest(), progress=S.canon({"gen": len(ev.history) - 1, "of": cfg.generations,
                                                           "best": ev.best.fitness, "phase": "done"}))
-    S.append("experiment.finished", {"status": status, "digest": ev.digest(), "cost": snap},
-             experiment_id=exp_id, cost_usd=snap["compute_usd_estimated"], cost_kind="estimated")
+    # Per-generation compute is already in the Ledger; book only the remainder here (validation,
+    # memory bookkeeping) so Ledger totals never double count.
+    booked = sum(compute_usd(h["cpu_s"]) for h in ev.history)
+    S.append("experiment.finished", {"status": status, "digest": ev.digest(), "cost": snap,
+                                     "ledger_cost_note": "cost_usd here = total minus per-generation entries"},
+             experiment_id=exp_id, cost_usd=max(0.0, snap["compute_usd_estimated"] - booked), cost_kind="estimated")
+
+
+def run_benchmark(exp):
+    from . import bench
+    meter = Meter()
+
+    def set_progress(p):
+        _update(exp["id"], progress=S.canon(p), heartbeat=S.now(), cost=S.canon(meter.snapshot()))
+
+    summary = bench.run(exp, set_progress)
+    snap = meter.snapshot()
+    snap["llm_usd_billed"] = summary["benchmark"]["spend"]["llm_usd"]
+    _update(exp["id"], status="completed", finished_at=S.now(), summary=S.canon(summary), cost=S.canon(snap),
+            stop_reason="benchmark complete", progress=S.canon({"phase": "done"}))
+    S.append("experiment.finished", {"status": "completed", "kind": "benchmark", "cost": snap},
+             experiment_id=exp["id"], cost_usd=0.0, cost_kind="none")
 
 
 def run_replay(exp):
@@ -258,12 +329,25 @@ def reap_stale(max_age_s=300):
 
 
 def work():
-    """Run one queued experiment, then re-exec a fresh process for the next one,
-    so every experiment starts with clean CPU accounting and its own rlimit."""
+    """Run queued experiments one at a time, each in a fresh child process, so every
+    experiment starts at zero CPU time with its own kernel limit."""
+    import subprocess
     reap_stale()
-    exp_id = claim_next()
-    if exp_id is None:
-        return
+    while True:
+        exp_id = claim_next()
+        if exp_id is None:
+            return
+        proc = subprocess.run([sys.executable, "-m", "darwin.runner", "run", str(exp_id)],
+                              cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if _get(exp_id)["status"] == "running":   # child was killed before it could record anything
+            reason = f"worker process ended unexpectedly (exit {proc.returncode})"
+            if proc.returncode in (-9, -24, 137, 152):
+                reason = "CPU hard limit reached"
+            _update(exp_id, status="failed", finished_at=S.now(), stop_reason=reason)
+            S.append("failure.experiment", {"error": reason}, experiment_id=exp_id)
+
+
+def run_one(exp_id: int):
     try:
         run_experiment(exp_id)
     except BaseException as e:
@@ -271,10 +355,6 @@ def work():
         reason = "CPU limit reached" if isinstance(e, SystemExit) else repr(e)
         _update(exp_id, status="failed", finished_at=S.now(), stop_reason=reason)
         S.append("failure.experiment", {"error": reason, "trace": tb[-1500:]}, experiment_id=exp_id)
-    with S.engine().connect() as c:
-        more = c.execute(sa.select(S.experiments.c.id).where(S.experiments.c.status == "queued").limit(1)).scalar()
-    if more is not None:
-        os.execv(sys.executable, [sys.executable, "-m", "darwin.runner", "work"])
 
 
 def _on_xcpu(signum, frame):
@@ -287,4 +367,4 @@ if __name__ == "__main__":
     if cmd == "work":
         work()
     elif cmd == "run":
-        run_experiment(int(sys.argv[2]))
+        run_one(int(sys.argv[2]))

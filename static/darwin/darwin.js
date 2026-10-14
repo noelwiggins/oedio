@@ -40,7 +40,8 @@
     if (y1 - y0 < 1e-9) { y1 += 1; y0 -= opts.yMin != null ? 0 : 1; }
     const n = Math.max(...series.map(s => s.values.length));
     const xs = series[0].xs || [...Array(n).keys()];
-    const x0 = xs[0], x1 = xs[xs.length - 1] === x0 ? x0 + 1 : xs[xs.length - 1];
+    let x0 = xs[0], x1 = xs[xs.length - 1];
+    if (x1 === x0) { x0 -= 0.5; x1 += 0.5; }   // centre a single point
     const X = x => pad.l + (x - x0) / (x1 - x0) * (W - pad.l - pad.r);
     const Y = y => H - pad.b - (y - y0) / (y1 - y0) * (H - pad.t - pad.b);
     const grid = D.css('--md-sys-color-outline-variant'), txt = D.css('--md-sys-color-on-surface-variant');
@@ -50,8 +51,8 @@
       h += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${yy}" y2="${yy}" stroke="${grid}" stroke-width="1" opacity=".6"/>`;
       h += `<text x="${pad.l - 6}" y="${yy + 4}" text-anchor="end" font-size="10.5" fill="${txt}" font-family="IBM Plex Mono, monospace">${D.num(yv, Math.abs(y1) < 10 ? 2 : 0)}</text>`;
     }
-    h += `<text x="${W - pad.r}" y="${H - 6}" text-anchor="end" font-size="10.5" fill="${txt}" font-family="IBM Plex Mono, monospace">${D.esc(opts.xLabel || '')} ${D.num(x1, 0)}</text>`;
-    h += `<text x="${pad.l}" y="${H - 6}" font-size="10.5" fill="${txt}" font-family="IBM Plex Mono, monospace">${D.num(x0, 0)}</text>`;
+    h += `<text x="${W - pad.r}" y="${H - 6}" text-anchor="end" font-size="10.5" fill="${txt}" font-family="IBM Plex Mono, monospace">${D.esc(opts.xLabel || '')} ${D.num(xs[xs.length - 1], 0)}</text>`;
+    h += `<text x="${pad.l}" y="${H - 6}" font-size="10.5" fill="${txt}" font-family="IBM Plex Mono, monospace">${D.num(xs[0], 0)}</text>`;
     (opts.markers || []).forEach(m => {
       const xx = X(m.x);
       h += `<line x1="${xx}" x2="${xx}" y1="${pad.t}" y2="${H - pad.b}" stroke="${D.css('--md-sys-color-tertiary')}" stroke-dasharray="3 4"/>`;
@@ -61,6 +62,8 @@
       const sx = s.xs || xs;
       const pts = s.values.map((v, i) => (v == null || !isFinite(v)) ? null : `${X(sx[i]).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean).join(' ');
       h += `<polyline fill="none" stroke="${s.color}" stroke-width="${s.width || 2}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ''} stroke-linejoin="round" points="${pts}"/>`;
+      if (opts.dots || s.values.length <= 40)   // markers keep short series (even a single day) visible
+        s.values.forEach((v, i) => { if (v != null && isFinite(v) && !s.dash) h += `<circle cx="${X(sx[i]).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="3" fill="${s.color}"/>`; });
     });
     svg.innerHTML = h;
   };
