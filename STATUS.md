@@ -1,10 +1,56 @@
 # Oedio STATUS — Library of Alexandria
 
-Last updated: 2026-10-13
+Last updated: 2026-10-14
+
+## DARWIN Phase 2 (2026-10-14) — memory, baselines, daily benchmark, always-on world
+
+**Why the design changed mid-build**: an equal-budget measurement on life-1.0 (10 genes) showed Darwin
+≈ random search ≈ hill climber; single-seed scores among top genomes were mostly noise and the space was
+shallow. Added **life-2.0** (`life.NEURAL`, 111 genes: 6 body + 13→6→3 softsign controller), evaluated on
+2 training seeds. There Darwin beat random 2.3–2.9× and beat hill climbing. life-1.0 is untouched; Phase 1
+configs replay with the same digests (test `test_phase1_configs_replay_unchanged`).
+
+**New modules**: `suite.py` (13 problems: T1–T6 train, D1–D2 dev, H1–H3 holdout, F1–F2 final; fixed search
+and scoring seeds; `LEAK_DISTANCE` 0.12), `memory.py` (Discovery Memory = validated winners; Failure Memory;
+retrieval weight exp(-d/0.25) × (helped+1)/(uses+2)), `baselines.py` (random search, (1+20) hill climber),
+`bench.py` (daily benchmark + standing claims), `schedule.py` (daily practice + benchmark).
+Tables: `darwin_memory`, `darwin_memory_uses`, `darwin_failures`, `darwin_calibration`, `darwin_bench_results`
+(all except calibration append-only); `darwin_experiments.source` added by an ALTER-if-missing migration
+(`store.ADDED_COLUMNS`).
+
+**Daily cycle** (from 06:00 UTC, run by the world thread once a minute): 3 practice runs on rotating training
+problems (memory on) → validated winners enter memory → holdout benchmark: per problem × 3 replicates,
+contestants random / hillclimb / darwin / darwin_memory / darwin_memory_fw at 500 unique evaluations, winners
+scored on 8 unseen seeds, normalised (0 = median random genome, 1 = best of 500 random on those seeds), plus
+`llm_direct` reference (LLM-designed life-1.0 genome, designed once per problem/model/prompt, re-scored daily).
+Paired sign tests; standing claims C-memory / C-random / C-hillclimb updated (replicated → robust after 3
+consecutive days; failed replication / contradicted recorded, never erased). Controls use fixed seeds, so
+`control_drift` flags nondeterminism. Benchmarks never write memory or memory-use stats. Cost ≈ 800 CPU-s/day
+(≈ $0.006) locally; Railway runs ~2× faster. Owner can run dev any time and the final set (uses counted)
+from `/darwin/intelligence`.
+
+**Always-on world**: `world_live._loop` thread started by `gunicorn.conf.py` `post_worker_init` (Procfile now
+passes `-c gunicorn.conf.py`), single owner via `pg_try_advisory_lock(774413)` (file lock on SQLite), 10 TPS,
+stats every minute, checkpoint every 600 ticks (≤ 60 s lost on redeploy), hourly `world.compute` cost event.
+Still life-1.0 genomes (stable); switching the terrarium to life-2.0 is a possible later step.
+
+**Fixes**: worker runs each experiment in a fresh child (`runner.work` → `python -m darwin.runner run <id>`),
+because RLIMIT_CPU can't be raised and CPU time accumulates across exec; Ledger no longer double-counts
+experiment compute (finished event books only the remainder).
+
+**Day-one results** (2026-10-14, 3 memories): Darwin vs random 8/9 (p=0.02), vs hill climber 8/9 (p=0.02)
+→ replicated; Darwin+memory vs Darwin +0.40 normalised, 7/9, p=0.09 → observed. Memory with and without
+failure weighting were identical (with ≤6 memories both retrieve everything); they diverge as memory grows.
+Cross-machine determinism confirmed on life-2.0 (production practice runs matched local exactly).
+
+**Next**: watch the memory claim for a few weeks; vectorise thrive reproduction; consider life-2.0 terrarium;
+Phase 3 Labs only after the benchmark has history. Pre-existing Oedio log line "Postgres catalog unavailable…
+'loc_item'" is an unrelated catalog-mirror KeyError (manifest component missing loc_item).
+
 
 ## DARWIN (2026-10-13) — evolutionary discovery engine behind the secret volume
 
-Built from Noel's "Darwin Master LLM Build Command" brief (75 sections). **Phase 1 nucleus is live**
+Built from Noel's "Darwin Master LLM Build Command" brief (75 sections). **Phase 1 nucleus is live** (Phase 2 above)
 at `/darwin/`; long-term plan: Oedio's domain may become Darwin's, with the book reader moving to its own URL.
 
 **Entry**: a slim green spine, "ORIGIN OF SPECIES", filed beside Science on the homepage rotunda
