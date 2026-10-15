@@ -43,6 +43,12 @@ experiment compute (finished event books only the remainder).
 failure weighting were identical (with ≤6 memories both retrieve everything); they diverge as memory grows.
 Cross-machine determinism confirmed on life-2.0 (production practice runs matched local exactly).
 
+**Live, first held-out benchmark (E-000007)** matched the local run exactly. LLM reference (life-1.0 hand
+rule designed by claude-sonnet-4-6, no search) scored 3.21 / 0.92 / 3.04 on H1–H3 vs Darwin+memory
+1.93 / 1.78 / 2.07: on forage a reasoned hand rule beats 500-evaluation neural search by a wide margin, so the
+neural representation has large headroom; on survive Darwin wins. Practice cost is now attributed to the next
+*completed* benchmark (an interrupted run no longer swallows it).
+
 **Next**: watch the memory claim for a few weeks; vectorise thrive reproduction; consider life-2.0 terrarium;
 Phase 3 Labs only after the benchmark has history. Pre-existing Oedio log line "Postgres catalog unavailable…
 'loc_item'" is an unrelated catalog-mirror KeyError (manifest component missing loc_item).

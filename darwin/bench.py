@@ -258,7 +258,8 @@ def _practice_cost_since(exp_id):
     """Compute spent on practice runs since the previous daily benchmark (memory-building cost)."""
     with S.engine().connect() as c:
         prev = c.execute(sa.select(sa.func.max(S.experiments.c.id)).where(
-            (S.experiments.c.kind == "benchmark") & (S.experiments.c.id < exp_id))).scalar() or 0
+            (S.experiments.c.kind == "benchmark") & (S.experiments.c.status == "completed") &
+            (S.experiments.c.id < exp_id))).scalar() or 0
         rows = c.execute(sa.select(S.experiments.c.cost).where(
             (S.experiments.c.source == "practice") & (S.experiments.c.id > prev) &
             (S.experiments.c.id < exp_id))).scalars().all()
