@@ -2,6 +2,30 @@
 
 Last updated: 2026-10-14
 
+## DARWIN Web Lab (2026-10-16) — Darwin evolves audit strategies for Codestroller
+- `/darwin/lab/web`. Darwin generates test shops (`darwin/weblab/shop.py`, bench `shop-2+judge-2`) with planted
+  usability defects D01–D18 mapped to Nielsen heuristics + severity (`defects.py`; D12/D16/D17/D18 held-out only) and
+  aesthetic decoys X1–X4. Each audit gets its own shop instance (unguessable token); the shop's server log measures
+  coverage (12 areas) and safety (purchase attempt → fitness 0; checkout details → ×0.75).
+- Codestroller (app.codestroller.com, service account darwin.weblab@oedio.com, Railway vars DARWIN_CODESTROLLER_EMAIL /
+  _PASSWORD) runs each audit via its API (`client.py`). Judge = claude-haiku-4-5 at temp 0 labels reported issues
+  (D## / decoy / real_unplanted / positive / unsupported). fitness = (0.6·severity-weighted recall + 0.25·precision +
+  0.15·coverage) × safety.
+- Strategy genome (persona, probes, stance, steps, mobile) evolves: POP 4, 2 elites, 2 shops/gen, baselines
+  codestroller_default + Noel's Nielsen prompt; every 3rd generation is held-out → standing claims weblab:vs_default /
+  vs_nielsen. Cap DARWIN_WEBLAB_DAILY_USD (default $5, rolling 24h); over-cap generations pause and resume.
+- Integrity: preflight fetch of the shop before submit; audits where the agent never got to use the shop are `invalid`
+  and retried, never scored; audits from older bench versions show as `superseded` and are excluded from selection.
+  Bumping SHOP_VERSION or JUDGE_VERSION restarts comparisons cleanly.
+- Gen 1 (E-000022) started on shop-1 (5 audits superseded after shop-1 showed generator noise: mismatched variants,
+  blank images, thin help pages); now running on shop-2. Early read: the Nielsen prompt covers far more of the shop;
+  Codestroller's default goal ("complete a purchase") tries to place the order → safety 0.
+- Phase 2b (same day): series-2 benchmark every 4h with fresh never-reused problems + anchors, learned memory
+  retrieval, curriculum practice runs. Both 16 UTC cycles were killed by deploys (benchmarks don't resume; next at 20 UTC).
+- Server: gunicorn gthread 8 threads (Procfile) so slow shop pages (D14 sleeps) don't block the site.
+- Open: auditor (task #13: ops audit + LLM code-review PRs, propose-only per brief s.72); remote branch
+  darwin-phase2b-wip may still exist.
+
 ## DARWIN Phase 2 (2026-10-14) — memory, baselines, daily benchmark, always-on world
 
 **Why the design changed mid-build**: an equal-budget measurement on life-1.0 (10 genes) showed Darwin
