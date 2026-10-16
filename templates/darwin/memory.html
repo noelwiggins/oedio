@@ -12,18 +12,26 @@
   <div class="card flat metric"><div class="k">Memories</div><div class="v">{{ entries|length }}</div><div class="n">validated genomes</div></div>
   <div class="card flat metric"><div class="k">Transfers tried</div><div class="v">{{ entries|sum(attribute='uses') }}</div><div class="n">{{ entries|sum(attribute='helped') }} founded the winning lineage</div></div>
   <div class="card flat metric"><div class="k">Failures recorded</div><div class="v">{{ failure_counts.values()|sum }}</div><div class="n">{% for k, v in failure_counts.items() %}{{ k.replace('_', ' ') }} {{ v }}{{ ' · ' if not loop.last }}{% endfor %}</div></div>
-  <div class="card flat metric"><div class="k">Refused (leakage guard)</div><div class="v">{{ excluded }}</div><div class="n">within {{ leak }} of a held-out or final problem</div></div>
+  <div class="card flat metric"><div class="k">Refused at admission</div><div class="v">{{ excluded }}</div><div class="n">duplicates, or within {{ leak }} of a protected problem</div></div>
+</div>
+<div class="card flat small" style="margin-top:12px">
+  <b>Learned retrieval:</b>
+  {% if model.ready %}model fitted on {{ model.rows }} recorded transfers (training accuracy {{ model.train_accuracy }}); weights
+    {% for k, v in model.weights.items() %}<span class="mono">{{ k }} {{ v }}</span>{{ ' · ' if not loop.last }}{% endfor %}.
+  {% else %}not trained yet; needs {{ model.needs }} recorded transfers. Until then it uses the rule.{% endif %}
+  <span class="muted">Consolidation retires a memory after {{ retire_uses }}+ transfers if under {{ (retire_rate * 100)|int }}% founded the winning lineage; retired memories stay listed but are no longer retrieved.</span>
 </div>
 
 <section class="section card scroll-x">
   <h2>Discovery Memory</h2>
   {% if entries %}
   <table class="t">
-    <tr><th>memory</th><th>from</th><th>world</th><th>objective</th><th>conditions</th><th>fitness</th><th>held-out</th><th>transfers</th><th>nearest protected</th><th>body</th></tr>
+    <tr><th>memory</th><th>status</th><th>from</th><th>world</th><th>objective</th><th>conditions</th><th>fitness</th><th>held-out</th><th>transfers</th><th>nearest protected</th><th>body</th></tr>
     {% for e in entries %}
     {% set v = e.validation or {} %}
     <tr>
       <td class="mono">{{ e.label }}</td>
+      <td><span class="pill s-{{ 'operational' if e.status == 'active' else 'failed' }}" title="{{ e.status_reason or '' }}">{{ e.status }}</span></td>
       <td>{% if e.experiment_id %}<a class="mono" href="/darwin/experiment/{{ e.experiment_id }}">{{ fmt_exp(e.experiment_id) }}</a>{% endif %}<div class="small muted">{{ e.source }}</div></td>
       <td class="mono small">{{ e.world }}</td>
       <td>{{ e.objective }}</td>

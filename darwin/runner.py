@@ -269,7 +269,12 @@ def run_benchmark(exp):
     def set_progress(p):
         _update(exp["id"], progress=S.canon(p), heartbeat=S.now(), cost=S.canon(meter.snapshot()))
 
-    summary = bench.run(exp, set_progress)
+    cfg = S.loads(exp["config"], {}) or {}
+    if cfg.get("series") == 2:
+        from . import bench2
+        summary = bench2.run(exp, set_progress)
+    else:
+        summary = bench.run(exp, set_progress)
     snap = meter.snapshot()
     snap["llm_usd_billed"] = summary["benchmark"]["spend"]["llm_usd"]
     _update(exp["id"], status="completed", finished_at=S.now(), summary=S.canon(summary), cost=S.canon(snap),

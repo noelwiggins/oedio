@@ -364,18 +364,94 @@ def test_phase2_pages_render(client):
     assert r.status_code == 403
 
 
-def test_scheduler_queues_practice_then_benchmark(monkeypatch):
+def test_scheduler_queues_cycle_practice_then_benchmark(monkeypatch):
     from datetime import datetime, timezone
-    from darwin import schedule
+    from darwin import curriculum, schedule
     monkeypatch.setenv("DARWIN_SCHEDULER", "on")
     monkeypatch.setattr("darwin.web.ensure_worker", lambda: None)
-    t = datetime(2031, 5, 4, 7, 0, tzinfo=timezone.utc)
-    with store.engine().begin() as c:   # keep the test independent of today's real date
+    t = datetime(2031, 5, 4, 9, 30, tzinfo=timezone.utc)          # slot starts 08:00
+    with store.engine().begin() as c:
         c.execute(store.experiments.update().where(store.experiments.c.status == "queued").values(status="stopped"))
-    monkeypatch.setattr(store, "now", lambda: "2031-05-04T07:00:00.000+00:00")
+    monkeypatch.setattr(store, "now", lambda: "2031-05-04T09:30:00.000+00:00")
     schedule.tick(t)
-    schedule.tick(t)   # idempotent within the day
+    schedule.tick(t)   # idempotent within the slot
     with store.engine().connect() as c:
-        rows = c.execute(sa.select(store.experiments.c.source, store.experiments.c.kind).where(
+        rows = c.execute(sa.select(store.experiments.c.source, store.experiments.c.config).where(
             store.experiments.c.created_at >= "2031-05-04")).all()
-    assert sorted(r[0] for r in rows) == ["benchmark", "practice", "practice", "practice"]
+    srcs = sorted(r[0] for r in rows)
+    assert srcs.count("practice") == curriculum.PRACTICE_PER_CYCLE and srcs.count("benchmark") == 1
+    assert any((json.loads(cfg) or {}).get("series") == 2 for src, cfg in rows if src == "benchmark")
+
+
+# ── Phase 2b ─────────────────────────────────────────────────────────────
+def test_fresh_problems_unique_and_deterministic():
+    a, b = suite.fresh_problems(101), suite.fresh_problems(101)
+    assert a == b and len({p["id"] for p in a}) == len(a)
+    assert suite.fresh_problems(102)[0]["conditions"] != a[0]["conditions"]
+
+
+def test_curriculum_plan_respects_leakage_guard():
+    from darwin import curriculum
+    plan = curriculum.plan(55)
+    assert len(plan) == curriculum.PRACTICE_PER_CYCLE and plan[0][0] == "fixed"
+    for kind, label, obj, cond in plan:
+        near = suite.protected_near(obj, cond)
+        assert near[1] >= suite.LEAK_DISTANCE
+
+
+def test_memory_dedupe_and_retirement():
+    cond = suite.get("T3")["conditions"]
+    g = life.random_genomes(np.random.default_rng(9), 1, life.NEURAL)[0]
+    m1, _ = memory.admit(None, None, "a", "life-2.0", "forage", cond, g, 1.0, {}, "test", "replicated")
+    m2, why = memory.admit(None, None, "b", "life-2.0", "forage", cond, g + 1e-4, 1.0, {}, "test", "replicated")
+    assert m1 and m2 is None and "duplicate" in why
+    for _ in range(memory.RETIRE_MIN_USES):
+        memory.record_uses(None, "forage", cond, [{"memory_id": m1, "distance": 0.0}], None, 1.0)
+    retired = memory.consolidate()
+    assert any(r["memory"] == store.fmt_mem(m1) for r in retired)
+    assert all(e["memory_id"] != m1 for e in memory.retrieve("life-2.0", "forage", cond))
+
+
+def test_learned_retrieval_trains_and_never_crashes():
+    cond = suite.get("T6")["conditions"]
+    g = life.random_genomes(np.random.default_rng(11), 1, life.NEURAL)[0]
+    mid, _ = memory.admit(None, None, "c", "life-2.0", "forage", cond, g, 1.0, {}, "test", "robust")
+    for i in range(memory.LEARN_MIN_ROWS):
+        memory.record_uses(None, "forage", cond, [{"memory_id": mid, "distance": 0.05 * (i % 4)}],
+                           mid if i % 3 == 0 else None, 1.0)
+    info = memory.model_info()
+    assert info["ready"] and 0.0 <= info["train_accuracy"] <= 1.0
+    got = memory.retrieve("life-2.0", "forage", cond, mode="learned")
+    assert got and got[0]["retrieval"] == "learned" and 0.0 <= got[0]["weight"] <= 1.0
+
+
+def test_series2_cycle_end_to_end_tiny(monkeypatch):
+    from darwin import bench2, schedule
+    monkeypatch.setattr(bench2, "PARAMS", {"max_evals": 30, "population": 10, "train_seeds": 1})
+    monkeypatch.setattr(suite, "TICKS", 60)
+    monkeypatch.setattr(suite, "SCORING_SEEDS", 3)
+    monkeypatch.setattr(suite, "FRESH_CALIBRATION_N", 20)
+    monkeypatch.setitem(bench.DEFAULTS, "calibration_n", 20)
+    monkeypatch.setattr(suite, "fresh_problems", lambda cid, n=2: [
+        {**p, "scoring_seeds": p["scoring_seeds"][:3]} for p in suite.__dict__["_fp_orig"](cid, 2)])
+    monkeypatch.setattr(suite, "anchors", lambda: suite.__dict__["_an_orig"]()[:1])
+    monkeypatch.setattr(bench, "_llm_reference", lambda *a, **k: None)
+    with store.engine().begin() as c:
+        c.execute(store.experiments.update().where(store.experiments.c.status == "queued").values(status="stopped"))
+        eid = schedule.queue_benchmark("cycle", store.now()[:10], c, series=2)
+    assert runner.claim_next() == eid
+    runner.run_experiment(eid)
+    with store.engine().connect() as c:
+        row = dict(c.execute(sa.select(store.experiments).where(store.experiments.c.id == eid)).mappings().one())
+    assert row["status"] == "completed", row["stop_reason"]
+    b = json.loads(row["summary"])["benchmark"]
+    assert b["series"] == 2 and set(b["contestants"]) == set(bench2.SEARCH if hasattr(bench2, "SEARCH") else
+                                                             ["random", "hillclimb", "darwin", "darwin_memory",
+                                                              "darwin_memory_fw", "darwin_memory_learned"])
+    assert b["comparisons"]["darwin__vs__random"]["n"] == 2 * suite.FRESH_REPLICATES
+    assert set(b["claims"]) == {"memory", "learned", "random", "hillclimb"}
+    assert bench2.history()[-1]["label"] == store.fmt_exp(eid)
+
+
+suite._fp_orig = suite.fresh_problems
+suite._an_orig = suite.anchors

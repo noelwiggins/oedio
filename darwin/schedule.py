@@ -5,8 +5,7 @@ Series 2 (Phase 2b): every CYCLE_HOURS hours (slots start at 00, 04, 08, ... UTC
      Validated winners grow Discovery Memory.
   2. One series-2 benchmark, queued after the practice runs, so it measures
      this cycle's memory on fresh, never-seen problems.
-  3. An operational audit after each finished cycle (see audit.py); a code
-     audit when the code changes, at most daily, and at least weekly.
+  3. Hourly memory consolidation (retire memories that keep failing to transfer).
 A failed cycle benchmark (for example, interrupted by a redeploy) is retried
 up to MAX_TRIES times in the same slot. A hard daily spending guard skips
 cycles if the last 24 hours of recorded spend exceed DARWIN_DAILY_HARD_USD.
@@ -90,12 +89,23 @@ def tick(now=None):
     from .web import ensure_worker
     now = now or datetime.now(timezone.utc)
     _cycle(now)
-    try:
-        from . import audit
-        audit.maybe_run(now)
-    except Exception as e:
-        print(f"[darwin] audit scheduling error: {e!r}")
+    _consolidate_hourly(now)
     ensure_worker()
+
+
+_last_consolidate = {"t": None}
+
+
+def _consolidate_hourly(now):
+    """Memory consolidation (retire memories that keep failing to transfer), once an hour."""
+    from . import memory
+    if _last_consolidate["t"] and (now - _last_consolidate["t"]).total_seconds() < 3600:
+        return
+    _last_consolidate["t"] = now
+    try:
+        memory.consolidate()
+    except Exception as e:
+        print(f"[darwin] consolidation error: {e!r}")
 
 
 def _cycle(now):

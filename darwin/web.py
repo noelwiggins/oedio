@@ -603,17 +603,34 @@ def api_snapshot_compare(sid):
 @bp.route("/intelligence")
 def intelligence_page():
     ensure_worker()
-    return render_template("darwin/intelligence.html", problems=suite.problems(), suite_version=suite.SUITE_VERSION,
-                           world=suite.WORLD, contestants=bench.CONTESTANTS, final_uses=bench.final_uses(),
-                           params=bench.DEFAULTS, run_id=request.args.get("run", type=int),
-                           hour=schedule.DAILY_HOUR_UTC, practice_per_day=schedule.PRACTICE_PER_DAY)
+    from . import bench2, curriculum
+    return render_template("darwin/intelligence.html", problems=suite.problems(), suite_version=suite.SUITE2,
+                           world=suite.WORLD, contestants=bench2.CONTESTANTS, final_uses=bench.final_uses(),
+                           params=bench2.PARAMS, run_id=request.args.get("run", type=int),
+                           cycle_hours=schedule.CYCLE_HOURS, practice=curriculum.PRACTICE_PER_CYCLE,
+                           fresh_n=suite.FRESH_PER_CYCLE, fresh_reps=suite.FRESH_REPLICATES,
+                           dist=suite.DISTRIBUTION, fresh_cal=suite.FRESH_CALIBRATION_N,
+                           series=request.args.get("series", type=int))
 
 
-def _bench_run(exp_id=None):
+def _has_series2_run():
+    with S.engine().connect() as c:
+        rows = c.execute(sa.select(S.experiments.c.config).where(S.experiments.c.kind == "benchmark")).scalars().all()
+    return any((S.loads(r, {}) or {}).get("series") == 2 for r in rows)
+
+
+def _bench_run(exp_id=None, series=None):
     with S.engine().connect() as c:
         q = sa.select(S.experiments).where(S.experiments.c.kind == "benchmark")
-        q = q.where(S.experiments.c.id == exp_id) if exp_id else q.order_by(S.experiments.c.id.desc()).limit(1)
-        e = c.execute(q).mappings().first()
+        if exp_id:
+            e = c.execute(q.where(S.experiments.c.id == exp_id)).mappings().first()
+        else:
+            e = None
+            for row in c.execute(q.order_by(S.experiments.c.id.desc()).limit(40)).mappings():
+                cs = (S.loads(row["config"], {}) or {}).get("series", 1)
+                if series is None or cs == series or (series == 1 and cs != 2):
+                    e = row
+                    break
         if not e:
             return None
         rows = c.execute(sa.select(S.bench_results).where(S.bench_results.c.experiment_id == e["id"]).order_by(
@@ -622,16 +639,26 @@ def _bench_run(exp_id=None):
             "created_at": e["created_at"], "finished_at": e["finished_at"], "progress": S.loads(e["progress"], {}),
             "stop_reason": e["stop_reason"], "config": S.loads(e["config"], {}),
             "summary": (S.loads(e["summary"], {}) or {}).get("benchmark"), "code_version": e["code_version"],
-            "cells": [{"problem": r["problem"], "contestant": r["contestant"], "replicate": r["replicate"],
-                       "normalized": r["normalized"], "score": r["score"], "evaluations": r["evaluations"],
-                       "cpu_s": r["cpu_s"], "detail": S.loads(r["detail"], {})} for r in rows]}
+            "series": (S.loads(e["config"], {}) or {}).get("series", 1),
+            "cells": [{"problem": r["problem"], "group": r["split"], "contestant": r["contestant"],
+                       "replicate": r["replicate"], "normalized": r["normalized"], "score": r["score"],
+                       "evaluations": r["evaluations"], "cpu_s": r["cpu_s"], "detail": S.loads(r["detail"], {})}
+                      for r in rows]}
 
 
 @bp.route("/api/benchmark")
 def api_benchmark():
-    return jsonify({"run": _bench_run(request.args.get("run", type=int)),
-                    "history": bench.history("holdout"), "versions": bench.versions("holdout"),
-                    "runs": _bench_runs(), "memory_size": memory.size(suite.WORLD), "final_uses": bench.final_uses(),
+    from . import bench2
+    h2 = bench2.history()
+    series = request.args.get("series", type=int) or (2 if h2 or _has_series2_run() else 1)
+    run = _bench_run(request.args.get("run", type=int), series=None if request.args.get("run") else series)
+    return jsonify({"series": series, "run": run,
+                    "history": h2 if series == 2 else bench.history("holdout"),
+                    "versions": bench2.versions() if series == 2 else bench.versions("holdout"),
+                    "learned_model": memory.model_info(),
+                    "contestants": bench2.CONTESTANTS if series == 2 else bench.CONTESTANTS,
+                    "runs": _bench_runs(), "memory_size": len(memory.entries(suite.WORLD, active_only=True)),
+                    "final_uses": bench.final_uses(),
                     "standing": [{"id": c["label"], "kind": c["kind"], "statement": c["statement"], "status": c["status"],
                                   "history": [{"ts": h["ts"], "status": h["status"], "reason": h["reason"]}
                                               for h in c["history"]]}
@@ -644,7 +671,9 @@ def _bench_runs(limit=60):
                                    S.experiments.c.created_at, S.experiments.c.config).where(
             S.experiments.c.kind == "benchmark").order_by(S.experiments.c.id.desc()).limit(limit)).all()
     return [{"id": i, "label": S.fmt_exp(i), "title": t, "status": st, "created_at": ts,
-             "split": (S.loads(cf, {}) or {}).get("split")} for i, t, st, ts, cf in rows]
+             "series": (S.loads(cf, {}) or {}).get("series", 1),
+             "split": "cycle" if (S.loads(cf, {}) or {}).get("series") == 2 else (S.loads(cf, {}) or {}).get("split")}
+            for i, t, st, ts, cf in rows]
 
 
 @bp.route("/api/benchmark/run", methods=["POST"])
@@ -675,9 +704,11 @@ def memory_page():
         near = suite.protected_near(e["objective"], e["conditions"] or {})
         e["nearest_protected"] = {"problem": near[0], "distance": round(near[1], 3)} if near else None
         e["summary"] = life.genome_summary(e["genome"], life.get_spec(e["world"]))
+    model = memory.model_info()
     with S.engine().connect() as c:
         excluded = c.execute(sa.select(sa.func.count()).select_from(S.events).where(
             S.events.c.type == "memory.excluded")).scalar()
     return render_template("darwin/memory.html", entries=list(reversed(ents)), failures=memory.failures_list(),
                            failure_counts=memory.failure_counts(), excluded=excluded, leak=suite.LEAK_DISTANCE,
-                           fmt_mem=S.fmt_mem)
+                           fmt_mem=S.fmt_mem, model=model, retire_uses=memory.RETIRE_MIN_USES,
+                           retire_rate=memory.RETIRE_MAX_RATE)
