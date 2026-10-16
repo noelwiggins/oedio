@@ -238,8 +238,53 @@ bench_results = sa.Table(
     sa.Column("code_version", T),
 )
 
+memory_status = sa.Table(
+    "darwin_memory_status", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("memory_id", sa.Integer, index=True, nullable=False),
+    sa.Column("status", T, nullable=False),      # active | retired
+    sa.Column("reason", T),
+)
+
+audits = sa.Table(
+    "darwin_audits", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("kind", T, nullable=False),        # ops | code
+    sa.Column("experiment_id", sa.Integer),
+    sa.Column("code_version", T),
+    sa.Column("summary", J),
+    sa.Column("findings", J),
+    sa.Column("cost_usd", sa.Float),
+)
+
+proposals = sa.Table(
+    "darwin_proposals", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("audit_id", sa.Integer, index=True),
+    sa.Column("title", T),
+    sa.Column("severity", T),
+    sa.Column("category", T),
+    sa.Column("safety_relevant", sa.Boolean),
+    sa.Column("detail", J),                      # explanation, edits, guard results
+    sa.Column("pr_number", sa.Integer),
+    sa.Column("pr_url", T),
+    sa.Column("branch", T),
+)
+
+proposal_status = sa.Table(
+    "darwin_proposal_status", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("proposal_id", sa.Integer, index=True, nullable=False),
+    sa.Column("status", T, nullable=False),      # proposed | rejected_by_guard | pr_opened | ci_passed | ci_failed | merged | closed
+    sa.Column("reason", T),
+)
+
 APPEND_ONLY = ("darwin_events", "darwin_claim_status", "darwin_memory", "darwin_memory_uses", "darwin_failures",
-               "darwin_bench_results")
+               "darwin_bench_results", "darwin_memory_status", "darwin_audits", "darwin_proposal_status")
 
 # Columns added after the first deploy; created with ALTER TABLE when missing.
 ADDED_COLUMNS = [("darwin_experiments", "source", "TEXT")]

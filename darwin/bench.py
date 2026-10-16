@@ -20,6 +20,7 @@ start of the run, and never write to it.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from datetime import datetime, timezone
@@ -54,33 +55,39 @@ COMPARISONS = [("darwin_memory_fw", "darwin"), ("darwin_memory", "darwin"), ("da
                ("hillclimb", "random")]
 
 
+def _scoring_seeds(prob):
+    return prob.get("scoring_seeds") or suite.scoring_seeds(prob["index"])
+
+
 def _score(genome, prob, spec):
     f, _ = life.evaluate(np.asarray(genome, dtype=np.float64)[None], prob["objective"],
-                         life.Conditions(**prob["conditions"]), suite.scoring_seeds(prob["index"]),
+                         life.Conditions(**prob["conditions"]), _scoring_seeds(prob),
                          suite.TICKS, suite.COHORT, spec)
     return f[0]
 
 
-def calibrate(prob, n=DEFAULTS["calibration_n"]):
+def calibrate(prob, n=DEFAULTS["calibration_n"], suite_tag=None):
     """Fixed per-problem normalisation, computed once per suite and world version."""
+    tag = suite_tag or suite.SUITE_VERSION
     with S.engine().connect() as c:
         row = c.execute(sa.select(S.calibration).where(
-            (S.calibration.c.suite == suite.SUITE_VERSION) & (S.calibration.c.problem == prob["id"]) &
+            (S.calibration.c.suite == tag) & (S.calibration.c.problem == prob["id"]) &
             (S.calibration.c.world == suite.WORLD)).order_by(S.calibration.c.id).limit(1)).mappings().first()
     if row:
         return row["r0"], row["r1"], 0.0
     spec = life.get_spec(suite.WORLD)
     t0 = time.process_time()
-    rng = np.random.default_rng(424242 + prob["index"])
+    rng = np.random.default_rng(424242 + (prob["index"] if prob.get("index") is not None
+                                          else int(hashlib.sha256(prob["id"].encode()).hexdigest()[:8], 16)))
     gs = life.random_genomes(rng, n, spec)
     f, _ = life.evaluate(gs, prob["objective"], life.Conditions(**prob["conditions"]),
-                         suite.scoring_seeds(prob["index"]), suite.TICKS, suite.COHORT, spec)
+                         _scoring_seeds(prob), suite.TICKS, suite.COHORT, spec)
     m = f.mean(1)
     r0, r1 = float(np.median(m)), float(m.max())
     cpu = time.process_time() - t0
     with S.engine().begin() as c:
         c.execute(S.calibration.insert().values(
-            created_at=S.now(), suite=suite.SUITE_VERSION, problem=prob["id"], world=suite.WORLD, r0=r0, r1=r1,
+            created_at=S.now(), suite=tag, problem=prob["id"], world=suite.WORLD, r0=r0, r1=r1,
             detail=S.canon({"n_random": n, "p90": float(np.percentile(m, 90)), "mean": float(m.mean()),
                             "cpu_s": round(cpu, 3), "note": "r1 is the best of n random genomes scored on the "
                             "scoring seeds themselves, so it is an optimistic reference"})))
@@ -346,14 +353,14 @@ def update_standing_claims(exp_id, day, comps, mem_size):
     return out
 
 
-def _llm_reference(exp_id, prob, day, split, r0, r1):
+def _llm_reference(exp_id, prob, day, split, r0, r1, suite_tag=None):
     """llm_direct contestant. Designed once per (problem, model, prompt version); re-scored daily."""
     from . import openlab
     spec = life.LINEAR
     with S.engine().connect() as c:
         prev = c.execute(sa.select(S.bench_results.c.genome, S.bench_results.c.detail).where(
-            (S.bench_results.c.contestant == "llm_direct") & (S.bench_results.c.problem == prob["id"]) &
-            (S.bench_results.c.suite == suite.SUITE_VERSION)).order_by(S.bench_results.c.id.desc()).limit(1)).first()
+            (S.bench_results.c.contestant == "llm_direct") & (S.bench_results.c.problem == prob["id"])
+        ).order_by(S.bench_results.c.id.desc()).limit(1)).first()
     new_cost, call = 0.0, None
     genome = None
     if prev:
@@ -374,7 +381,7 @@ def _llm_reference(exp_id, prob, day, split, r0, r1):
     nm = _norm(float(sc.mean()), r0, r1)
     with S.engine().begin() as c:
         c.execute(S.bench_results.insert().values(
-            experiment_id=exp_id, day=day, split=split, suite=suite.SUITE_VERSION, problem=prob["id"],
+            experiment_id=exp_id, day=day, split=split, suite=suite_tag or suite.SUITE_VERSION, problem=prob["id"],
             contestant="llm_direct", replicate=0, evaluations=1, cpu_s=round(cpu, 4),
             cost_usd=costs.compute_usd(cpu) + new_cost, cost_kind="billed+estimated" if new_cost else "estimated",
             score=float(sc.mean()), score_seeds=S.canon([round(float(x), 6) for x in sc]), normalized=nm,
@@ -401,13 +408,13 @@ def history(split="holdout", limit=120):
     return out
 
 
-def versions(split="holdout"):
+def versions(split="holdout", suite_tag=None):
     """Version comparison (s.57): per code version, mean normalised score per contestant."""
     with S.engine().connect() as c:
         rows = c.execute(sa.select(S.bench_results.c.code_version, S.bench_results.c.contestant,
                                    sa.func.avg(S.bench_results.c.normalized), sa.func.count(),
                                    sa.func.min(S.bench_results.c.day), sa.func.max(S.bench_results.c.day)).where(
-            (S.bench_results.c.split == split) & (S.bench_results.c.suite == suite.SUITE_VERSION)).group_by(
+            (S.bench_results.c.split == split) & (S.bench_results.c.suite == (suite_tag or suite.SUITE_VERSION))).group_by(
             S.bench_results.c.code_version, S.bench_results.c.contestant)).all()
     out = {}
     for cv, name, avg, n, d0, d1 in rows:

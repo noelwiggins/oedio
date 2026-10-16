@@ -94,3 +94,56 @@ def search_seed(problem_index: int, replicate: int) -> int:
 
 def scoring_seeds(problem_index: int):
     return [9_000_000 + 100 * problem_index + i for i in range(SCORING_SEEDS)]
+
+
+# ── Series 2 (Phase 2b): fresh problems every cycle ─────────────────────
+# Each benchmark cycle draws FRESH_PER_CYCLE never-reused problems from the
+# distribution below and searches them with fresh seeds, so every cycle is
+# independent evidence. The suite-1 holdout problems H1-H3 stay as a fixed
+# "anchor" (replicate 0, fixed seeds) for the exact-reproducibility check.
+SUITE2 = "suite-2"
+FRESH_PER_CYCLE = 6
+FRESH_REPLICATES = 2
+FRESH_CALIBRATION_N = 200
+DISTRIBUTION = {
+    "objective": ["forage", "survive"],
+    "food": (12, 90),             # log-uniform, integer
+    "green_share": (0.1, 0.9),    # uniform
+    "scarcity": (0.6, 2.4),       # log-uniform
+    "hazards": (0, 6),            # integer uniform
+}
+
+
+def sample_problem(rng):
+    """One problem from the series-2 distribution (shared by fresh tests and curriculum practice)."""
+    D = DISTRIBUTION
+    obj = D["objective"][int(rng.integers(len(D["objective"])))]
+    cond = {**life.Conditions().to_dict(),
+            "food": int(round(math.exp(rng.uniform(math.log(D["food"][0]), math.log(D["food"][1]))))),
+            "green_share": round(float(rng.uniform(*D["green_share"])), 3),
+            "scarcity": round(math.exp(rng.uniform(math.log(D["scarcity"][0]), math.log(D["scarcity"][1]))), 3),
+            "hazards": int(rng.integers(D["hazards"][0], D["hazards"][1] + 1))}
+    return obj, cond
+
+
+def fresh_problems(cycle_id: int, n: int = FRESH_PER_CYCLE):
+    """Never-reused test problems for one benchmark cycle, with their own search and scoring seeds."""
+    import numpy as np
+    out = []
+    for k in range(n):
+        rng = np.random.default_rng([2, int(cycle_id), k])
+        obj, cond = sample_problem(rng)
+        seeds = rng.integers(1, 2 ** 31 - 1, size=FRESH_REPLICATES + SCORING_SEEDS)
+        out.append({"id": f"X{cycle_id}-{k + 1}", "index": None, "split": "fresh", "objective": obj,
+                    "conditions": cond, "note": "fresh, never reused",
+                    "search_seeds": [int(x) for x in seeds[:FRESH_REPLICATES]],
+                    "scoring_seeds": [int(x) for x in seeds[FRESH_REPLICATES:]]})
+    return out
+
+
+def anchors():
+    out = []
+    for p in problems("holdout"):
+        out.append({**p, "split": "anchor", "search_seeds": [search_seed(p["index"], 0)],
+                    "scoring_seeds": scoring_seeds(p["index"])})
+    return out
