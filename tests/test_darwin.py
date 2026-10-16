@@ -571,6 +571,7 @@ def test_weblab_generation_end_to_end(monkeypatch):
                 "call_id": 1}
     monkeypatch.setattr("darwin.openlab._call", fake_call)
     monkeypatch.setattr(WE, "SHOPS_PER_GEN", 1)
+    monkeypatch.setattr(WE, "preflight", lambda url, tries=3: True)
     fake = FakeCodestroller()
     for gen in (1, 2, 3):
         with store.engine().begin() as c:
@@ -601,6 +602,14 @@ def test_weblab_budget_pause(monkeypatch):
     assert out.get("paused")
 
 
+def test_weblab_unusable_audits_are_invalid_not_scored():
+    down = {"status": "complete", "steps": [{"narration": "the page says Application failed to respond",
+                                             "issues_found": [{"description": "site is completely down"}]}]}
+    assert WE.unusable(down, {"events": 3})
+    ok = {"status": "complete", "steps": [{"narration": "browsing"}] * 5}
+    assert not WE.unusable(ok, {"events": 12})
+
+
 def test_weblab_pages_render(client):
     import darwin.weblab.pages  # noqa: F401
     for path in ("/darwin/lab/web",):
@@ -609,3 +618,17 @@ def test_weblab_pages_render(client):
     assert "leaderboard" in d and "curve" in d
     r = client.post("/darwin/api/weblab/sample-shop")
     assert r.status_code == 200 and "answer_key" not in r.get_json()
+
+
+def test_weblab_shop2_catalog_is_coherent():
+    from darwin.weblab import shop as SH
+    for seed in range(40):
+        for split in ("train", "holdout"):
+            spec = SH.make_spec(seed, split)
+            assert spec["version"] == SH.SHOP_VERSION
+            names = [p["name"] for p in spec["products"]]
+            assert len(names) == len(set(names))
+            for p in spec["products"]:
+                kinds = SH.DOMAINS[spec["domain"]]["cats"][p["cat"]]
+                assert any(p["name"].endswith(k[0]) and set(p["stock"]) == set(k[2][1]) for k in kinds)
+                assert p["icon"] and any(v == 0 for v in p["stock"].values())

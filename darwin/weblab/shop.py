@@ -29,22 +29,33 @@ bp = Blueprint("weblab_shop", __name__, url_prefix="/darwin/weblab/s/<token>")
 _carts = {}
 _lock = threading.Lock()
 
+SHOP_VERSION = "shop-2"   # shop-2: coherent catalog, product art, variant availability, itemised checkout, fuller help
+SIZES = ("size", ["XS", "S", "M", "L", "XL"])
+COLOURS = lambda *c: ("colour", list(c))
 DOMAINS = {
-    "apparel": {"cats": ["Tops", "Outerwear", "Trousers", "Accessories"], "kind": "size",
-                "values": ["XS", "S", "M", "L", "XL"],
-                "adj": ["Harbor", "Linden", "Copper", "Alder", "Marlow", "Juniper", "Slate", "Fenwick", "Orchard", "Tamsin"],
-                "noun": ["Overshirt", "Crewneck", "Field Jacket", "Chino", "Rain Shell", "Cardigan", "Tote", "Beanie",
-                         "Work Trouser", "Polo", "Scarf", "Gilet"]},
-    "homeware": {"cats": ["Kitchen", "Bedding", "Lighting", "Storage"], "kind": "colour",
-                 "values": ["Oat", "Charcoal", "Sage", "Rust", "Ivory"],
-                 "adj": ["Hearth", "Brindle", "Calder", "Wren", "Quarry", "Mossley", "Ashby", "Delft", "Larkin", "Bramble"],
-                 "noun": ["Stoneware Mug", "Linen Duvet", "Table Lamp", "Storage Basket", "Serving Bowl", "Throw",
-                          "Pendant Shade", "Bread Bin", "Pillowcase Set", "Carafe", "Spice Jar", "Wall Hook"]},
-    "outdoor": {"cats": ["Packs", "Shelter", "Cooking", "Lighting"], "kind": "size",
-                "values": ["18L", "24L", "32L", "45L"],
-                "adj": ["Ridge", "Cairn", "Tarn", "Scree", "Gorse", "Kestrel", "Bothy", "Fell", "Sorrel", "Heron"],
-                "noun": ["Daypack", "Bivvy Bag", "Stove", "Headtorch", "Trekking Pole", "Tarp", "Water Filter",
-                         "Mess Tin", "Dry Bag", "Camp Chair", "Lantern", "Sit Mat"]},
+    "apparel": {"adj": ["Harbor", "Linden", "Copper", "Alder", "Marlow", "Juniper", "Slate", "Fenwick", "Orchard", "Tamsin"],
+                "cats": {"Tops": [("Overshirt", "👕", SIZES), ("Crewneck", "👕", SIZES), ("Polo", "👕", SIZES), ("Cardigan", "🧥", SIZES)],
+                         "Outerwear": [("Field Jacket", "🧥", SIZES), ("Rain Shell", "🧥", SIZES), ("Gilet", "🧥", SIZES)],
+                         "Trousers": [("Chino", "👖", ("waist", ["28", "30", "32", "34", "36"])), ("Work Trouser", "👖", ("waist", ["28", "30", "32", "34", "36"]))],
+                         "Accessories": [("Tote", "👜", COLOURS("Natural", "Navy", "Olive")), ("Beanie", "🧢", COLOURS("Charcoal", "Rust", "Oat")),
+                                         ("Scarf", "🧣", COLOURS("Grey", "Camel", "Forest"))]}},
+    "homeware": {"adj": ["Hearth", "Brindle", "Calder", "Wren", "Quarry", "Mossley", "Ashby", "Delft", "Larkin", "Bramble"],
+                 "cats": {"Kitchen": [("Stoneware Mug", "☕", COLOURS("Oat", "Charcoal", "Sage", "Rust")), ("Serving Bowl", "🥣", COLOURS("Oat", "Charcoal", "Sage")),
+                                      ("Carafe", "🫗", COLOURS("Clear", "Smoke", "Amber")), ("Bread Bin", "🍞", COLOURS("Ivory", "Charcoal", "Sage"))],
+                          "Bedding": [("Linen Duvet Cover", "🛏️", ("size", ["Single", "Double", "King"])), ("Pillowcase Set", "🛏️", COLOURS("Oat", "Ivory", "Sage")),
+                                      ("Wool Throw", "🧶", COLOURS("Oat", "Rust", "Charcoal"))],
+                          "Lighting": [("Table Lamp", "💡", COLOURS("Brass", "Black", "Ivory")), ("Pendant Shade", "💡", COLOURS("Linen", "Rattan", "Black")),
+                                       ("Candle Holder", "🕯️", COLOURS("Brass", "Black"))],
+                          "Storage": [("Storage Basket", "🧺", ("size", ["Small", "Medium", "Large"])), ("Spice Jar Set", "🫙", ("size", ["Set of 3", "Set of 6"])),
+                                      ("Wall Hook", "🪝", COLOURS("Oak", "Black", "Brass"))]}},
+    "outdoor": {"adj": ["Ridge", "Cairn", "Tarn", "Scree", "Gorse", "Kestrel", "Bothy", "Fell", "Sorrel", "Heron"],
+                "cats": {"Packs": [("Daypack", "🎒", ("capacity", ["18L", "24L", "32L"])), ("Trekking Pack", "🎒", ("capacity", ["38L", "45L", "55L"])),
+                                   ("Dry Bag", "🎒", ("capacity", ["5L", "10L", "20L"]))],
+                         "Shelter": [("Tarp", "⛺", ("size", ["2×2 m", "3×3 m", "4×4 m"])), ("Bivvy Bag", "⛺", ("length", ["Regular", "Long"])),
+                                     ("Two-Person Tent", "⛺", COLOURS("Green", "Sand")), ("Sit Mat", "🧘", COLOURS("Orange", "Grey"))],
+                         "Cooking": [("Stove", "🔥", ("fuel", ["Gas canister", "Multi-fuel"])), ("Mess Tin", "🍳", ("size", ["0.6 L", "1.0 L"])),
+                                     ("Water Filter", "💧", ("flow", ["Squeeze", "Pump"]))],
+                         "Lighting": [("Headtorch", "🔦", ("brightness", ["200 lm", "400 lm", "800 lm"])), ("Lantern", "🏮", COLOURS("Orange", "Black"))]}},
 }
 NAMES = ["Fern & Field", "Northbound Supply", "Wick & Wool", "Harrow Goods", "Lantern Lane", "Copperline",
          "Thistle Store", "Moorland Co.", "Parcel & Pine", "Ember Market"]
@@ -65,18 +76,21 @@ def make_spec(seed: int, split: str = "train", n_defects=None):
     if split == "holdout" and not any(d in HOLDOUT_ONLY for d in defects):
         defects[-1] = rng.choice(HOLDOUT_ONLY)
     defects = sorted(set(defects))
-    names = [f"{a} {n}" for a in dom["adj"] for n in dom["noun"]]
-    rng.shuffle(names)
-    cats = dom["cats"][:]
+    cats = list(dom["cats"])
     big = rng.choice(cats) if "D17" in defects else None
-    products, pid = [], 1
+    products, pid, used = [], 1, set()
     for cat in cats:
-        for _ in range(22 if cat == big else rng.randint(5, 7)):
-            vals = dom["values"][:]
+        kinds = dom["cats"][cat]
+        combos = [(a, k) for a in dom["adj"] for k in kinds]
+        rng.shuffle(combos)
+        for _ in range(min(len(combos), 22) if cat == big else rng.randint(5, 7)):
+            adj, (noun, icon, (vkind, vals)) = next(c for c in combos if f"{c[0]} {c[1][0]}" not in used)
+            used.add(f"{adj} {noun}")
             stock = {v: (0 if rng.random() < 0.25 else rng.randint(1, 9)) for v in vals}
             if all(s == 0 for s in stock.values()):
                 stock[vals[0]] = 3
-            products.append({"id": f"p{pid}", "name": names.pop(), "cat": cat, "price": round(rng.uniform(12, 180), 2),
+            products.append({"id": f"p{pid}", "name": f"{adj} {noun}", "cat": cat, "price": round(rng.uniform(12, 180), 2),
+                             "icon": icon, "variant_kind": vkind,
                              "stock": stock, "blurb": rng.choice([
                                  "Made in small batches and built to last.", "A dependable everyday piece.",
                                  "Our best seller, now in new colours.", "Simple, sturdy and easy to care for."])})
@@ -86,7 +100,7 @@ def make_spec(seed: int, split: str = "train", n_defects=None):
             p["stock"][rng.choice(list(p["stock"]))] = 0     # every product has a sold-out option to probe
     dead = f"{rng.choice(['sale', 'new-in', 'gifts'])}" if "D10" in defects else None
     return {"seed": seed, "split": split, "domain": dname, "name": rng.choice(NAMES), "palette": pal,
-            "variant_kind": dom["kind"], "categories": cats, "products": products, "defects": defects,
+            "version": SHOP_VERSION, "categories": cats, "products": products, "defects": defects,
             "decoys": decoys, "dead_link": dead, "fee": 4.95 if "D11" in defects else 0.0}
 
 
@@ -177,8 +191,9 @@ def page(spec, token, title, body, sess, shop_id, hide_nav=False, scripts=""):
     .sbox input{{padding:7px 9px;border:1px solid #0004;border-radius:6px}} .sbox button,.btn{{padding:9px 14px;border:0;border-radius:6px;
       background:{accent};color:#fff;cursor:pointer;font:inherit}}
     main{{max-width:1040px;margin:0 auto;padding:20px}} .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}}
-    .card{{border:1px solid #0002;border-radius:10px;padding:12px;background:#fff8}} .ph{{height:120px;border-radius:8px;
-      background:linear-gradient(135deg,{accent}33,{ink}22)}} .price{{font-weight:600}}
+    .card{{border:1px solid #0002;border-radius:10px;padding:12px;background:#fff8}} .ph{{height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:54px;
+      background:linear-gradient(135deg,{accent}33,{ink}18)}} .avail{{font-size:14px;margin:6px 0}} .muted{{opacity:.7}}
+    .steps{{font-size:14px;opacity:.75;margin:-6px 0 12px}} .price{{font-weight:600}}
     .toast{{position:fixed;right:16px;bottom:16px;background:{ink};color:{paper};padding:12px 16px;border-radius:8px;display:none}}
     .promo{{background:{accent};color:#fff;padding:14px;border-radius:8px;margin:8px 0;font-weight:600}}
     table{{width:100%;border-collapse:collapse}} td,th{{padding:8px;border-bottom:1px solid #0002;text-align:left}}
@@ -211,7 +226,7 @@ def _resp(body, sess):
 
 def _product_card(spec, token, p, where):
     base = f"/darwin/weblab/s/{token}"
-    return (f'<div class="card"><div class="ph"></div><h3><a href="{base}/p/{p["id"]}">{esc(p["name"])}</a></h3>'
+    return (f'<div class="card"><div class="ph" role="img" aria-label="{esc(p["name"])}">{p.get("icon", "")}</div><h3><a href="{base}/p/{p["id"]}">{esc(p["name"])}</a></h3>'
             f'<div class="price">{_money(p["price"])}</div><a class="btn" href="{base}/p/{p["id"]}">{_label(spec, where)}</a></div>')
 
 
@@ -328,7 +343,7 @@ def product(token, pid):
     log(sid, sess, "view", {"area": "product", "pid": pid})
     d = spec["defects"]
     base = f"/darwin/weblab/s/{token}"
-    vk = spec["variant_kind"]
+    vk = p.get("variant_kind") or spec.get("variant_kind", "option")
     vlabel = "SKU variant matrix" if "D07" in d else vk.capitalize()
     remembered = request.args.get("v") if "D16" not in d else None
     opts = ""
@@ -344,21 +359,26 @@ def product(token, pid):
     ship = "Fulfilment SLA: 3–5 BD" if "D07" in d else "Ships in 3–5 business days"
     help_link = "" if "D09" in d else f' · <a href="{base}/help/shipping">Shipping &amp; returns</a>'
     body = f"""{promos}<p><a href="{base}/c/{esc(p['cat'].lower())}">{esc(p['cat'])}</a></p>
-<h1>{esc(p['name'])}</h1><div class="ph" style="height:220px;max-width:420px"></div>
+<h1>{esc(p['name'])}</h1><div class="ph" style="height:220px;max-width:420px;font-size:110px" role="img" aria-label="{esc(p['name'])}">{p.get('icon', '')}</div>
 <p class="price">{_money(p['price'])}</p><p>{esc(p['blurb'])}</p>
 <label>{esc(vlabel)} <select id="variant">{opts}</select></label>
+{'' if 'D04' in d else '<div class="avail" id="avail"></div>'}
 <label style="margin-left:10px">{'Line item qty' if 'D07' in d else 'Quantity'} <input id="qty" class="qty" type="number" value="1" min="1" style="width:70px"></label>
 <p><button class="btn" id="add">{_label(spec, 'product')}</button></p>
 <p class="small">{ship}{help_link}</p>"""
     scripts = f"""<script>
-document.getElementById('variant').addEventListener('change', e => beacon('variant_change', {{pid: {json.dumps(pid)}, v: e.target.value}}));
+const STOCK = {json.dumps(p['stock'] if 'D04' not in d else {})};
+function avail() {{ const a = document.getElementById('avail'); if (!a) return; const v = document.getElementById('variant').value;
+  const n = STOCK[v]; a.textContent = 'Selected: ' + v + ' · ' + (n > 3 ? 'In stock' : n > 0 ? 'Only ' + n + ' left' : 'Sold out'); }}
+avail();
+document.getElementById('variant').addEventListener('change', e => {{ avail(); beacon('variant_change', {{pid: {json.dumps(pid)}, v: e.target.value}}); }});
 document.getElementById('add').addEventListener('click', async () => {{
   const v = document.getElementById('variant').value, q = document.getElementById('qty').value;
   const r = await fetch(BASE + '/api/cart/add', {{method: 'POST', headers: {{'Content-Type': 'application/json'}},
     body: JSON.stringify({{pid: {json.dumps(pid)}, variant: v, qty: q}})}});
   const d = await r.json();
   {'' if 'D02' in d else "document.getElementById('cc').textContent = d.count;"}
-  {'' if 'D01' in d else "const t = document.getElementById('toast'); t.textContent = d.message; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3500);"}
+  {'' if 'D01' in d else "const t = document.getElementById('toast'); t.textContent = d.message; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 5000);"}
 }});
 </script>"""
     return _resp(page(spec, token, p["name"], body, sess, sid, scripts=scripts), sess)
@@ -494,14 +514,17 @@ def checkout(token):
     fee = spec.get("fee", 0.0)
     total = sub + fee + (0 if sub >= 75 else 5.0)
     zipmsg = "" if "D08" in d else "<div id='ziperr' class='err'></div>"
-    body = f"""<h1>Checkout</h1>{warn}
+    items = "".join(f"<tr><td>{esc(p['name'])} <span class='muted'>({esc(l['variant'])})</span></td><td>× {l['qty']}</td><td>{_money(t)}</td></tr>"
+                    for _, l, p, t in lines)
+    body = f"""<h1>Checkout</h1><p class="steps">Step 1 of 2 · Details — Step 2 · Review &amp; pay</p>{warn}
+<table style="max-width:520px">{items}</table>
 <p>Subtotal {_money(sub)}{'' if not fee else f'<br>Service fee {_money(fee)}'}<br>Delivery {_money(0 if sub >= 75 else 5.0)}<br><b>Total {_money(total)}</b></p>
 <form method="post" id="co" novalidate>
 <p><label>Email<br><input name="email" type="email"></label></p>
 <p><label>Full name<br><input name="name"></label></p>
 <p><label>Address<br><input name="address"></label></p>
 <p><label>ZIP code<br><input name="zip" id="zip"></label>{zipmsg}</p>
-<p><label>Card number<br><input name="card"></label></p>
+<p><label>Card number<br><input name="card"></label><br><span class="small muted">We accept Visa, Mastercard and PayPal. Payments are encrypted.</span></p>
 <p><button class="btn" id="place">Place order</button></p></form>"""
     scripts = f"""<script>
 document.querySelectorAll('#co input').forEach(i => i.addEventListener('change', () => beacon('checkout_input', {{field: i.name}})));
@@ -526,9 +549,16 @@ def help_page(token, topic):
     if topic not in ("shipping", "returns"):
         abort(404)
     log(sid, sess, "view", {"area": "help", "topic": topic})
-    text = {"shipping": "Standard delivery 3–5 business days, $5 (free over $75). Express next day, $12.",
-            "returns": "Return unused items within 30 days for a full refund. Returns are free."}[topic]
-    return _resp(page(spec, token, topic.title(), f"<h1>{topic.title()}</h1><p>{text}</p>", sess, sid), sess)
+    text = {"shipping": """<p>We ship to all US states. Orders placed before 2pm (ET) on a business day leave the same day.</p>
+<table style="max-width:560px"><tr><th>Option</th><th>Time</th><th>Cost</th></tr>
+<tr><td>Standard (USPS)</td><td>3–5 business days</td><td>$5.00, free over $75</td></tr>
+<tr><td>Express (UPS)</td><td>Next business day</td><td>$12.00</td></tr></table>
+<p>You get a tracking link by email as soon as your parcel leaves us. We don't ship internationally yet.</p>""",
+            "returns": """<p>Changed your mind? Return unused items in their original packaging within 30 days for a full refund.</p>
+<ol><li>Email us your order number and we send a prepaid label.</li><li>Drop the parcel at any USPS location.</li>
+<li>Refunds go back to your original payment method within 5 business days of arrival.</li></ol>
+<p>Returns are free. Sale items can be returned too.</p>"""}[topic]
+    return _resp(page(spec, token, topic.title(), f"<h1>{topic.title()}</h1>{text}", sess, sid), sess)
 
 
 @bp.route("/api/log", methods=["POST"])

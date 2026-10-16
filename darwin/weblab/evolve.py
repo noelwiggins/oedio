@@ -35,6 +35,7 @@ ELITES = 2
 SHOPS_PER_GEN = 2
 HOLDOUT_EVERY = 3
 PUBLIC_URL = os.environ.get("DARWIN_PUBLIC_URL", "https://web-production-0df99e.up.railway.app").rstrip("/")
+BENCH = f"{shop.SHOP_VERSION}+{J.JUDGE_VERSION}"   # audits from other bench versions are kept but never compared
 BASELINES = [strategy.CODESTROLLER_DEFAULT, strategy.NOEL_HEURISTIC]
 STANDING = {
     "vs_default": ("codestroller_default",
@@ -70,10 +71,14 @@ def _audits(where=None):
     return rows
 
 
+def current(a):
+    return (a.get("strategy") or {}).get("bench") == BENCH
+
+
 def leaderboard():
-    """Every strategy ever audited on training shops, ranked by mean fitness."""
+    """Every strategy audited on training shops of the current bench version, ranked by mean fitness."""
     by = {}
-    for a in _audits(S.weblab_audits.c.status == "judged"):
+    for a in filter(current, _audits(S.weblab_audits.c.status == "judged")):
         st, sc = a["strategy"] or {}, a["score"] or {}
         if a["split"] != "train" or sc.get("fitness") is None:
             continue
@@ -157,8 +162,8 @@ def run(exp, set_progress, cl=None):
                                            "shop_seeds": seeds, "selection": note, "daily_cap_usd": daily_cap()},
              experiment_id=exp_id)
     plan = [(sd, c) for sd in seeds for c in contestants]
-    done_keys = {(a["contestant"], (a["strategy"] or {}).get("shop_seed")) for a in
-                 _audits((S.weblab_audits.c.experiment_id == exp_id) & (S.weblab_audits.c.status == "judged"))}
+    done_keys = {(a["contestant"], (a["strategy"] or {}).get("shop_seed")) for a in filter(current,
+                 _audits((S.weblab_audits.c.experiment_id == exp_id) & S.weblab_audits.c.status.in_(["judged", "failed"])))}
     for n, (seed, c) in enumerate(plan):
         if (c["label"], seed) in done_keys:
             continue
@@ -174,7 +179,13 @@ def run(exp, set_progress, cl=None):
         while not cl.queue_idle() and time.time() - t0 < 900:
             set_progress({"phase": f"gen {gen} · waiting for Codestroller's queue to clear", "cell": n, "of": len(plan)})
             time.sleep(30)
-        _audit_one(exp_id, gen, split, seed, c, cl, lambda ph: set_progress({"phase": ph, "cell": n, "of": len(plan)}))
+        for attempt in (1, 2):
+            aid = _audit_one(exp_id, gen, split, seed, c, cl,
+                             lambda ph: set_progress({"phase": ph, "cell": n, "of": len(plan)}))
+            if not aid or _status(aid) != "invalid":
+                break
+            set_progress({"phase": f"gen {gen} · {c['label']}: shop was unreachable, retrying", "cell": n, "of": len(plan)})
+            time.sleep(60)
     summ = summarize(exp_id, gen, split, [c["label"] for c in contestants], note)
     if split == "holdout":
         summ["claims"] = update_claims(exp_id)
@@ -188,10 +199,16 @@ def _audit_one(exp_id, gen, split, seed, c, cl, progress):
     with S.engine().begin() as conn:
         aid = conn.execute(S.weblab_audits.insert().values(
             created_at=S.now(), experiment_id=exp_id, generation=gen, contestant=c["label"],
-            strategy=S.canon({**c, "shop_seed": seed}), split=split, status="queued")).inserted_primary_key[0]
+            strategy=S.canon({**c, "shop_seed": seed, "bench": BENCH}), split=split, status="queued")).inserted_primary_key[0]
         sid, tok = shop.create_instance(spec, audit_id=aid, conn=conn)
         conn.execute(S.weblab_audits.update().where(S.weblab_audits.c.id == aid).values(shop_id=sid))
     url = f"{PUBLIC_URL}/darwin/weblab/s/{tok}/"
+    if not preflight(url):
+        with S.engine().begin() as conn:
+            conn.execute(S.weblab_audits.update().where(S.weblab_audits.c.id == aid).values(
+                status="invalid", finished_at=S.now(), score=S.canon({"error": "shop not reachable from outside before submit"})))
+        S.append("weblab.audit_invalid", {"audit": aid, "reason": "preflight failed"}, experiment_id=exp_id)
+        return aid
     try:
         job_id = cl.submit(url, c["persona_text"], c["goal_text"], c["steps"], c["mobile"])
         with S.engine().begin() as conn:
@@ -209,6 +226,17 @@ def _audit_one(exp_id, gen, split, seed, c, cl, progress):
     inter = shop.interactions(sid)
     answer = shop.answer_key(spec)
     status = "judged"
+    if unusable(job, inter):
+        with S.engine().begin() as conn:
+            conn.execute(S.weblab_audits.update().where(S.weblab_audits.c.id == aid).values(
+                status="invalid", finished_at=S.now(), raw=S.canon({"steps": job.get("steps")}),
+                score=S.canon({"error": "the agent could not use the shop (infrastructure, not strategy)"}),
+                cost=S.canon({"codestroller_usd_estimated": cost_cs, "judge_usd_billed": 0.0, "total_usd": cost_cs,
+                              "steps": len(job.get("steps") or []), "note": cs.PRICE_NOTE})))
+            S.append("weblab.audit_invalid", {"audit": aid, "reason": "agent could not use the shop",
+                                              "steps": len(job.get("steps") or []), "events": inter.get("events")},
+                     experiment_id=exp_id, cost_usd=cost_cs, cost_kind="estimated", conn=conn)
+        return aid
     if job.get("status") != "complete":
         judged, sc = {"labels": [], "issues": [], "call": None}, None
         status = "failed"
@@ -235,8 +263,65 @@ def _audit_one(exp_id, gen, split, seed, c, cl, progress):
     return aid
 
 
+def _status(aid):
+    with S.engine().connect() as c:
+        return c.execute(sa.select(S.weblab_audits.c.status).where(S.weblab_audits.c.id == aid)).scalar()
+
+
+def preflight(url, tries=3):
+    """The shop must answer from the public internet before Codestroller is sent to it."""
+    import urllib.request
+    for i in range(tries):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "darwin-preflight"}),
+                                        timeout=20) as r:
+                if r.status == 200 and b"<header>" in r.read(4000):
+                    return True
+        except Exception:
+            pass
+        time.sleep(10 * (i + 1))
+    return False
+
+
+DOWN_PHRASES = ("failed to respond", "application error", "bad gateway", "502", "503", "service unavailable",
+                "site is down", "site is completely down", "could not load", "page did not load")
+
+
+def unusable(job, inter):
+    """An audit where the agent never really got to use the shop says nothing about its strategy."""
+    steps = job.get("steps") or []
+    text = " ".join(str(s.get("narration", "")) + " " + " ".join(str(i.get("description", "")) for i in s.get("issues_found") or [])
+                    for s in steps[:3]).lower()
+    if len(steps) <= 2 and any(p in text for p in DOWN_PHRASES):
+        return True
+    return job.get("status") == "complete" and inter.get("events", 0) <= 1 and len(steps) <= 2
+
+
+_revalidated = {"done": False}
+
+
+def revalidate():
+    """Once per process: re-check already-judged audits with the current unusable() rule; corrections are logged."""
+    if _revalidated["done"]:
+        return
+    _revalidated["done"] = True
+    for a in _audits(S.weblab_audits.c.status == "judged"):
+        raw = a["raw"] or {}
+        inter = (a["judged"] or {}).get("interactions") or {}
+        if unusable({"steps": raw.get("steps"), "status": raw.get("status")}, inter):
+            with S.engine().begin() as conn:
+                conn.execute(S.weblab_audits.update().where(S.weblab_audits.c.id == a["id"]).values(status="invalid"))
+                S.append("weblab.audit_invalidated", {"audit": a["id"], "previous_score": (a["score"] or {}).get("fitness"),
+                                                      "reason": "agent could not use the shop; excluded and re-run"},
+                         experiment_id=a["experiment_id"], conn=conn)
+
+
+_started = time.time()
+STARTUP_GRACE_S = 180
+
+
 def summarize(exp_id, gen, split, labels, note):
-    rows = _audits((S.weblab_audits.c.experiment_id == exp_id) & (S.weblab_audits.c.status == "judged"))
+    rows = list(filter(current, _audits((S.weblab_audits.c.experiment_id == exp_id) & (S.weblab_audits.c.status == "judged"))))
     by = {}
     for a in rows:
         by.setdefault(a["contestant"], {})[(a["strategy"] or {}).get("shop_seed")] = a["score"]["fitness"]
@@ -262,7 +347,7 @@ def summarize(exp_id, gen, split, labels, note):
 
 def update_claims(exp_id):
     """Standing claims judged on ALL held-out audits so far, paired by shop."""
-    rows = [a for a in _audits(S.weblab_audits.c.status == "judged") if a["split"] == "holdout"]
+    rows = [a for a in _audits(S.weblab_audits.c.status == "judged") if a["split"] == "holdout" and current(a)]
     by_exp = {}
     for a in rows:
         by_exp.setdefault(a["experiment_id"], {}).setdefault(a["contestant"], {})[(a["strategy"] or {}).get("shop_seed")] = \
@@ -324,6 +409,9 @@ def maybe_schedule(now=None):
     allows; otherwise start a new one at most every MIN_HOURS_BETWEEN hours."""
     if not cs.Client().configured() or os.environ.get("DARWIN_WEBLAB", "on") == "off":
         return None
+    if time.time() - _started < STARTUP_GRACE_S:      # let a fresh deploy take traffic first
+        return None
+    revalidate()
     now = now or datetime.now(timezone.utc)
     with S.engine().begin() as c:
         rows = c.execute(sa.select(S.experiments.c.id, S.experiments.c.status, S.experiments.c.finished_at,

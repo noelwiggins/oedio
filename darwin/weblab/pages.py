@@ -55,14 +55,15 @@ def api_weblab():
     for a in reversed(audits[-80:]):
         sc = a["score"] or {}
         recent.append({"id": a["id"], "generation": a["generation"], "contestant": a["contestant"], "split": a["split"],
-                       "status": a["status"], "created_at": a["created_at"], "fitness": sc.get("fitness"),
+                       "status": a["status"] if evolve.current(a) or a["status"] != "judged" else "superseded",
+                       "bench": (a["strategy"] or {}).get("bench") or "shop-1+judge-1", "created_at": a["created_at"], "fitness": sc.get("fitness"),
                        "found": sc.get("found"), "missed": sc.get("missed"), "decoy_hits": sc.get("decoy_hits"),
                        "coverage": sc.get("coverage"), "safety": sc.get("safety"), "precision": sc.get("precision"),
                        "cost": (a["cost"] or {}).get("total_usd"), "error": sc.get("error")})
     per_gen = {}
     for a in audits:
         sc = a["score"] or {}
-        if a["status"] != "judged" or sc.get("fitness") is None:
+        if a["status"] != "judged" or sc.get("fitness") is None or not evolve.current(a):
             continue
         g = per_gen.setdefault(a["generation"], {"generation": a["generation"], "split": a["split"], "evolved": [],
                                                  "codestroller_default": [], "nielsen_prompt": []})
@@ -77,7 +78,7 @@ def api_weblab():
     claims = [{"id": c["label"], "kind": c["kind"], "statement": c["statement"], "status": c["status"],
                "history": [{"ts": h["ts"], "status": h["status"], "reason": h["reason"]} for h in c["history"]]}
               for c in S.all_claims() if (c["kind"] or "").startswith("weblab:")]
-    return jsonify({"configured": cs.Client().configured(), "cap_usd": evolve.daily_cap(),
+    return jsonify({"bench": evolve.BENCH, "configured": cs.Client().configured(), "cap_usd": evolve.daily_cap(),
                     "spent_24h": round(evolve.spent_24h(), 4), "generations": _gens(), "leaderboard": evolve.leaderboard(),
                     "curve": curve, "recent": recent, "claims": claims,
                     "totals": {"audits": len(audits), "judged": sum(1 for a in audits if a["status"] == "judged"),
