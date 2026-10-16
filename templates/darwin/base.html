@@ -21,7 +21,8 @@
   <nav class="dw-nav">
     {% set here = request.path %}
     <a href="/darwin/" class="{{ 'on' if here == '/darwin/' }}">World</a>
-    <a href="/darwin/lab/life" class="{{ 'on' if here.startswith('/darwin/lab') }}">Life Lab</a>
+    <a href="/darwin/lab/life" class="{{ 'on' if here.startswith('/darwin/lab/life') }}">Life Lab</a>
+    <a href="/darwin/lab/web" class="{{ 'on' if here.startswith('/darwin/lab/web') }}">Web Lab</a>
     <a href="/darwin/intelligence" class="{{ 'on' if here.startswith('/darwin/intelligence') }}">Intelligence</a>
     <a href="/darwin/memory" class="{{ 'on' if here.startswith('/darwin/memory') }}">Memory</a>
     <a href="/darwin/history" class="{{ 'on' if here.startswith('/darwin/history') or here.startswith('/darwin/experiment') }}">History</a>

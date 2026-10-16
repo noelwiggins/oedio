@@ -283,6 +283,47 @@ proposal_status = sa.Table(
     sa.Column("reason", T),
 )
 
+# ── Web Lab ───────────────────────────────────────────────────────────────
+weblab_shops = sa.Table(
+    "darwin_weblab_shops", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("created_at", T, nullable=False),
+    sa.Column("token", T, unique=True, index=True, nullable=False),   # unguessable URL segment
+    sa.Column("spec_seed", sa.BigInteger),
+    sa.Column("split", T),                  # train | holdout
+    sa.Column("audit_id", sa.Integer),
+    sa.Column("spec", J),                   # theme, catalog, defects, decoys (the answer key lives here)
+)
+
+weblab_events = sa.Table(
+    "darwin_weblab_events", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("shop_id", sa.Integer, index=True),
+    sa.Column("session", T),
+    sa.Column("kind", T),
+    sa.Column("detail", J),
+)
+
+weblab_audits = sa.Table(
+    "darwin_weblab_audits", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("created_at", T, nullable=False),
+    sa.Column("experiment_id", sa.Integer, index=True),
+    sa.Column("generation", sa.Integer),
+    sa.Column("contestant", T),             # strategy label
+    sa.Column("strategy", J),
+    sa.Column("shop_id", sa.Integer),
+    sa.Column("split", T),
+    sa.Column("job_id", T),                 # Codestroller job id
+    sa.Column("status", T),                 # queued | running | complete | failed | judged
+    sa.Column("raw", J),                    # Codestroller job (steps + report)
+    sa.Column("judged", J),
+    sa.Column("score", J),
+    sa.Column("cost", J),
+    sa.Column("finished_at", T),
+)
+
 APPEND_ONLY = ("darwin_events", "darwin_claim_status", "darwin_memory", "darwin_memory_uses", "darwin_failures",
                "darwin_bench_results", "darwin_memory_status", "darwin_audits", "darwin_proposal_status")
 

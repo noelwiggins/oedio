@@ -58,6 +58,7 @@
       <h3>{{ lab.name }}</h3>
       <p class="small muted" style="margin:0 0 10px;padding-right:80px">{{ lab.about }}</p>
       {% if key == 'life' %}<a class="btn tonal" href="/darwin/lab/life">Design an experiment</a>
+      {% elif key == 'web' %}<a class="btn tonal" href="/darwin/lab/web">See it training Codestroller</a>
       {% elif key == 'open' %}<span class="small muted">Use the question box above.</span>
       {% else %}<span class="small muted">{{ lab.status }}. Not simulated yet; Darwin will say so rather than guess.</span>{% endif %}
     </div>
@@ -242,6 +243,7 @@
       let h = `<div class="card flat"><div class="row"><span class="pill ${D.statusClass(r.lab_status.split(' ')[0])}">${D.esc(r.lab_name)} · ${D.esc(r.lab_status)}</span><span class="small muted">${D.esc(r.method)}</span></div>
         <p style="margin:10px 0 6px">${D.esc(r.message)}</p><div class="small muted">Simulatability: ${D.esc(r.simulatability)}</div>`;
       if (r.suggested) h += `<div style="margin-top:12px"><a class="btn" href="/darwin/lab/life?preset=${encodeURIComponent(JSON.stringify(Object.assign({ goal }, r.suggested)))}">Set up this experiment</a></div>`;
+      if (r.link) h += `<div style="margin-top:12px"><a class="btn tonal" href="${r.link}">Open Web Lab</a></div>`;
       h += `</div>`;
       const a = d.assessment;
       if (a && a.error) h += `<div class="card flat err" style="margin-top:10px">${D.esc(a.error)}</div>`;

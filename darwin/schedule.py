@@ -90,6 +90,11 @@ def tick(now=None):
     now = now or datetime.now(timezone.utc)
     _cycle(now)
     _consolidate_hourly(now)
+    try:
+        from .weblab import evolve
+        evolve.maybe_schedule(now)
+    except Exception as e:
+        print(f"[darwin] weblab scheduling error: {e!r}")
     ensure_worker()
 
 

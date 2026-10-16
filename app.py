@@ -62,6 +62,8 @@ app.register_blueprint(studio_bp)
 
 from darwin.web import bp as darwin_bp  # noqa: E402  (Darwin: the engine behind the secret book)
 app.register_blueprint(darwin_bp)
+from darwin.weblab.shop import bp as weblab_shop_bp  # noqa: E402  (Web Lab test shops)
+app.register_blueprint(weblab_shop_bp)
 
 
 @app.after_request

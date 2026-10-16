@@ -210,6 +210,8 @@ def client():
     app = Flask(__name__, template_folder=os.path.join(ROOT, "templates"),
                 static_folder=os.path.join(ROOT, "static"))
     app.register_blueprint(bp)
+    from darwin.weblab.shop import bp as shop_bp
+    app.register_blueprint(shop_bp)
     return app.test_client()
 
 
@@ -455,3 +457,155 @@ def test_series2_cycle_end_to_end_tiny(monkeypatch):
 
 suite._fp_orig = suite.fresh_problems
 suite._an_orig = suite.anchors
+
+
+# ── Web Lab ──────────────────────────────────────────────────────────────
+from darwin.weblab import defects as WD, evolve as WE, judge as WJ, shop as WS, strategy as WST  # noqa: E402
+
+
+def _shop_client():
+    from flask import Flask
+    app = Flask(__name__)
+    app.register_blueprint(WS.bp)
+    return app.test_client()
+
+
+def test_shop_specs_answer_keys_and_holdout_types():
+    tr = WS.make_spec(5, "train")
+    ho = WS.make_spec(6, "holdout")
+    assert 3 <= len(tr["defects"]) <= 6 and not set(tr["defects"]) & set(WD.HOLDOUT_ONLY)
+    assert set(ho["defects"]) & set(WD.HOLDOUT_ONLY)
+    assert WS.make_spec(5, "train") == tr
+    assert all(k["id"] in WD.DEFECTS for k in WS.answer_key(tr))
+
+
+def test_shop_pages_hide_the_answer_key_and_log_coverage():
+    spec = WS.make_spec(7, "train", n_defects=6)
+    sid, tok = WS.create_instance(spec)
+    c = _shop_client()
+    B = f"/darwin/weblab/s/{tok}"
+    page = c.get(B + "/").data.decode()
+    for d in spec["defects"]:
+        assert d not in page and WD.DEFECTS[d][0] not in page
+    p = spec["products"][0]
+    v = next(k for k, s in p["stock"].items() if s > 0)
+    c.get(B + f"/p/{p['id']}")
+    c.post(B + "/api/cart/add", json={"pid": p["id"], "variant": v, "qty": 1})
+    c.get(B + "/search?q=" + p["name"].split()[0][:-1] + "q")
+    c.get(B + "/checkout")
+    inter = WS.interactions(sid)
+    assert {"home", "product", "add", "checkout", "search"} <= set(inter["areas"])
+    assert inter["safety"]["purchase_attempts"] == 0
+    c.post(B + "/checkout", data={"email": "x"})
+    assert WS.interactions(sid)["safety"]["purchase_attempts"] == 1
+
+
+def test_defect_behaviours_differ_from_clean_shop():
+    clean = dict(WS.make_spec(8, "train"), defects=[], fee=0.0, dead_link=None)
+    bad = dict(clean, defects=["D03", "D05"])
+    c = _shop_client()
+    word = clean["products"][0]["name"].split()[0]
+    typo = word[:-1] + ("x" if word[-1] != "x" else "y")
+    outs = []
+    for spec in (clean, bad):
+        sid, tok = WS.create_instance(spec)
+        outs.append(c.get(f"/darwin/weblab/s/{tok}/search?q={typo}").data.decode())
+    assert "Showing results for" in outs[0] and "No results" in outs[1]
+
+
+def test_score_rewards_finds_and_penalises_decoys_and_purchases():
+    ans = [WD.card("D01"), WD.card("D03")]
+    judged = {"issues": [{"text": "a", "severity": "bug"}, {"text": "b", "severity": "friction"}],
+              "labels": [{"issue": 0, "label": "D01"}, {"issue": 1, "label": "decoy"}]}
+    ok = WJ.score(ans, judged, {"areas": ["home", "add"], "safety": {}})
+    assert ok["found"] == ["D01"] and ok["precision"] == 0.5 and ok["fitness"] > 0
+    bad = WJ.score(ans, judged, {"areas": ["home"], "safety": {"purchase_attempts": 1}})
+    assert bad["fitness"] == 0 and bad["safety"] == "purchase attempted"
+
+
+def test_strategy_render_always_has_safety_rules():
+    import random as _r
+    rng = _r.Random(3)
+    for _ in range(20):
+        g = WST.random_genome(rng)
+        g2, _ = WST.mutate(g, rng)
+        assert WST.SAFETY in WST.render(g2)["goal_text"] and 2 <= len(g2["probes"])
+
+
+class FakeCodestroller:
+    """Browses the shop through the Flask test client and reports one real finding and one decoy complaint."""
+
+    def __init__(self):
+        self.c = _shop_client()
+        self.jobs = {}
+
+    def configured(self):
+        return True
+
+    def queue_idle(self):
+        return True
+
+    def submit(self, url, persona, goal, steps, mobile):
+        path = url.split("://", 1)[1].split("/", 1)[1]
+        base = "/" + path.rstrip("/")
+        self.c.get(base + "/")
+        self.c.get(base + "/cart")
+        jid = f"job{len(self.jobs) + 1}"
+        self.jobs[jid] = {"id": jid, "status": "complete",
+                          "steps": [{"step": 1, "url": url, "narration": "looking", "action": {"type": "click"},
+                                     "issues_found": [{"severity": "bug", "description": "nothing happened when I added"},
+                                                      {"severity": "friction", "description": "the colours are odd"}]}],
+                          "report": {"critical_bugs": [], "ux_friction": []}}
+        return jid
+
+    def wait(self, jid, heartbeat=None, **kw):
+        return self.jobs[jid]
+
+
+def test_weblab_generation_end_to_end(monkeypatch):
+    def fake_call(system, user, max_tokens, purpose, experiment_id=None, temperature=None, model=None, timeout=60):
+        first = user.split("PLANTED DEFECTS:\n", 1)[1].split()[0]
+        return {"status": "ok", "text": json.dumps({"labels": [{"issue": 1, "label": first, "why": "match"},
+                                                              {"issue": 2, "label": "decoy", "why": "taste"}]}),
+                "stop": "end_turn", "usage": {"input_tokens": 100, "output_tokens": 50}, "usd": 0.0005, "latency": 1,
+                "call_id": 1}
+    monkeypatch.setattr("darwin.openlab._call", fake_call)
+    monkeypatch.setattr(WE, "SHOPS_PER_GEN", 1)
+    fake = FakeCodestroller()
+    for gen in (1, 2, 3):
+        with store.engine().begin() as c:
+            eid = c.execute(store.experiments.insert().values(
+                created_at=store.now(), kind="weblab", lab="web", title=f"g{gen}", config=store.canon(
+                    {"generation": gen, "holdout": gen == 3, "shops": 1}), seed=0, status="running", owner=True,
+                requester="t", stop_requested=False, source="weblab")).inserted_primary_key[0]
+        exp = dict(store.engine().connect().execute(
+            sa.select(store.experiments).where(store.experiments.c.id == eid)).mappings().one())
+        summ = WE.run(exp, lambda p: None, cl=fake)
+        assert summ["generation"] == gen and summ["failed_audits"] == 0
+    board = WE.leaderboard()
+    assert any(b["kind"] == "evolved" for b in board) and any(b["label"] == "nielsen_prompt" for b in board)
+    assert all(b["audits"] >= 1 for b in board)
+    assert set(summ["claims"]) == {"vs_default", "vs_nielsen"}
+    a = WE._audits(store.weblab_audits.c.status == "judged")[-1]
+    assert a["score"]["found"] and a["score"]["decoy_hits"] == 1 and "home" in a["score"]["areas"]
+
+
+def test_weblab_budget_pause(monkeypatch):
+    monkeypatch.setattr(WE, "daily_cap", lambda: 0.0)
+    with store.engine().begin() as c:
+        eid = c.execute(store.experiments.insert().values(
+            created_at=store.now(), kind="weblab", lab="web", title="gb", config=store.canon({"generation": 9, "shops": 1}),
+            seed=0, status="running", owner=True, requester="t", stop_requested=False, source="weblab")).inserted_primary_key[0]
+    exp = dict(store.engine().connect().execute(sa.select(store.experiments).where(store.experiments.c.id == eid)).mappings().one())
+    out = WE.run(exp, lambda p: None, cl=FakeCodestroller())
+    assert out.get("paused")
+
+
+def test_weblab_pages_render(client):
+    import darwin.weblab.pages  # noqa: F401
+    for path in ("/darwin/lab/web",):
+        assert client.get(path).status_code == 200
+    d = client.get("/darwin/api/weblab").get_json()
+    assert "leaderboard" in d and "curve" in d
+    r = client.post("/darwin/api/weblab/sample-shop")
+    assert r.status_code == 200 and "answer_key" not in r.get_json()

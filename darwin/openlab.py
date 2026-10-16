@@ -29,8 +29,8 @@ MODEL = "claude-sonnet-4-6"
 LABS = {
     "life": {"name": "Life Lab", "status": "operational",
              "about": "creatures, foraging, survival, cooperation and competition in an artificial ecosystem"},
-    "web": {"name": "Web Lab", "status": "planned (Phase 3)",
-            "about": "website navigation, forms, task completion, accessibility checks"},
+    "web": {"name": "Web Lab", "status": "experimental",
+            "about": "trains Codestroller's website-audit agent on test shops with planted usability problems"},
     "space": {"name": "Space Lab", "status": "planned (Phase 3)",
               "about": "physical layouts: kitchens, retail, offices, warehouses, storage"},
     "operations": {"name": "Operations Lab", "status": "planned (Phase 3)",
@@ -69,6 +69,12 @@ def route(goal: str) -> dict:
         out["message"] = ("Darwin could not match this goal to a Lab. Only Life Lab can run experiments today; "
                           "other goals need a World to be built first. The owner can request an LLM feasibility "
                           "assessment, which returns a research plan when reliable scoring is not possible.")
+    elif lab == "web":
+        out["simulatability"] = "partial: Web Lab tests audit strategies on generated shops, not your site directly"
+        out["message"] = ("This is a website problem. Web Lab is running: it evolves Codestroller's audit strategy on test "
+                          "shops with planted usability defects and known answers. To audit a real site, run it through "
+                          "Codestroller (app.codestroller.com), which can use the best strategy Darwin has found.")
+        out["link"] = "/darwin/lab/web"
     else:
         out["simulatability"] = "not yet: the Lab for this goal is not built"
         out["message"] = (f"This looks like a {info['name']} problem ({info['about']}). {info['name']} is "
@@ -112,12 +118,13 @@ Reply with ONE JSON object and nothing else. Keep every string short (one senten
 Set runnable_now true only if the goal maps honestly onto Life Lab's mechanics; say what is lost in that mapping in limits_on_conclusions."""
 
 
-def _call(system, user, max_tokens, purpose, experiment_id=None, temperature=None):
+def _call(system, user, max_tokens, purpose, experiment_id=None, temperature=None, model=None, timeout=60):
     """One recorded Anthropic API call (tokens, latency, price table, cost, Ledger event)."""
     key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not key:
         return {"status": "no key", "text": "", "stop": None, "usage": {}, "usd": 0.0, "latency": 0, "call_id": None}
-    body = {"model": MODEL, "max_tokens": max_tokens, "system": system,
+    model = model or MODEL
+    body = {"model": model, "max_tokens": max_tokens, "system": system,
             "messages": [{"role": "user", "content": user}]}
     if temperature is not None:
         body["temperature"] = temperature
@@ -127,7 +134,7 @@ def _call(system, user, max_tokens, purpose, experiment_id=None, temperature=Non
     t0 = time.time()
     status, usage, text, stop = "ok", {}, "", None
     try:
-        resp = json.loads(urllib.request.urlopen(req, timeout=60).read())
+        resp = json.loads(urllib.request.urlopen(req, timeout=timeout).read())
         usage = resp.get("usage", {}) or {}
         stop = resp.get("stop_reason")
         text = "".join(b.get("text", "") for b in resp.get("content", []) if b.get("type") == "text")
@@ -137,16 +144,16 @@ def _call(system, user, max_tokens, purpose, experiment_id=None, temperature=Non
         status = f"error {type(e).__name__}"
     latency = int((time.time() - t0) * 1000)
     usage = {k: v for k, v in usage.items() if isinstance(v, int)}
-    usd = costs.llm_usd(MODEL, usage)
-    pricing = {**costs.LLM_PRICES.get(MODEL, {}), "unit": "USD per million tokens", "note": costs.LLM_PRICES_NOTE}
+    usd = costs.llm_usd(model, usage)
+    pricing = {**costs.LLM_PRICES.get(model, {}), "unit": "USD per million tokens", "note": costs.LLM_PRICES_NOTE}
     with S.engine().begin() as c:
         call_id = c.execute(S.llm_calls.insert().values(
             ts=S.now(), experiment_id=experiment_id, purpose=purpose, provider="anthropic",
-            model=MODEL, input_tokens=usage.get("input_tokens", 0), output_tokens=usage.get("output_tokens", 0),
+            model=model, input_tokens=usage.get("input_tokens", 0), output_tokens=usage.get("output_tokens", 0),
             cache_read_tokens=usage.get("cache_read_input_tokens", 0),
             cache_write_tokens=usage.get("cache_creation_input_tokens", 0), latency_ms=latency,
             pricing=S.canon(pricing), cost_usd=usd, cost_kind="billed", status=status)).inserted_primary_key[0]
-        S.append("llm.call", {"call_id": call_id, "purpose": purpose, "model": MODEL,
+        S.append("llm.call", {"call_id": call_id, "purpose": purpose, "model": model,
                               "usage": usage, "latency_ms": latency, "status": status},
                  experiment_id=experiment_id, cost_usd=usd, cost_kind="billed", conn=c)
     return {"status": status, "text": text, "stop": stop, "usage": usage, "usd": usd, "latency": latency,

@@ -87,18 +87,28 @@ def _headers(resp):
 
 
 # ── worker management ────────────────────────────────────────────────────
+_workers = {}
+
+
 def ensure_worker():
-    """Start the experiment worker if there is queued work and none is running."""
-    global _worker
+    """Start the Life Lab and Web Lab workers if they have queued work and none is running."""
+    _ensure_group("life")
+    _ensure_group("weblab")
+
+
+def _ensure_group(group):
+    from .runner import WEBLAB_KINDS, reap_stale
     with _worker_lock:
-        if _worker is not None and _worker.poll() is None:
+        w = _workers.get(group)
+        if w is not None and w.poll() is None:
             return
-        _worker = None
+        _workers[group] = None
+        kind_ok = S.experiments.c.kind.in_(WEBLAB_KINDS) if group == "weblab" else S.experiments.c.kind.notin_(WEBLAB_KINDS)
         with S.engine().connect() as c:
             queued = c.execute(sa.select(sa.func.count()).select_from(S.experiments).where(
-                S.experiments.c.status == "queued")).scalar()
+                (S.experiments.c.status == "queued") & kind_ok)).scalar()
             running = c.execute(sa.select(S.experiments.c.heartbeat).where(
-                S.experiments.c.status == "running")).scalars().all()
+                (S.experiments.c.status == "running") & kind_ok)).scalars().all()
         fresh = False
         for hb in running:
             try:
@@ -106,11 +116,11 @@ def ensure_worker():
             except Exception:
                 pass
         if queued and not fresh:
-            _worker = subprocess.Popen([sys.executable, "-m", "darwin.runner", "work"], cwd=ROOT,
-                                       start_new_session=True)
+            _workers[group] = subprocess.Popen(
+                [sys.executable, "-m", "darwin.runner", "work" if group == "life" else "work-weblab"], cwd=ROOT,
+                start_new_session=True)
         elif running and not fresh:
-            from .runner import reap_stale
-            reap_stale(120)
+            reap_stale(120, group=group)
 
 
 # ── pages ────────────────────────────────────────────────────────────────
@@ -712,3 +722,6 @@ def memory_page():
                            failure_counts=memory.failure_counts(), excluded=excluded, leak=suite.LEAK_DISTANCE,
                            fmt_mem=S.fmt_mem, model=model, retire_uses=memory.RETIRE_MIN_USES,
                            retire_rate=memory.RETIRE_MAX_RATE)
+
+
+from .weblab import pages as _weblab_pages  # noqa: E402,F401  (Web Lab routes)

@@ -1,0 +1,143 @@
+{% extends "darwin/base.html" %}
+{% block title %}Web Lab — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Web Lab · experimental · trains Codestroller</p>
+<h1 class="page">Teaching an auditor to find real usability problems</h1>
+<p class="lede">Darwin generates small online shops with <b>planted usability defects</b>, each mapped to Nielsen's ten heuristics and the 0–4
+  severity scale, plus a few harmless design "decoys". It sends <a href="{{ codestroller }}" target="_blank" rel="noopener">Codestroller</a>'s
+  persona agent to audit them with different strategies, then scores every report against the answer key. Points come for each planted
+  problem found, weighted by severity. Points are lost for invented problems, for complaints about decoys, and for skipping parts of the shop.
+  A strategy that tries to place an order scores zero.
+  The best strategies breed; the rest are replaced. Every {{ holdout_every }}rd generation is a held-out test on shops with defect types the
+  strategies have never been tuned on.</p>
+
+{% if not configured %}
+<div class="card flat warn small" style="margin-bottom:14px">Codestroller credentials are not configured on this deployment, so no audits run yet.</div>
+{% endif %}
+
+<div class="grid g4" id="tiles"></div>
+
+<section class="section card" id="claims-card">
+  <h2>Standing claims</h2>
+  <div id="claims" class="small muted">Opened with the first held-out test (generation {{ holdout_every }}).</div>
+</section>
+
+<section class="section card">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">Fitness by generation</h2>
+    <span class="small muted">0–1 · held-out generations marked</span></div>
+  <div class="legend" id="legend" style="margin-top:8px"></div>
+  <svg class="chart" id="curve" style="height:240px"></svg>
+</section>
+
+<section class="section card scroll-x">
+  <h2>Strategy leaderboard <span class="small muted">(training shops)</span></h2>
+  <table class="t" id="board"></table>
+</section>
+
+<section class="section grid g2">
+  <div class="card scroll-x"><h2>Generations</h2><table class="t" id="gens"></table>
+    {% if is_owner %}<div class="row" style="margin-top:12px"><button class="btn tonal" id="run">Run a generation now</button><span id="run-msg" class="small"></span></div>{% endif %}
+  </div>
+  <div class="card scroll-x"><h2>Recent audits</h2><table class="t" id="audits"></table></div>
+</section>
+
+<section class="section grid g2">
+  <div class="card scroll-x">
+    <h2>Defect library</h2>
+    <table class="t small">
+      <tr><th>id</th><th>problem</th><th>heuristic</th><th>severity</th><th>where</th></tr>
+      {% for did, d in defects.items() %}
+      <tr><td class="mono">{{ did }}{% if did in holdout_only %} <span class="pill s-planned" title="never appears in training shops">held-out only</span>{% endif %}</td>
+        <td>{{ d[0] }}</td><td class="small">{% for h in d[1] %}H{{ h }} {{ heuristics[h] }}{{ '; ' if not loop.last }}{% endfor %}</td>
+        <td>{{ d[2] }}</td><td>{{ d[3] }}</td></tr>
+      {% endfor %}
+    </table>
+    <h3 style="margin-top:14px">Decoys <span class="small muted">(not usability problems; reporting one is a false alarm)</span></h3>
+    <ul class="small">{% for k, v in decoys.items() %}<li><span class="mono">{{ k }}</span> {{ v }}</li>{% endfor %}</ul>
+  </div>
+  <div class="card">
+    <h2>What gets evolved</h2>
+    <p class="small"><b>Persona</b> ({{ personas|length }}): {% for k in personas %}<span class="mono">{{ k }}</span>{{ ', ' if not loop.last }}{% endfor %}.<br>
+      <b>Journey probes</b> (any subset of {{ probes|length }}): {% for k in probes %}<span class="mono">{{ k }}</span>{{ ', ' if not loop.last }}{% endfor %}.<br>
+      <b>Reporting stance</b>: {% for k in stances %}<span class="mono">{{ k }}</span>{{ ', ' if not loop.last }}{% endfor %}.<br>
+      <b>Step budget</b> 10–30 · <b>mobile pass</b> on/off. Safety rules are always appended and cannot be evolved away.</p>
+    <h3>Baselines</h3>
+    <ul class="small">{% for b in baselines %}<li><span class="mono">{{ b.label }}</span>: “{{ b.persona_text }}”, {{ b.steps }} steps{% if b.label == 'nielsen_prompt' %}, your Nielsen-heuristic prompt as the goal{% else %}, goal “{{ b.goal_text }}”{% endif %}</li>{% endfor %}</ul>
+    <h3>Score</h3>
+    <p class="small">fitness = (0.6 × severity-weighted recall + 0.25 × precision + 0.15 × coverage) × safety.
+      Precision counts complaints about decoys and vague or invented issues against the strategy. Coverage is measured from the shop's own server log, not from the report.
+      A judge model labels each reported issue; it never sees which strategy wrote it.</p>
+    <h3>Budget</h3>
+    <p class="small">Cap ${{ '%.2f' % cap }} per rolling 24 h. A generation is {{ pop }} evolved strategies + 2 baselines on {{ shops }} shops, about ${{ estimate }}.
+      Costs are {{ price_note }}.</p>
+    <div class="row"><button class="btn outline" id="sample">Open a sample test shop</button><span id="sample-msg" class="small"></span></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin;
+  const COL = { best: '#7dd8b5', mean: '#b49cf0', codestroller_default: '#89938d', nielsen_prompt: '#e9bf6d' };
+  let timer;
+  async function load() {
+    const d = await D.api('/darwin/api/weblab');
+    const lb = d.leaderboard, best = lb.find(x => x.kind === 'evolved');
+    const base = l => lb.find(x => x.label === l);
+    document.getElementById('tiles').innerHTML = [
+      ['Generations', d.generations.filter(g => g.status === 'completed').length, `${d.generations.filter(g => g.status !== 'completed').length} in progress or paused`],
+      ['Audits judged', d.totals.judged, `${d.totals.audits} submitted`],
+      ['Spend, last 24 h', D.usd(d.spent_24h), `cap ${D.usd(d.cap_usd)} · total ${D.usd(d.totals.spend_usd)}`],
+      ['Best evolved', best ? D.num(best.fitness, 3) : '—', best ? `${best.label} · ${best.audits} audits` : 'after generation 1'],
+      ['Codestroller default', base('codestroller_default') ? D.num(base('codestroller_default').fitness, 3) : '—', 'baseline'],
+      ['Nielsen prompt', base('nielsen_prompt') ? D.num(base('nielsen_prompt').fitness, 3) : '—', 'baseline'],
+    ].map(([k, v, n]) => `<div class="card flat metric"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+
+    document.getElementById('claims').innerHTML = d.claims.length ? d.claims.map(c => `<div class="claim ${D.statusClass(c.status)}"><span class="mono">${c.id}</span> ${D.pill(c.status)}
+      <div style="margin-top:4px;color:var(--md-sys-color-on-surface)">${D.esc(c.statement)}</div>
+      <ol class="hist">${c.history.slice(-5).map(h => `<li>${D.esc(h.status)} — ${D.esc(h.reason || '')}</li>`).join('')}</ol></div>`).join('') : 'Opened with the first held-out test.';
+
+    const cv = d.curve, xs = cv.map(r => r.generation);
+    D.lineChart(document.getElementById('curve'), [
+      { color: COL.best, values: cv.map(r => r.best_evolved), xs, width: 2.6 },
+      { color: COL.mean, values: cv.map(r => r.mean_evolved), xs, dash: '4 3' },
+      { color: COL.codestroller_default, values: cv.map(r => r.codestroller_default), xs },
+      { color: COL.nielsen_prompt, values: cv.map(r => r.nielsen_prompt), xs }],
+      { xLabel: 'generation', yMin: 0, empty: 'The first generation has not finished yet.', markers: cv.filter(r => r.split === 'holdout').map(r => ({ x: r.generation, label: 'held-out' })) });
+    document.getElementById('legend').innerHTML = [['best', 'best evolved'], ['mean', 'mean evolved'], ['codestroller_default', 'Codestroller default'], ['nielsen_prompt', 'Nielsen prompt']]
+      .map(([k, n]) => `<span><i style="--c:${COL[k]}"></i>${n}</span>`).join('');
+
+    document.getElementById('board').innerHTML = `<tr><th>strategy</th><th>persona · probes · steps · mobile · stance</th><th>audits</th><th>fitness</th><th>recall (sev.)</th><th>precision</th><th>coverage</th><th>$/audit</th><th>safety</th></tr>` +
+      (lb.map(b => { const g = (b.strategy || {}).genome; return `<tr><td class="mono">${D.esc(b.label)}</td>
+        <td class="small">${g ? `${g.persona} · ${g.probes.join(', ')} · ${g.steps} · ${g.mobile ? 'mobile' : 'desktop'} · ${g.stance}` : D.esc(b.strategy.persona_text) + ' · ' + b.strategy.steps + ' steps'}</td>
+        <td>${b.audits}</td><td><b>${D.num(b.fitness, 3)}</b>${b.fitness_sd != null ? `<span class="small muted"> ±${D.num(b.fitness_sd, 2)}</span>` : ''}</td>
+        <td>${D.num(b.recall_w, 2)}</td><td>${D.num(b.precision, 2)}</td><td>${D.num(b.coverage, 2)}</td><td>${D.usd(b.usd_per_audit)}</td>
+        <td>${b.safety_failures ? `<span class="err">${b.safety_failures} failures</span>` : 'ok'}</td></tr>`; }).join('') || '<tr><td class="muted">No judged audits yet.</td></tr>');
+
+    document.getElementById('gens').innerHTML = `<tr><th>gen</th><th>status</th><th>best</th><th>spend</th></tr>` + (d.generations.map(g => `<tr>
+      <td class="mono">${g.generation || '—'}${g.holdout ? ' <span class="pill s-observed">held-out</span>' : ''}</td>
+      <td>${D.pill(g.status)}<div class="small muted">${D.esc((g.progress || {}).phase || g.stop_reason || '')}</div></td>
+      <td class="mono small">${D.esc((g.summary || {}).best_evolved || '')}</td><td>${g.summary && g.summary.spend ? D.usd(g.summary.spend.total_usd) : ''}</td></tr>`).join('') || '<tr><td class="muted">None yet.</td></tr>');
+
+    document.getElementById('audits').innerHTML = `<tr><th>audit</th><th>strategy</th><th>fitness</th><th>found / missed</th><th>coverage</th><th>$</th></tr>` + (d.recent.slice(0, 30).map(a => `<tr>
+      <td><a class="mono" href="/darwin/lab/web/audit/${a.id}">#${a.id}</a><div class="small muted">gen ${a.generation} · ${a.split}</div></td>
+      <td class="mono small">${D.esc(a.contestant)}</td>
+      <td>${a.status === 'judged' ? D.num(a.fitness, 3) : D.pill(a.status)}${a.safety && a.safety !== 'ok' ? `<div class="small err">${D.esc(a.safety)}</div>` : ''}</td>
+      <td class="small">${(a.found || []).join(' ') || '—'}${a.missed && a.missed.length ? ` <span class="muted">/ ${a.missed.join(' ')}</span>` : ''}${a.decoy_hits ? ` <span class="warn">· ${a.decoy_hits} decoy</span>` : ''}</td>
+      <td>${a.coverage != null ? D.num(a.coverage, 2) : ''}</td><td class="small">${a.cost != null ? D.usd(a.cost) : ''}</td></tr>`).join('') || '<tr><td class="muted">None yet.</td></tr>');
+
+    clearTimeout(timer);
+    if (d.generations.some(g => ['queued', 'running'].includes(g.status))) timer = setTimeout(load, 15000);
+  }
+  const run = document.getElementById('run');
+  if (run) run.onclick = async () => { run.disabled = true; const m = document.getElementById('run-msg');
+    try { const r = await D.api('/darwin/api/weblab/run', { method: 'POST' }); m.textContent = `Queued ${r.label}`; load(); } catch (e) { m.className = 'small err'; m.textContent = e.message; run.disabled = false; } };
+  document.getElementById('sample').onclick = async e => { e.target.disabled = true; const m = document.getElementById('sample-msg');
+    try { const r = await D.api('/darwin/api/weblab/sample-shop', { method: 'POST' }); window.open(r.url, '_blank', 'noopener');
+      m.innerHTML = `Opened <a href="${r.url}" target="_blank" rel="noopener">${D.esc(r.name)}</a>` + (r.answer_key ? ` · planted: ${r.answer_key.map(d => d.id).join(', ')}` : ' · can you spot the planted problems?'); }
+    catch (err) { m.textContent = err.message; } e.target.disabled = false; };
+  load();
+})();
+</script>
+{% endblock %}

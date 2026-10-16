@@ -33,12 +33,18 @@ def _env_record():
             "code_version": S.code_version()}
 
 
-def claim_next():
-    """Atomically move the oldest queued experiment to running."""
+WEBLAB_KINDS = ("weblab",)
+
+
+def claim_next(group="life"):
+    """Atomically move the oldest queued experiment of this worker group to running.
+    Life Lab and Web Lab have separate workers so long Web Lab audits never block Life Lab cycles."""
     eng = S.engine()
     with eng.begin() as c:
-        row = c.execute(sa.select(S.experiments.c.id).where(S.experiments.c.status == "queued")
-                        .order_by(S.experiments.c.id).limit(1)).scalar()
+        q = sa.select(S.experiments.c.id).where(S.experiments.c.status == "queued")
+        q = q.where(S.experiments.c.kind.in_(WEBLAB_KINDS)) if group == "weblab" else \
+            q.where(S.experiments.c.kind.notin_(WEBLAB_KINDS))
+        row = c.execute(q.order_by(S.experiments.c.id).limit(1)).scalar()
         if row is None:
             return None
         n = c.execute(S.experiments.update().where(
@@ -72,6 +78,8 @@ def run_experiment(exp_id: int):
         return run_replay(exp)
     if exp["kind"] == "benchmark":
         return run_benchmark(exp)
+    if exp["kind"] == "weblab":
+        return run_weblab(exp)
     cfg = core.Config.from_dict(json.loads(exp["config"]))
     spec = life.get_spec(cfg.world)
     meter = Meter()
@@ -262,6 +270,23 @@ def run_experiment(exp_id: int):
              experiment_id=exp_id, cost_usd=max(0.0, snap["compute_usd_estimated"] - booked), cost_kind="estimated")
 
 
+def run_weblab(exp):
+    from .weblab import evolve
+
+    def set_progress(p):
+        _update(exp["id"], progress=S.canon(p), heartbeat=S.now())
+
+    summary = evolve.run(exp, set_progress)
+    if summary.get("paused"):
+        _update(exp["id"], status="paused", heartbeat=S.now(), stop_reason=summary["reason"],
+                progress=S.canon({"phase": "paused: " + summary["reason"]}))
+        return
+    _update(exp["id"], status="completed", finished_at=S.now(), summary=S.canon({"weblab": summary}),
+            stop_reason="generation complete", progress=S.canon({"phase": "done"}),
+            cost=S.canon({"weblab_usd": summary["spend"]["total_usd"]}))
+    S.append("experiment.finished", {"status": "completed", "kind": "weblab"}, experiment_id=exp["id"])
+
+
 def run_benchmark(exp):
     from . import bench
     meter = Meter()
@@ -316,30 +341,44 @@ def run_replay(exp):
              cost_kind="estimated", provenance={"replay_experiment": S.fmt_exp(exp["id"])})
 
 
-def reap_stale(max_age_s=300):
-    """Mark experiments whose worker vanished (e.g. a redeploy) as failed. Never deletes."""
+def reap_stale(max_age_s=300, group=None):
+    """Mark experiments whose worker vanished (e.g. a redeploy) as failed, or, for a Web Lab
+    generation, put it back to paused so it resumes where it stopped. Never deletes."""
     from datetime import datetime, timezone
     with S.engine().begin() as c:
-        rows = c.execute(sa.select(S.experiments.c.id, S.experiments.c.heartbeat).where(
-            S.experiments.c.status == "running")).all()
-        for i, hb in rows:
+        q = sa.select(S.experiments.c.id, S.experiments.c.heartbeat, S.experiments.c.kind).where(
+            S.experiments.c.status == "running")
+        if group == "weblab":
+            q = q.where(S.experiments.c.kind.in_(WEBLAB_KINDS))
+        elif group == "life":
+            q = q.where(S.experiments.c.kind.notin_(WEBLAB_KINDS))
+        rows = c.execute(q).all()
+        for i, hb, kind in rows:
             try:
                 age = (datetime.now(timezone.utc) - datetime.fromisoformat(hb)).total_seconds()
             except Exception:
                 age = 1e9
+            if age > max_age_s and kind in WEBLAB_KINDS:
+                c.execute(S.experiments.update().where(S.experiments.c.id == i).values(
+                    status="paused", stop_reason="worker lost; will resume where it stopped"))
+                S.append("weblab.worker_lost", {"heartbeat_age_s": round(age)}, experiment_id=i, conn=c)
+                c.execute(S.weblab_audits.update().where((S.weblab_audits.c.experiment_id == i) &
+                                                         S.weblab_audits.c.status.in_(["queued", "running"])).values(
+                    status="failed", finished_at=S.now(), score=S.canon({"error": "worker lost mid-audit"})))
+                continue
             if age > max_age_s:
                 c.execute(S.experiments.update().where(S.experiments.c.id == i).values(
                     status="failed", finished_at=S.now(), stop_reason="worker lost (no heartbeat)"))
                 S.append("failure.worker_lost", {"heartbeat_age_s": round(age)}, experiment_id=i, conn=c)
 
 
-def work():
+def work(group="life"):
     """Run queued experiments one at a time, each in a fresh child process, so every
     experiment starts at zero CPU time with its own kernel limit."""
     import subprocess
-    reap_stale()
+    reap_stale(group=group)
     while True:
-        exp_id = claim_next()
+        exp_id = claim_next(group)
         if exp_id is None:
             return
         proc = subprocess.run([sys.executable, "-m", "darwin.runner", "run", str(exp_id)],
@@ -371,5 +410,7 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "work"
     if cmd == "work":
         work()
+    elif cmd == "work-weblab":
+        work("weblab")
     elif cmd == "run":
         run_one(int(sys.argv[2]))

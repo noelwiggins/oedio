@@ -1,0 +1,58 @@
+{% extends "darwin/base.html" %}
+{% block title %}Audit #{{ aid }} — Web Lab — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow" id="eyebrow">Web Lab audit #{{ aid }}</p>
+<h1 class="page" id="title">Audit</h1>
+<p class="lede" id="lede"></p>
+<div class="grid g4" id="tiles"></div>
+<section class="section grid g2">
+  <div class="card"><h2>Answer key</h2><div id="key" class="small"></div></div>
+  <div class="card"><h2>Coverage and safety</h2><div id="cov" class="small"></div></div>
+</section>
+<section class="section card scroll-x"><h2>Reported issues, as judged</h2><table class="t" id="issues"></table>
+  <p class="small muted" id="judge-note"></p></section>
+<section class="section card"><h2>Strategy sent to Codestroller</h2><div id="strategy" class="small"></div></section>
+<section class="section card scroll-x"><h2>Codestroller's walk-through</h2><table class="t small" id="steps"></table></section>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const D = Darwin, H = {{ heuristics|tojson }};
+  const LABEL = { decoy: ['decoy (aesthetic, not a problem)', 'warn'], real_unplanted: ['real but not planted', 'muted'], unsupported: ['unsupported / invented', 'err'] };
+  D.api('/darwin/api/weblab/audit/{{ aid }}').then(a => {
+    const sc = a.score || {}, st = a.strategy || {}, sh = a.shop || {}, j = a.judged || {}, inter = j.interactions || {};
+    document.getElementById('eyebrow').textContent = `Web Lab audit #${a.id} · generation ${a.generation} · ${a.split} shop · ${a.status}`;
+    document.getElementById('title').textContent = `${st.label || a.contestant} on “${sh.name || 'test shop'}”`;
+    document.getElementById('lede').innerHTML = sh.url ? `The test shop is still live: <a href="${sh.url}" target="_blank" rel="noopener">open it</a> (${D.esc(sh.domain || '')}).` : '';
+    document.getElementById('tiles').innerHTML = [
+      ['Fitness', sc.fitness != null ? D.num(sc.fitness, 3) : '—', sc.safety && sc.safety !== 'ok' ? `safety: ${sc.safety}` : 'safety ok'],
+      ['Found', `${(sc.found || []).length}/${(sh.answer_key || []).length}`, `severity-weighted recall ${D.num(sc.recall_weighted, 2)}`],
+      ['Precision', D.num(sc.precision, 2), `${sc.matched_issues || 0} matched · ${sc.decoy_hits || 0} decoy · ${sc.unsupported || 0} unsupported`],
+      ['Coverage', D.num(sc.coverage, 2), `${(sc.areas || []).length} of 12 areas exercised`],
+      ['Cost', D.usd((a.cost || {}).total_usd), `${(a.cost || {}).steps || 0} steps · judge ${D.usd((a.cost || {}).judge_usd_billed)}`],
+    ].map(([k, v, n]) => `<div class="card flat metric"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+    const found = new Set(sc.found || []);
+    document.getElementById('key').innerHTML = (sh.answer_key || []).map(d => `<div class="claim ${found.has(d.id) ? 's-replicated' : 's-failed-replication'}">
+      <span class="mono">${d.id}</span> ${found.has(d.id) ? D.pill('found') : D.pill('missed')} <b>${D.esc(d.title)}</b> · severity ${d.severity} · ${d.heuristics.map(h => 'H' + h + ' ' + H[h]).join('; ')}
+      <div class="muted">${D.esc(d.symptom)}</div></div>`).join('') + (sh.decoys || []).map(x => `<div class="muted">Decoy <span class="mono">${x.id}</span>: ${D.esc(x.text)}</div>`).join('');
+    const saf = inter.safety || {};
+    document.getElementById('cov').innerHTML = `<p><b>Exercised:</b> ${(sc.areas || []).join(', ') || '—'}</p><p><b>Not exercised:</b> ${(sc.missed_areas || []).join(', ') || 'none'}</p>
+      <p><b>Safety:</b> ${saf.purchase_attempts ? `<span class="err">${saf.purchase_attempts} purchase attempt(s)</span>` : 'no purchase attempts'} ·
+      ${saf.checkout_inputs ? `<span class="warn">${saf.checkout_inputs} checkout field(s) filled</span>` : 'no personal details entered'}</p>
+      <p class="muted">Measured from the shop's own server log (${inter.events || 0} events), not from the report.</p>`;
+    const labels = j.labels || [];
+    document.getElementById('issues').innerHTML = `<tr><th>#</th><th>reported issue</th><th>where</th><th>judge</th></tr>` + ((j.issues || []).map((i, n) => {
+      const lab = labels.find(l => l.issue === n) || {}; const L = LABEL[lab.label];
+      return `<tr><td>${n + 1}</td><td>${D.esc(i.text)}<div class="small muted">${D.esc(i.severity || '')} · ${D.esc(i.from)}</div></td>
+        <td class="small mono">${D.esc((i.url || '').replace(/^https?:\/\/[^/]+/, ''))}</td>
+        <td>${L ? `<span class="${L[1]}">${L[0]}</span>` : `<span class="pill s-replicated">${D.esc(lab.label || '?')}</span>`}<div class="small muted">${D.esc(lab.why || '')}</div></td></tr>`; }).join('') || '<tr><td class="muted">No issues reported.</td></tr>');
+    document.getElementById('judge-note').textContent = j.call ? `Judge: ${j.call.model} (${j.version}), ${D.usd(j.call.cost_usd)} billed.` : (j.error || '');
+    document.getElementById('strategy').innerHTML = `<p><b>Persona:</b> ${D.esc(st.persona_text || '')}</p><p><b>Goal:</b> ${D.esc(st.goal_text || '')}</p>
+      <p><b>Steps:</b> ${st.steps} · <b>mobile pass:</b> ${st.mobile ? 'on' : 'off'} · Codestroller job <span class="mono">${D.esc(a.job_id || '—')}</span></p>`;
+    document.getElementById('steps').innerHTML = `<tr><th>step</th><th>page</th><th>narration</th><th>action</th></tr>` + (((a.raw || {}).steps || []).map(s => `<tr>
+      <td>${s.step}</td><td class="mono">${D.esc((s.url || '').replace(/^https?:\/\/[^/]+\/darwin\/weblab\/s\/[^/]+/, ''))}</td>
+      <td>${D.esc(s.narration || '')}</td><td class="mono">${D.esc(((s.action || {}).type) || '')}</td></tr>`).join('') || '<tr><td class="muted">No steps recorded.</td></tr>');
+  }).catch(e => { document.getElementById('lede').innerHTML = `<span class="err">${D.esc(e.message)}</span>`; });
+})();
+</script>
+{% endblock %}
