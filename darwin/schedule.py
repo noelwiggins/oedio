@@ -39,8 +39,11 @@ def hard_budget_usd() -> float:
 def spend_last_24h() -> float:
     since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     with S.engine().connect() as c:
+        weblab = sa.select(S.experiments.c.id).where(S.experiments.c.kind == "weblab")
+        # Web Lab has its own cap (DARWIN_WEBLAB_DAILY_USD); it must not starve the Life Lab cycles
         return float(c.execute(sa.select(sa.func.coalesce(sa.func.sum(S.events.c.cost_usd), 0.0)).where(
-            S.events.c.ts >= since)).scalar() or 0.0)
+            (S.events.c.ts >= since) & ~S.events.c.type.like("weblab.%") &
+            (S.events.c.experiment_id.is_(None) | S.events.c.experiment_id.not_in(weblab)))).scalar() or 0.0)
 
 
 def queue_practice(problem, seed, day, conn, kind="fixed", label=""):

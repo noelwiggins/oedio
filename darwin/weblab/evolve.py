@@ -149,12 +149,18 @@ def run(exp, set_progress, cl=None):
     gen = cfg.get("generation") or generation_number()
     holdout = cfg.get("holdout", gen % HOLDOUT_EVERY == 0)
     rng = random.Random(exp_id * 7919)
-    if holdout:
+    if cfg.get("contestants"):        # resuming: the field is fixed for the whole generation
+        evolved, note = cfg["contestants"], cfg.get("selection", "")
+    elif holdout:
         board = [b for b in leaderboard() if b["kind"] == "evolved"]
         evolved = [board[0]["strategy"]["genome"]] if board else []
         note = f"held-out test of the best evolved strategy {board[0]['label']}" if board else "no evolved strategy yet"
     else:
         evolved, note = next_population(rng)
+    if not cfg.get("contestants"):
+        with S.engine().begin() as conn:
+            conn.execute(S.experiments.update().where(S.experiments.c.id == exp_id).values(
+                config=S.canon({**cfg, "generation": gen, "holdout": holdout, "contestants": evolved, "selection": note})))
     contestants = [dict(b) for b in BASELINES] + [strategy.render(g) for g in evolved]
     split = "holdout" if holdout else "train"
     seeds = [(1_000_000 if holdout else 0) + exp_id * 10 + k for k in range(cfg.get("shops", SHOPS_PER_GEN))]
@@ -162,8 +168,14 @@ def run(exp, set_progress, cl=None):
                                            "shop_seeds": seeds, "selection": note, "daily_cap_usd": daily_cap()},
              experiment_id=exp_id)
     plan = [(sd, c) for sd in seeds for c in contestants]
-    done_keys = {(a["contestant"], (a["strategy"] or {}).get("shop_seed")) for a in filter(current,
-                 _audits((S.weblab_audits.c.experiment_id == exp_id) & S.weblab_audits.c.status.in_(["judged", "failed"])))}
+    mine = list(filter(current, _audits(S.weblab_audits.c.experiment_id == exp_id)))
+    key = lambda a: (a["contestant"], (a["strategy"] or {}).get("shop_seed"))
+    fails = {}
+    for a in mine:
+        if a["status"] == "failed":
+            fails[key(a)] = fails.get(key(a), 0) + 1
+    # done = judged, or failed twice (a worker lost mid-audit gets another go)
+    done_keys = {key(a) for a in mine if a["status"] == "judged"} | {k for k, n in fails.items() if n >= 2}
     for n, (seed, c) in enumerate(plan):
         if (c["label"], seed) in done_keys:
             continue
