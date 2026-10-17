@@ -294,6 +294,29 @@ def _still_leader() -> bool:
         return False
 
 
+# Since 2026-10-16 the homepage world is the life-3.0 tidal pool (darwin/pool.py, its own process).
+# This life-1.0 world is archived: its last checkpoint and full stats history are kept and it can be
+# resumed by setting ARCHIVED = False. The thread keeps running for the scheduler and leader lock.
+ARCHIVED = True
+_archived = {"done": False}
+
+
+def _archive_once():
+    if _archived["done"]:
+        return
+    _archived["done"] = True
+    with S.engine().connect() as c:
+        seen = c.execute(sa.select(sa.func.count()).select_from(S.events).where(S.events.c.type == "world.archived")).scalar()
+    if seen:
+        return
+    w = _state
+    if w is not None:
+        _checkpoint(w)
+        S.append("world.archived", {"era": w.era, "tick": int(w.sim.tick), "births": w.births, "deaths": w.deaths,
+                                    "world_version": life.WORLD_VERSION, "stats": w.stats(),
+                                    "reason": "superseded by the life-3.0 tidal pool; checkpoint and history kept"})
+
+
 def _loop():
     global _state
     period = 1.0 / TPS
@@ -312,13 +335,16 @@ def _loop():
                     get()
                     ticks_mark = _state.sim.tick
             t0 = time.time()
-            with _lock:
-                w = _state
-                if w.step(1) == "extinct":
-                    S.append("world.extinction", {"era": w.era, "tick": w.sim.tick, "births": w.births,
-                                                  "deaths": w.deaths})
-                    _checkpoint(w)
-                    _state = _genesis(w.era + 1)
+            if ARCHIVED:
+                _archive_once()
+            else:
+                with _lock:
+                    w = _state
+                    if w.step(1) == "extinct":
+                        S.append("world.extinction", {"era": w.era, "tick": w.sim.tick, "births": w.births,
+                                                      "deaths": w.deaths})
+                        _checkpoint(w)
+                        _state = _genesis(w.era + 1)
             if t0 - last_minute >= 60:
                 last_minute = t0
                 if not _still_leader():
@@ -338,7 +364,7 @@ def _loop():
                 S.append("world.compute", {"cpu_s": round(cpu, 2), "ticks": int(ticks), "period_s": round(t0 - last_compute)},
                          cost_usd=costs.compute_usd(cpu), cost_kind="estimated")
                 cpu_mark, last_compute = time.thread_time(), t0
-            time.sleep(max(0.0, period - (time.time() - t0)))
+            time.sleep(1.0 if ARCHIVED else max(0.0, period - (time.time() - t0)))
         except Exception as e:
             print(f"[darwin] world loop error: {e!r}")
             time.sleep(5)

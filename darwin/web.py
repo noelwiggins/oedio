@@ -62,6 +62,10 @@ def _limit(key: str, n: int, per_s: int) -> bool:
 def start_background():
     """Called from the gunicorn post_worker_init hook, and lazily on the first request."""
     world_live.ensure_background()
+    try:
+        ensure_pool()
+    except Exception as e:
+        print(f"[darwin] pool start failed: {e!r}")
 
 
 @bp.before_app_request
@@ -94,6 +98,21 @@ def ensure_worker():
     """Start the Life Lab and Web Lab workers if they have queued work and none is running."""
     _ensure_group("life")
     _ensure_group("weblab")
+    ensure_pool()
+
+
+_pool_proc = {"p": None}
+
+
+def ensure_pool():
+    """The tidal pool runs in its own process; the advisory lock inside it prevents duplicates."""
+    if os.environ.get("DARWIN_POOL", "on") == "off":
+        return
+    with _worker_lock:
+        p = _pool_proc["p"]
+        if p is not None and p.poll() is None:
+            return
+        _pool_proc["p"] = subprocess.Popen([sys.executable, "-m", "darwin.pool", "run"], cwd=ROOT, start_new_session=True)
 
 
 def _ensure_group(group):
@@ -225,6 +244,49 @@ def owner():
         resp.delete_cookie("darwin_owner", path="/darwin")
         return resp
     return render_template("darwin/owner.html", ok=is_owner(), msg=msg)
+
+
+# ── the tidal pool (life-3.0) ───────────────────────────────────────────
+@bp.route("/pool")
+def pool_page():
+    ensure_pool()
+    from . import pool
+    return render_template("darwin/pool.html", milestones=[{"key": k, "title": t} for k, t, _ in pool.Pool.MILESTONES],
+                           years_per_gen=pool.YEARS_PER_GEN, cell_names=pool.CELL_NAMES, version=pool.VERSION)
+
+
+@bp.route("/api/pool")
+def api_pool():
+    from . import pool
+    try:
+        ensure_pool()
+    except Exception:
+        pass
+    d = pool.read_live()
+    if d is None:
+        return jsonify({"standby": True, "note": "the pool is starting for the first time"})
+    try:
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(d["written_at"])).total_seconds()
+    except Exception:
+        age = 0
+    d["stale"] = age > 20
+    d["age_s"] = round(age, 1)
+    return jsonify(d)
+
+
+@bp.route("/api/pool/history")
+def api_pool_history():
+    from . import pool
+    return jsonify(pool.history(limit=min(int(request.args.get("limit", 600)), 2000)))
+
+
+@bp.route("/api/pool/archive")
+def api_pool_archive():
+    """The archived life-1.0 world (era 4 and earlier): its final record from the Ledger."""
+    with S.engine().connect() as c:
+        row = c.execute(sa.select(S.events.c.ts, S.events.c.payload).where(S.events.c.type == "world.archived")
+                        .order_by(S.events.c.id.desc()).limit(1)).first()
+    return jsonify({"archived": bool(row), "ts": row[0] if row else None, "record": S.loads(row[1], {}) if row else None})
 
 
 # ── live world ───────────────────────────────────────────────────────────

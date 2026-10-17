@@ -154,6 +154,32 @@ world_stats = sa.Table(
     sa.Column("stats", J),
 )
 
+# ── the tidal pool (life-3.0), run by its own process ───────────────────────
+pool_checkpoints = sa.Table(
+    "darwin_pool_checkpoints", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("era", sa.Integer),
+    sa.Column("tick", sa.BigInteger),
+    sa.Column("blob", sa.LargeBinary),
+)
+
+pool_stats = sa.Table(
+    "darwin_pool_stats", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("era", sa.Integer),
+    sa.Column("tick", sa.BigInteger),
+    sa.Column("stats", J),
+)
+
+pool_live = sa.Table(          # one row: the latest frames, written by the pool process, read by the web
+    "darwin_pool_live", md,
+    sa.Column("id", sa.Integer, primary_key=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("data", J),
+)
+
 snapshots = sa.Table(
     "darwin_snapshots", md,
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),

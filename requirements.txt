@@ -10,3 +10,4 @@ fonttools>=4.50
 # Darwin (evolutionary discovery engine)
 numpy>=2.0,<3
 SQLAlchemy>=2.0.16
+scipy>=1.11

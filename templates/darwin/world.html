@@ -4,30 +4,29 @@
 <section class="hero">
   <div>
     <div class="terrarium" id="terra">
-      <canvas id="world" aria-label="Darwin World, a live artificial-life simulation"></canvas>
+      <canvas id="world" aria-label="The tidal pool, a live open-ended evolution simulation"></canvas>
       <div class="terra-tag" id="terra-tag"><i></i><span>connecting</span></div>
-      <div class="terra-legend"><span style="--c:var(--dw-amber)">amber diet</span><span style="--c:var(--dw-green)">green diet</span><span style="--c:var(--dw-hazard)">hazard</span></div>
+      <div class="pool-legend" id="legend"></div>
     </div>
     <p class="small muted" style="margin:8px 2px 0">
-      Live, server-side simulation shared by every visitor. Each dot is a creature with a heritable genome;
-      size is body size, colour is diet. Nothing is scripted: offspring inherit mutated genes and the environment does the selecting.
-      The world runs around the clock, watched or not, at 10 ticks a second.
+      The tidal pool: a live, server-side world shared by every visitor. Each creature is drawn from the body its own genes grew.
+      Nothing is scripted: genes duplicate and mutate, the environment keeps changing, and whatever survives is what evolved.
+      <a href="/darwin/pool">Open the tidal pool →</a>
     </p>
   </div>
   <div>
-    <p class="eyebrow" id="era-line">Darwin World</p>
+    <p class="eyebrow" id="era-line">The tidal pool</p>
     <h1 class="display"><span>Watch Darwin learn.</span><span>Give Darwin a problem.</span><span>See what evolves.</span></h1>
     <div class="grid g4" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:6px">
-      <div class="card flat metric"><div class="k">Population</div><div class="v" id="m-pop">—</div><svg class="spark" id="sp-pop"></svg></div>
-      <div class="card flat metric"><div class="k">Deepest generation</div><div class="v" id="m-gen">—</div><div class="n" id="m-gen-n">descendants of the founders</div></div>
-      <div class="card flat metric"><div class="k">Births · deaths</div><div class="v" id="m-bd">—</div><div class="n">since this era began</div></div>
-      <div class="card flat metric"><div class="k">Grouping (Clark–Evans R)</div><div class="v" id="m-R">—</div><div class="n" id="m-R-n">&lt;1 clustered · 1 random · &gt;1 spaced</div></div>
+      <div class="card flat metric"><div class="k">Evolution so far</div><div class="v" id="m-geo">—</div><div class="n" id="m-geo-n">1 generation = 1,000 years</div></div>
+      <div class="card flat metric"><div class="k">Species</div><div class="v" id="m-sp">—</div><div class="n" id="m-sp-n">effective number</div></div>
+      <div class="card flat metric"><div class="k">Most complex body</div><div class="v" id="m-cx">—</div><div class="n" id="m-cx-n"></div></div>
+      <div class="card flat metric"><div class="k">Latest milestone</div><div class="v" id="m-ms" style="font-size:16px;line-height:1.3">—</div><div class="n" id="m-ms-n"></div></div>
     </div>
     <div class="card flat" style="margin-top:12px">
-      <div class="row" style="justify-content:space-between"><h3 style="margin:0">Diet mix</h3><span class="small muted" id="m-season">season</span></div>
-      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0 6px" id="diet-bar"></div>
-      <div class="small muted" id="diet-txt"></div>
-      <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px" id="trait-sparks"></div>
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">Cells in use</h3><span class="small muted" id="m-roles"></span></div>
+      <div class="bar-mix" id="mix"></div>
+      <div class="small muted" id="mix-t"></div>
     </div>
   </div>
 </section>
@@ -93,138 +92,31 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/darwin/pool.js?v=1"></script>
 <script>
 (function () {
   const D = Darwin;
-  const canvas = document.getElementById('world');
-  const ctx = canvas.getContext('2d');
-  const tag = document.getElementById('terra-tag');
-  let frames = [], scene = null, arena = 100, tps = 10, lastTick = -1, playT = null, lastRAF = null, failures = 0;
-
-  // Layout size (clientWidth), not getBoundingClientRect: the page may still be
-  // mid-swing through the bookcase, and a transformed rect would squash the canvas.
-  function resize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const col = t => `rgb(${D.CELL_COLORS[t].join(',')})`;
+  document.getElementById('legend').innerHTML = D.CELL_LABELS.map((n, t) => `<span style="--c:${col(t)}">${n}</span>`).join('');
+  D.PoolView({ canvas: document.getElementById('world'), tag: document.getElementById('terra-tag'), onData: d => {
+    const s = d.stats || {};
+    document.getElementById('era-line').textContent = `The tidal pool · era ${d.era} · ${d.version}`;
+    document.getElementById('m-geo').textContent = D.geo(d.geo_ma);
+    document.getElementById('m-geo-n').textContent = `mean generation ${D.num(s.mean_generation, 0)} · 1 generation = 1,000 years`;
+    document.getElementById('m-sp').textContent = D.num(s.species_eff, 1);
+    document.getElementById('m-sp-n').textContent = `${D.num(s.population, 0)} creatures alive`;
+    document.getElementById('m-cx').textContent = s.cells_max != null ? `${s.cells_max} cells` : '—';
+    document.getElementById('m-cx-n').textContent = s.types_max != null ? `up to ${s.types_max} cell types in one body` : '';
+    const ms = (d.milestones || []).slice(-1)[0];
+    document.getElementById('m-ms').textContent = ms ? ms.title : 'none yet';
+    document.getElementById('m-ms-n').textContent = ms ? `at ${D.geo(ms.geo_ma)}` : 'single cells so far';
+    document.getElementById('m-roles').textContent = s.population ? `${Math.round(s.producers * 100)}% producers · ${Math.round(s.grazers * 100)}% grazers · ${Math.round(s.predators * 100)}% predators` : '';
+    if (s.cell_mix) {
+      const tot = Object.values(s.cell_mix).reduce((a, b) => a + b, 0) || 1;
+      document.getElementById('mix').innerHTML = D.CELL_LABELS.map((n, t) => `<div title="${n}" style="width:${(s.cell_mix[n] || 0) / tot * 100}%;background:${col(t)}"></div>`).join('');
+      document.getElementById('mix-t').textContent = D.CELL_LABELS.filter(n => s.cell_mix[n]).map(n => `${n} ${Math.round(s.cell_mix[n] / tot * 100)}%`).join(' · ');
     }
-  }
-  window.addEventListener('resize', resize); resize();
-
-  async function poll() {
-    try {
-      const d = await D.api('/darwin/api/world/frames?since=' + lastTick);
-      failures = 0;
-      if (d.standby) {
-        tag.className = 'terra-tag'; tag.querySelector('span').textContent = 'starting · resuming from checkpoint';
-        setTimeout(poll, 2000); return;
-      }
-      if (d.stats.tick < lastTick) { frames = []; lastTick = -1; playT = null; }
-      arena = d.arena; tps = d.tps; scene = d.scene;
-      d.frames.forEach(f => { if (f.t > lastTick) { frames.push(f); lastTick = f.t; } });
-      if (frames.length > 80) frames = frames.slice(-80);
-      if (playT == null && frames.length) playT = frames[0].t;
-      tag.className = 'terra-tag live';
-      tag.querySelector('span').textContent = 'live · tick ' + d.stats.tick.toLocaleString() + ' · running continuously';
-      stats(d.stats, d.resumed_from);
-    } catch (e) {
-      failures++;
-      tag.className = 'terra-tag';
-      tag.querySelector('span').textContent = 'paused: ' + (failures > 2 ? 'connection lost' : 'retrying');
-    }
-    setTimeout(poll, document.hidden ? 4000 : 900);
-  }
-
-  function lerpFrames(t) {
-    let i = frames.findIndex(f => f.t > t);
-    if (i === -1) return { a: frames[frames.length - 1], b: null, k: 0 };
-    if (i === 0) return { a: frames[0], b: null, k: 0 };
-    const a = frames[i - 1], b = frames[i];
-    return { a, b, k: (t - a.t) / (b.t - a.t) };
-  }
-
-  function draw(ts) {
-    const dt = lastRAF ? Math.min(0.1, (ts - lastRAF) / 1000) : 0; lastRAF = ts;
-    resize();
-    const W = canvas.clientWidth, H = canvas.clientHeight, s = W / (arena * 10);
-    ctx.clearRect(0, 0, W, H);
-    if (scene) {
-      scene.hazards.forEach(([x, y]) => {
-        const r = scene.hazard_radius * 10 * s;
-        const g = ctx.createRadialGradient(x * s, y * s, 0, x * s, y * s, r);
-        g.addColorStop(0, 'rgba(255,110,90,.28)'); g.addColorStop(1, 'rgba(255,110,90,0)');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x * s, y * s, r, 0, 7); ctx.fill();
-        ctx.strokeStyle = 'rgba(255,138,122,.45)'; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.arc(x * s, y * s, r, 0, 7); ctx.stroke(); ctx.setLineDash([]);
-      });
-      scene.food.forEach(([x, y, t]) => {
-        ctx.fillStyle = t ? 'rgba(125,216,181,.55)' : 'rgba(233,191,109,.6)';
-        ctx.fillRect(x * s - 1.5, y * s - 1.5, 3, 3);
-      });
-    }
-    if (frames.length) {
-      // Play about 1.5 s behind the newest frame so motion stays smooth between polls.
-      const newest = frames[frames.length - 1].t;
-      playT = Math.max(frames[0].t, Math.min(newest, (playT || newest) + dt * tps));
-      if (newest - playT > tps * 4) playT = newest - tps * 1.5;
-      const { a, b, k } = lerpFrames(playT);
-      const nb = b ? new Map(b.c.map(c => [c[0], c])) : null;
-      a.c.forEach(c => {
-        let x = c[1], y = c[2], alpha = 1;
-        if (nb) { const n = nb.get(c[0]); if (n) { x += (n[1] - x) * k; y += (n[2] - y) * k; } else alpha = 1 - k; }
-        const r = Math.max(1.6, c[3] / 10 * 2.3 * s * 10 / 4);
-        ctx.fillStyle = D.dietColor(c[4] / 100, 0.9 * alpha);
-        ctx.beginPath(); ctx.arc(x * s, y * s, r, 0, 7); ctx.fill();
-        const e = Math.min(1, c[5] / 90);
-        ctx.strokeStyle = `rgba(255,255,255,${0.15 + 0.5 * e * alpha})`; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(x * s, y * s, r + 1.2, -Math.PI / 2, -Math.PI / 2 + e * 6.283); ctx.stroke();
-      });
-    }
-    requestAnimationFrame(draw);
-  }
-
-  const hist = { population: [], speed: [], sense: [], size: [], w_crowd: [], w_hazard: [], pref: [] };
-  function stats(s, resumed) {
-    document.getElementById('era-line').textContent = `Darwin World · era ${s.era}` + (resumed != null ? ` · resumed from checkpoint at tick ${resumed.toLocaleString()}` : '');
-    document.getElementById('m-pop').textContent = s.population;
-    document.getElementById('m-gen').textContent = s.max_generation != null ? s.max_generation : '—';
-    document.getElementById('m-gen-n').textContent = s.mean_generation != null ? `mean generation ${s.mean_generation}` : '';
-    document.getElementById('m-bd').textContent = `${s.births.toLocaleString()} · ${s.deaths.toLocaleString()}`;
-    document.getElementById('m-R').textContent = s.clark_evans_R != null ? s.clark_evans_R.toFixed(2) : '—';
-    if (s.clark_evans_R != null) {
-      const R = s.clark_evans_R;
-      document.getElementById('m-R-n').textContent = R < 0.85 ? 'creatures are clustering' : R > 1.15 ? 'creatures are spacing out' : 'close to random placement';
-    }
-    document.getElementById('m-season').textContent = `season: ${Math.round(s.green_share * 100)}% of new food is green`;
-    if (s.population) {
-      const a = s.diet_amber_specialists, g = s.diet_green_specialists, m = s.diet_generalists;
-      document.getElementById('diet-bar').innerHTML =
-        `<div style="width:${a * 100}%;background:var(--dw-amber)"></div><div style="width:${m * 100}%;background:var(--md-sys-color-outline)"></div><div style="width:${g * 100}%;background:var(--dw-green)"></div>`;
-      document.getElementById('diet-txt').textContent = `${Math.round(a * 100)}% amber specialists · ${Math.round(m * 100)}% generalists · ${Math.round(g * 100)}% green specialists`;
-    }
-  }
-
-  async function loadHistory() {
-    try {
-      const h = await D.api('/darwin/api/world/history?limit=1440');
-      const cur = h.length ? h[h.length - 1].era : null;
-      const rows = h.filter(r => r.era === cur);
-      D.spark(document.getElementById('sp-pop'), rows.map(r => r.population), D.css('--md-sys-color-primary'));
-      const box = document.getElementById('trait-sparks');
-      box.innerHTML = '';
-      ['speed', 'sense', 'size', 'pref', 'w_crowd', 'w_hazard'].forEach(k => {
-        const vals = rows.map(r => r.mean_genome ? r.mean_genome[k] : null);
-        const last = vals.length ? vals[vals.length - 1] : null;
-        const div = document.createElement('div');
-        div.innerHTML = `<div class="small mono muted">${k} <b style="color:var(--md-sys-color-on-surface)">${D.num(last, 2)}</b></div><svg class="spark"></svg>`;
-        box.appendChild(div);
-        D.spark(div.querySelector('svg'), vals, D.css('--md-sys-color-tertiary'));
-      });
-      if (rows.length < 2) box.insertAdjacentHTML('beforeend', '<div class="small muted" style="grid-column:1/-1">Trait drift over the last day appears as the world runs (sampled once a minute).</div>');
-    } catch (e) { }
-    setTimeout(loadHistory, 15000);
-  }
+  } });
 
   // ── question box ─────────────────────────────────────
   const form = document.getElementById('ask'), out = document.getElementById('assess');
@@ -262,7 +154,6 @@
     } catch (err) { out.innerHTML = `<div class="card flat err">${D.esc(err.message)}</div>`; }
   });
 
-  poll(); loadHistory(); requestAnimationFrame(draw);
 })();
 </script>
 {% endblock %}

@@ -18,6 +18,7 @@ _tmp = tempfile.mkdtemp()
 os.environ["DARWIN_DB_URL"] = "sqlite:///" + os.path.join(_tmp, "t.sqlite")
 os.environ.pop("DATABASE_URL", None)
 os.environ["DARWIN_SCHEDULER"] = "off"   # tests drive the scheduler explicitly
+os.environ["DARWIN_POOL"] = "off"        # the tidal pool process is never spawned by tests
 
 from darwin import core, life, runner, snapshot, store  # noqa: E402
 import sqlalchemy as sa  # noqa: E402
@@ -230,7 +231,8 @@ def test_world_api_streams_frames(client):
     assert d["stats"]["population"] > 0
     time.sleep(0.6)
     d2 = client.get("/darwin/api/world/frames?since=-1").get_json()
-    assert d2["stats"]["tick"] > d["stats"]["tick"] or d2["frames"]
+    # the life-1.0 world is archived (the tidal pool replaced it): it still answers, but no longer advances
+    assert d2["stats"]["tick"] == d["stats"]["tick"]
 
 
 def test_visitor_caps_are_enforced(client):
@@ -632,3 +634,37 @@ def test_weblab_shop2_catalog_is_coherent():
                 kinds = SH.DOMAINS[spec["domain"]]["cats"][p["cat"]]
                 assert any(p["name"].endswith(k[0]) and set(p["stock"]) == set(k[2][1]) for k in kinds)
                 assert p["icon"] and any(v == 0 for v in p["stock"].values())
+
+
+def test_pool_development_and_mutation():
+    from darwin import pool as P
+    rng = np.random.default_rng(0)
+    cells = P.develop([[P.PHOTO, 0, 0, 1], [P.MOUTH, 0, 0, 2], [P.EYE, 1, 1, 1], [P.FLAG, 0, 2, 1]])
+    assert len(cells) == 5 and len({(x, y) for x, y, _ in cells}) == 5
+    n, cnt, expo = P.phenotype(cells)
+    assert n == 5 and cnt[P.MOUTH] == 2 and 0 < expo <= 1
+    g = P.new_genome(rng)
+    lens = set()
+    for _ in range(300):
+        g = P.mutate(g, rng)
+        lens.add(len(g["body"]))
+        assert len(P.develop(g["body"])) <= P.MAX_CELLS
+    assert max(lens) > 1                       # duplication/insertion can grow genomes
+    k = P.crossover(g, P.new_genome(rng), rng)
+    assert k["brain"].shape == (P.NW,)
+
+
+def test_pool_runs_checkpoints_and_serves(client):
+    from darwin import pool as P
+    p = P.Pool(1, 7)
+    for _ in range(P.STATS_EVERY):
+        p.step()
+    assert p.last_stats and p.last_stats["population"] > 0 and p.births > P.START
+    q = P.from_blob(P.to_blob(p))
+    assert q.tick == p.tick and int(q.alive.sum()) == int(p.alive.sum())
+    q.step()
+    P.write_live(p, [p.frame()])
+    d = client.get("/darwin/api/pool").get_json()
+    assert d["tick"] == p.tick and d["frames"][0]["c"] and str(d["frames"][0]["c"][0][4]) in d["plans"]
+    assert client.get("/darwin/pool").status_code == 200
+    assert isinstance(client.get("/darwin/api/pool/history").get_json(), list)

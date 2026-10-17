@@ -255,3 +255,19 @@ table.t td a.mono, table.t td .mono { white-space: nowrap; }
 .card, .grid > * { min-width: 0; }
 .dw-nav { min-width: 0; }
 table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; }
+
+/* ── tidal pool ───────────────────────────────────────────────────────── */
+.pool-legend { position: absolute; left: 12px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 4px 10px; max-width: calc(100% - 24px);
+  font: 500 10.5px var(--dw-mono); color: rgba(230, 240, 236, .78); }
+.pool-legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: var(--c); vertical-align: -1px; }
+.clock { font: 600 34px var(--dw-sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.ms { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.ms:last-child { border-bottom: 0; }
+.ms .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--md-sys-color-outline); }
+.ms.done .dot { background: var(--dw-green); border-color: var(--dw-green); }
+.ms.pending { opacity: .55; }
+.ms canvas { width: 54px; height: 40px; }
+.sp-row canvas { width: 46px; height: 34px; vertical-align: middle; }
+.bar-mix { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 8px 0; }
+.chart { width: 100%; height: 200px; display: block; }

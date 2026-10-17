@@ -1,0 +1,167 @@
+{% extends "darwin/base.html" %}
+{% block title %}Tidal Pool — DARWIN{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <div class="terrarium" id="terra">
+      <canvas id="pool" aria-label="The tidal pool, a live open-ended evolution simulation"></canvas>
+      <div class="terra-tag" id="terra-tag"><i></i><span>connecting</span></div>
+      <div class="pool-legend" id="legend"></div>
+    </div>
+    <p class="small muted" style="margin:8px 2px 0">
+      Every creature is drawn from the body its own genes grew, cell by cell. The bright stripe is sunlit water,
+      teal glows are nutrient upwellings, brown specks are dead matter. Shared by every visitor and running around the clock.
+    </p>
+  </div>
+  <div>
+    <p class="eyebrow" id="era-line">The tidal pool · {{ version }}</p>
+    <div class="clock" id="clock">—</div>
+    <p class="small muted" style="margin:4px 0 14px" id="clock-n">of evolution so far</p>
+    <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+      <div class="card flat metric"><div class="k">Population</div><div class="v" id="m-pop">—</div><div class="n" id="m-pop-n"></div></div>
+      <div class="card flat metric"><div class="k">Species</div><div class="v" id="m-sp">—</div><div class="n" id="m-sp-n">effective number (Shannon)</div></div>
+      <div class="card flat metric"><div class="k">Most complex body</div><div class="v" id="m-cx">—</div><div class="n" id="m-cx-n"></div></div>
+      <div class="card flat metric"><div class="k">Food chain</div><div class="v" id="m-tl">—</div><div class="n" id="m-tl-n">trophic levels</div></div>
+    </div>
+    <div class="card flat" style="margin-top:10px">
+      <div class="row" style="justify-content:space-between"><h3 style="margin:0">Cells in use</h3><span class="small muted" id="m-roles"></span></div>
+      <div class="bar-mix" id="mix"></div>
+      <div class="small muted" id="mix-t"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2 style="margin-top:0">The road to complexity</h2>
+    <p class="small muted" style="margin-top:-4px">Each is recorded the first time it is established (a whole species or a real share of the population, five samples in a row). None are scripted.</p>
+    <div id="milestones">
+      {% for m in milestones %}<div class="ms pending" data-k="{{ m.key }}"><span class="dot"></span><span>{{ m.title }}</span><span class="small muted mono">not yet</span></div>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">Most complex creature alive</h2>
+    <div class="row" style="gap:16px;align-items:center">
+      <canvas id="ex" style="width:140px;height:140px;border-radius:12px;background:#0d1714"></canvas>
+      <div class="small" id="ex-t">—</div>
+    </div>
+    <h3 style="margin-top:18px">Leading species</h3>
+    <div class="scroll-x"><table class="t small" id="species"></table></div>
+  </div>
+</section>
+
+<section class="section card">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">Deep time</h2><span class="small muted">x axis: generations · 1,000 generations = 1 million years</span></div>
+  <div class="grid g2" style="margin-top:10px">
+    <div><h3>Body complexity</h3><svg class="chart" id="c-cx"></svg><div class="legend small" id="l-cx"></div></div>
+    <div><h3>Biodiversity</h3><svg class="chart" id="c-sp"></svg><div class="legend small" id="l-sp"></div></div>
+    <div><h3>Ways of living</h3><svg class="chart" id="c-role"></svg><div class="legend small" id="l-role"></div></div>
+    <div><h3>Food-chain depth and genome length</h3><svg class="chart" id="c-tl"></svg><div class="legend small" id="l-tl"></div></div>
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2 style="margin-top:0">Catastrophes</h2>
+    <p class="small muted" style="margin-top:-4px">Rare impacts, ice ages, hothouses and anoxic events, mostly small, occasionally severe.</p>
+    <table class="t small" id="cat"></table>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">How the pool works</h2>
+    <ul class="small" style="padding-left:18px;margin:0">
+      <li><b>Bodies are grown, not designed.</b> A genome is a list of genes; each adds a cell of one of nine types next to an existing cell. Genes can be duplicated, deleted, inserted or repurposed, so bodies can grow without limit (up to 64 cells for now).</li>
+      <li><b>Cells specialise:</b> photo (light to energy), mouth (eat dead matter or other creatures), flagellum (swim), eye (see further), armour, store (energy reserve), neuron (a bigger brain), gonad (sex), skin.</li>
+      <li><b>A real food web.</b> Light feeds producers, corpses feed grazers, and any mouth can attack: success depends on attack against defence, and bigger bodies are harder to eat.</li>
+      <li><b>Bigger bodies run cheaper per cell</b> (metabolism scales with size to the ¾ power, as in living things) but cost more to build.</li>
+      <li><b>The world keeps changing</b> on many clocks: day and night, seasons, a drifting sunlit band, temperature, ocean current and upwellings, slow orbital cycles and rare catastrophes.</li>
+      <li><b>Waste and corpses fertilise the water</b>, so what lives in a place changes what can live there next.</li>
+      <li><b>The clock is declared, not measured:</b> 1 generation = {{ years_per_gen }} years, so a billion years is a million generations. At the current speed that is about six weeks of running.</li>
+    </ul>
+    <p class="small muted" id="archive" style="margin-bottom:0"></p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/darwin/pool.js?v=1"></script>
+<script>
+(function () {
+  const D = Darwin, MS = {{ milestones|tojson }};
+  const col = t => `rgb(${D.CELL_COLORS[t].join(',')})`;
+  document.getElementById('legend').innerHTML = D.CELL_LABELS.map((n, t) => `<span style="--c:${col(t)}">${n}</span>`).join('');
+  let lastEx = null;
+  function onData(d) {
+    const s = d.stats || {};
+    document.getElementById('era-line').textContent = `The tidal pool · era ${d.era} · ${d.version}`;
+    document.getElementById('clock').textContent = D.geo(d.geo_ma);
+    document.getElementById('clock-n').textContent = `of evolution · mean generation ${D.num(s.mean_generation, 1)} · deepest line ${D.num(s.max_generation, 0)}`;
+    document.getElementById('m-pop').textContent = D.num(s.population, 0);
+    document.getElementById('m-pop-n').textContent = s.births != null ? `${s.births.toLocaleString()} births · ${s.kills.toLocaleString()} eaten` : '';
+    document.getElementById('m-sp').textContent = D.num(s.species_eff, 1);
+    document.getElementById('m-sp-n').textContent = `effective number · ${D.num(s.species, 0)} lineages alive`;
+    document.getElementById('m-cx').textContent = s.cells_max != null ? `${s.cells_max} cells` : '—';
+    document.getElementById('m-cx-n').textContent = s.types_max != null ? `up to ${s.types_max} cell types in one body · mean ${D.num(s.cells_mean, 2)} cells` : '';
+    document.getElementById('m-tl').textContent = D.num(s.trophic_max, 1);
+    document.getElementById('m-roles').textContent = s.population ? `${Math.round(s.producers * 100)}% producers · ${Math.round(s.grazers * 100)}% grazers · ${Math.round(s.predators * 100)}% predators` : '';
+    if (s.cell_mix) {
+      const tot = Object.values(s.cell_mix).reduce((a, b) => a + b, 0) || 1;
+      document.getElementById('mix').innerHTML = D.CELL_LABELS.map((n, t) => `<div title="${n}" style="width:${(s.cell_mix[n] || 0) / tot * 100}%;background:${col(t)}"></div>`).join('');
+      document.getElementById('mix-t').textContent = D.CELL_LABELS.filter(n => s.cell_mix[n]).map(n => `${n} ${Math.round(s.cell_mix[n] / tot * 100)}%`).join(' · ');
+    }
+    const done = {}; (d.milestones || []).forEach(m => done[m.key] = m);
+    document.querySelectorAll('.ms').forEach(el => {
+      const m = done[el.dataset.k];
+      if (m && !el.classList.contains('done')) {
+        el.classList.remove('pending'); el.classList.add('done');
+        el.lastElementChild.innerHTML = `${D.geo(m.geo_ma)}<br><span class="muted">${D.esc((m.exemplar || {}).name || '')}</span>`;
+      }
+    });
+    const ex = d.exemplar;
+    if (ex && JSON.stringify(ex.body) !== lastEx) {
+      lastEx = JSON.stringify(ex.body);
+      D.bodyThumb(document.getElementById('ex'), ex.body, 120);
+      document.getElementById('ex-t').innerHTML = `<b><i>${D.esc(ex.name || '')}</i></b><br>${ex.cells} cells: ${Object.entries(ex.cell_counts).map(([k, v]) => `${v} ${k}`).join(', ')}<br>
+        generation ${ex.generation.toLocaleString()} · trophic level ${ex.trophic}`;
+    }
+    const sp = d.species || [];
+    document.getElementById('species').innerHTML = '<tr><th></th><th>species</th><th>alive</th><th>cells</th><th>way of life</th><th>age</th></tr>' +
+      sp.map((r, i) => `<tr class="sp-row"><td><canvas data-i="${i}"></canvas></td><td><i>${D.esc(r.name)}</i></td><td>${r.count}</td><td>${r.cells}</td><td>${r.role}</td><td class="small muted">${D.geo(r.age_ma)}</td></tr>`).join('');
+    document.querySelectorAll('#species canvas').forEach(c => { const r = sp[+c.dataset.i]; D.bodyThumb(c, (d.plans || {})[r.plan], r.hue * 360); });
+    document.getElementById('cat').innerHTML = (d.catastrophes || []).length ?
+      '<tr><th>when</th><th>event</th><th>severity</th><th>killed</th></tr>' + d.catastrophes.slice().reverse().map(c => `<tr><td>${D.geo(c.geo_ma)}</td><td>${D.esc(c.kind)}</td><td>${Math.round(c.severity * 100)}%</td><td>${c.killed}</td></tr>`).join('')
+      : '<tr><td class="muted">None yet. They are rare: about one every three million ticks.</td></tr>';
+  }
+  D.PoolView({ canvas: document.getElementById('pool'), tag: document.getElementById('terra-tag'), onData });
+
+  function legend(id, series) { document.getElementById(id).innerHTML = series.map(s => `<span><i style="--c:${s.color}"></i>${D.esc(s.name)}</span>`).join(' '); }
+  async function charts() {
+    try {
+      const h = await D.api('/darwin/api/pool/history?limit=500');
+      const xs = h.map(r => r.mean_generation || 0);
+      const p = D.css('--md-sys-color-primary'), t = D.css('--md-sys-color-tertiary'), o = D.css('--md-sys-color-outline');
+      const S1 = [{ name: 'largest body (cells)', color: p, values: h.map(r => r.cells_max), xs },
+                  { name: '90th percentile', color: t, values: h.map(r => r.cells_p90), xs },
+                  { name: 'most cell types', color: 'rgb(170,120,235)', values: h.map(r => r.types_max), xs }];
+      D.lineChart(document.getElementById('c-cx'), S1, { yMin: 0, xLabel: 'generation' }); legend('l-cx', S1);
+      const S2 = [{ name: 'species (effective)', color: p, values: h.map(r => r.species_eff), xs },
+                  { name: 'population / 50', color: o, values: h.map(r => r.population / 50), xs, dash: '4 4' }];
+      D.lineChart(document.getElementById('c-sp'), S2, { yMin: 0, xLabel: 'generation' }); legend('l-sp', S2);
+      const S3 = [{ name: 'producers', color: 'rgb(92,201,120)', values: h.map(r => r.producers), xs },
+                  { name: 'grazers', color: 'rgb(150,110,70)', values: h.map(r => r.grazers), xs },
+                  { name: 'predators', color: 'rgb(235,96,82)', values: h.map(r => r.predators), xs },
+                  { name: 'swimmers', color: o, values: h.map(r => r.motile_share), xs, dash: '4 4' }];
+      D.lineChart(document.getElementById('c-role'), S3, { yMin: 0, yMax: 1, xLabel: 'generation' }); legend('l-role', S3);
+      const S4 = [{ name: 'food-chain depth', color: 'rgb(235,96,82)', values: h.map(r => r.trophic_max), xs },
+                  { name: 'mean genome length (genes)', color: p, values: h.map(r => r.genome_mean), xs }];
+      D.lineChart(document.getElementById('c-tl'), S4, { yMin: 0, xLabel: 'generation' }); legend('l-tl', S4);
+    } catch (e) { }
+    setTimeout(charts, 60000);
+  }
+  charts();
+  D.api('/darwin/api/pool/archive').then(a => {
+    if (a.archived && a.record) document.getElementById('archive').textContent =
+      `Before this pool: Darwin World era ${a.record.era} (life-1.0, dots with ten genes) ran to tick ${a.record.tick.toLocaleString()} and generation ${(a.record.stats || {}).max_generation}. It is archived with its last checkpoint and full history, and can be resumed.`;
+  }).catch(() => {});
+})();
+</script>
+{% endblock %}
