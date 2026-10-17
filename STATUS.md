@@ -2,6 +2,25 @@
 
 Last updated: 2026-10-14
 
+## DARWIN Tidal Pool life-3.0 (2026-10-17) — open-ended evolution toward complex creatures
+- `darwin/pool.py`, page `/darwin/pool`, also the homepage hero. Runs in its own process (`python -m darwin.pool run`,
+  started by the web worker via `web.ensure_pool()`, advisory lock 774414), up to DARWIN_POOL_TPS (default 200)
+  ticks/s, ~one vCPU. Checkpoint every 30 s (darwin_pool_checkpoints, keeps 3), stats every 2,400 ticks
+  (darwin_pool_stats), live frames every 0.5 s (darwin_pool_live row 1) read by `/darwin/api/pool`.
+- Model: genome = list of body genes [cell type, attach-to, direction, repeat] grown by a developmental program
+  (max 64 cells) + a 16-8-4 neural controller (hidden units unlocked by neuron cells) + traits (repro threshold,
+  temperature optimum, evolvable mutation rate, hue). Mutations: point, duplication, deletion, insertion; sex with
+  crossover for gonad-bearers within a species. Nine cell types: skin, photo, mouth, flagellum, eye, armour, store,
+  neuron, gonad. Light band + day/night + seasons + drifting climate/current/upwellings + orbital cycle + rare
+  catastrophes; nutrient/detritus fields with recycling; patch light competition (others' cells only), crowding
+  cost, Kleiber metabolism (n^0.75), size refuge from predation. Species split at genetic distance 0.55 from founder.
+- Clock: 1 generation = 1,000 years (declared). Milestones (15) need a species or a population share for 5 samples.
+- Calibration (local, Oct 17): runs stay alive; mean body size climbed from 1 to ~10 cells within ~150
+  generations in one seed and rose/fell in another. Live era 5 started 03:5x UTC; at gen ~120: 17-cell bodies,
+  6 cell types, eyes 9%, predators 12%. Watch for low-population extinction (reseeds 30 founders if < 4 alive).
+- Era 4 (life-1.0 world_live) archived: ARCHIVED = True in world_live.py; thread still runs the scheduler.
+- Railway watch patterns now skip root *.md changes, so STATUS edits don't redeploy (and kill benchmarks).
+
 ## DARWIN Web Lab (2026-10-16) — Darwin evolves audit strategies for Codestroller
 - `/darwin/lab/web`. Darwin generates test shops (`darwin/weblab/shop.py`, bench `shop-2+judge-2`) with planted
   usability defects D01–D18 mapped to Nielsen heuristics + severity (`defects.py`; D12/D16/D17/D18 held-out only) and
