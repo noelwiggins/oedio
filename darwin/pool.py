@@ -210,7 +210,7 @@ class Pool:
         self.W = np.zeros((CAP, NW), np.float32)
         self.genomes = [None] * CAP
         self.plans, self.plan_ids, self.next_pid = {}, {}, 1
-        self.clock_gen, self.last_mg, self.restarts = 0.0, 0.0, 0
+        self.clock_gen, self.last_mg, self.restarts, self.bank, self.seg_peak = 0.0, 0.0, 0, 0.0, 0.0
         self.spec = {}          # species id -> {founder cnt, brain, name, born_tick, born_gen, parent}
         self.next_sid = 1
         self.N = np.full((GRID, GRID), 3.0, np.float32)    # dissolved nutrient
@@ -381,6 +381,8 @@ class Pool:
             for _ in range(30):
                 self._spawn(new_genome(rng), rng.uniform(0, ARENA), rng.uniform(0, ARENA), 0, None, 6.0)
             self.restarts += 1
+            self.bank += self.seg_peak          # bank the time evolved before the near-extinction
+            self.seg_peak = 0.0
             ev = {"tick": int(t), "kind": "near-extinction · life re-seeded", "severity": 1.0, "killed": 0,
                   "geo_ma": self.geo_ma()}
             self.events.append(ev)
@@ -570,12 +572,12 @@ class Pool:
 
     # ── measurement ───────────────────────────────────────────────────
     def _advance_clock(self):
-        """Deep time only moves forward: it adds the population's progress in mean generation, so a re-seed
-        after a near-extinction (founders start at generation 0) does not wind the clock back."""
+        """Deep time only moves forward: the furthest the mean generation has reached since the last re-seed,
+        plus the time banked before each near-extinction (founders restart at generation 0)."""
         a = self.alive
         mg = float(self.gen[a].mean()) if a.any() else 0.0
-        if mg > self.last_mg:
-            self.clock_gen += mg - self.last_mg
+        self.seg_peak = max(self.seg_peak, mg)
+        self.clock_gen = self.bank + self.seg_peak
         self.last_mg = mg
 
     def _prune(self):
@@ -741,28 +743,31 @@ def from_blob(b: bytes) -> Pool:
     # migrate checkpoints written by older code
     if not hasattr(p, "next_pid"):
         p.next_pid = max(p.plans, default=0) + 1
-    if not hasattr(p, "clock_gen"):
-        p.clock_gen, p.restarts = _clock_from_history(p.era), 0
+    if not hasattr(p, "bank"):
+        p.bank, p.seg_peak = _clock_from_history(p.era)
+        p.clock_gen = p.bank + p.seg_peak
+        p.restarts = getattr(p, "restarts", 0)
         a = p.alive
         p.last_mg = float(p.gen[a].mean()) if a.any() else 0.0
     return p
 
 
 def _clock_from_history(era):
-    """Rebuild deep time from the recorded stats: the sum of every forward step in mean generation."""
+    """Rebuild deep time from the recorded stats: the peak mean generation of each stretch between re-seeds, added up."""
     try:
         with S.engine().connect() as c:
             rows = c.execute(sa.select(S.pool_stats.c.stats).where(S.pool_stats.c.era == era)
                              .order_by(S.pool_stats.c.id)).scalars().all()
     except Exception:
-        return 0.0
-    total, last = 0.0, 0.0
+        return 0.0, 0.0
+    bank, peak = 0.0, 0.0
     for r in rows:
         mg = (json.loads(r) or {}).get("mean_generation") or 0.0
-        if mg > last:
-            total += mg - last
-        last = mg
-    return total
+        if peak > 50 and mg < 0.3 * peak:      # a re-seed: bank the segment
+            bank, peak = bank + peak, mg
+        else:
+            peak = max(peak, mg)
+    return bank, peak
 
 
 def _ledger(kind, payload, **kw):
