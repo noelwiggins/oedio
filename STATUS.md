@@ -18,6 +18,12 @@ Last updated: 2026-10-14
 - Calibration (local, Oct 17): runs stay alive; mean body size climbed from 1 to ~10 cells within ~150
   generations in one seed and rose/fell in another. Live era 5 started 03:5x UTC; at gen ~120: 17-cell bodies,
   6 cell types, eyes 9%, predators 12%. Watch for low-population extinction (reseeds 30 founders if < 4 alive).
+- Oct 18 fixes: body-plan and species registries grew without bound (pickled every 30 s), slowing the pool to ~7
+  ticks/s and making the page show "paused"; now pruned (back to ~190 ticks/s). A severe ice age at ~11 Ma (Oct 17
+  19:11 UTC) nearly wiped out life (4 re-seeds); ice ages/hothouses are now half as strong and temperature cost is
+  capped. Deep-time clock no longer resets on re-seed (banks each stretch's peak); rebuilt to ~17.3 Ma.
+- Railway watchPatterns are now an explicit positive list (code/templates/static/etc.); negation patterns made
+  Railway SKIP every deploy.
 - Era 4 (life-1.0 world_live) archived: ARCHIVED = True in world_live.py; thread still runs the scheduler.
 - Railway watch patterns now skip root *.md changes, so STATUS edits don't redeploy (and kill benchmarks).
 
