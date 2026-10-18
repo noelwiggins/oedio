@@ -209,7 +209,8 @@ class Pool:
         self.repro, self.temp, self.hidden = z(), z(), z(np.int8)
         self.W = np.zeros((CAP, NW), np.float32)
         self.genomes = [None] * CAP
-        self.plans, self.plan_ids = {}, {}
+        self.plans, self.plan_ids, self.next_pid = {}, {}, 1
+        self.clock_gen, self.last_mg, self.restarts = 0.0, 0.0, 0
         self.spec = {}          # species id -> {founder cnt, brain, name, born_tick, born_gen, parent}
         self.next_sid = 1
         self.N = np.full((GRID, GRID), 3.0, np.float32)    # dissolved nutrient
@@ -229,7 +230,8 @@ class Pool:
         key = tuple(sorted(cells))
         pid = self.plan_ids.get(key)
         if pid is None:
-            pid = len(self.plan_ids) + 1
+            pid = self.next_pid
+            self.next_pid += 1
             self.plan_ids[key] = pid
             self.plans[pid] = [list(c) for c in cells]
         return pid
@@ -338,10 +340,10 @@ class Pool:
             killed = len(hit)
             self._die(hit)
         elif kind == "ice age":
-            self.clim["shock_temp"] = -1.2 * sev
+            self.clim["shock_temp"] = -0.6 * sev
             self.clim["shock_until"] = self.tick + int(60000 * sev)
         elif kind == "hothouse":
-            self.clim["shock_temp"] = 1.0 * sev
+            self.clim["shock_temp"] = 0.5 * sev
             self.clim["shock_until"] = self.tick + int(60000 * sev)
         else:
             self.N *= (1 - 0.8 * sev)
@@ -378,7 +380,11 @@ class Pool:
         if len(a) < 4:
             for _ in range(30):
                 self._spawn(new_genome(rng), rng.uniform(0, ARENA), rng.uniform(0, ARENA), 0, None, 6.0)
-            _ledger("pool.reseeded", {"era": self.era, "tick": int(t), "survivors": int(len(a))})
+            self.restarts += 1
+            ev = {"tick": int(t), "kind": "near-extinction · life re-seeded", "severity": 1.0, "killed": 0,
+                  "geo_ma": self.geo_ma()}
+            self.events.append(ev)
+            _ledger("pool.reseeded", {"era": self.era, "tick": int(t), "survivors": int(len(a)), "geo_ma": ev["geo_ma"]})
             a = np.flatnonzero(self.alive)
         n = len(a)
         x, y, hd = self.x[a], self.y[a], self.hd[a]
@@ -467,7 +473,7 @@ class Pool:
         g_photo = 0.9 * self.expo[a] * L * nutf * shade
         mouth = self.cnt[a, MOUTH].astype(np.float32)
         g_det = np.where(eat > 0.3, np.minimum(Dc * 0.15, 0.06 * mouth), 0.0)
-        cost = self.metab[a] * (1 + 0.4 * temp_mis ** 2) * crowd + 0.004 * v * self.n[a]
+        cost = self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * crowd + 0.004 * v * self.n[a]
         np.subtract.at(self.N, (gy, gx), g_photo * 0.5)
         np.subtract.at(self.D, (gy, gx), g_det)
         np.add.at(self.N, (gy, gx), cost * 0.6)
@@ -555,16 +561,40 @@ class Pool:
                     break
         self.tick += 1
         if self.tick % STATS_EVERY == 0:
+            self._advance_clock()
+            self._prune()
             self.last_stats = self.stats()
             self._milestones(self.last_stats)
             return self.last_stats
         return None
 
     # ── measurement ───────────────────────────────────────────────────
-    def geo_ma(self):
+    def _advance_clock(self):
+        """Deep time only moves forward: it adds the population's progress in mean generation, so a re-seed
+        after a near-extinction (founders start at generation 0) does not wind the clock back."""
         a = self.alive
-        g = float(self.gen[a].mean()) if a.any() else 0.0
-        return round(g * YEARS_PER_GEN / 1e6, 3)
+        mg = float(self.gen[a].mean()) if a.any() else 0.0
+        if mg > self.last_mg:
+            self.clock_gen += mg - self.last_mg
+        self.last_mg = mg
+
+    def _prune(self):
+        """Forget body plans and species nobody alive (or any milestone) refers to, so state stays small."""
+        a = np.flatnonzero(self.alive)
+        keep = set(int(x) for x in np.unique(self.plan[a]))
+        for m in self.milestones.values():
+            if m.get("exemplar"):
+                keep.add(int(m["exemplar"]["plan"]))
+        if len(self.plans) > len(keep) * 2 + 500:
+            self.plans = {k: v for k, v in self.plans.items() if k in keep}
+            self.plan_ids = {k: v for k, v in self.plan_ids.items() if v in keep}
+        alive_sp = set(int(x) for x in np.unique(self.species[a]))
+        keep_sp = alive_sp | {self.spec[s_]["parent"] for s_ in alive_sp if s_ in self.spec and self.spec[s_]["parent"]}
+        if len(self.spec) > len(keep_sp) * 2 + 500:
+            self.spec = {k: v for k, v in self.spec.items() if k in keep_sp}
+
+    def geo_ma(self):
+        return round(self.clock_gen * YEARS_PER_GEN / 1e6, 3)
 
     def stats(self):
         a = np.flatnonzero(self.alive)
@@ -583,7 +613,7 @@ class Pool:
         glen = np.array([len(self.genomes[i]["body"]) for i in a])
         out.update({
             "mean_generation": round(float(self.gen[a].mean()), 2), "max_generation": int(self.gen[a].max()),
-            "geo_ma": round(float(self.gen[a].mean()) * YEARS_PER_GEN / 1e6, 3),
+            "geo_ma": self.geo_ma(), "clock_generations": round(self.clock_gen, 1), "restarts": self.restarts,
             "cells_mean": round(float(ncell.mean()), 3), "cells_max": int(ncell.max()),
             "cells_p90": float(np.percentile(ncell, 90)),
             "types_max": int(types.max()), "types_mean": round(float(types.mean()), 3),
@@ -707,7 +737,32 @@ def to_blob(p: Pool) -> bytes:
 
 
 def from_blob(b: bytes) -> Pool:
-    return pickle.loads(zlib.decompress(b))
+    p = pickle.loads(zlib.decompress(b))
+    # migrate checkpoints written by older code
+    if not hasattr(p, "next_pid"):
+        p.next_pid = max(p.plans, default=0) + 1
+    if not hasattr(p, "clock_gen"):
+        p.clock_gen, p.restarts = _clock_from_history(p.era), 0
+        a = p.alive
+        p.last_mg = float(p.gen[a].mean()) if a.any() else 0.0
+    return p
+
+
+def _clock_from_history(era):
+    """Rebuild deep time from the recorded stats: the sum of every forward step in mean generation."""
+    try:
+        with S.engine().connect() as c:
+            rows = c.execute(sa.select(S.pool_stats.c.stats).where(S.pool_stats.c.era == era)
+                             .order_by(S.pool_stats.c.id)).scalars().all()
+    except Exception:
+        return 0.0
+    total, last = 0.0, 0.0
+    for r in rows:
+        mg = (json.loads(r) or {}).get("mean_generation") or 0.0
+        if mg > last:
+            total += mg - last
+        last = mg
+    return total
 
 
 def _ledger(kind, payload, **kw):

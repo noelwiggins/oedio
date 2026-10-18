@@ -83,7 +83,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/darwin/pool.js?v=1"></script>
+<script src="/static/darwin/pool.js?v=2"></script>
 <script>
 (function () {
   const D = Darwin, MS = {{ milestones|tojson }};
@@ -137,7 +137,8 @@
   async function charts() {
     try {
       const h = await D.api('/darwin/api/pool/history?limit=500');
-      const xs = h.map(r => r.mean_generation || 0);
+      let acc = 0, last = 0;   // deep time only moves forward (a re-seed restarts mean generation at 0)
+      const xs = h.map(r => { const mg = r.mean_generation || 0; if (mg > last) acc += mg - last; last = mg; return r.clock_generations != null ? r.clock_generations : acc; });
       const p = D.css('--md-sys-color-primary'), t = D.css('--md-sys-color-tertiary'), o = D.css('--md-sys-color-outline');
       const S1 = [{ name: 'largest body (cells)', color: p, values: h.map(r => r.cells_max), xs },
                   { name: '90th percentile', color: t, values: h.map(r => r.cells_p90), xs },

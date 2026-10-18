@@ -98,7 +98,7 @@
           prev = cur; cur = f; tPrev = tCur; tCur = performance.now();
           if (prev && f.t < prev.t) prev = null;
         }
-        setTag(d.stale ? '' : 'live', d.stale ? 'paused · the pool process is restarting' :
+        setTag(d.stale ? '' : 'live', d.stale ? 'catching up · the pool is saving or restarting' :
           `live · ${D.geo(d.geo_ma)} · tick ${d.tick.toLocaleString()}`);
         if (opts.onData) opts.onData(d);
       } catch (e) {
