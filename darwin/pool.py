@@ -71,6 +71,10 @@ STATS_EVERY = 2400
 K_NEAR = 8
 SENSE_MAX = 30.0
 MIN_AGE = 30
+BASINS = 3                 # the pool is split into basins by reefs; narrow straits let life through
+BASIN_W = ARENA / BASINS
+GAP_H = 18.0               # height of each strait in the reef
+JUVENILE = 300             # ticks during which a parent with care can feed its young
 
 SKIN, PHOTO, MOUTH, FLAG, EYE, ARMOR, STORE, NEURON, GONAD = range(9)
 NT = 9
@@ -91,7 +95,7 @@ def new_genome(rng, root=None):
     root = root if root is not None else (PHOTO if rng.random() < 0.7 else MOUTH)
     return {"body": [[root, 0, 0, 1]], "brain": random_brain(rng),
             "repro": float(rng.uniform(0.45, 0.65)), "temp": float(rng.uniform(-0.3, 0.3)),
-            "mut": 1.0, "hue": float(rng.random())}
+            "mut": 1.0, "hue": float(rng.random()), "warm": 0.0, "care": 0.0}
 
 
 def develop(body):
@@ -157,7 +161,10 @@ def mutate(g, rng):
             "repro": float(np.clip(g["repro"] + rng.normal(0, 0.02), 0.3, 0.95)),
             "temp": float(np.clip(g["temp"] + rng.normal(0, 0.04), -1.5, 1.5)),
             "mut": float(np.clip(g["mut"] * math.exp(rng.normal(0, 0.05)), 0.25, 4.0)),
-            "hue": float((g["hue"] + rng.normal(0, 0.01)) % 1.0)}
+            "hue": float((g["hue"] + rng.normal(0, 0.01)) % 1.0),
+            # warm-bloodedness and parental care: costly traits that start at zero and must pay their way
+            "warm": float(np.clip(g.get("warm", 0.0) + (rng.normal(0, 0.04) if r(0.15) else 0.0), 0.0, 1.0)),
+            "care": float(np.clip(g.get("care", 0.0) + (rng.normal(0, 0.04) if r(0.15) else 0.0), 0.0, 1.0))}
 
 
 def crossover(a, b, rng):
@@ -168,7 +175,8 @@ def crossover(a, b, rng):
     pick = rng.random(NW) < 0.5
     return {"body": body, "brain": np.where(pick, a["brain"], b["brain"]).astype(np.float32),
             "repro": (a["repro"] + b["repro"]) / 2, "temp": (a["temp"] + b["temp"]) / 2,
-            "mut": math.sqrt(a["mut"] * b["mut"]), "hue": a["hue"]}
+            "mut": math.sqrt(a["mut"] * b["mut"]), "hue": a["hue"],
+            "warm": (a.get("warm", 0.0) + b.get("warm", 0.0)) / 2, "care": (a.get("care", 0.0) + b.get("care", 0.0)) / 2}
 
 
 # ── names ────────────────────────────────────────────────────────────────
@@ -188,6 +196,10 @@ def species_name(sid, cnt, n):
 
 
 # ── the world ────────────────────────────────────────────────────────────
+def basin_of(x):
+    return (np.asarray(x) // BASIN_W).astype(np.int64) % BASINS
+
+
 def _wrap(d):
     return (d + ARENA / 2) % ARENA - ARENA / 2
 
@@ -208,6 +220,8 @@ class Pool:
         self.emax, self.metab, self.vmax, self.sense, self.att, self.dfn, self.rad = z(), z(), z(), z(), z(), z(), z()
         self.repro, self.temp, self.hidden = z(), z(), z(np.int8)
         self.W = np.zeros((CAP, NW), np.float32)
+        self.warm, self.care = z(), z()
+        self.mom, self.mom_uid, self.fed_until = np.full(CAP, -1, np.int64), z(np.int64), z(np.int64)
         self.genomes = [None] * CAP
         self.plans, self.plan_ids, self.next_pid = {}, {}, 1
         self.clock_gen, self.last_mg, self.restarts, self.bank, self.seg_peak = 0.0, 0.0, 0, 0.0, 0.0
@@ -217,7 +231,8 @@ class Pool:
         self.D = np.zeros((GRID, GRID), np.float32)        # dead matter (detritus)
         self.clim = {"band": ARENA / 2, "width": 55.0, "temp": 0.0, "cur": float(self.rng.uniform(0, 6.283)),
                      "up": [[float(self.rng.uniform(0, ARENA)), float(self.rng.uniform(0, ARENA))] for _ in range(4)],
-                     "shock_temp": 0.0, "shock_until": 0}
+                     "shock_temp": 0.0, "shock_until": 0,
+                     "gaps": [float(self.rng.uniform(0, ARENA)) for _ in range(BASINS)]}
         self.milestones = {}
         self.ms_streak = {}
         self.events = []        # catastrophes etc., kept in state for the timeline
@@ -250,7 +265,7 @@ class Pool:
                           "born": self.tick, "born_gen": int(gen), "parent": parent_sid}
         return sid
 
-    def _spawn(self, g, x, y, gen, parent_sid, energy, tl=1.0):
+    def _spawn(self, g, x, y, gen, parent_sid, energy, tl=1.0, mom=-1):
         free = np.flatnonzero(~self.alive)
         if not len(free):
             return None
@@ -280,6 +295,10 @@ class Pool:
         self.temp[i] = g["temp"]
         self.hidden[i] = min(H, 2 + 2 * int(c[NEURON]))
         self.W[i] = g["brain"]
+        self.warm[i], self.care[i] = g.get("warm", 0.0), g.get("care", 0.0)
+        self.mom[i] = mom
+        self.mom_uid[i] = self.uid[mom] if mom >= 0 else 0
+        self.fed_until[i] = 0
         self.tl[i] = tl
         self.s_photo[i], self.s_det[i], self.s_pred[i] = (1.0, 0.0, 0.0) if c[PHOTO] else (0.0, 1.0, 0.0)  # priors; real income takes over
         self.plan[i] = self._plan_id(cells)
@@ -318,6 +337,8 @@ class Pool:
         c["width"] = float(np.clip(c["width"] + rng.normal(0, 0.8), 30, 90))
         c["temp"] = float(np.clip(0.995 * c["temp"] + rng.normal(0, 0.02), -1, 1))
         c["cur"] = float((c["cur"] + rng.normal(0, 0.06)) % 6.283)
+        c.setdefault("gaps", [float(rng.uniform(0, ARENA)) for _ in range(BASINS)])
+        c["gaps"] = [float((gp + rng.normal(0, 2.0)) % ARENA) for gp in c["gaps"]]
         for u in c["up"]:
             u[0] = (u[0] + rng.normal(0, 1.5)) % ARENA
             u[1] = (u[1] + rng.normal(0, 1.5)) % ARENA
@@ -418,7 +439,8 @@ class Pool:
         sense = self.sense[a][:, None]
         att, dfn, sp = self.att[a], self.dfn[a], self.species[a]
         rad = self.rad[a]
-        within = valid & (dist <= sense + rad[idx])
+        bas = basin_of(x)
+        within = valid & (dist <= sense + rad[idx]) & (bas[idx] == bas[:, None])   # reefs block sight and reach
         can_eat = within & (att[:, None] > dfn[idx])
         threat = within & (att[idx] > dfn[:, None])
         mate = within & (sp[idx] == sp[:, None]) & (self.cnt[a][idx][..., GONAD] > 0)
@@ -444,7 +466,8 @@ class Pool:
         plx, ply, pp = local(jp, hp, dp)
         tlx, tly, tp = local(jt, ht, dt_)
         gyL = (self.light(y + 3, t) - self.light(y - 3, t)) * 3
-        temp_mis = Tm - self.temp[a]
+        warm = self.warm[a]
+        temp_mis = (Tm - self.temp[a]) * (1.0 - 0.9 * warm)       # warm-blooded bodies hold their own temperature
         efrac = self.energy[a] / self.emax[a]
         inp = np.stack([np.ones(n), efrac, L, np.tanh(Nc / 5), np.tanh(Dc / 10), np.tanh(temp_mis),
                         gyL * s_, gyL * c, plx, ply, pp, tlx, tly, tp,
@@ -466,8 +489,19 @@ class Pool:
         hd = (hd + 0.35 * turn) % 6.283
         v = self.vmax[a] * throttle
         cur = self.clim["cur"]
-        x = (x + v * np.cos(hd) + 0.008 * math.cos(cur) + rng.normal(0, 0.05, n)) % ARENA
+        nx = (x + v * np.cos(hd) + 0.008 * math.cos(cur) + rng.normal(0, 0.05, n)) % ARENA
         y = (y + v * np.sin(hd) + 0.008 * math.sin(cur) + rng.normal(0, 0.05, n)) % ARENA
+        crossed = basin_of(nx) != bas
+        if crossed.any():
+            # which reef: moving right crosses the next basin's west wall, moving left this basin's west wall
+            right = _wrap(nx - x) > 0
+            wall = np.where(right, (bas + 1) % BASINS, bas)
+            gaps = np.array(self.clim["gaps"], np.float32)
+            through = np.abs(_wrap(y - gaps[wall])) < GAP_H / 2
+            blocked = crossed & ~through
+            nx = np.where(blocked, x, nx)
+            hd = np.where(blocked, (math.pi - hd) % 6.283, hd)    # bounce off the reef
+        x = nx
         self.x[a], self.y[a], self.hd[a] = x, y, hd
 
         # energy: light, dead matter, metabolism (temperature-dependent), waste back into the water
@@ -475,7 +509,7 @@ class Pool:
         g_photo = 0.9 * self.expo[a] * L * nutf * shade
         mouth = self.cnt[a, MOUTH].astype(np.float32)
         g_det = np.where(eat > 0.3, np.minimum(Dc * 0.15, 0.06 * mouth), 0.0)
-        cost = self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * crowd + 0.004 * v * self.n[a]
+        cost = self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd + 0.004 * v * self.n[a]
         np.subtract.at(self.N, (gy, gx), g_photo * 0.5)
         np.subtract.at(self.D, (gy, gx), g_det)
         np.add.at(self.N, (gy, gx), cost * 0.6)
@@ -489,7 +523,9 @@ class Pool:
         self.age[a] += 1
 
         # predation: one attempt per hunter per tick; a creature is eaten at most once
-        hunt = np.flatnonzero(hp & (eat > 0.5) & (mouth > 0) & (dp <= rad + rad[jp] + 0.6))
+        # hunters that are full, or still digesting their last meal, do not attack (handling time)
+        hungry = (self.energy[a] < 0.85 * self.emax[a]) & (self.fed_until[a] <= t)
+        hunt = np.flatnonzero(hp & hungry & (eat > 0.5) & (mouth > 0) & (dp <= rad + rad[jp] + 0.6))
         if len(hunt):
             rng.shuffle(hunt)
             taken = set()
@@ -503,7 +539,8 @@ class Pool:
                 if rng.random() < att[h] / (att[h] + dfn[pr]):
                     taken.add(pr)
                     food = max(0.0, float(self.energy[ip])) + 2.0 * float(self.n[ip])
-                    gain = min(0.7 * food, float(self.emax[ih] - self.energy[ih]))
+                    gain = min(0.6 * food, float(self.emax[ih] - self.energy[ih]))
+                    self.fed_until[ih] = t + 40 + 4 * int(self.n[ip])
                     self.energy[ih] += gain
                     self.s_pred[ih] += gain
                     self.tl[ih] = 0.9 * self.tl[ih] + 0.1 * (self.tl[ip] + 1)
@@ -525,6 +562,22 @@ class Pool:
         al = self.alive[a]
         die = a[al & ((self.energy[a] <= 0) | (self.age[a] > self.life[a]))]
         self._die(die)
+
+        # parental care: a parent with "care" keeps feeding its young while they are near
+        kids = np.flatnonzero(self.alive & (self.age < JUVENILE) & (self.mom >= 0))
+        if len(kids):
+            m = self.mom[kids]
+            ok = self.alive[m] & (self.uid[m] == self.mom_uid[kids]) & (self.care[m] > 0.02)
+            if ok.any():
+                kids, m = kids[ok], m[ok]
+                near = (np.hypot(_wrap(self.x[kids] - self.x[m]), _wrap(self.y[kids] - self.y[m])) < 10) & \
+                       (basin_of(self.x[kids]) == basin_of(self.x[m]))
+                kids, m = kids[near], m[near]
+                if len(kids):
+                    give = np.minimum(self.care[m] * 0.05, 0.02 * np.maximum(self.energy[m], 0))
+                    give = np.minimum(give, np.maximum(self.emax[kids] - self.energy[kids], 0))
+                    np.subtract.at(self.energy, m, give)
+                    np.add.at(self.energy, kids, give * 0.9)
 
         # reproduction
         ready = np.flatnonzero(self.alive[a] & (self.energy[a] >= self.repro[a] * self.emax[a]) & (breed > 0.5)
@@ -556,8 +609,10 @@ class Pool:
                 self.energy[i] -= share
                 ang = rng.uniform(0, 6.283)
                 off = float(self.rad[i]) + 1 + rng.uniform(0, 3)
+                if basin_of(np.array([self.x[i] + math.cos(ang) * off]))[0] != basin_of(np.array([self.x[i]]))[0]:
+                    ang = math.pi - ang                 # born on the parent's side of the reef
                 k_ = self._spawn(child, self.x[i] + math.cos(ang) * off, self.y[i] + math.sin(ang) * off,
-                                 int(self.gen[i]) + 1, int(self.species[i]), share + gift, float(self.tl[i]))
+                                 int(self.gen[i]) + 1, int(self.species[i]), share + gift, float(self.tl[i]), mom=i)
                 if k_ is None:
                     self.energy[i] += share
                     break
@@ -632,6 +687,9 @@ class Pool:
             "cell_mix": {CELL_NAMES[t]: int(cnt[:, t].sum()) for t in range(NT)},
             "biomass": int(ncell.sum()), "nutrient": round(float(self.N.mean()), 3), "detritus": round(float(self.D.mean()), 3),
             "temp": round(float(self.clim["temp"] + self.clim["shock_temp"]), 3),
+            "warm_mean": round(float(self.warm[a].mean()), 4), "warm_share": round(float((self.warm[a] >= 0.5).mean()), 4),
+            "care_mean": round(float(self.care[a].mean()), 4), "care_share": round(float((self.care[a] >= 0.3).mean()), 4),
+            "basins": np.bincount(basin_of(self.x[a]), minlength=BASINS).astype(int).tolist(),
         })
         out["complexity"] = round(float(np.percentile(ncell * types, 95)), 2)
         return out
@@ -655,6 +713,9 @@ class Pool:
         ("five_types", "Bodies with five cell types", lambda s, p: p["types5"] >= 10),
         ("bodies_40", "A species with bodies of 40+ cells", lambda s, p: p["sp_cells40"] >= 1),
         ("species_25", "Twenty-five coexisting species", lambda s, p: s["mean_generation"] >= 500 and s["species_eff"] >= 25),
+        ("parental_care", "Parental care (parents feeding their young)", lambda s, p: p["sp_care"] >= 1),
+        ("warm_blood", "Warm-blooded lineages", lambda s, p: p["sp_warm"] >= 1),
+        ("warm_care_brain", "Warm-blooded, caring, big-brained species (the mammal-like package)", lambda s, p: p["sp_mammal"] >= 1),
     ]
     MS_STREAK = 5
 
@@ -672,6 +733,12 @@ class Pool:
         big = counts >= 10                       # a species, not a handful of mutants
         for k in (2, 10, 20, 40):
             p[f"sp_cells{k}"] = int((big & (mean_cells >= k)).sum())
+        mw = np.bincount(inv, weights=self.warm[a].astype(float)) / counts
+        mc = np.bincount(inv, weights=self.care[a].astype(float)) / counts
+        mn = np.bincount(inv, weights=cnt[:, NEURON].astype(float)) / counts
+        p["sp_warm"] = int((big & (mw >= 0.5)).sum())
+        p["sp_care"] = int((big & (mc >= 0.3)).sum())
+        p["sp_mammal"] = int((big & (mw >= 0.5) & (mc >= 0.3) & (mn >= 2)).sum())
         for key, title, test in self.MILESTONES:
             if key in self.milestones:
                 continue
@@ -729,6 +796,8 @@ class Pool:
                 "light": round(float(self.light(np.array([self.clim["band"]]), self.tick)[0]), 3),
                 "upwellings": [[round(u[0], 1), round(u[1], 1)] for u in self.clim["up"]],
                 "current": round(float(self.clim["cur"]), 3),
+                "reefs": [round(k * BASIN_W, 1) for k in range(BASINS)],
+                "straits": [round(float(g_), 1) for g_ in self.clim.get("gaps", [])], "strait_h": GAP_H,
                 "detritus": np.round(np.clip(self.D[::4, ::4] / 20, 0, 1) * 100).astype(int).tolist(),
                 "nutrient": np.round(np.clip(self.N[::4, ::4] / 12, 0, 1) * 100).astype(int).tolist()}
 
@@ -743,6 +812,11 @@ def from_blob(b: bytes) -> Pool:
     # migrate checkpoints written by older code
     if not hasattr(p, "next_pid"):
         p.next_pid = max(p.plans, default=0) + 1
+    if not hasattr(p, "warm"):                 # Oct 25: basins, warm blood, parental care, handling time
+        p.warm = np.array([(g or {}).get("warm", 0.0) for g in p.genomes], np.float32)
+        p.care = np.array([(g or {}).get("care", 0.0) for g in p.genomes], np.float32)
+        p.mom, p.mom_uid, p.fed_until = np.full(CAP, -1, np.int64), np.zeros(CAP, np.int64), np.zeros(CAP, np.int64)
+        p.clim.setdefault("gaps", [float(p.rng.uniform(0, ARENA)) for _ in range(BASINS)])
     if not hasattr(p, "bank"):
         p.bank, p.seg_peak = _clock_from_history(p.era)
         p.clock_gen = p.bank + p.seg_peak

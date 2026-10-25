@@ -131,6 +131,15 @@
           if (v > 4) { ctx.fillStyle = `rgba(150,110,70,${Math.min(0.5, v / 120)})`;
             for (let k = 0; k < Math.min(6, v / 10); k++) ctx.fillRect(i * cw + ((k * 37 + j * 13) % cw), j * ch + ((k * 23 + i * 17) % ch), 1.5, 1.5); }
         }));
+        // reefs dividing the basins, with the straits life can pass through
+        (env.reefs || []).forEach((rx, k) => {
+          const gy = (env.straits || [])[k], gh = (env.strait_h || 18) / 2;
+          ctx.strokeStyle = 'rgba(214,190,150,.55)'; ctx.lineWidth = Math.max(2, s * 1.2); ctx.setLineDash([]);
+          const X = Math.max(1, rx * s);
+          const segs = gy == null ? [[0, A]] : (() => { const a0 = (gy - gh + A) % A, a1 = (gy + gh) % A;
+            return a0 < a1 ? [[0, a0], [a1, A]] : [[a1, a0]]; })();
+          segs.forEach(([y0, y1]) => { ctx.beginPath(); ctx.moveTo(X, y0 * sy); ctx.lineTo(X, y1 * sy); ctx.stroke(); });
+        });
         (env.upwellings || []).forEach(([x, y]) => {
           const r = 14 * s;
           const g = ctx.createRadialGradient(x * s, y * sy, 0, x * s, y * sy, r);

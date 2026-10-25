@@ -27,6 +27,7 @@
       <div class="row" style="justify-content:space-between"><h3 style="margin:0">Cells in use</h3><span class="small muted" id="m-roles"></span></div>
       <div class="bar-mix" id="mix"></div>
       <div class="small muted" id="mix-t"></div>
+      <div class="small muted" id="m-traits" style="margin-top:6px"></div>
     </div>
   </div>
 </section>
@@ -71,6 +72,8 @@
     <ul class="small" style="padding-left:18px;margin:0">
       <li><b>Bodies are grown, not designed.</b> A genome is a list of genes; each adds a cell of one of nine types next to an existing cell. Genes can be duplicated, deleted, inserted or repurposed, so bodies can grow without limit (up to 64 cells for now).</li>
       <li><b>Cells specialise:</b> photo (light to energy), mouth (eat dead matter or other creatures), flagellum (swim), eye (see further), armour, store (energy reserve), neuron (a bigger brain), gonad (sex), skin.</li>
+      <li><b>Three basins.</b> Reefs split the pool into three basins joined by narrow straits that drift with the climate. A crash in one basin no longer ends life everywhere, and survivors can recolonise through the straits.</li>
+      <li><b>Mammal-like traits can evolve:</b> warm blood (a creature holds its own temperature, so cold and heat hurt it far less, at the price of half again as much food) and parental care (parents keep feeding their young while they stay close). Both start at zero and spread only if they pay.</li>
       <li><b>A real food web.</b> Light feeds producers, corpses feed grazers, and any mouth can attack: success depends on attack against defence, and bigger bodies are harder to eat.</li>
       <li><b>Bigger bodies run cheaper per cell</b> (metabolism scales with size to the ¾ power, as in living things) but cost more to build.</li>
       <li><b>The world keeps changing</b> on many clocks: day and night, seasons, a drifting sunlit band, temperature, ocean current and upwellings, slow orbital cycles and rare catastrophes.</li>
@@ -83,7 +86,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/darwin/pool.js?v=2"></script>
+<script src="/static/darwin/pool.js?v=3"></script>
 <script>
 (function () {
   const D = Darwin, MS = {{ milestones|tojson }};
@@ -103,6 +106,8 @@
     document.getElementById('m-cx-n').textContent = s.types_max != null ? `up to ${s.types_max} cell types in one body · mean ${D.num(s.cells_mean, 2)} cells` : '';
     document.getElementById('m-tl').textContent = D.num(s.trophic_max, 1);
     document.getElementById('m-roles').textContent = s.population ? `${Math.round(s.producers * 100)}% producers · ${Math.round(s.grazers * 100)}% grazers · ${Math.round(s.predators * 100)}% predators` : '';
+    const ex2 = document.getElementById('m-traits');
+    if (ex2 && s.warm_mean != null) ex2.textContent = `warm blood ${Math.round(s.warm_share * 100)}% · parental care ${Math.round(s.care_share * 100)}%` + (s.basins ? ` · basins ${s.basins.join(' / ')}` : '');
     if (s.cell_mix) {
       const tot = Object.values(s.cell_mix).reduce((a, b) => a + b, 0) || 1;
       document.getElementById('mix').innerHTML = D.CELL_LABELS.map((n, t) => `<div title="${n}" style="width:${(s.cell_mix[n] || 0) / tot * 100}%;background:${col(t)}"></div>`).join('');
