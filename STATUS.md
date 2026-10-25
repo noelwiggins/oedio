@@ -24,6 +24,13 @@ Last updated: 2026-10-14
   capped. Deep-time clock no longer resets on re-seed (banks each stretch's peak); rebuilt to ~17.3 Ma.
 - Railway watchPatterns are now an explicit positive list (code/templates/static/etc.); negation patterns made
   Railway SKIP every deploy.
+- Oct 25: era 5 had re-seeded 104 times in 8 days (complex, near-single-species hunter worlds kept collapsing).
+  Added: 3 basins split by reefs at x=0/80/160 with drifting 18-unit straits (no sight, attack or mating across a
+  reef); hunters need hunger (<85% full) and a handling time of 40+4×prey cells after a kill; kill efficiency 0.6.
+  New evolvable traits starting at 0: warm (temperature stress ×(1−0.9·warm), metabolism ×(1+0.5·warm)) and care
+  (parent feeds young under 300 ticks old within 10 units). New milestones: parental care, warm-blooded lineages,
+  and the mammal-like package (warm ≥0.5, care ≥0.3, ≥2 neurons in one species). Local check: 400k ticks, 0
+  re-seeds, a 24-cell 8-type phase held ~200 generations, care rose to ~0.5. Watch live re-seed rate.
 - Era 4 (life-1.0 world_live) archived: ARCHIVED = True in world_live.py; thread still runs the scheduler.
 - Railway watch patterns now skip root *.md changes, so STATUS edits don't redeploy (and kill benchmarks).
 
