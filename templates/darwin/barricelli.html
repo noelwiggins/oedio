@@ -1,0 +1,96 @@
+{% extends "darwin/base.html" %}
+{% block title %}Barricelli's Symbiosis — DARWIN{% endblock %}
+{% block content %}
+<p class="eyebrow">Institute for Advanced Study · Princeton · 1953–1956</p>
+<h1 class="page">Barricelli's Symbiosis</h1>
+<p class="lede">In 1953 the mathematician Nils Aall Barricelli used John von Neumann's computer at night to breed numbers. A ring of cells,
+  a few integers, three rules, and no design. What came out reproduced, cooperated, parasitised, crossed and repaired itself.
+  This is a live reconstruction: every run starts from random numbers, and every organism named below was found, not written.</p>
+
+<section class="section card" id="bx">
+  <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div class="row" style="gap:6px;flex-wrap:wrap">
+      <button class="btn" id="bx-play">Pause</button>
+      <button class="btn tonal" id="bx-step">Step</button>
+      <button class="btn tonal" id="bx-reset">New universe</button>
+    </div>
+    <div class="row small" style="gap:12px;flex-wrap:wrap">
+      <label>Speed <input type="range" id="bx-speed" min="2" max="60" value="16"></label>
+      <label>Cells <select id="bx-n"><option value="256">256</option><option value="512" selected>512</option></select></label>
+      <label>Genes <select id="bx-k"><option value="8">±8</option><option value="16" selected>±16</option></select></label>
+      <label>Collisions <select id="bx-norm">
+        <option value="0">annihilate (norm 0)</option><option value="sum">fuse into the sum</option>
+        <option value="random">random mutation</option><option value="mixed" selected>mixed by region</option></select></label>
+      <label><input type="checkbox" id="bx-ex"> parallel universe exchange</label>
+    </div>
+  </div>
+  <div class="small muted" id="bx-stat" style="margin:10px 0 6px">—</div>
+  <div style="position:relative"><canvas id="bx-canvas" class="bx-canvas" aria-label="Barricelli's numerical universe, one generation per row"></canvas></div>
+  <div class="bx-lens mono" id="bx-lens"></div>
+  <p class="small muted" style="margin:6px 0 0">Each row is one generation (newest at the bottom), each column one cell. Coloured genes belong to a
+    symbioorganism, matched to the call-outs; grey genes are loose. White specks mark collisions. Hover to read the numbers, as on his printouts.</p>
+</section>
+
+<section class="section grid g2">
+  <div class="card"><h2 style="margin-top:0">Symbioorganisms</h2><div id="bx-orgs"></div></div>
+  <div class="card"><h2 style="margin-top:0">What just happened</h2><div id="bx-log" class="bx-logbox"></div></div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2 style="margin-top:0">The three rules</h2>
+    <svg viewBox="0 0 520 150" class="bx-diag" aria-label="A gene +3 moves three cells right, lands on a −2, and copies itself again two cells left of where it started">
+      <g font-family="IBM Plex Mono, monospace" font-size="13" text-anchor="middle">
+        <text x="14" y="40" fill="currentColor" opacity=".6" text-anchor="start">now</text>
+        <text x="14" y="112" fill="currentColor" opacity=".6" text-anchor="start">next</text>
+        <g></g>
+      </g>
+    </svg>
+    <ol class="small" style="padding-left:18px">
+      <li><b>Move.</b> A gene <i>n</i> in cell <i>a</i> copies itself to cell <i>a + n</i> in the next generation. +3 jumps three cells right; −2 two cells left.</li>
+      <li><b>Multiply by meeting.</b> If the cell it lands on already holds a gene <i>m</i>, it copies itself again, to <i>a + m</i> — and again if that cell is full too.
+        A gene alone only drifts. Genes that keep landing on each other multiply. That is the whole engine of cooperation.</li>
+      <li><b>Collide.</b> When different genes arrive in one cell, a norm decides: annihilate (Barricelli's norm 0), fuse into their sum, or produce a random new gene.</li>
+    </ol>
+    <p class="small muted">A <b>symbioorganism</b> here is a set of genes that only multiply by using each other, in a closed loop. A <b>parasite</b> uses an organism's genes but gives nothing back.
+      A <b>crossing</b> is a new organism built from genes of two others. <b>Self-repair</b> is an organism that loses more than half its copies and grows back.</p>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">What Barricelli found, and what this is</h2>
+    <p class="small">Working at night on the IAS machine (512 cells of memory for his universe, 5 KB in all), he saw self-reproducing groups of numbers appear on their own,
+      along with parasites, crossing between organisms and repair after damage. He took it as support for <i>symbiogenesis</i>: the idea that complexity comes from
+      organisms merging, not only from mutation. He also hit a wall: one simple organism tended to take over the whole universe and evolution stalled. His remedies
+      were different norms in different regions and swapping segments between parallel universes. Both are switches above.</p>
+    <p class="small muted">This page follows his published shift, replication and collision norms; details such as the chain limit, the gene range and the exact
+      mixture of norms are reconstructions. Organisms are detected from who-multiplies-by-whom over the last 12 generations.</p>
+    <h3>Does it help the tidal pool?</h3>
+    <p class="small">It already has: Barricelli's takeover problem is the one the pool hit this week, and his remedy, a divided world, is how the pool's basins and
+      habitats were built. It does not send creatures to the pool (the two worlds are made of different stuff), but it is a fast laboratory for the one thing the pool
+      cannot do yet: separate lineages merging into one organism. What makes merging pay here is the best guide to adding it there.</p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/darwin/barricelli.js?v=2"></script>
+<script>
+(function () {
+  // the diagram: +3 at cell 2 lands on −2 at cell 5 → copies at 5 and at 0
+  const svg = document.querySelector('.bx-diag'), g = svg.querySelector('g g'), cs = 40, x0 = 60;
+  const now = { 2: 3, 5: -2 }, next = { 5: 3, 0: 3, 3: -2 };
+  let h = '';
+  for (let i = 0; i < 11; i++) {
+    h += `<rect x="${x0 + i * cs}" y="22" width="${cs - 4}" height="28" rx="5" fill="currentColor" opacity=".08"/>`;
+    h += `<rect x="${x0 + i * cs}" y="94" width="${cs - 4}" height="28" rx="5" fill="currentColor" opacity=".08"/>`;
+    if (now[i]) h += `<text x="${x0 + i * cs + 18}" y="41" fill="${now[i] > 0 ? '#e9bf6d' : '#9ab8ff'}">${now[i] > 0 ? '+' : '−'}${Math.abs(now[i])}</text>`;
+    if (next[i]) h += `<text x="${x0 + i * cs + 18}" y="113" fill="${next[i] > 0 ? '#e9bf6d' : '#9ab8ff'}">${next[i] > 0 ? '+' : '−'}${Math.abs(next[i])}</text>`;
+  }
+  const c = i => x0 + i * cs + 18;
+  h += `<path d="M${c(2)} 52 L${c(5)} 92" stroke="#e9bf6d" fill="none" marker-end="url(#ar)"/><text x="${c(5) + 26}" y="80" fill="#e9bf6d" font-size="11" text-anchor="start">1 · move +3</text>`;
+  h += `<path d="M${c(2)} 52 L${c(0)} 92" stroke="#e9bf6d" stroke-dasharray="4 3" fill="none" marker-end="url(#ar)"/><text x="${c(0) - 30}" y="140" fill="#e9bf6d" font-size="11" text-anchor="start">2 · it met −2, so it also copies 2 cells left</text>`;
+  h += `<path d="M${c(5)} 52 L${c(3)} 92" stroke="#9ab8ff" fill="none" marker-end="url(#ar)"/>`;
+  svg.insertAdjacentHTML('afterbegin', '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>');
+  g.innerHTML = h;
+  Darwin.Barricelli(document.querySelector('main'));
+})();
+</script>
+{% endblock %}

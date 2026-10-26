@@ -294,3 +294,20 @@ table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; 
 .c3d .note { position: absolute; left: 16px; top: 14px; color: rgba(232,242,238,.7); font: 500 10.5px var(--dw-mono); letter-spacing: .06em; pointer-events: none; }
 @media (max-width: 520px) { .pick-hint { display: none; } .pick-card { grid-template-columns: 44px minmax(0,1fr) auto; } .pick-card .x { display: none; } }
 .pick-card[hidden] { display: none; }
+
+/* ── Barricelli's Symbiosis ───────────────────────────────────────────── */
+.bx-canvas { width: 100%; height: 440px; display: block; border-radius: 12px; background: #0b1210; cursor: crosshair; }
+.bx-lens { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--dw-glass); font-size: 12px; white-space: nowrap; overflow-x: auto; }
+.bx-lens .e { opacity: .35; }
+.bx-org { display: grid; grid-template-columns: 12px 22px minmax(0,1fr) 64px; gap: 4px 8px; align-items: center; padding: 7px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.bx-org i { width: 12px; height: 12px; border-radius: 3px; }
+.bx-org .small { grid-column: 2 / -1; }
+.bx-org.gone { opacity: .45; }
+.bx-spark { width: 60px; height: 18px; }
+.bx-logbox { max-height: 420px; overflow-y: auto; }
+.bx-ev { padding: 6px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 13.5px; }
+.bx-ev.cross { color: var(--dw-amber); } .bx-ev.takeover { color: var(--dw-hazard); } .bx-ev.parasite { color: #d79bff; }
+.bx-ev.repair, .bx-ev.born { color: var(--dw-green); }
+.bx-diag { width: 100%; height: auto; color: var(--md-sys-color-on-surface); margin: 4px 0 10px; }
+@media (max-width: 600px) { .bx-canvas { height: 340px; } }

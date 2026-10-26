@@ -247,6 +247,11 @@ def owner():
 
 
 # ── the tidal pool (life-3.0) ───────────────────────────────────────────
+@bp.route("/barricelli")
+def barricelli_page():
+    return render_template("darwin/barricelli.html")
+
+
 @bp.route("/pool")
 def pool_page():
     ensure_pool()
