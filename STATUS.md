@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-14
 
+## DARWIN Barricelli's Symbiosis (2026-10-26)
+- `/darwin/barricelli` (nav "Barricelli"): client-side reconstruction of Barricelli's 1953–56 IAS experiments
+  (static/darwin/barricelli.js). Ring of 256/512 cells, genes ±8/±16; shift norm a→a+n; symbiotic chain replication
+  (landing on m copies again to a+m, up to 6); collision norms 0/sum/random/mixed-by-region; optional parallel-universe
+  segment exchange every 50 generations. Organisms = genes that multiply each other (reciprocal "uses" links over
+  12 generations, Tarjan SCC), named once they persist 20 generations; parasites = one-way users; crossings,
+  self-repair, takeover and extinctions are logged and called out on the printout canvas.
+
 ## DARWIN Tidal Pool life-3.0 (2026-10-17) — open-ended evolution toward complex creatures
 - `darwin/pool.py`, page `/darwin/pool`, also the homepage hero. Runs in its own process (`python -m darwin.pool run`,
   started by the web worker via `web.ensure_pool()`, advisory lock 774414), up to DARWIN_POOL_TPS (default 200)
