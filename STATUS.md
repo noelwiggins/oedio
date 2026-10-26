@@ -31,6 +31,16 @@ Last updated: 2026-10-14
   (parent feeds young under 300 ticks old within 10 units). New milestones: parental care, warm-blooded lineages,
   and the mammal-like package (warm ≥0.5, care ≥0.3, ≥2 neurons in one species). Local check: 400k ticks, 0
   re-seeds, a 24-cell 8-type phase held ~200 generations, care rose to ~0.5. Watch live re-seed rate.
+- Oct 26 (landscape stage 1): the three basins are now habitats west→east: open sea (light ×0.9, richer deep
+  water, steadier temperature, 2 upwellings pinned there), reef shallows, tidal flats (tide every 900 ticks; above
+  the waterline: light ×1.3, cost ×1.4 drying, speed ×0.25). Reef at x=0 is solid. Currents run along the coast
+  only (cross-shore drift piled life against reefs and emptied the sea). Local check: all three habitats stay
+  populated over 115k ticks, bodies rising to ~6 cells mean.
+  UI: pool.js draws a 960×720 landscape (ocean, bay, beach, land, clouds) with Bay/Coast/Landscape zoom, wheel/pinch/
+  drag, click-to-select; creature3d.js (three.js 0.160 via import map in base.html) renders a creature from its body
+  plan (gaussian field + marching cubes, organs ray-cast onto the skin, underwater lighting). Not a photograph.
+  Next stages: land colonisation (water-holding skin, legs, lungs) then air (wings).
+- The Railway GraphQL token in memory returned "Not Authorized" on Oct 26; the Railway connector works.
 - Era 4 (life-1.0 world_live) archived: ARCHIVED = True in world_live.py; thread still runs the scheduler.
 - Railway watch patterns now skip root *.md changes, so STATUS edits don't redeploy (and kill benchmarks).
 
