@@ -40,6 +40,10 @@ Last updated: 2026-10-14
   drag, click-to-select; creature3d.js (three.js 0.160 via import map in base.html) renders a creature from its body
   plan (gaussian field + marching cubes, organs ray-cast onto the skin, underwater lighting). Not a photograph.
   Next stages: land colonisation (water-holding skin, legs, lungs) then air (wings).
+- Oct 26 pm: live pool re-seeded 3× after the habitat release: 25→44-cell giant monocultures swam through every
+  strait and aged out together. Fix: attack/defence scale with sqrt(cells), bodies with radius ≥2.3 (~10+ cells)
+  can't pass straits. Local seed 6: 11-cell, 7-type swimmers held ~150k ticks at ~350 across all habitats, 0
+  re-seeds (one dip to 14). 3D button fixed (card re-render dropped its handler when the creature died).
 - The Railway GraphQL token in memory returned "Not Authorized" on Oct 26; the Railway connector works.
 - Era 4 (life-1.0 world_live) archived: ARCHIVED = True in world_live.py; thread still runs the scheduler.
 - Railway watch patterns now skip root *.md changes, so STATUS edits don't redeploy (and kill benchmarks).
