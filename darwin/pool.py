@@ -74,7 +74,12 @@ MIN_AGE = 30
 BASINS = 3                 # the pool is split into basins by reefs; narrow straits let life through
 BASIN_W = ARENA / BASINS
 GAP_H = 18.0               # height of each strait in the reef
-JUVENILE = 300             # ticks during which a parent with care can feed its young
+JUVENILE = 300
+# The three basins are habitats along a coast, west to east. The reef at x=0 is the solid boundary between the
+# tidal flats (east edge) and the open sea (west edge); the other two reefs have drifting straits.
+SEA, SHALLOWS, TIDAL = 0, 1, 2
+HABITATS = ["open sea", "reef shallows", "tidal flats"]
+TIDE = 900                 # ticks per tide cycle (three days)             # ticks during which a parent with care can feed its young
 
 SKIN, PHOTO, MOUTH, FLAG, EYE, ARMOR, STORE, NEURON, GONAD = range(9)
 NT = 9
@@ -196,6 +201,9 @@ def species_name(sid, cnt, n):
 
 
 # ── the world ────────────────────────────────────────────────────────────
+_N_TARGET = np.where(np.arange(48)[None, :] * (240.0 / 48) < 80.0, 5.0, 2.0).astype(np.float32)
+
+
 def basin_of(x):
     return (np.asarray(x) // BASIN_W).astype(np.int64) % BASINS
 
@@ -319,6 +327,25 @@ class Pool:
         self.deaths += len(idx)
 
     # ── environment ───────────────────────────────────────────────────
+    def tide(self, t=None):
+        """0 = low water, 1 = high water."""
+        t = self.tick if t is None else t
+        return 0.5 + 0.5 * math.sin(2 * math.pi * t / TIDE)
+
+    def waterline(self, t=None):
+        """How far up the tidal flats (0 = seaward edge, 1 = beach) the water reaches."""
+        return 0.4 + 0.55 * self.tide(t)
+
+    def habitat(self, x, t=None):
+        """Per position: habitat index, light factor, current factor, temperature factor, exposed (out of water)."""
+        h = basin_of(x)
+        elev = (np.asarray(x) - TIDAL * BASIN_W) / BASIN_W
+        exposed = (h == TIDAL) & (elev > self.waterline(t))
+        lightf = np.where(h == SEA, 0.9, np.where(exposed, 1.3, 1.0))
+        curf = np.where(h == SEA, 1.5, np.where(h == TIDAL, 1.25, 1.0))
+        tempf = np.where(h == SEA, 0.6, np.where(exposed, 1.6, 1.0))
+        return h, lightf, curf, tempf, exposed
+
     def light(self, y, t):
         day = 0.03 + 0.97 * max(0.0, math.sin(2 * math.pi * t / DAY))
         season = 0.85 + 0.15 * math.sin(2 * math.pi * t / YEAR)
@@ -339,9 +366,11 @@ class Pool:
         c["cur"] = float((c["cur"] + rng.normal(0, 0.06)) % 6.283)
         c.setdefault("gaps", [float(rng.uniform(0, ARENA)) for _ in range(BASINS)])
         c["gaps"] = [float((gp + rng.normal(0, 2.0)) % ARENA) for gp in c["gaps"]]
-        for u in c["up"]:
+        for k, u in enumerate(c["up"]):
             u[0] = (u[0] + rng.normal(0, 1.5)) % ARENA
             u[1] = (u[1] + rng.normal(0, 1.5)) % ARENA
+            if k < 2:                       # two upwellings belong to the open sea: deep water rising
+                u[0] = float(np.clip(u[0], 4, BASIN_W - 4))
         if self.tick > c["shock_until"]:
             c["shock_temp"] *= 0.9
         # catastrophes: rare, mostly small, occasionally severe (log-uniform)
@@ -387,7 +416,7 @@ class Pool:
             decay = 0.01 * D
             self.D = D - decay
             self.N += decay * 0.8
-            self.N += 0.003 * (2.0 - self.N)      # slow exchange with the open sea: background level 2
+            self.N += 0.003 * (_N_TARGET - self.N)   # exchange with deep water: richer in the open sea
             self.D = 0.8 * self.D + 0.05 * (np.roll(self.D, 1, 0) + np.roll(self.D, -1, 0) + np.roll(self.D, 1, 1) + np.roll(self.D, -1, 1))
 
     # ── one tick ──────────────────────────────────────────────────────
@@ -413,8 +442,9 @@ class Pool:
         x, y, hd = self.x[a], self.y[a], self.hd[a]
         gx = (x / CELL).astype(int) % GRID
         gy = (y / CELL).astype(int) % GRID
-        L = self.light(y, t)
-        Tm = self.temperature(y, t)
+        hab, lightf, curf, tempf, exposed = self.habitat(x, t)
+        L = self.light(y, t) * lightf
+        Tm = self.temperature(y, t) * tempf
         Nc, Dc = self.N[gy, gx], self.D[gy, gx]
         photo = self.cnt[a, PHOTO].astype(np.float32)
         # producers compete for light within ~10-unit patches
@@ -487,17 +517,17 @@ class Pool:
 
         # movement: own thrust plus a slow ocean current and jitter
         hd = (hd + 0.35 * turn) % 6.283
-        v = self.vmax[a] * throttle
+        v = self.vmax[a] * throttle * np.where(exposed, 0.25, 1.0)     # stranded at low tide: hard to move
         cur = self.clim["cur"]
-        nx = (x + v * np.cos(hd) + 0.008 * math.cos(cur) + rng.normal(0, 0.05, n)) % ARENA
-        y = (y + v * np.sin(hd) + 0.008 * math.sin(cur) + rng.normal(0, 0.05, n)) % ARENA
+        nx = (x + v * np.cos(hd) + rng.normal(0, 0.05, n)) % ARENA      # currents run along the coast, so nothing piles up on a reef
+        y = (y + v * np.sin(hd) + 0.012 * curf * math.sin(cur) + rng.normal(0, 0.05, n)) % ARENA
         crossed = basin_of(nx) != bas
         if crossed.any():
             # which reef: moving right crosses the next basin's west wall, moving left this basin's west wall
             right = _wrap(nx - x) > 0
             wall = np.where(right, (bas + 1) % BASINS, bas)
             gaps = np.array(self.clim["gaps"], np.float32)
-            through = np.abs(_wrap(y - gaps[wall])) < GAP_H / 2
+            through = (np.abs(_wrap(y - gaps[wall])) < GAP_H / 2) & (wall != 0)   # the outer reef is solid
             blocked = crossed & ~through
             nx = np.where(blocked, x, nx)
             hd = np.where(blocked, (math.pi - hd) % 6.283, hd)    # bounce off the reef
@@ -509,7 +539,9 @@ class Pool:
         g_photo = 0.9 * self.expo[a] * L * nutf * shade
         mouth = self.cnt[a, MOUTH].astype(np.float32)
         g_det = np.where(eat > 0.3, np.minimum(Dc * 0.15, 0.06 * mouth), 0.0)
-        cost = self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd + 0.004 * v * self.n[a]
+        dry = np.where(exposed, 1.4, 1.0)        # drying out on the exposed flats (stage 2 adds water-holding skin)
+        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry
+                + 0.004 * v * self.n[a])
         np.subtract.at(self.N, (gy, gx), g_photo * 0.5)
         np.subtract.at(self.D, (gy, gx), g_det)
         np.add.at(self.N, (gy, gx), cost * 0.6)
@@ -690,6 +722,9 @@ class Pool:
             "warm_mean": round(float(self.warm[a].mean()), 4), "warm_share": round(float((self.warm[a] >= 0.5).mean()), 4),
             "care_mean": round(float(self.care[a].mean()), 4), "care_share": round(float((self.care[a] >= 0.3).mean()), 4),
             "basins": np.bincount(basin_of(self.x[a]), minlength=BASINS).astype(int).tolist(),
+            "habitats": {HABITATS[h]: {"population": int((basin_of(self.x[a]) == h).sum()),
+                                       "cells_mean": round(float(ncell[basin_of(self.x[a]) == h].mean()), 2) if (basin_of(self.x[a]) == h).any() else None}
+                         for h in range(BASINS)},
         })
         out["complexity"] = round(float(np.percentile(ncell * types, 95)), 2)
         return out
@@ -788,7 +823,7 @@ class Pool:
         hue = np.array([self.genomes[i]["hue"] for i in a])
         return {"t": int(self.tick), "c": np.stack([self.uid[a], np.round(self.x[a] * 10), np.round(self.y[a] * 10),
                                                     np.round(self.hd[a] * 100), self.plan[a], np.round(hue * 360),
-                                                    np.round(np.clip(self.energy[a] / self.emax[a], 0, 1) * 100)],
+                                                    np.round(np.clip(self.energy[a] / self.emax[a], 0, 1) * 100), self.species[a]],
                                                    1).astype(np.int64).tolist()}
 
     def env(self):
@@ -797,6 +832,9 @@ class Pool:
                 "upwellings": [[round(u[0], 1), round(u[1], 1)] for u in self.clim["up"]],
                 "current": round(float(self.clim["cur"]), 3),
                 "reefs": [round(k * BASIN_W, 1) for k in range(BASINS)],
+                "habitats": HABITATS, "basin_w": BASIN_W, "tide": round(self.tide(), 3), "waterline": round(self.waterline(), 3),
+                "day": round(max(0.0, math.sin(2 * math.pi * self.tick / DAY)), 3),
+                "season": round(math.sin(2 * math.pi * self.tick / YEAR), 3),
                 "straits": [round(float(g_), 1) for g_ in self.clim.get("gaps", [])], "strait_h": GAP_H,
                 "detritus": np.round(np.clip(self.D[::4, ::4] / 20, 0, 1) * 100).astype(int).tolist(),
                 "nutrient": np.round(np.clip(self.N[::4, ::4] / 12, 0, 1) * 100).astype(int).tolist()}
@@ -886,6 +924,7 @@ def write_live(p: Pool, frames):
             "version": VERSION, "tick": int(p.tick), "arena": ARENA, "years_per_generation": YEARS_PER_GEN,
             "geo_ma": p.geo_ma(), "milestones": sorted(p.milestones.values(), key=lambda m: m["tick"]),
             "catastrophes": p.events[-12:], "species": p.species_table(), "exemplar": p.exemplar(),
+            "names": {str(int(k)): p.spec.get(int(k), {}).get("name") for k in np.unique(p.species[p.alive])},
             "cell_names": CELL_NAMES}
     used = {c[4] for f in data["frames"] for c in f["c"]} | {s["plan"] for s in data["species"]}
     if data["exemplar"]:

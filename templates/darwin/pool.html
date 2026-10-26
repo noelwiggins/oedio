@@ -9,8 +9,9 @@
       <div class="pool-legend" id="legend"></div>
     </div>
     <p class="small muted" style="margin:8px 2px 0">
-      Every creature is drawn from the body its own genes grew, cell by cell. The bright stripe is sunlit water,
-      teal glows are nutrient upwellings, brown specks are dead matter. Shared by every visitor and running around the clock.
+      Darwin's bay, west to east: open sea, reef shallows and tidal flats, split by reefs with drifting straits. The sand on the
+      right is the flats drying out at low tide. Every creature is drawn from the body its own genes grew; click one to see it in 3D.
+      Zoom out to see the coast, the land (no life yet) and the sky (no flyers yet).
     </p>
   </div>
   <div>
@@ -72,7 +73,7 @@
     <ul class="small" style="padding-left:18px;margin:0">
       <li><b>Bodies are grown, not designed.</b> A genome is a list of genes; each adds a cell of one of nine types next to an existing cell. Genes can be duplicated, deleted, inserted or repurposed, so bodies can grow without limit (up to 64 cells for now).</li>
       <li><b>Cells specialise:</b> photo (light to energy), mouth (eat dead matter or other creatures), flagellum (swim), eye (see further), armour, store (energy reserve), neuron (a bigger brain), gonad (sex), skin.</li>
-      <li><b>Three basins.</b> Reefs split the pool into three basins joined by narrow straits that drift with the climate. A crash in one basin no longer ends life everywhere, and survivors can recolonise through the straits.</li>
+      <li><b>Three habitats along a coast.</b> Reefs split Darwin's bay into the open sea (dimmer, richer water from deep upwellings, steady temperature), the reef shallows, and the tidal flats, where the tide comes in and out every three days: creatures left high and dry move slowly and lose water, but get full sun. Drifting straits in the reefs let life move between them, so a crash in one habitat no longer ends life everywhere. Zoom out to see the coast, land (no life yet) and sky (no flyers yet).</li>
       <li><b>Mammal-like traits can evolve:</b> warm blood (a creature holds its own temperature, so cold and heat hurt it far less, at the price of half again as much food) and parental care (parents keep feeding their young while they stay close). Both start at zero and spread only if they pay.</li>
       <li><b>A real food web.</b> Light feeds producers, corpses feed grazers, and any mouth can attack: success depends on attack against defence, and bigger bodies are harder to eat.</li>
       <li><b>Bigger bodies run cheaper per cell</b> (metabolism scales with size to the ¾ power, as in living things) but cost more to build.</li>
@@ -86,13 +87,19 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/darwin/pool.js?v=3"></script>
+<script src="/static/darwin/pool.js?v=4"></script>
 <script>
 (function () {
   const D = Darwin, MS = {{ milestones|tojson }};
   const col = t => `rgb(${D.CELL_COLORS[t].join(',')})`;
   document.getElementById('legend').innerHTML = D.CELL_LABELS.map((n, t) => `<span style="--c:${col(t)}">${n}</span>`).join('');
-  let lastEx = null;
+  let lastEx = null, lastSpecies = [], lastPlans = {};
+  document.getElementById('species').addEventListener('click', e => {
+    const i = e.target.dataset && e.target.dataset.v; if (i == null) return;
+    const r = lastSpecies[+i], cells = lastPlans[r.plan] || [[0, 0, 1]], counts = {};
+    cells.forEach(([, , t]) => { counts[D.CELL_LABELS[t]] = (counts[D.CELL_LABELS[t]] || 0) + 1; });
+    D.view3D({ name: r.name, cells, hue: r.hue * 360, counts });
+  });
   function onData(d) {
     const s = d.stats || {};
     document.getElementById('era-line').textContent = `The tidal pool · era ${d.era} · ${d.version}`;
@@ -126,11 +133,13 @@
       lastEx = JSON.stringify(ex.body);
       D.bodyThumb(document.getElementById('ex'), ex.body, 120);
       document.getElementById('ex-t').innerHTML = `<b><i>${D.esc(ex.name || '')}</i></b><br>${ex.cells} cells: ${Object.entries(ex.cell_counts).map(([k, v]) => `${v} ${k}`).join(', ')}<br>
-        generation ${ex.generation.toLocaleString()} · trophic level ${ex.trophic}`;
+        generation ${ex.generation.toLocaleString()} · trophic level ${ex.trophic}<br><button class="btn tonal" id="ex-3d" style="margin-top:8px">See it in 3D</button>`;
+      document.getElementById('ex-3d').onclick = () => D.view3D({ name: ex.name, cells: ex.body, hue: 120, counts: ex.cell_counts });
     }
     const sp = d.species || [];
-    document.getElementById('species').innerHTML = '<tr><th></th><th>species</th><th>alive</th><th>cells</th><th>way of life</th><th>age</th></tr>' +
-      sp.map((r, i) => `<tr class="sp-row"><td><canvas data-i="${i}"></canvas></td><td><i>${D.esc(r.name)}</i></td><td>${r.count}</td><td>${r.cells}</td><td>${r.role}</td><td class="small muted">${D.geo(r.age_ma)}</td></tr>`).join('');
+    document.getElementById('species').innerHTML = '<tr><th></th><th>species</th><th>alive</th><th>cells</th><th>way of life</th><th>age</th><th></th></tr>' +
+      sp.map((r, i) => `<tr class="sp-row"><td><canvas data-i="${i}"></canvas></td><td><i>${D.esc(r.name)}</i></td><td>${r.count}</td><td>${r.cells}</td><td>${r.role}</td><td class="small muted">${D.geo(r.age_ma)}</td><td><button class="btn tonal" data-v="${i}" style="padding:6px 10px;font-size:12px">3D</button></td></tr>`).join('');
+    lastSpecies = sp; lastPlans = d.plans || {};
     document.querySelectorAll('#species canvas').forEach(c => { const r = sp[+c.dataset.i]; D.bodyThumb(c, (d.plans || {})[r.plan], r.hue * 360); });
     document.getElementById('cat').innerHTML = (d.catastrophes || []).length ?
       '<tr><th>when</th><th>event</th><th>severity</th><th>killed</th></tr>' + d.catastrophes.slice().reverse().map(c => `<tr><td>${D.geo(c.geo_ma)}</td><td>${D.esc(c.kind)}</td><td>${Math.round(c.severity * 100)}%</td><td>${c.killed}</td></tr>`).join('')

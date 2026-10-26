@@ -271,3 +271,26 @@ table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; 
 .sp-row canvas { width: 46px; height: 34px; vertical-align: middle; }
 .bar-mix { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 8px 0; }
 .chart { width: 100%; height: 200px; display: block; }
+.zoom-ui { position: absolute; right: 10px; top: 10px; display: flex; gap: 2px; background: rgba(8,16,14,.62); border-radius: 999px; padding: 3px; }
+.zoom-ui button { border: 0; background: transparent; color: rgba(235,245,240,.85); font: 600 10.5px var(--dw-mono); letter-spacing: .08em;
+  text-transform: uppercase; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+.zoom-ui button.on, .zoom-ui button:hover { background: rgba(125,216,181,.25); color: #fff; }
+.pick-hint { position: absolute; right: 12px; bottom: 34px; font: 500 10px var(--dw-mono); color: rgba(235,245,240,.55); pointer-events: none; }
+.pick-card { position: absolute; left: 10px; right: 10px; bottom: 34px; display: grid; grid-template-columns: 56px minmax(0,1fr) auto auto; gap: 10px;
+  align-items: center; padding: 10px 12px; border-radius: 14px; background: rgba(8,16,14,.86); color: #e8f2ee; font-size: 12.5px;
+  backdrop-filter: blur(6px); }
+.pick-card canvas { width: 56px; height: 44px; }
+.pick-card span { color: rgba(232,242,238,.72); }
+.pick-card .x { background: none; border: 0; color: #e8f2ee; font-size: 20px; cursor: pointer; padding: 0 4px; }
+.pick-card .btn { padding: 8px 12px; font-size: 12.5px; }
+.terrarium canvas { touch-action: none; cursor: grab; }
+.c3d { position: fixed; inset: 0; z-index: 100; background: rgba(2,8,10,.86); display: flex; align-items: center; justify-content: center; }
+.c3d .stage { position: relative; width: min(1100px, 96vw); height: min(760px, 88vh); border-radius: 18px; overflow: hidden; background: #02161c; }
+.c3d canvas { width: 100%; height: 100%; display: block; }
+.c3d .cap { position: absolute; left: 16px; bottom: 14px; right: 16px; color: #e8f2ee; font-size: 13px; pointer-events: none; text-shadow: 0 1px 3px #000; }
+.c3d .cap b { font-size: 17px; }
+.c3d .close { position: absolute; right: 12px; top: 10px; background: rgba(0,0,0,.45); color: #fff; border: 0; width: 36px; height: 36px; border-radius: 50%;
+  font-size: 22px; cursor: pointer; }
+.c3d .note { position: absolute; left: 16px; top: 14px; color: rgba(232,242,238,.7); font: 500 10.5px var(--dw-mono); letter-spacing: .06em; pointer-events: none; }
+@media (max-width: 520px) { .pick-hint { display: none; } .pick-card { grid-template-columns: 44px minmax(0,1fr) auto; } .pick-card .x { display: none; } }
+.pick-card[hidden] { display: none; }
