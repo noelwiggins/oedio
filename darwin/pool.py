@@ -295,8 +295,8 @@ class Pool:
                          + 0.004 * c[STORE] + 0.006 * c[GONAD])
         self.vmax[i] = min(1.6, 0.55 * c[FLAG] / math.sqrt(n))
         self.sense[i] = 1.5 + (min(SENSE_MAX - 1.5, 7.0 * c[EYE] ** 0.7) if c[EYE] else 0.0)
-        self.att[i] = (c[MOUTH] * 1.0 + 0.3 * n) if c[MOUTH] else 0.0
-        self.dfn[i] = 0.5 + 1.5 * c[ARMOR] + 0.35 * n
+        self.att[i] = (c[MOUTH] * 1.0 + 1.0 * math.sqrt(n)) if c[MOUTH] else 0.0   # size helps, with diminishing returns
+        self.dfn[i] = 0.5 + 1.5 * c[ARMOR] + 1.1 * math.sqrt(n)
         self.rad[i] = 0.5 + 0.55 * math.sqrt(n)
         self.life[i] = int((1500 + 150 * n) * self.rng.uniform(0.7, 1.3))
         self.repro[i] = g["repro"]
@@ -527,7 +527,7 @@ class Pool:
             right = _wrap(nx - x) > 0
             wall = np.where(right, (bas + 1) % BASINS, bas)
             gaps = np.array(self.clim["gaps"], np.float32)
-            through = (np.abs(_wrap(y - gaps[wall])) < GAP_H / 2) & (wall != 0)   # the outer reef is solid
+            through = (np.abs(_wrap(y - gaps[wall])) < GAP_H / 2) & (wall != 0) & (self.rad[a] < 2.3)   # outer reef solid; giants don't fit the straits
             blocked = crossed & ~through
             nx = np.where(blocked, x, nx)
             hd = np.where(blocked, (math.pi - hd) % 6.283, hd)    # bounce off the reef
