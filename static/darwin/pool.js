@@ -73,7 +73,7 @@
 
   /* Open the realistic 3D viewer for a body plan (loaded on demand). */
   D.view3D = async function (info) {
-    const mod = await import('/static/darwin/creature3d.js?v=2');
+    const mod = await import('/static/darwin/creature3d.js?v=3');
     mod.open(info);
   };
 
@@ -154,6 +154,16 @@
       <button data-z="land" title="The whole landscape">Landscape</button>`;
     host.appendChild(ui);
     const card = document.createElement('div'); card.className = 'pick-card'; card.hidden = true; host.appendChild(card);
+    card.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      e.stopPropagation();
+      if (a.dataset.a === 'x') { select(null); return; }
+      if (card.info) {
+        a.disabled = true; a.textContent = 'Loading…';
+        D.view3D(card.info).catch(err => { const st = card.querySelector('[data-s]'); if (st) st.textContent = '3D view could not load: ' + err.message; })
+          .finally(() => { a.disabled = false; a.textContent = 'See it in 3D'; });
+      }
+    });
     const hint = document.createElement('div'); hint.className = 'pick-hint'; hint.textContent = 'click a creature · scroll or pinch to zoom · drag to pan'; host.appendChild(hint);
 
     function fitScale() { return Math.max(canvas.clientWidth / LW, canvas.clientHeight / LH); }
@@ -219,12 +229,11 @@
       if (!c) { card.hidden = true; return; }
       const info = infoFor(c);
       card.hidden = false;
-      card.innerHTML = `<canvas></canvas><div><b><i>${D.esc(info.name)}</i></b><br><span>${info.cells.length} cells · ${D.esc(info.habitat)}</span><br>
+      card.innerHTML = `<canvas></canvas><div><b><i>${D.esc(info.name)}</i></b><br><span data-s>${info.cells.length} cells · ${D.esc(info.habitat)}</span><br>
         <span>${Object.entries(info.counts).map(([k, v]) => `${v} ${k}`).join(', ')}</span></div>
         <button class="btn" data-a="3d">See it in 3D</button><button class="x" aria-label="close" data-a="x">×</button>`;
       D.bodyThumb(card.querySelector('canvas'), info.cells, info.hue);
-      card.querySelector('[data-a="3d"]').onclick = () => D.view3D(info);
-      card.querySelector('[data-a="x"]').onclick = () => select(null);
+      card.info = info;
       if (opts.onSelect) opts.onSelect(info);
     }
 
@@ -253,7 +262,11 @@
         if (f && (!cur || f.t > cur.t)) {
           prev = cur; cur = f; tPrev = tCur; tCur = performance.now();
           if (prev && f.t < prev.t) prev = null;
-          if (selected != null && !cur.c.some(c => c[0] === selected)) { card.innerHTML += ''; card.querySelector('span') && (card.querySelector('span').textContent = 'this creature has died'); selected = null; }
+          if (selected != null && !cur.c.some(c => c[0] === selected)) {
+            // it died: keep the card (and its 3D view, which only needs the body plan) and say so
+            const st = card.querySelector('[data-s]'); if (st) st.textContent = 'this creature has died · ' + st.textContent;
+            selected = null;
+          }
         }
         setTag(d.stale ? '' : 'live', d.stale ? 'catching up · the pool is saving or restarting' :
           `live · ${D.geo(d.geo_ma)} · tick ${d.tick.toLocaleString()}`);

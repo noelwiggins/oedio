@@ -271,7 +271,7 @@ table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; 
 .sp-row canvas { width: 46px; height: 34px; vertical-align: middle; }
 .bar-mix { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 8px 0; }
 .chart { width: 100%; height: 200px; display: block; }
-.zoom-ui { position: absolute; right: 10px; top: 10px; display: flex; gap: 2px; background: rgba(8,16,14,.62); border-radius: 999px; padding: 3px; }
+.zoom-ui { position: absolute; right: 10px; top: 46px; display: flex; gap: 2px; background: rgba(8,16,14,.62); border-radius: 999px; padding: 3px; }
 .zoom-ui button { border: 0; background: transparent; color: rgba(235,245,240,.85); font: 600 10.5px var(--dw-mono); letter-spacing: .08em;
   text-transform: uppercase; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
 .zoom-ui button.on, .zoom-ui button:hover { background: rgba(125,216,181,.25); color: #fff; }
