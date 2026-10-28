@@ -2,6 +2,18 @@
 
 Last updated: 2026-10-14
 
+## DARWIN Tidal Pool — Red Queen update (2026-10-27)
+Why neurons/sex stalled: neuron cells were the costliest cell and unmasked randomly-drifted hidden units (pure harm at first);
+gonads needed a conspecific gonad-bearer in eyesight (impossible at 1% share), crossover was non-homologous, and with no
+parasites cloning always won. Changes (darwin/pool.py): armour upkeep 0.006->0.012, drag 1/(1+0.08A), defence 3*sqrt(A);
+neuron upkeep 0.022->0.012, dormant hidden units fade (W2 *= 0.7 per birth), neurons give turn rate +30% and strike/dodge +12%
+each (cap 3); homologous crossover; broadcast spawning within a basin (60%); 4 immune genes per genome (mhc) and 3 pathogen
+strains that track the commonest genotypes every 1000 ticks; disease raises metabolism up to 1+0.5*sus*load (needs nearby hosts).
+New stats: neurons_mean, neural_share, disease. Checkpoint migration seeds mhc from hue.
+A/B from a fresh world (~1.1M ticks): new code -> 12-cell bodies by 1 Ma (old: 3), sexual share peaks 21%, neural share to 12%,
+armour no longer sweeps; population ~150 (biomass similar) and lower diversity; disease factor then softened 0.8 -> 0.5.
+Watch: re-seed count, population, sexual_share and neural_share on the live pool.
+
 ## Forge batch — translate all remaining non-English books (2026-10-27) — PAUSED: API spend limit
 Stopped when the Anthropic key hit its monthly usage limit ("regain access on 2026-11-01 00:00 UTC"). ~490 pages done (~$22, claude-sonnet-5).
 Resume: `cd /root/oedio` scratchpad driver is gone with the session -- rebuild from this list. Forge is resumable (skips pages with text):

@@ -87,6 +87,9 @@ CELL_NAMES = ["skin", "photo", "mouth", "flagellum", "eye", "armour", "store", "
 DIRS = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
 IN, H, OUT = 16, 8, 4
+MHC = 4                    # immune "lock" genes; pathogens evolve keys that fit the commonest locks (the Red Queen)
+STRAINS = 3
+PATH_R = 0.22              # how close a key must be to a lock to infect
 NW = IN * H + H + H * OUT + OUT
 
 
@@ -100,7 +103,8 @@ def new_genome(rng, root=None):
     root = root if root is not None else (PHOTO if rng.random() < 0.7 else MOUTH)
     return {"body": [[root, 0, 0, 1]], "brain": random_brain(rng),
             "repro": float(rng.uniform(0.45, 0.65)), "temp": float(rng.uniform(-0.3, 0.3)),
-            "mut": 1.0, "hue": float(rng.random()), "warm": 0.0, "care": 0.0}
+            "mut": 1.0, "hue": float(rng.random()), "warm": 0.0, "care": 0.0,
+            "mhc": [float(v) for v in rng.random(MHC)]}
 
 
 def develop(body):
@@ -169,19 +173,31 @@ def mutate(g, rng):
             "hue": float((g["hue"] + rng.normal(0, 0.01)) % 1.0),
             # warm-bloodedness and parental care: costly traits that start at zero and must pay their way
             "warm": float(np.clip(g.get("warm", 0.0) + (rng.normal(0, 0.04) if r(0.15) else 0.0), 0.0, 1.0)),
-            "care": float(np.clip(g.get("care", 0.0) + (rng.normal(0, 0.04) if r(0.15) else 0.0), 0.0, 1.0))}
+            "care": float(np.clip(g.get("care", 0.0) + (rng.normal(0, 0.04) if r(0.15) else 0.0), 0.0, 1.0)),
+            "mhc": [float((v + rng.normal(0, 0.015)) % 1.0) for v in _mhc(g, rng)]}
+
+
+def _mhc(g, rng):
+    m = g.get("mhc")
+    if m is None:                   # genomes from before the immune genes: seed them from the colour gene
+        m = [(g.get("hue", 0.5) * (k + 1.618)) % 1.0 for k in range(MHC)]
+        g["mhc"] = m
+    return m
 
 
 def crossover(a, b, rng):
+    # homologous crossover: both parents are cut at the same relative point, so a child gets one copy
+    # of each stretch of the developmental program instead of a duplicated or missing middle
     ia = int(rng.integers(1, len(a["body"]) + 1))
-    ib = int(rng.integers(0, len(b["body"]) + 1))
+    ib = min(len(b["body"]), max(0, round(ia * len(b["body"]) / max(1, len(a["body"])))))
     body = [list(x) for x in a["body"][:ia]] + [list(x) for x in b["body"][ib:]]
     body = body[:48] or [list(a["body"][0])]
     pick = rng.random(NW) < 0.5
     return {"body": body, "brain": np.where(pick, a["brain"], b["brain"]).astype(np.float32),
             "repro": (a["repro"] + b["repro"]) / 2, "temp": (a["temp"] + b["temp"]) / 2,
             "mut": math.sqrt(a["mut"] * b["mut"]), "hue": a["hue"],
-            "warm": (a.get("warm", 0.0) + b.get("warm", 0.0)) / 2, "care": (a.get("care", 0.0) + b.get("care", 0.0)) / 2}
+            "warm": (a.get("warm", 0.0) + b.get("warm", 0.0)) / 2, "care": (a.get("care", 0.0) + b.get("care", 0.0)) / 2,
+            "mhc": [x if rng.random() < 0.5 else y for x, y in zip(_mhc(a, rng), _mhc(b, rng))]}
 
 
 # ── names ────────────────────────────────────────────────────────────────
@@ -229,6 +245,8 @@ class Pool:
         self.repro, self.temp, self.hidden = z(), z(), z(np.int8)
         self.W = np.zeros((CAP, NW), np.float32)
         self.warm, self.care = z(), z()
+        self.sus = z()             # how well the current pathogen strains fit this creature's immune genes (0..1)
+        self.pathogens = [[float(v) for v in self.rng.random(MHC)] for _ in range(STRAINS)]
         self.mom, self.mom_uid, self.fed_until = np.full(CAP, -1, np.int64), z(np.int64), z(np.int64)
         self.genomes = [None] * CAP
         self.plans, self.plan_ids, self.next_pid = {}, {}, 1
@@ -291,18 +309,25 @@ class Pool:
         c = cnt.astype(np.float32)
         self.emax[i] = 12.0 * n + 45.0 * c[STORE]
         self.energy[i] = min(energy, self.emax[i])
-        self.metab[i] = (0.018 * n ** 0.75 + 0.012 * c[FLAG] + 0.022 * c[NEURON] + 0.010 * c[EYE] + 0.006 * c[ARMOR]
+        self.metab[i] = (0.018 * n ** 0.75 + 0.012 * c[FLAG] + 0.012 * c[NEURON] + 0.010 * c[EYE] + 0.012 * c[ARMOR]
                          + 0.004 * c[STORE] + 0.006 * c[GONAD])
-        self.vmax[i] = min(1.6, 0.55 * c[FLAG] / math.sqrt(n))
+        self.vmax[i] = min(1.6, 0.55 * c[FLAG] / math.sqrt(n)) / (1.0 + 0.08 * c[ARMOR])   # plates are heavy
         self.sense[i] = 1.5 + (min(SENSE_MAX - 1.5, 7.0 * c[EYE] ** 0.7) if c[EYE] else 0.0)
         self.att[i] = (c[MOUTH] * 1.0 + 1.0 * math.sqrt(n)) if c[MOUTH] else 0.0   # size helps, with diminishing returns
-        self.dfn[i] = 0.5 + 1.5 * c[ARMOR] + 1.1 * math.sqrt(n)
+        self.dfn[i] = 0.5 + 3.0 * math.sqrt(c[ARMOR]) + 1.1 * math.sqrt(n)   # each extra plate adds less
         self.rad[i] = 0.5 + 0.55 * math.sqrt(n)
         self.life[i] = int((1500 + 150 * n) * self.rng.uniform(0.7, 1.3))
         self.repro[i] = g["repro"]
         self.temp[i] = g["temp"]
         self.hidden[i] = min(H, 2 + 2 * int(c[NEURON]))
+        # dormant hidden units (no neuron cells to run them) fade toward silence, so when a neuron cell does
+        # appear its new units start nearly neutral instead of scrambling a working controller
+        h = int(self.hidden[i])
+        if h < H:
+            W2 = g["brain"][IN * H + H:IN * H + H + H * OUT].reshape(H, OUT)
+            W2[h:] *= 0.7
         self.W[i] = g["brain"]
+        self.sus[i] = self._susceptibility(_mhc(g, self.rng))
         self.warm[i], self.care[i] = g.get("warm", 0.0), g.get("care", 0.0)
         self.mom[i] = mom
         self.mom_uid[i] = self.uid[mom] if mom >= 0 else 0
@@ -313,6 +338,35 @@ class Pool:
         self.species[i] = self._species_for(g, cnt, parent_sid, gen)
         self.births += 1
         return i
+
+    def _susceptibility(self, mhc):
+        m = np.asarray(mhc, np.float32)
+        best = 0.0
+        for key in self.pathogens:
+            d = np.abs(m - np.asarray(key, np.float32))
+            d = np.minimum(d, 1.0 - d)                       # the lock space wraps around
+            best = max(best, float(math.exp(-(np.sqrt((d * d).sum()) / PATH_R) ** 2)))
+        return best
+
+    def _evolve_pathogens(self):
+        """Each strain drifts toward the immune genes of the hosts it already fits best: whatever genotype is
+        common gets hunted. Rare genotypes escape, which is the advantage sex gives (it shuffles the locks)."""
+        a = np.flatnonzero(self.alive)
+        if len(a) < 10:
+            return
+        M = np.array([_mhc(self.genomes[i], self.rng) for i in a], np.float32)
+        for k, key in enumerate(self.pathogens):
+            kk = np.asarray(key, np.float32)
+            d = np.abs(M - kk)
+            d = np.minimum(d, 1.0 - d)
+            dist = np.sqrt((d * d).sum(1))
+            near = M[np.argsort(dist)[:max(5, len(a) // 8)]]
+            # circular mean of the closest hosts, then step toward it
+            ang = near * 2 * math.pi
+            tgt = (np.arctan2(np.sin(ang).mean(0), np.cos(ang).mean(0)) / (2 * math.pi)) % 1.0
+            step = ((tgt - kk + 0.5) % 1.0) - 0.5
+            self.pathogens[k] = [float(v) for v in (kk + 0.35 * step + self.rng.normal(0, 0.02, MHC)) % 1.0]
+        self.sus[a] = [self._susceptibility(m) for m in M]
 
     def _die(self, idx):
         if not len(idx):
@@ -373,6 +427,7 @@ class Pool:
                 u[0] = float(np.clip(u[0], 4, BASIN_W - 4))
         if self.tick > c["shock_until"]:
             c["shock_temp"] *= 0.9
+        self._evolve_pathogens()
         # catastrophes: rare, mostly small, occasionally severe (log-uniform)
         if rng.random() < CLIMATE_EVERY / 3_000_000:
             self._catastrophe()
@@ -456,6 +511,10 @@ class Pool:
         occ = np.zeros((GRID // 2, GRID // 2), np.float32)
         np.add.at(occ, (sy, sx), self.n[a].astype(np.float32))
         crowd = 1.0 + 0.1 * np.maximum(0.0, occ[sy, sx] - 3.0)   # space and oxygen get scarce in a packed patch
+        sus = self.sus[a]
+        load = np.zeros((GRID // 2, GRID // 2), np.float32)
+        np.add.at(load, (sy, sx), sus)
+        sick = 1.0 + 0.5 * sus * np.minimum(np.maximum(load[sy, sx] - sus, 0.0) / 2.0, 1.5)   # infection needs other hosts nearby
 
         # neighbours (periodic)
         pos = np.mod(np.stack([x, y], 1).astype(np.float64), ARENA)
@@ -516,7 +575,8 @@ class Pool:
         breed = 1 / (1 + np.exp(-out[:, 3]))
 
         # movement: own thrust plus a slow ocean current and jitter
-        hd = (hd + 0.35 * turn) % 6.283
+        nh = np.minimum(self.cnt[a, NEURON], 3).astype(np.float32)        # neurons: faster, finer reflexes
+        hd = (hd + 0.35 * (1 + 0.3 * nh) * turn) % 6.283
         v = self.vmax[a] * throttle * np.where(exposed, 0.25, 1.0)     # stranded at low tide: hard to move
         cur = self.clim["cur"]
         nx = (x + v * np.cos(hd) + rng.normal(0, 0.05, n)) % ARENA      # currents run along the coast, so nothing piles up on a reef
@@ -540,7 +600,7 @@ class Pool:
         mouth = self.cnt[a, MOUTH].astype(np.float32)
         g_det = np.where(eat > 0.3, np.minimum(Dc * 0.15, 0.06 * mouth), 0.0)
         dry = np.where(exposed, 1.4, 1.0)        # drying out on the exposed flats (stage 2 adds water-holding skin)
-        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry
+        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry * sick
                 + 0.004 * v * self.n[a])
         np.subtract.at(self.N, (gy, gx), g_photo * 0.5)
         np.subtract.at(self.D, (gy, gx), g_det)
@@ -568,7 +628,8 @@ class Pool:
                     continue
                 ih, ip = a[h], a[pr]
                 self.energy[ih] -= 0.05
-                if rng.random() < att[h] / (att[h] + dfn[pr]):
+                ah, dp_ = att[h] * (1 + 0.12 * nh[h]), dfn[pr] * (1 + 0.12 * nh[pr])   # coordination: strike and dodge
+                if rng.random() < ah / (ah + dp_):
                     taken.add(pr)
                     food = max(0.0, float(self.energy[ip])) + 2.0 * float(self.n[ip])
                     gain = min(0.6 * food, float(self.emax[ih] - self.energy[ih]))
@@ -616,6 +677,11 @@ class Pool:
                                & (self.age[a] >= MIN_AGE))
         if len(ready):
             rng.shuffle(ready)
+            gon = a[self.cnt[a, GONAD] > 0]
+            spawners = {}
+            if len(gon):
+                for j, b_ in zip(gon.tolist(), basin_of(self.x[gon]).tolist()):
+                    spawners.setdefault((int(self.species[j]), b_), []).append(j)
             for r_ in ready[:40]:
                 i = int(a[r_])
                 if not self.alive[i]:
@@ -626,9 +692,18 @@ class Pool:
                     j = int(a[jm[r_]])
                     if self.alive[j] and self.energy[j] > 0.3 * self.emax[j]:
                         mate_i = j
+                broadcast = False
+                if mate_i is None and self.cnt[i, GONAD]:
+                    # broadcast spawning: gametes released into the water can reach a distant conspecific
+                    # in the same basin (how sex works for corals, urchins and most early animals)
+                    key = (int(self.species[i]), int(basin_of(np.array([self.x[i]]))[0]))
+                    pool_ = [j for j in spawners.get(key, []) if j != i and self.alive[j]]
+                    if pool_ and rng.random() < 0.6:
+                        mate_i = pool_[int(rng.integers(len(pool_)))]
+                        broadcast = True
                 if mate_i is not None:
                     child = mutate(crossover(g, self.genomes[mate_i], rng), rng)
-                    gift = 0.15 * float(self.energy[mate_i])
+                    gift = 0.0 if broadcast else 0.15 * float(self.energy[mate_i])
                     self.energy[mate_i] -= gift
                 else:
                     child = mutate(g, rng)
@@ -712,6 +787,8 @@ class Pool:
             "motile_share": round(float((cnt[:, FLAG] > 0).mean()), 4),
             "armour_share": round(float((cnt[:, ARMOR] > 0).mean()), 4),
             "sexual_share": round(float((cnt[:, GONAD] > 0).mean()), 4),
+            "neurons_mean": round(float(cnt[:, NEURON].mean()), 3), "neural_share": round(float((cnt[:, NEURON] > 0).mean()), 4),
+            "disease": round(float(self.sus[a].mean()), 4),
             "producers": round(float((role == 0).mean()), 4), "grazers": round(float((role == 1).mean()), 4),
             "predators": round(float((role == 2).mean()), 4), "predator_count": int((role == 2).sum()),
             "trophic_max": round(float(np.percentile(self.tl[a], 98)), 3),
@@ -855,6 +932,11 @@ def from_blob(b: bytes) -> Pool:
         p.care = np.array([(g or {}).get("care", 0.0) for g in p.genomes], np.float32)
         p.mom, p.mom_uid, p.fed_until = np.full(CAP, -1, np.int64), np.zeros(CAP, np.int64), np.zeros(CAP, np.int64)
         p.clim.setdefault("gaps", [float(p.rng.uniform(0, ARENA)) for _ in range(BASINS)])
+    if not hasattr(p, "pathogens"):            # Oct 27: immune genes and evolving pathogens
+        p.pathogens = [[float(v) for v in p.rng.random(MHC)] for _ in range(STRAINS)]
+        p.sus = np.zeros(CAP, np.float32)
+        for i in np.flatnonzero(p.alive):
+            p.sus[i] = p._susceptibility(_mhc(p.genomes[i], p.rng))
     if not hasattr(p, "bank"):
         p.bank, p.seg_peak = _clock_from_history(p.era)
         p.clock_gen = p.bank + p.seg_peak
