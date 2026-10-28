@@ -22,7 +22,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY") or open(
     os.path.expanduser("~/.anthropic_key")).read().strip()
-MODEL = "claude-sonnet-4-6"
+MODEL = os.environ.get("FORGE_MODEL", "claude-sonnet-4-6")
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROMPT_TRANSLATE = """This is a page from {description}, in {lang}.
@@ -56,6 +56,10 @@ _wikimedia_last_request = [0.0]
 
 
 def fetch_image_b64(url):
+    # Optional: ask IIIF servers for a larger rendition (fine scripts such as Greek uncial or Gothic
+    # textura lose legibility at the 50% size the reader uses).
+    if os.environ.get("FORGE_FULLRES") and "/full/pct:50/" in url:
+        url = url.replace("/full/pct:50/", "/full/pct:100/")
     headers = {"User-Agent": "oedio.com megabook builder (noel@harmonyball.com)"}
     if not url.startswith("http"):
         # Local file path -- used for user-submitted scans processed directly
@@ -76,9 +80,72 @@ def fetch_image_b64(url):
             data = urllib.request.urlopen(req, timeout=60).read()
             _wikimedia_last_request[0] = time.time()
             return base64.b64encode(data).decode()
-    req = urllib.request.Request(url, headers=headers)
-    data = urllib.request.urlopen(req, timeout=60).read()
-    return base64.b64encode(data).decode()
+    for attempt in range(4):
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            data = urllib.request.urlopen(req, timeout=180).read()
+            return base64.b64encode(data).decode()
+        except Exception:
+            if attempt == 3:
+                raise
+            time.sleep(15 * (attempt + 1))
+
+
+def call_claude_text(text, lang, description):
+    """Translate an existing transcription (no image) into English."""
+    prompt = (f"Below is a transcription of one page from {description}, in {lang}. "
+              "Translate it into clear, readable English, preserving line and verse structure and "
+              "the flavor of the original without archaism. Keep verse numbers, headings and "
+              "[illegible] markers. Respond with the English translation only -- no preamble, "
+              "notes or markdown fences.\n\n" + text)
+    body = json.dumps({"model": MODEL, "max_tokens": 16000,
+                       "messages": [{"role": "user", "content": prompt}]}).encode()
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, headers={
+        "x-api-key": API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"})
+    for attempt in range(3):
+        try:
+            resp = json.loads(urllib.request.urlopen(req, timeout=600).read())
+            usage = resp.get("usage", {})
+            with open(os.environ.get("FORGE_TOKEN_LOG", "/tmp/forge_token_log.jsonl"), "a") as logf:
+                logf.write(json.dumps({"input_tokens": usage.get("input_tokens", 0),
+                                       "output_tokens": usage.get("output_tokens", 0), "model": MODEL}) + "\n")
+            return "".join(b.get("text", "") for b in resp.get("content", [])).strip()
+        except Exception as e:
+            if attempt == 2:
+                print(f"    call_claude_text failed: {type(e).__name__}: {e}")
+                return None
+            time.sleep(10 * (attempt + 1))
+
+
+def main_from_transcription(slug, start, end, lang, description=None):
+    """Fill {slug}-english.json from an existing {slug}-transcription.json."""
+    description = description or "a rare, digitized public-domain book"
+    t_path = f"{BASE}/static/reader-data/{slug}-transcription.json"
+    e_path = f"{BASE}/static/reader-data/{slug}-english.json"
+    t_layer = {p["page"]: p for p in json.load(open(t_path))}
+    e_layer = load_layer(e_path, list(t_layer.values()))
+    for pg, p in t_layer.items():
+        e_layer.setdefault(pg, {"page": pg, "text": "", "image": p.get("image", "")})
+    todo = [pg for pg in sorted(t_layer) if start <= pg <= end and t_layer[pg]["text"].strip()
+            and not e_layer[pg]["text"].strip()]
+    print(f"{slug}: translating {len(todo)} transcribed pages ({start}-{end})")
+    def save():
+        json.dump(sorted(e_layer.values(), key=lambda p: p["page"]), open(e_path, "w"), ensure_ascii=False)
+    n = 0
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("FORGE_WORKERS", "7"))) as ex:
+        futs = {}
+        for pg in todo:
+            tx = t_layer[pg]["text"]
+            if tx.strip() == "\u2014":
+                e_layer[pg]["text"] = "\u2014"; continue
+            futs[ex.submit(call_claude_text, tx, lang, description)] = pg
+        for fut in as_completed(futs):
+            out = fut.result()
+            if out:
+                e_layer[futs[fut]]["text"] = out; n += 1
+                if n % 5 == 0: save()
+    save()
+    print(f"done: {n} pages translated -> {e_path}")
 
 
 def call_claude(img_b64, lang, description, want_translation):
@@ -86,7 +153,7 @@ def call_claude(img_b64, lang, description, want_translation):
         lang=lang, description=description)
     body = json.dumps({
         "model": MODEL,
-        "max_tokens": 4000,
+        "max_tokens": 16000,
         "messages": [{"role": "user", "content": [
             {"type": "image", "source": {"type": "base64",
              "media_type": "image/jpeg", "data": img_b64}},
@@ -100,12 +167,12 @@ def call_claude(img_b64, lang, description, want_translation):
             "content-type": "application/json"})
     for attempt in range(3):
         try:
-            resp = json.loads(urllib.request.urlopen(req, timeout=90).read())
+            resp = json.loads(urllib.request.urlopen(req, timeout=600).read())
             usage = resp.get("usage", {})
             if usage:
-                with open("/tmp/forge_token_log.jsonl", "a") as logf:
+                with open(os.environ.get("FORGE_TOKEN_LOG", "/tmp/forge_token_log.jsonl"), "a") as logf:
                     logf.write(json.dumps({"input_tokens": usage.get("input_tokens", 0),
-                                            "output_tokens": usage.get("output_tokens", 0)}) + "\n")
+                                            "output_tokens": usage.get("output_tokens", 0), "model": MODEL}) + "\n")
             return "".join(b.get("text", "") for b in resp.get("content", []))
         except Exception as e:
             if attempt == 2:
@@ -177,7 +244,7 @@ def main(slug, start, end, lang, description=None, want_translation=True):
 
     done = 0
     processed = 0
-    with ThreadPoolExecutor(max_workers=7) as ex:
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("FORGE_WORKERS", "7"))) as ex:
         futures = {ex.submit(work, pg): pg for pg in todo}
         for fut in as_completed(futures):
             pg, tr, en = fut.result()
@@ -207,5 +274,10 @@ if __name__ == "__main__":
     a = sys.argv
     no_translate = "--no-translation" in a
     a = [x for x in a if x != "--no-translation"]
+    from_tr = "--from-transcription" in a
+    a = [x for x in a if x != "--from-transcription"]
     desc = a[5] if len(a) > 5 else None
+    if from_tr:
+        main_from_transcription(a[1], int(a[2]), int(a[3]), a[4], desc)
+        sys.exit(0)
     main(a[1], int(a[2]), int(a[3]), a[4], desc, not no_translate)
