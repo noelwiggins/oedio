@@ -261,6 +261,26 @@
      "source_label": "Internet Archive"
     },
     {
+     "slug": "gutenberg-bible-transcription",
+     "title": "The Gutenberg Bible (1454-1456) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Facsimile Editions",
+     "year": 1455,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "gutenberg-bible-english",
+     "title": "The Gutenberg Bible (1454-1456) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Facsimile Editions",
+     "year": 1455,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "garima-gospels",
      "role": "Ancient Manuscript",
      "title": "The Garima Gospels (Ge’ez, c. 330–650 CE)",
@@ -611,6 +631,26 @@
      "is_translated": true
     },
     {
+     "slug": "french-colonies-1867-transcription",
+     "title": "Les colonies anglaises de 1574 à 1660 — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Primary text",
+     "year": 1867,
+     "loc_item": "13022174",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "french-colonies-1867-english",
+     "title": "Les colonies anglaises de 1574 à 1660 — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Primary text",
+     "year": 1867,
+     "loc_item": "13022174",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "sailing-directions-1869",
      "role": "Reference",
      "title": "West Indies Directory, Part 1: Cuba, the Bahamas, and the Florida Reef (1869)",
@@ -757,6 +797,26 @@
      "facsimile": true
     },
     {
+     "slug": "florentine-codex-book02-transcription",
+     "title": "Book 2: The Ceremonies — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 2",
+     "year": 1577,
+     "loc_item": "2021667847",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book02-english",
+     "title": "Book 2: The Ceremonies — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 2",
+     "year": 1577,
+     "loc_item": "2021667847",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "florentine-codex-book03",
      "role": "Book 3",
      "title": "Book 3: The Origin of the Gods",
@@ -807,6 +867,26 @@
      "facsimile": true
     },
     {
+     "slug": "florentine-codex-book07-transcription",
+     "title": "Book 7: The Sun, Moon, and Stars, and the Binding of the Years — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 7",
+     "year": 1577,
+     "loc_item": "2021667852",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book07-english",
+     "title": "Book 7: The Sun, Moon, and Stars, and the Binding of the Years — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 7",
+     "year": 1577,
+     "loc_item": "2021667852",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "florentine-codex-book08",
      "role": "Book 8",
      "title": "Book 8: Kings and Lords",
@@ -815,6 +895,26 @@
      "loc_item": "2021667853",
      "note": "Kings and Lords records Aztec political history and royal genealogy from oral accounts of surviving nobility -- this book has been used extensively by historians trying to reconstruct pre-conquest Aztec political history, precisely because so few other sources for that history, outside of the pictorial codices, survive at all.",
      "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book08-transcription",
+     "title": "Book 8: Kings and Lords — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 8",
+     "year": 1577,
+     "loc_item": "2021667853",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book08-english",
+     "title": "Book 8: Kings and Lords — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 8",
+     "year": 1577,
+     "loc_item": "2021667853",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "florentine-codex-book09",
@@ -1062,6 +1162,16 @@
      "source_label": "Internet Archive"
     },
     {
+     "slug": "buddha-jayanti-sutta-pitaka-transcription",
+     "title": "Buddha Jayanti Sutta Pitaka (1957–1989 edition) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Sinhala Tradition",
+     "year": 1957,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "nalanda-khuddakanikaya-1",
      "role": "Devanagari Tradition",
      "title": "Nalanda Devanagari Pali Series: Khuddakanikaya Vol. 1 (1959)",
@@ -1086,6 +1196,16 @@
      "source_label": "Internet Archive"
     },
     {
+     "slug": "buddha-jayanti-vinaya-pitaka-transcription",
+     "title": "Buddha Jayanti Vinaya Pitaka (1957 edition) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Sinhala Tradition",
+     "year": 1957,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "buddha-jayanti-abhidhamma-pitaka",
      "role": "Sinhala Tradition",
      "title": "Buddha Jayanti Abhidhamma Pitaka (1957 edition)",
@@ -1098,6 +1218,16 @@
      "source_label": "Internet Archive"
     },
     {
+     "slug": "buddha-jayanti-abhidhamma-pitaka-transcription",
+     "title": "Buddha Jayanti Abhidhamma Pitaka (1957 edition) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Sinhala Tradition",
+     "year": 1957,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "hewavitarne-sutta-commentary",
      "role": "Theravada Commentary — Sinhala Tradition",
      "title": "Suttatthakatha (Simon Hewavitarne Bequest, Sinhala script)",
@@ -1108,6 +1238,26 @@
      "facsimile": true,
      "source_url": "https://archive.org/details/shbsuttatthakatha",
      "source_label": "Internet Archive"
+    },
+    {
+     "slug": "hewavitarne-sutta-commentary-transcription",
+     "title": "Suttatthakatha (Simon Hewavitarne Bequest, Sinhala script) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Theravada Commentary — Sinhala Tradition",
+     "year": 1920,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "hewavitarne-sutta-commentary-english",
+     "title": "Suttatthakatha (Simon Hewavitarne Bequest, Sinhala script) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Theravada Commentary — Sinhala Tradition",
+     "year": 1920,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     }
    ],
    "emblem": "em-lotus"
@@ -1340,6 +1490,26 @@
      "tradition": "kampo",
      "source_url": "https://www.loc.gov/item/2021666350/",
      "source_label": "Library of Congress"
+    },
+    {
+     "slug": "kampo-tradition-transcription",
+     "title": "Yi Xin Fang / Ishinpo (medicinal recension, 1856 printing) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "East Asia",
+     "year": 1856,
+     "loc_item": "2021666350",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "kampo-tradition-english",
+     "title": "Yi Xin Fang / Ishinpo (medicinal recension, 1856 printing) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "East Asia",
+     "year": 1856,
+     "loc_item": "2021666350",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "yamato-honzo",

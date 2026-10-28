@@ -55,6 +55,26 @@ _wikimedia_lock = threading.Lock()
 _wikimedia_last_request = [0.0]
 
 
+def _fit_image(data):
+    """Keep images inside the API limits (5 MB base64, 8000 px) and always send JPEG."""
+    try:
+        from PIL import Image
+        import io
+        im = Image.open(io.BytesIO(data))
+        if im.format == "JPEG" and len(data) < 3_600_000 and max(im.size) <= 7900:
+            return data
+        im = im.convert("RGB")
+        im.thumbnail((3000, 3000))
+        q = 88
+        while True:
+            buf = io.BytesIO(); im.save(buf, "JPEG", quality=q)
+            if buf.tell() < 3_600_000 or q < 50:
+                return buf.getvalue()
+            q -= 10
+    except Exception:
+        return data
+
+
 def fetch_image_b64(url):
     # Optional: ask IIIF servers for a larger rendition (fine scripts such as Greek uncial or Gothic
     # textura lose legibility at the 50% size the reader uses).
@@ -84,7 +104,7 @@ def fetch_image_b64(url):
         try:
             req = urllib.request.Request(url, headers=headers)
             data = urllib.request.urlopen(req, timeout=180).read()
-            return base64.b64encode(data).decode()
+            return base64.b64encode(_fit_image(data)).decode()
         except Exception:
             if attempt == 3:
                 raise
@@ -175,8 +195,14 @@ def call_claude(img_b64, lang, description, want_translation):
                                             "output_tokens": usage.get("output_tokens", 0), "model": MODEL}) + "\n")
             return "".join(b.get("text", "") for b in resp.get("content", []))
         except Exception as e:
+            detail = ""
+            if hasattr(e, "read"):
+                try: detail = e.read().decode()[:300]
+                except Exception: pass
+            if getattr(e, "code", None) == 400:
+                print(f"    call_claude 400: {detail}"); return None
             if attempt == 2:
-                print(f"    call_claude failed after 3 attempts: {type(e).__name__}: {e}")
+                print(f"    call_claude failed after 3 attempts: {type(e).__name__}: {e} {detail}")
                 return None
             time.sleep(10 * (attempt + 1))
 
