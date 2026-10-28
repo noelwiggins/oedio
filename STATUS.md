@@ -2,6 +2,22 @@
 
 Last updated: 2026-10-14
 
+## Forge batch — translate all remaining non-English books (2026-10-27) — PAUSED: API spend limit
+Stopped when the Anthropic key hit its monthly usage limit ("regain access on 2026-11-01 00:00 UTC"). ~490 pages done (~$22, claude-sonnet-5).
+Resume: `cd /root/oedio` scratchpad driver is gone with the session -- rebuild from this list. Forge is resumable (skips pages with text):
+`FORGE_MODEL=claude-sonnet-5 FORGE_WORKERS=5 python3 scripts/forge_translate.py <slug> 1 9999 "<lang>" "<description>"`
+(add `FORGE_FULLRES=1` for Dioscorides; `--from-transcription` translates existing transcription layers text-only).
+Then register new layers in data/manifest.json next to the base component (slug-transcription / slug-english).
+Done: french-colonies-1867 (118), florentine-codex-book07 (51), Czech MSS wired as aligned layers (commit 06846aa).
+Partial (T/E pages of total): florentine book02 163/290, book08 31/116, gutenberg-bible 908/1283, czech-herbal 324/452,
+  prager-wundarznei 154/378, medical-compendium 128/276, astronomical-medical 150/364, kampo-tradition 20/90.
+Not started: florentine book03,04,05,06,09,10,12; greek-nt-westcotthort-1895 (1179; bound with English RV -- English pages
+  transcribe only); dhammapada-fausboll-1855 (495, Pali+Latin); dhammapada-thai-chulalongkorn (492, Pali in Thai script);
+  dioscorides (351, needs FORGE_FULLRES=1); bencao-gangmu (207 -- actually the JAPANESE Honzo Zufu, fix its description);
+  garima-gospels (7, Ge'ez); maps bellin/blaeu-v2/coronelli/schenk/lopez/roggeveen (1 each);
+  English from transcription: buddha-jayanti vinaya/sutta/abhidhamma, hewavitarne (~1,100 pages, text-only, cheap).
+Estimated remaining: ~5,500 image pages, ~$250-400 at sonnet-5 rates (~$0.045/page avg so far).
+
 ## DARWIN Barricelli's Symbiosis (2026-10-26)
 - `/darwin/barricelli` (nav "Barricelli"): client-side reconstruction of Barricelli's 1953–56 IAS experiments
   (static/darwin/barricelli.js). Ring of 256/512 cells, genes ±8/±16; shift norm a→a+n; symbiotic chain replication
