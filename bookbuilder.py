@@ -347,6 +347,35 @@ def _norm_layout(L, ids, default_src):
     return {"layout": "full", "src": src, "fit": fit}
 
 
+def _spread_sources(left, right, ids):
+    """Never show one source twice while a chosen source goes unused.
+
+    The Studio form can end up with stale panels (e.g. both panels "A" after sources were removed and
+    added back), which printed the same scan three times on a spread. Repeat a source only when there
+    are not enough distinct sources to fill every slot."""
+    slots = []
+    for L in (left, right):
+        if not L or L["layout"] == "blank":
+            continue
+        if L["layout"] == "full":
+            slots.append((L, "src", None))
+        else:
+            slots += [(L, "panels", 0), (L, "panels", 1)]
+    get = lambda L, k, i: L[k] if i is None else L[k][i]
+    used = [get(*sl) for sl in slots]
+    unused = [i for i in ids if i not in used]
+    seen = set()
+    for L, k, i in slots:
+        v = get(L, k, i)
+        if v in seen and unused:
+            v = unused.pop(0)
+            if i is None:
+                L[k] = v
+            else:
+                L[k][i] = v
+        seen.add(v)
+
+
 def normalize_spec(raw: dict) -> dict:
     if not isinstance(raw, dict):
         raise SpecError("Spec must be an object")
@@ -382,6 +411,7 @@ def normalize_spec(raw: dict) -> dict:
     mode = "single" if raw.get("mode") == "single" else "spread"
     left = _norm_layout(raw.get("left"), ids, ids[0])
     right = _norm_layout(raw.get("right"), ids, ids[min(1, len(ids) - 1)])
+    _spread_sources(left, right if mode == "spread" else None, ids)
 
     c = raw.get("cover") or {}
     theme = c.get("theme") if c.get("theme") in THEMES else "oxblood"

@@ -408,6 +408,19 @@
       if (IDS.indexOf(L.src) >= n) L.src = "A";
       L.panels = L.panels.map(p => IDS.indexOf(p) >= n ? IDS[Math.max(0, n - 1)] : p);
     });
+    // never show one source twice while a chosen source goes unused (the builder enforces the same)
+    const slots = [];
+    [S.left, S.mode === "spread" ? S.right : null].forEach(L => {
+      if (!L || L.layout === "blank") return;
+      if (L.layout === "full") slots.push([L, "src", null]); else slots.push([L, "panels", 0], [L, "panels", 1]);
+    });
+    const val = ([L, k, i]) => i == null ? L[k] : L[k][i];
+    const used = slots.map(val), unused = IDS.slice(0, n).filter(id => !used.includes(id)), seen = new Set();
+    slots.forEach(sl => {
+      let v = val(sl);
+      if (seen.has(v) && unused.length) { v = unused.shift(); if (sl[2] == null) sl[0][sl[1]] = v; else sl[0][sl[1]][sl[2]] = v; }
+      seen.add(v);
+    });
     renderSources(); renderAll(); changed();
   }
 
