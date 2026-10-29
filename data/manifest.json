@@ -847,6 +847,26 @@
      "facsimile": true
     },
     {
+     "slug": "florentine-codex-book03-transcription",
+     "title": "Book 3: The Origin of the Gods — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 3",
+     "year": 1577,
+     "loc_item": "2021667848",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book03-english",
+     "title": "Book 3: The Origin of the Gods — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 3",
+     "year": 1577,
+     "loc_item": "2021667848",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "florentine-codex-book04",
      "role": "Book 4",
      "title": "Book 4: The Soothsayers (Art of Divination)",
@@ -855,6 +875,26 @@
      "loc_item": "2021667849",
      "note": "The Art of Divination catalogs a Aztec calendrical system, the tonalpohualli, used to predict individual destiny based on birth date -- Spanish clergy considered this kind of astrological practice a serious threat to genuine conversion, since it offered an alternative framework for understanding fate that competed directly with Christian providence.",
      "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book04-transcription",
+     "title": "Book 4: The Soothsayers (Art of Divination) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 4",
+     "year": 1577,
+     "loc_item": "2021667849",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book04-english",
+     "title": "Book 4: The Soothsayers (Art of Divination) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 4",
+     "year": 1577,
+     "loc_item": "2021667849",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "florentine-codex-book05",
@@ -945,6 +985,26 @@
      "loc_item": "2021667854",
      "note": "The Merchants documents the pochteca, a powerful hereditary merchant class who functioned as much as long-distance diplomats and intelligence gatherers for the Aztec state as traders -- their detailed trade networks extended far beyond the reach of Aztec military conquest, giving the empire economic influence well past its actual borders.",
      "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book09-transcription",
+     "title": "Book 9: The Merchants — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 9",
+     "year": 1577,
+     "loc_item": "2021667854",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book09-english",
+     "title": "Book 9: The Merchants — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 9",
+     "year": 1577,
+     "loc_item": "2021667854",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "florentine-codex-book10",
