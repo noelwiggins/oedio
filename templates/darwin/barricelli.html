@@ -5,7 +5,7 @@
 <h1 class="page">Barricelli's Symbiosis</h1>
 <p class="lede">In 1953 the mathematician Nils Aall Barricelli used John von Neumann's computer at night to breed numbers. A ring of cells,
   a few integers, three rules, and no design. What came out reproduced, cooperated, parasitised, crossed and repaired itself.
-  This is a live reconstruction: every run starts from random numbers, and every organism named below was found, not written.</p>
+  This is a live reconstruction: every run starts from random numbers, and every organism named below was found, not written. <a href="#explain">How it works, slowed down ↓</a></p>
 
 <section class="section card" id="bx">
   <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -69,9 +69,220 @@
       cannot do yet: separate lineages merging into one organism. What makes merging pay here is the best guide to adding it there.</p>
   </div>
 </section>
+
+<h2 class="section" id="explain" style="margin-bottom:4px">How it works, slowed down</h2>
+<p class="small muted" style="margin-top:0">Each animation below runs the same rules as the universe above, zoomed in or side by side. They play while on screen.</p>
+
+<section class="grid g2" style="margin-top:12px">
+  <div class="card bxe" id="bxe-drift">
+    <div class="bxe-head"><h3>1 · A gene alone only drifts</h3><button class="btn tonal sm" data-replay>Replay</button></div>
+    <canvas class="bxe-cv" style="height:230px" aria-label="A single gene +3 jumping three cells right each generation"></canvas>
+    <p class="small bxe-cap"></p>
+  </div>
+  <div class="card bxe" id="bxe-pair">
+    <div class="bxe-head"><h3>2 · Two genes that meet multiply</h3><button class="btn tonal sm" data-replay>Replay</button></div>
+    <canvas class="bxe-cv" style="height:230px" aria-label="Genes +3 and −2 landing on each other and multiplying"></canvas>
+    <p class="small bxe-cap"></p>
+  </div>
+</section>
+
+<section class="section card bxe" id="bxe-coll">
+  <div class="bxe-head"><h3>3 · Collisions: the three norms</h3><button class="btn tonal sm" data-replay>Replay</button></div>
+  <p class="small" style="margin-top:0">A <b style="color:#e9bf6d">+2</b> jumps right two cells and a <b style="color:#9ab8ff">−3</b> jumps left three. Both land in the same cell. What happens next is the
+    <b>collision norm</b>, the one rule Barricelli varied most.</p>
+  <div class="grid g3">
+    <div><div class="small"><b>Norm 0 · annihilate</b></div><canvas class="bxe-cv" style="height:150px"></canvas>
+      <p class="small muted">Barricelli's basic rule. Two different genes can't share a cell, so both are lost. Competition is absolute: one niche, one occupant.</p></div>
+    <div><div class="small"><b>Sum · fuse</b></div><canvas class="bxe-cv" style="height:150px"></canvas>
+      <p class="small muted">The two fuse into one gene, their sum (if it stays within range). Material is merged rather than destroyed, so new genes are built from old ones.</p></div>
+    <div><div class="small"><b>Random · mutate</b></div><canvas class="bxe-cv" style="height:150px"></canvas>
+      <p class="small muted">Half the time a random new gene appears; otherwise the cell stays empty. This is mutation: novelty with no plan. Replay to roll again.</p></div>
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card bxe" id="bxe-graph">
+    <div class="bxe-head"><h3>4 · How an organism is recognised</h3></div>
+    <canvas class="bxe-cv" style="height:280px" aria-label="A graph of genes; arrows show which gene multiplies by landing on which"></canvas>
+    <p class="small" style="margin-bottom:0">Each circle is a gene value and each arrow means "multiplies by landing on". <b style="color:#7dd8b5">A</b> and <b style="color:#e9bf6d">B</b> are closed loops:
+      every member is copied with another member's help, so the group copies itself as a whole. <b style="color:#d79bff">+6</b> only takes. Remove B and +6 stops multiplying;
+      remove +6 and B doesn't notice.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Who uses whom</h3>
+    <p class="small">Every time a gene <i>n</i> earns an extra copy by landing on gene <i>m</i>, the page records a link <i>n</i> → <i>m</i> (each dot travelling along an arrow is one such copy).
+      Over the last <b>12 generations</b> the links form a network.</p>
+    <ul class="small" style="padding-left:18px">
+      <li><b>Symbioorganism:</b> genes that use each other in a closed loop, in both directions and often. A loop can be two genes (<b style="color:#7dd8b5">A</b>: +3 ⇄ −2) or longer
+        (<b style="color:#e9bf6d">B</b>: +5 → −4 → +1 → +5). Formally these are the network's <i>strongly connected components</i>, found with Tarjan's algorithm.</li>
+      <li><b>Parasite:</b> a gene that multiplies by landing on an organism's genes while the organism almost never lands on it (<b style="color:#d79bff">+6</b>). It takes copies and gives none back.</li>
+      <li><b>Crossing:</b> a new loop that shares genes with two living organisms, i.e. built from parts of both.</li>
+      <li><b>Self-repair:</b> an organism that loses over half its copies and grows back to near its former size.</li>
+    </ul>
+    <p class="small muted">Weak links are ignored: a link counts only if it fired at least max(8, 0.4% of all links) times in the window. An organism gets a name only after it has
+      lasted 20 generations with at least 6 genes. Barricelli did all this by eye, reading printouts.</p>
+  </div>
+</section>
+
+<section class="section card bxe" id="bxe-take">
+  <h3 style="margin-top:0">5 · Takeover, and the first remedy: different rules in different places</h3>
+  <p class="small" style="margin-top:0">The same random start, run twice. Watch the green trace (number of different genes) at the top right of each panel.</p>
+  <div class="small bxe-stat"></div><canvas class="bxe-cv bxe-uni"></canvas>
+  <div class="small bxe-stat" style="margin-top:10px"></div><canvas class="bxe-cv bxe-uni"></canvas>
+  <p class="small" style="margin-bottom:0">With one rule everywhere, the first organism that copies itself efficiently fills the ring and everything else dies. Barricelli called it
+    <i>organized homogeneity</i>: a living universe where evolution has stopped. Splitting the ring into regions with different collision norms stops any one organism
+    being best everywhere. Each region favours different survivors, and they keep leaking into each other's territory.</p>
+</section>
+
+<section class="section card bxe" id="bxe-exch">
+  <h3 style="margin-top:0">6 · The second remedy: parallel universe exchange</h3>
+  <p class="small" style="margin-top:0">Two universes evolve side by side. Every 50 generations a random stretch of one eighth of the ring (here 16 of 128 cells) is swapped between them
+    at the same positions (violet flash). The third panel is universe 1 again, with no exchange.</p>
+  <div class="small bxe-stat"></div><canvas class="bxe-cv bxe-uni"></canvas>
+  <div class="small bxe-stat" style="margin-top:10px"></div><canvas class="bxe-cv bxe-uni"></canvas>
+  <div class="small bxe-stat" style="margin-top:10px"></div><canvas class="bxe-cv bxe-uni"></canvas>
+  <div class="grid g2" style="margin-top:12px">
+    <p class="small" style="margin:0">Each universe drifts toward its own winners. A swapped stretch drops organisms into a world they did not evolve in. Most die; some
+      find partners and form crossings no single universe would produce. The exchange keeps reintroducing variety that local winners would otherwise erase.
+      In this run the control collapses to two genes at around generation 700 and never recovers, while both exchanging universes keep 9 to 15.
+      Mixed norms alone usually hold out; the exchange is insurance against the runs where they don't.</p>
+    <p class="small muted" style="margin:0">In the main simulation, the "parallel universe exchange" switch does exactly this: a second, invisible universe with the same settings, and
+      every 50 generations a random stretch of N/8 cells (64 of 512) is swapped. Only universe 1 is drawn. Biologists know this as the <b>island model</b>: populations
+      kept mostly apart, with occasional migrants, preserve more diversity than one well-mixed population, and the same trick drives "island" genetic algorithms in computing.</p>
+  </div>
+</section>
+
+<section class="section card">
+  <h2 style="margin-top:0">Every parameter</h2>
+  <div class="bxe-table-wrap"><table class="bxe-table small">
+    <thead><tr><th>Parameter</th><th>What it does here</th><th>Barricelli</th><th>The analogue in living things</th></tr></thead>
+    <tbody>
+      <tr><td><b>Speed</b></td><td>Generations per second on screen. Changes nothing in the rules.</td><td>His runs used the IAS machine's spare night hours; a few thousand generations took days.</td><td>—</td></tr>
+      <tr><td><b>Cells</b> 256 / 512</td><td>The length of the ring. It wraps around, so a gene leaving the right edge re-enters on the left.</td><td>512 cells per universe.</td><td>Habitat or population size. Small worlds lose variety faster by chance (genetic drift).</td></tr>
+      <tr><td><b>Genes</b> ±8 / ±16</td><td>The range of integers a gene can be. A wider range means longer jumps and more possible genes.</td><td>Integers; the exact range here is a reconstruction.</td><td>The size of the space of possible variants.</td></tr>
+      <tr><td><b>Seed density</b> 30%</td><td>At generation 0, 30% of cells get a random gene. Fixed.</td><td>Random starting numbers.</td><td>The prebiotic soup: many short molecules, no organisms.</td></tr>
+      <tr><td><b>Shift norm</b></td><td>Gene <i>n</i> at cell <i>a</i> copies to <i>a + n</i>. Fixed.</td><td>His reproduction rule.</td><td>Template copying: information that gets replicated.</td></tr>
+      <tr><td><b>Symbiotic replication</b>, chain limit 6</td><td>Landing on a gene <i>m</i> earns an extra copy at <i>a + m</i>, repeatable up to 6 times, never to the same cell twice.</td><td>His rule; the cap of 6 is a reconstruction.</td><td>Catalysis: one molecule helping another copy itself, the core of a hypercycle.</td></tr>
+      <tr><td><b>Collisions: norm 0</b></td><td>Different genes landing in one cell destroy each other.</td><td>His basic norm.</td><td>Competitive exclusion: two species can't hold the same niche for long.</td></tr>
+      <tr><td><b>Collisions: sum</b></td><td>They fuse into their sum, if it stays in range.</td><td>One of his alternative norms.</td><td>Fusion and recombination of genetic material.</td></tr>
+      <tr><td><b>Collisions: random</b></td><td>Half the time a random new gene appears, otherwise nothing.</td><td>His mutation norm.</td><td>Mutation from copying errors and damage.</td></tr>
+      <tr><td><b>Collisions: mixed by region</b></td><td>Four quarters with different norms: norm 0 · sum · random · norm 0.</td><td>His first remedy against takeover.</td><td>Environmental patchiness: different habitats favour different life, which keeps variety.</td></tr>
+      <tr><td><b>Parallel universe exchange</b></td><td>A second hidden universe; every 50 generations a random stretch of N/8 cells is swapped at the same positions.</td><td>His second remedy: segments exchanged between universes.</td><td>Migration and gene flow between separated populations; horizontal gene transfer between bacteria; hybridisation.</td></tr>
+      <tr><td><b>Organism detection</b></td><td>Two-way "uses" links over the last 12 generations; loops are found with Tarjan's algorithm. Thresholds: max(8, 0.4% of links).</td><td>Done by eye on printouts.</td><td>Ecologists infer mutualism the same way, from who-benefits-whom networks.</td></tr>
+      <tr><td><b>Naming</b></td><td>A loop is named once it lasts 20 generations with 6 or more genes.</td><td>—</td><td>Calling something a species only once it persists.</td></tr>
+      <tr><td><b>Parasite</b></td><td>A gene with 3+ copies that uses an organism's genes while being used back less than a quarter as often.</td><td>Observed.</td><td>Viruses, transposons, cheaters in cooperative systems.</td></tr>
+      <tr><td><b>Crossing</b></td><td>A new organism sharing genes with two living ones.</td><td>Observed; central to his theory.</td><td>Recombination, hybridisation, symbiogenesis.</td></tr>
+      <tr><td><b>Self-repair</b></td><td>An organism falls below 45% of its size and recovers to 85% within 120 generations.</td><td>Observed.</td><td>Regeneration; populations recovering after a crash.</td></tr>
+      <tr><td><b>Takeover alert</b></td><td>One organism holds more than 90% of all genes.</td><td>"Organized homogeneity".</td><td>A selective sweep or a monoculture.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="section">
+  <h2>Is this how nature does it?</h2>
+  <p class="lede" style="margin-top:4px">Partly, and the parts that match are the interesting ones. Barricelli's bet was that life's big steps came from cooperation and merger, not only
+    from mutation. Biology has since found real versions of nearly every phenomenon on this page.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Cooperating copiers: the hypercycle</h3>
+      <svg viewBox="0 0 300 220" class="bxe-svg" aria-label="Four replicators in a loop, each helping the next copy itself, with a parasite drawing help from one">
+        <defs><marker id="bxa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+        <circle id="hc" cx="120" cy="110" r="70" fill="none" stroke="currentColor" stroke-opacity=".25"/>
+        <path id="hcp" d="M120 40 A70 70 0 1 1 119.9 40" fill="none"/>
+        <g font-family="IBM Plex Mono, monospace" font-size="12" text-anchor="middle">
+          <g fill="#0b1210" stroke="#7dd8b5" stroke-width="2">
+            <circle cx="120" cy="40" r="17"/><circle cx="190" cy="110" r="17"/><circle cx="120" cy="180" r="17"/><circle cx="50" cy="110" r="17"/></g>
+          <g fill="#7dd8b5"><text x="120" y="44">I₁</text><text x="190" y="114">I₂</text><text x="120" y="184">I₃</text><text x="50" y="114">I₄</text></g>
+          <g fill="#7dd8b5"><circle r="4"><animateMotion dur="4s" repeatCount="indefinite"><mpath href="#hcp"/></animateMotion></circle>
+            <circle r="4"><animateMotion dur="4s" begin="-1s" repeatCount="indefinite"><mpath href="#hcp"/></animateMotion></circle>
+            <circle r="4"><animateMotion dur="4s" begin="-2s" repeatCount="indefinite"><mpath href="#hcp"/></animateMotion></circle>
+            <circle r="4"><animateMotion dur="4s" begin="-3s" repeatCount="indefinite"><mpath href="#hcp"/></animateMotion></circle></g>
+          <circle cx="262" cy="52" r="17" fill="#0b1210" stroke="#d79bff" stroke-width="2"/><text x="262" y="56" fill="#d79bff">P</text>
+          <path d="M205 99 L246 63" stroke="#d79bff" stroke-dasharray="3 3" fill="none" color="#d79bff" marker-end="url(#bxa)"/>
+          <circle r="3.5" fill="#d79bff"><animateMotion dur="1.6s" repeatCount="indefinite" path="M205 99 L246 63"/></circle>
+          <text x="262" y="86" fill="#d79bff" font-size="10">parasite</text>
+        </g>
+      </svg>
+      <p class="small">In 1977 Manfred Eigen and Peter Schuster proposed the <b>hypercycle</b>: a loop of self-copying molecules in which each one speeds up the copying of
+        the next. It is the chemical form of a symbioorganism. Each member multiplies only through the others, as +3 and −2 do in animation 2.</p>
+      <p class="small">Its known weakness is Barricelli's parasite: a molecule that takes help from the loop and gives none back can drain it (dashed violet).
+        In 1991 Maarten Boerlijst and Paulien Hogeweg showed the cure is space: on a grid, hypercycles form rotating spirals that keep parasites at the edges. That is the
+        same lesson as the mixed-norm regions above. Structure in space protects cooperation.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Organisms that merged: symbiogenesis</h3>
+      <svg viewBox="0 0 300 220" class="bxe-svg" aria-label="A large cell engulfs a bacterium, which becomes a mitochondrion inside it">
+        <ellipse cx="150" cy="115" rx="120" ry="85" fill="#7dd8b5" fill-opacity=".07" stroke="#7dd8b5" stroke-width="2"/>
+        <circle cx="120" cy="105" r="26" fill="#7dd8b5" fill-opacity=".14" stroke="#7dd8b5" stroke-opacity=".6"/>
+        <text x="120" y="109" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#7dd8b5">nucleus</text>
+        <g>
+          <animateTransform attributeName="transform" type="translate" values="130,-70; 0,0; 0,0; 130,-70" keyTimes="0;0.4;0.92;1" dur="7s" repeatCount="indefinite"/>
+          <ellipse cx="200" cy="130" rx="26" ry="14" fill="#e9bf6d" fill-opacity=".22" stroke="#e9bf6d" stroke-width="1.6"/>
+          <ellipse cx="200" cy="130" rx="31" ry="19" fill="none" stroke="#e9bf6d" stroke-width="1.2" stroke-dasharray="3 2" opacity="0">
+            <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.4;0.5;0.92;1" dur="7s" repeatCount="indefinite"/></ellipse>
+          <path d="M180 130 q5 -8 10 0 t10 0 t10 0" fill="none" stroke="#e9bf6d" stroke-width="1.2"/>
+        </g>
+        <text x="150" y="214" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity=".7">bacterium → engulfed → mitochondrion</text>
+      </svg>
+      <p class="small">The idea that new organisms arise by merging, <b>symbiogenesis</b>, was proposed by Konstantin Mereschkowski in 1905. Barricelli named his experiments after it.
+        Lynn Margulis made the case for it in 1967, and it is now settled for two of the most important events in the history of life. Mitochondria descend from
+        free-living bacteria (related to today's alphaproteobacteria) taken up by another cell well over a billion years ago, and chloroplasts descend from cyanobacteria.
+        Every animal and plant cell is a crossing in Barricelli's sense.</p>
+    </div>
+  </div>
+
+  <div class="card section">
+    <h3 style="margin-top:0">Each phenomenon, and its real counterpart</h3>
+    <div class="bxe-table-wrap"><table class="bxe-table small">
+      <thead><tr><th>On this page</th><th>In nature</th></tr></thead>
+      <tbody>
+        <tr><td>Genes that only multiply by landing on each other</td><td>Autocatalytic sets and hypercycles: molecules that make each other (Eigen and Schuster; Stuart Kauffman).</td></tr>
+        <tr><td>Symbioorganisms built from many genes</td><td>Genomes are cooperatives: genes that can only copy themselves as part of a cell, and cells that can only reproduce as part of a body.</td></tr>
+        <tr><td>Parasites riding on organisms</td><td>Viruses and "selfish" DNA. Transposable elements make up roughly 45% of the human genome, and old retroviruses about 8%.</td></tr>
+        <tr><td>A parasite becoming a partner</td><td>Syncytin, a protein essential to the human placenta, was captured from a retrovirus's coat gene.</td></tr>
+        <tr><td>Crossing between organisms</td><td>Sex and recombination; horizontal gene transfer between bacteria; the mergers that made mitochondria and chloroplasts.</td></tr>
+        <tr><td>Collision norms</td><td>The chemistry of what happens when variants meet: competition (norm 0), fusion (sum), copying errors (random).</td></tr>
+        <tr><td>Takeover / organized homogeneity</td><td>Selective sweeps and monocultures; Gause's competitive exclusion.</td></tr>
+        <tr><td>Mixed norms by region</td><td>Patchy environments and niches; spatial structure that shelters cooperators from cheaters.</td></tr>
+        <tr><td>Parallel universe exchange</td><td>Sewall Wright's subdivided populations with occasional migrants (the island model and his shifting-balance theory), and gene flow across species.</td></tr>
+        <tr><td>Self-repair</td><td>Populations rebounding from crashes; a symbiosis reassembling after one partner is depleted.</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="grid g2 section">
+    <div class="card">
+      <h3 style="margin-top:0">Where the analogy breaks</h3>
+      <ul class="small" style="padding-left:18px">
+        <li>A gene here is just a number with nothing to do but get copied. Nature's replicators build bodies (phenotypes) that must survive an environment.
+          Barricelli saw this gap, and in later work had his number-organisms play a simple board game (Tac Tix), so that skill rather than mere copying could decide who spread.</li>
+        <li>The norms are chosen by the experimenter. In nature they are fixed by chemistry and physics and nobody picks them.</li>
+        <li>The universe is a ring of a few hundred cells. Real populations are vast, which changes how much chance and selection each matter.</li>
+        <li>Nothing here has an inside: no membrane separates an organism from its neighbours. Real cooperation became stable once cells enclosed their partners.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">What it means for the tidal pool</h3>
+      <p class="small">The tidal pool hit Barricelli's wall: armoured monocultures that took over and stalled. Its fixes follow his remedies and their biological versions.
+        Basins and habitats are its "mixed norms". Narrow straits between basins are its "parallel universe exchange". Since Oct 27, evolving pathogens that hunt the
+        commonest genotype supply the parasites, which is the pressure that makes sex worth having. What the pool still lacks is the event this page is named for: two
+        separate lineages merging into one organism.</p>
+      <h3>Further reading</h3>
+      <ul class="small muted" style="padding-left:18px">
+        <li>N. A. Barricelli, "Symbiogenetic evolution processes realized by artificial methods", <i>Methodos</i> 9 (1957).</li>
+        <li>N. A. Barricelli, "Numerical testing of evolution theories", <i>Acta Biotheoretica</i> 16 (1962–63).</li>
+        <li>M. Eigen &amp; P. Schuster, <i>The Hypercycle</i> (1979).</li>
+        <li>M. Boerlijst &amp; P. Hogeweg, "Spiral wave structure in pre-biotic evolution", <i>Physica D</i> (1991).</li>
+        <li>L. Margulis, <i>Symbiosis in Cell Evolution</i> (1981).</li>
+        <li>G. Dyson, <i>Turing's Cathedral</i> (2012), the chapter on Barricelli.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 {% endblock %}
 {% block scripts %}
 <script src="/static/darwin/barricelli.js?v=2"></script>
+<script src="/static/darwin/barricelli-explain.js?v=2"></script>
 <script>
 (function () {
   // the diagram: +3 at cell 2 lands on −2 at cell 5 → copies at 5 and at 0
@@ -91,6 +302,7 @@
   svg.insertAdjacentHTML('afterbegin', '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>');
   g.innerHTML = h;
   Darwin.Barricelli(document.querySelector('main'));
+  Darwin.BarricelliExplain(document.querySelector('main'));
 })();
 </script>
 {% endblock %}

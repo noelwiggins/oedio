@@ -311,3 +311,18 @@ table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; 
 .bx-ev.repair, .bx-ev.born { color: var(--dw-green); }
 .bx-diag { width: 100%; height: auto; color: var(--md-sys-color-on-surface); margin: 4px 0 10px; }
 @media (max-width: 600px) { .bx-canvas { height: 340px; } }
+
+/* Barricelli explainers */
+.bxe-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.bxe-head h3 { margin: 0 0 8px; }
+.btn.sm { height: 30px; padding: 0 12px; font-size: 12.5px; }
+.bxe-cv { width: 100%; display: block; border-radius: 10px; background: #0b1210; }
+.bxe-uni { height: 150px; margin-top: 4px; }
+.bxe-cap { min-height: 3.6em; margin-bottom: 0; }
+.bxe-stat { font-family: var(--dw-mono); font-size: 11.5px; }
+.bxe-svg { width: 100%; max-width: 380px; height: auto; display: block; margin: 0 auto 6px; color: var(--md-sys-color-on-surface); }
+.bxe-table-wrap { overflow-x: auto; }
+.bxe-table { border-collapse: collapse; width: 100%; min-width: 640px; }
+.bxe-table th, .bxe-table td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
+.bxe-table th { font-family: var(--dw-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); }
+@media (max-width: 600px) { .bxe-uni { height: 120px; } }
