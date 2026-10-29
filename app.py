@@ -13,6 +13,7 @@ import re
 import sqlite3
 import functools
 import urllib.request
+import urllib.parse
 import urllib.error
 from datetime import datetime
 
@@ -261,8 +262,33 @@ def _find_megabook(mega_slug):
     return next((m for m in MEGABOOKS if m["slug"] == mega_slug), None)
 
 
+_MOBILE_UA = ("iphone", "ipod", "android", "mobile", "blackberry", "opera mini", "iemobile")
+
+
+def _is_phone():
+    ua = (request.headers.get("User-Agent") or "").lower()
+    return any(k in ua for k in _MOBILE_UA) and "ipad" not in ua
+
+
+@app.route("/m")
+@app.route("/m/")
+def mobile_app():
+    """The phone interface (static/m/): a separate, lighter app over the same library."""
+    resp = app.send_static_file("m/index.html")
+    resp.set_cookie("oedio_view", "", max_age=0)
+    return resp
+
+
 @app.route("/")
 def library():
+    if request.args.get("view") == "full":
+        resp = Response(render_template("index.html", now=datetime.utcnow(), sections=SECTIONS,
+            megabooks_by_section={s["slug"]: [mb for mb in MEGABOOKS if mb.get("section") == s["slug"]] for s in SECTIONS},
+            megabooks=MEGABOOKS, active_page="library"))
+        resp.set_cookie("oedio_view", "full", max_age=60 * 60 * 24 * 180)
+        return resp
+    if request.cookies.get("oedio_view") != "full" and _is_phone():
+        return app.send_static_file("m/index.html")
     return render_template("index.html", now=datetime.utcnow(),
         sections=SECTIONS,
         megabooks_by_section={s["slug"]: [mb for mb in MEGABOOKS if mb.get("section") == s["slug"]] for s in SECTIONS},
@@ -823,6 +849,130 @@ def layered_reader(mega_slug):
         abort(404)
     return render_template("layered.html", now=datetime.utcnow(), mb=mb,
                            active_page="library")
+
+
+# ── Mobile app API (static/m/) ─────────────────────────────────────────────
+@functools.lru_cache(maxsize=48)
+def _m_pages(data_slug):
+    path = os.path.join(BASE_DIR, "static", "reader-data", f"{data_slug}.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, list) else []
+    except Exception:
+        return []
+
+
+def _m_layers(comp_slug):
+    """Layers that align page-for-page with this component's scan, base first."""
+    grp = PANEL_GROUPS.get(comp_slug)
+    if not grp:
+        return []
+    out = []
+    for g in grp:
+        slug = g["slug"]
+        if g["kind"] == "image":
+            label = "Page"
+        elif slug.endswith("-transcription"):
+            label = "Original"
+        elif slug.endswith("-english"):
+            label = "English"
+        else:
+            label = g.get("label") or "Layer"
+        out.append({"slug": slug, "data_slug": g["data_slug"], "kind": g["kind"], "label": label})
+    return out
+
+
+def _m_base_of(mb, comp_slug):
+    for c in mb["components"]:
+        if c["slug"] == comp_slug:
+            if c.get("layer_of"):
+                return c["layer_of"]
+            for suf in ("-transcription", "-english"):
+                if comp_slug.endswith(suf) and any(x["slug"] == comp_slug[:-len(suf)] for x in mb["components"]):
+                    return comp_slug[:-len(suf)]
+            return comp_slug
+    return comp_slug
+
+
+def _m_work(mb, c):
+    layers = _m_layers(c["slug"])
+    kinds = [l["label"] for l in layers if l["kind"] != "image"]
+    return {"slug": c["slug"], "title": c.get("title"), "role": c.get("role"), "contributor": c.get("contributor"),
+            "year": c.get("year"), "facsimile": bool(c.get("facsimile")), "text_only": bool(c.get("text_only")),
+            "note": c.get("note"), "layers": kinds, "group": c.get("group"), "group_title": c.get("group_title"),
+            "volume_label": c.get("volume_label")}
+
+
+@app.route("/api/m/library")
+def api_m_library():
+    secs = []
+    for s in SECTIONS:
+        books = [{"slug": mb["slug"], "title": mb["title"], "author": mb.get("author"), "spine": mb.get("spine_color"),
+                  "description": mb.get("description"), "works": len([c for c in mb["components"] if not c.get("layer_of") and not c["slug"].endswith(("-transcription", "-english"))])}
+                 for mb in MEGABOOKS if mb.get("section") == s["slug"]]
+        if books:
+            secs.append({"slug": s["slug"], "title": s["title"], "description": s.get("description"), "books": books})
+    return jsonify({"sections": secs})
+
+
+@app.route("/api/m/book/<mega_slug>")
+def api_m_book(mega_slug):
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    works, groups = [], {}
+    for c in mb["components"]:
+        if c.get("layer_of") or c["slug"].endswith(("-transcription", "-english")) and _m_base_of(mb, c["slug"]) != c["slug"]:
+            continue
+        if c.get("group"):
+            g = groups.get(c["group"])
+            if g is None:
+                g = groups[c["group"]] = {"group": c["group"], "title": c.get("group_title"), "role": c.get("role"),
+                                          "contributor": c.get("contributor"), "year": c.get("year"), "volumes": []}
+                works.append(g)
+            g["volumes"].append(_m_work(mb, c))
+        else:
+            works.append(_m_work(mb, c))
+    return jsonify({"slug": mb["slug"], "title": mb["title"], "author": mb.get("author"), "spine": mb.get("spine_color"),
+                    "description": mb.get("description"), "overview": mb.get("overview"),
+                    "section": SECTION_MAP.get(mb.get("section"), {}).get("title"),
+                    "default": (works[0].get("slug") or works[0]["volumes"][0]["slug"]) if works else None, "works": works})
+
+
+@app.route("/api/m/read/<mega_slug>/<comp_slug>/<int:n>")
+def api_m_read(mega_slug, comp_slug, n):
+    """One page of a work (1-based index) with every aligned layer's text for the same page."""
+    mb = _find_megabook(mega_slug)
+    if not mb:
+        abort(404)
+    base = _m_base_of(mb, comp_slug)
+    comp = next((c for c in mb["components"] if c["slug"] == base), None)
+    if not comp:
+        abort(404)
+    pages = _m_pages(comp.get("data_slug", base))
+    if not pages:
+        return jsonify({"total": 0})
+    i = max(0, min(len(pages) - 1, n - 1))
+    want = request.args.get("page", type=int)
+    if want is not None:   # deep links from full-text search carry the page number, not the index
+        i = next((k for k, x in enumerate(pages) if x.get("page") == want), i)
+    p = pages[i]
+    img = p.get("image") or ""
+    if "tile.loc.gov" in img:
+        img = "/img-proxy?u=" + urllib.parse.quote(img, safe="")
+    layers = []
+    for l in _m_layers(base):
+        if l["kind"] == "image":
+            continue
+        lp = _m_pages(l["data_slug"])
+        t = (lp[i].get("text") if i < len(lp) else "") or ""
+        layers.append({"label": l["label"], "text": _strip_fn_tokens(t).strip()})
+    return jsonify({"total": len(pages), "index": i + 1, "page": p.get("page"), "label": p.get("label") or p.get("canvas_label") or "",
+                    "image": img, "text": _strip_fn_tokens(p.get("text") or "").strip(), "layers": layers,
+                    "work": {"slug": base, "title": comp.get("title"), "contributor": comp.get("contributor"), "year": comp.get("year"),
+                             "text_only": bool(comp.get("text_only"))},
+                    "book": {"slug": mb["slug"], "title": mb["title"]}})
 
 
 @app.route("/about")

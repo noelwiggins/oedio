@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-14
 
+## Mobile app (2026-10-29)
+Phones get static/m/ (index.html, m.css, m.js) at "/" (UA check in app.py); "Full site" sets cookie oedio_view=full
+(/?view=full); /m always serves the mobile app. Three destinations: Library (shelves of bookcloth spines per section,
+book page with editions grouped by role, filter for big collections, multi-volume sets), Search (pages via FTS + books),
+Saved (localStorage). Reader loads one page at a time from /api/m/read/<mega>/<work>/<n>[?page=P] with every aligned
+layer (Original / English) as a segmented switch; tile.loc.gov images go through /img-proxy. Other endpoints:
+/api/m/library, /api/m/book/<slug>. Darwin and Book Studio stay desktop-only.
+
 ## DARWIN Tidal Pool — Red Queen update (2026-10-27)
 Why neurons/sex stalled: neuron cells were the costliest cell and unmasked randomly-drifted hidden units (pure harm at first);
 gonads needed a conspecific gonad-bearer in eyesight (impossible at 1% share), crossover was non-homologous, and with no
