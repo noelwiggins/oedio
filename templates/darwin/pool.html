@@ -9,9 +9,9 @@
       <div class="pool-legend" id="legend"></div>
     </div>
     <p class="small muted" style="margin:8px 2px 0">
-      Darwin's bay, west to east: open sea, reef shallows and tidal flats, split by reefs with drifting straits. The sand on the
-      right is the flats drying out at low tide. Every creature is drawn from the body its own genes grew; click one to see it in 3D.
-      Zoom out to see the coast, the land (no life yet) and the sky (no flyers yet).
+      Darwin's world, west to east: the deep ocean (dark, cold, fed by sinking dead matter and two glowing vents), the open sea,
+      the reef shallows and the tidal flats (split by reefs with drifting straits), then land. Every creature is drawn from the body
+      its own genes grew; click one to see it in 3D. Use Deep and Shore to look closer, or zoom out to the landscape.
     </p>
   </div>
   <div>
@@ -73,7 +73,9 @@
     <ul class="small" style="padding-left:18px;margin:0">
       <li><b>Bodies are grown, not designed.</b> A genome is a list of genes; each adds a cell of one of nine types next to an existing cell. Genes can be duplicated, deleted, inserted or repurposed, so bodies can grow without limit (up to 64 cells for now).</li>
       <li><b>Cells specialise:</b> photo (light to energy), mouth (eat dead matter or other creatures), flagellum (swim), eye (see further), armour, store (energy reserve), neuron (a bigger brain), gonad (sex), skin.</li>
-      <li><b>Three habitats along a coast.</b> Reefs split Darwin's bay into the open sea (dimmer, richer water from deep upwellings, steady temperature), the reef shallows, and the tidal flats, where the tide comes in and out every three days: creatures left high and dry move slowly and lose water, but get full sun. Drifting straits in the reefs let life move between them, so a crash in one habitat no longer ends life everywhere. Zoom out to see the coast, land (no life yet) and sky (no flyers yet).</li>
+      <li><b>Five habitats along a coast.</b> Reefs split the bay into the open sea (dimmer, richer water from upwellings, steady temperature), the reef shallows, and the tidal flats, where the tide comes in and out every three days. Drifting straits in the reefs let life move between them.</li>
+      <li><b>The deep ocean</b> slopes away west of the open sea into darkness. Photosynthesis fails, eyes see almost nothing, and it is cold, but dead matter sinks into it from above (marine snow) and two hydrothermal vents feed bacterial mats and warm the water around them. Neurons give every creature a short-range sense of movement in the water that works without light.</li>
+      <li><b>Land</b> lies beyond the flats: always out of water, strong sun, poor soil, wide temperature swings and no currents. Bodies dry out unless skin cells hold water in, drying gets worse inland, flagella barely work out of water (armour cells worked by flagella act as legs), big bodies need armour as a skeleton to carry their own weight, and gametes cannot be released into the air. Nothing is placed there: life has to get there from the flats.</li>
       <li><b>Mammal-like traits can evolve:</b> warm blood (a creature holds its own temperature, so cold and heat hurt it far less, at the price of half again as much food) and parental care (parents keep feeding their young while they stay close). Both start at zero and spread only if they pay.</li>
       <li><b>A real food web.</b> Light feeds producers, corpses feed grazers, and any mouth can attack: success depends on attack against defence, and bigger bodies are harder to eat.</li>
       <li><b>Bigger bodies run cheaper per cell</b> (metabolism scales with size to the ¾ power, as in living things) but cost more to build.</li>
@@ -87,7 +89,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/darwin/pool.js?v=5"></script>
+<script src="/static/darwin/pool.js?v=6"></script>
 <script>
 (function () {
   const D = Darwin, MS = {{ milestones|tojson }};

@@ -1,8 +1,8 @@
 /* The tidal pool renderer (life-3.0): draws every creature from its developmental body plan, inside a
-   landscape you can zoom out to: open ocean, the simulated bay (open sea · reef shallows · tidal flats),
+   landscape you can zoom out to: open ocean, the simulated world (deep ocean · open sea · reef shallows · tidal flats · land),
    beach, land and sky. Nothing about the creatures is invented client-side: positions come from the
-   server's frames and bodies from the plans the simulation grew. The landscape outside the bay is scenery
-   until life reaches it (land and air are not simulated yet). */
+   server's frames and bodies from the plans the simulation grew. Outside the simulated strip the landscape is
+   scenery (the far ocean, the hinterland and the air are not simulated yet). */
 (function () {
   const D = window.Darwin;
   const CELL_COLORS = {
@@ -79,7 +79,8 @@
 
   // ── landscape ──────────────────────────────────────────────────────
   const LW = 960, LH = 720;            // landscape size in world units
-  const BAY = { x: 300, y: 240, w: 240, h: 240 };   // the simulated arena sits on the coast
+  // the simulated world: 5 zones of 80 units, deep ocean (west) to land (east); the shore is at zone 4's west edge
+  const BAY = { x: 220, y: 240, w: 400, h: 240, zw: 80, shore: 320 };
   function hash(x, y, s) { let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(s, 2147483647); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
   function vnoise(x, y, s) {
     const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
@@ -93,7 +94,7 @@
     // exactly the bay's east edge inside the bay, a natural coastline elsewhere
     const off = (fbm(0.5, y / 90, 11, 4) - 0.5) * 120;
     const inBay = 1 - smooth(0, 70, Math.max(BAY.y - y, y - (BAY.y + BAY.h), 0));
-    return BAY.x + BAY.w + (1 - inBay) * off;
+    return BAY.x + BAY.shore + (1 - inBay) * off;
   }
   let terrain = null, clouds = null;
   function buildTerrain() {
@@ -137,7 +138,7 @@
     cg.putImageData(ci, 0, 0); clouds = cc;
   }
 
-  const WATER = { 0: [24, 92, 120], 1: [28, 128, 128], 2: [64, 170, 160] };
+  const WATER = { 1: [24, 92, 120], 2: [28, 128, 128], 3: [64, 170, 160] };
 
   /* Live view. opts: {canvas, tag, onData(d), onSelect(info)} */
   D.PoolView = function (opts) {
@@ -150,8 +151,8 @@
     // controls
     const host = canvas.parentElement;
     const ui = document.createElement('div'); ui.className = 'zoom-ui';
-    ui.innerHTML = `<button data-z="pool" title="Creatures in the bay">Bay</button><button data-z="coast" title="The coast">Coast</button>
-      <button data-z="land" title="The whole landscape">Landscape</button>`;
+    ui.innerHTML = `<button data-z="deep" title="The deep ocean and its vents">Deep</button><button data-z="pool" title="Every simulated habitat">World</button>
+      <button data-z="coast" title="The shore and the land">Shore</button><button data-z="land" title="The whole landscape">Landscape</button>`;
     host.appendChild(ui);
     const card = document.createElement('div'); card.className = 'pick-card'; card.hidden = true; host.appendChild(card);
     card.addEventListener('click', e => {
@@ -167,11 +168,13 @@
     const hint = document.createElement('div'); hint.className = 'pick-hint'; hint.textContent = 'click a creature · scroll or pinch to zoom · drag to pan'; host.appendChild(hint);
 
     function fitScale() { return Math.max(canvas.clientWidth / LW, canvas.clientHeight / LH); }
-    function poolScale() { return Math.min(canvas.clientWidth, canvas.clientHeight) / BAY.w; }
+    function poolScale() { return Math.min(canvas.clientWidth / BAY.w, canvas.clientHeight / BAY.h); }
     function goto(z) {
       const W = canvas.clientWidth, H = canvas.clientHeight;
+      const zoomed = Math.min(canvas.clientWidth / (BAY.zw * 2), canvas.clientHeight / BAY.h);
       if (z === 'pool') { cam.tx = BAY.x + BAY.w / 2; cam.ty = BAY.y + BAY.h / 2; cam.ts = poolScale(); }
-      if (z === 'coast') { cam.tx = BAY.x + BAY.w * 0.75; cam.ty = BAY.y + BAY.h / 2; cam.ts = poolScale() * 0.42; }
+      if (z === 'deep') { cam.tx = BAY.x + BAY.zw * 0.75; cam.ty = BAY.y + BAY.h / 2; cam.ts = zoomed; }
+      if (z === 'coast') { cam.tx = BAY.x + BAY.shore; cam.ty = BAY.y + BAY.h / 2; cam.ts = zoomed; }
       if (z === 'land') { cam.tx = LW / 2; cam.ty = LH / 2; cam.ts = fitScale(); }
       ui.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.z === z));
     }
@@ -222,7 +225,7 @@
       const body = plans[c[4]] || [[0, 0, 1]], counts = {};
       body.forEach(([, , t]) => { counts[D.CELL_LABELS[t]] = (counts[D.CELL_LABELS[t]] || 0) + 1; });
       return { uid: c[0], name: names[c[7]] || 'unnamed lineage', species: c[7], cells: body, hue: c[5], counts, energy: c[6],
-               habitat: data && data.env.habitats ? data.env.habitats[Math.min(2, Math.floor((c[1] / 10) / (data.env.basin_w || 80)))] : '' };
+               habitat: data && data.env.habitats ? data.env.habitats[Math.min(data.env.habitats.length - 1, Math.floor((c[1] / 10) / (data.env.basin_w || 80)))] : '' };
     }
     function select(c) {
       selected = c ? c[0] : null;
@@ -292,27 +295,35 @@
       ctx.clearRect(0, 0, W, H);
       ctx.imageSmoothingEnabled = true;
       ctx.drawImage(terrain, X(0), Y(0), LW * s, LH * s);
-      const env = (data && data.env) || {}, A = BAY.w;
-      // the bay: habitats with the live tide, light band, nutrients, dead matter, reefs, upwellings
-      ctx.save(); ctx.beginPath(); ctx.rect(X(BAY.x), Y(BAY.y), A * s, A * s); ctx.clip();
+      const env = (data && data.env) || {}, A = BAY.w, AH = BAY.h;
+      // the simulated world: habitats with the live tide, light band, nutrients, dead matter, reefs, upwellings, vents
+      ctx.save(); ctx.beginPath(); ctx.rect(X(BAY.x), Y(BAY.y), A * s, AH * s); ctx.clip();
       const bw = env.basin_w || 80, wl = env.waterline != null ? env.waterline : 0.7;
-      for (let h = 0; h < 3; h++) {
-        const c = WATER[h]; ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; ctx.fillRect(X(BAY.x + h * bw), Y(BAY.y), bw * s + 1, A * s);
+      for (let h = 1; h <= 3; h++) {
+        const c = WATER[h]; ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; ctx.fillRect(X(BAY.x + h * bw), Y(BAY.y), bw * s + 1, AH * s);
       }
+      // the deep: the open sea's blue sinking into darkness toward the abyss
+      const gd = ctx.createLinearGradient(X(BAY.x), 0, X(BAY.x + bw), 0);
+      gd.addColorStop(0, 'rgb(3,8,22)'); gd.addColorStop(0.55, 'rgb(8,30,58)'); gd.addColorStop(1, 'rgb(24,92,120)');
+      ctx.fillStyle = gd; ctx.fillRect(X(BAY.x), Y(BAY.y), bw * s + 1, AH * s);
+      // land: beach rising to dry ground
+      const gl = ctx.createLinearGradient(X(BAY.x + 4 * bw), 0, X(BAY.x + 5 * bw), 0);
+      gl.addColorStop(0, 'rgb(212,190,140)'); gl.addColorStop(0.3, 'rgb(170,150,100)'); gl.addColorStop(1, 'rgb(122,112,78)');
+      ctx.fillStyle = gl; ctx.fillRect(X(BAY.x + 4 * bw), Y(BAY.y), bw * s + 1, AH * s);
       // exposed flats at low tide: wet sand above the waterline
-      const wx0 = BAY.x + 2 * bw + wl * bw;
-      const gs = ctx.createLinearGradient(X(wx0), 0, X(BAY.x + A), 0);
+      const wx0 = BAY.x + 3 * bw + wl * bw, wx1 = BAY.x + 4 * bw;
+      const gs = ctx.createLinearGradient(X(wx0), 0, X(wx1), 0);
       gs.addColorStop(0, 'rgba(168,150,110,.95)'); gs.addColorStop(1, 'rgba(206,186,140,1)');
-      ctx.fillStyle = gs; ctx.fillRect(X(wx0), Y(BAY.y), (BAY.x + A - wx0) * s + 1, A * s);
-      ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(X(wx0) - 1, Y(BAY.y), Math.max(1, s * 0.6), A * s);   // surf line
+      ctx.fillStyle = gs; ctx.fillRect(X(wx0), Y(BAY.y), (wx1 - wx0) * s + 1, AH * s);
+      ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(X(wx0) - 1, Y(BAY.y), Math.max(1, s * 0.6), AH * s);   // surf line
       if (data) {
         const light = Math.max(0.05, env.light || 0), band = Y(BAY.y + env.band), bwid = env.width * s;
-        [-A * s, 0, A * s].forEach(off => {
+        [-AH * s, 0, AH * s].forEach(off => {
           const g = ctx.createLinearGradient(0, band + off - bwid * 1.6, 0, band + off + bwid * 1.6);
           g.addColorStop(0, 'rgba(255,236,170,0)'); g.addColorStop(0.5, `rgba(255,236,170,${0.18 * light})`); g.addColorStop(1, 'rgba(255,236,170,0)');
-          ctx.fillStyle = g; ctx.fillRect(X(BAY.x), band + off - bwid * 1.6, A * s, bwid * 3.2);
+          ctx.fillStyle = g; ctx.fillRect(X(BAY.x + bw * 0.6), band + off - bwid * 1.6, (A - bw * 0.6) * s, bwid * 3.2);   // sunlight never reaches the abyss
         });
-        const cw = A / 12;
+        const cw = A / ((env.nutrient && env.nutrient[0] && env.nutrient[0].length) || 20);
         (env.nutrient || []).forEach((row, j) => row.forEach((v, i) => {
           if (v > 8) { ctx.fillStyle = `rgba(80,210,220,${Math.min(0.14, v / 600)})`; ctx.fillRect(X(BAY.x + i * cw), Y(BAY.y + j * cw), cw * s, cw * s); }
         }));
@@ -326,11 +337,20 @@
           g.addColorStop(0, 'rgba(140,230,240,.22)'); g.addColorStop(1, 'rgba(140,230,240,0)');
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
         });
+        (env.vents || []).forEach(([x, y], k) => {           // hydrothermal vents: a shimmering warm glow on the dark floor
+          const pulse = 0.75 + 0.25 * Math.sin(performance.now() / 600 + k * 2);
+          const r = 11 * s, cx = X(BAY.x + x), cy = Y(BAY.y + y);
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          g.addColorStop(0, `rgba(255,170,90,${0.55 * pulse})`); g.addColorStop(0.4, `rgba(220,110,60,${0.22 * pulse})`); g.addColorStop(1, 'rgba(200,90,50,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+        });
+        const walls = env.walls || [];
         (env.reefs || []).forEach((rx, k) => {
-          const gy = k === 0 ? null : (env.straits || [])[k], gh = (env.strait_h || 18) / 2;
+          if (walls.length ? walls[k] !== 2 : k === 0) return;          // only reefs are drawn; open water and open shore are not walls
+          const gy = (env.straits || [])[k], gh = (env.strait_h || 18) / 2;
           ctx.strokeStyle = 'rgba(222,200,160,.75)'; ctx.lineWidth = Math.max(2, s * 1.4);
-          const xx = X(BAY.x + rx) + (k === 0 ? ctx.lineWidth / 2 : 0);
-          const segs = gy == null ? [[0, A]] : (() => { const a0 = (gy - gh + A) % A, a1 = (gy + gh) % A; return a0 < a1 ? [[0, a0], [a1, A]] : [[a1, a0]]; })();
+          const xx = X(BAY.x + rx);
+          const segs = gy == null ? [[0, AH]] : (() => { const a0 = (gy - gh + AH) % AH, a1 = (gy + gh) % AH; return a0 < a1 ? [[0, a0], [a1, AH]] : [[a1, a0]]; })();
           segs.forEach(([y0, y1]) => { ctx.beginPath(); ctx.moveTo(xx, Y(BAY.y + y0)); ctx.lineTo(xx, Y(BAY.y + y1)); ctx.stroke(); });
         });
       }
@@ -342,7 +362,7 @@
         cur.c.forEach(c => {
           let x = c[1] / 10, y = c[2] / 10, hd = c[3] / 100;
           const p = pm && pm.get(c[0]);
-          if (p) { const dx = x - p[1] / 10, dy = y - p[2] / 10; if (Math.abs(dx) < A / 2 && Math.abs(dy) < A / 2) { x = p[1] / 10 + dx * k; y = p[2] / 10 + dy * k; } }
+          if (p) { const dx = x - p[1] / 10, dy = y - p[2] / 10; if (Math.abs(dx) < A / 2 && Math.abs(dy) < AH / 2) { x = p[1] / 10 + dx * k; y = p[2] / 10 + dy * k; } }
           const sx = X(BAY.x + x), sy = Y(BAY.y + y);
           if (sx < -20 || sy < -20 || sx > W + 20 || sy > H + 20) return;
           const body = plans[c[4]] || [[0, 0, 1]];
@@ -361,7 +381,7 @@
       // the bay outline and labels when zoomed out
       if (zoomOut > 0.05) {
         ctx.strokeStyle = `rgba(255,255,255,${0.5 * zoomOut})`; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-        ctx.strokeRect(X(BAY.x), Y(BAY.y), A * s, A * s); ctx.setLineDash([]);
+        ctx.strokeRect(X(BAY.x), Y(BAY.y), A * s, AH * s); ctx.setLineDash([]);
       }
       // night falls over the whole landscape
       const day = env.day != null ? env.day : 1;
@@ -392,9 +412,9 @@
           ctx.fillStyle = `rgba(255,255,255,${0.95 * a})`; ctx.fillText(t, x, y + 1);
           if (sub) { ctx.fillStyle = `rgba(255,255,255,${0.7 * a})`; ctx.fillText(sub, x, y + 14); }
         };
-        lab('OPEN OCEAN', 190, 380, 'not simulated yet');
-        lab("DARWIN'S BAY", BAY.x + BAY.w / 2, BAY.y - 14, 'open sea · reef shallows · tidal flats');
-        lab('LAND', 760, 360, 'no life yet');
+        lab('OPEN OCEAN', 110, 380, 'not simulated');
+        lab("DARWIN'S WORLD", BAY.x + BAY.w / 2, BAY.y - 14, 'deep · open sea · shallows · flats · land');
+        lab('HINTERLAND', 800, 380, 'not simulated');
         lab('SKY', 700, 170, 'no flyers yet');
       }
       requestAnimationFrame(draw);

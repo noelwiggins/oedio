@@ -14,6 +14,17 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 (<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
+## DARWIN Tidal Pool — deep ocean and land (2026-10-29)
+World is now 400 x 240 (was 240 x 240): five zones of 80 west to east — deep ocean, open sea, reef shallows, tidal flats,
+land (BASINS=5, WALL_KIND [solid, open, reef, reef, open], REGION joins deep+sea and flats+land for sight/hunting/mating).
+Deep: light 0.9*exp(-3.6*depth), cold (-0.55*depth), marine snow (3% of open-sea detritus sinks per 5 ticks), two vents
+(clim["vents"]) adding detritus + nutrient + heat. Eyes scale with ambient light; neurons give a 3-unit-per-neuron "lateral
+line" sense. Land: always exposed, light 1.35, N target 0.8, tempf 1.9, no currents; drying 1+(0.9+0.9*inland)*(1-skin
+protection, 40% skin = full); legs = min(armour, flagella); support cost for n>8 without 15% armour; no broadcast spawning.
+Checkpoint migration (world_v 2): x += 80, fields padded, gaps remapped, vents created. New milestones: deep_life,
+vent_community, land_life, land_species. Local test from a young world: land colonised within ~0.3 Ma (all with skin),
+deep held 12-110 creatures. Client: zoom presets Deep / World / Shore / Landscape.
+
 ## DARWIN Tidal Pool — Red Queen update (2026-10-27)
 Why neurons/sex stalled: neuron cells were the costliest cell and unmasked randomly-drifted hidden units (pure harm at first);
 gonads needed a conspecific gonad-bearer in eyesight (impossible at 1% share), crossover was non-homologous, and with no

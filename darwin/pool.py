@@ -57,8 +57,11 @@ VERSION = "life-3.0"
 YEARS_PER_GEN = 1000
 
 # ── world constants ──────────────────────────────────────────────────────
-ARENA = 240.0
-GRID = 48
+ARENA = 240.0              # north-south extent of the world (y wraps around)
+WORLD_W = 400.0            # west-east extent: deep ocean, open sea, reef shallows, tidal flats, land
+WORLD_H = ARENA
+GRID = 48                  # field cells north-south
+GRID_X = 80                # field cells west-east
 CELL = ARENA / GRID
 CAP = 1100
 START = 160
@@ -71,14 +74,19 @@ STATS_EVERY = 2400
 K_NEAR = 8
 SENSE_MAX = 30.0
 MIN_AGE = 30
-BASINS = 3                 # the pool is split into basins by reefs; narrow straits let life through
-BASIN_W = ARENA / BASINS
+BASINS = 5                 # five habitats west to east (the name predates the deep and the land)
+BASIN_W = WORLD_W / BASINS
 GAP_H = 18.0               # height of each strait in the reef
 JUVENILE = 300
-# The three basins are habitats along a coast, west to east. The reef at x=0 is the solid boundary between the
-# tidal flats (east edge) and the open sea (west edge); the other two reefs have drifting straits.
-SEA, SHALLOWS, TIDAL = 0, 1, 2
-HABITATS = ["open sea", "reef shallows", "tidal flats"]
+# Five habitats along a coast, west to east. The deep ocean slopes down from the open sea into darkness, fed by
+# sinking dead matter and two hydrothermal vents. Two reefs with drifting straits separate the open sea, the reef
+# shallows and the tidal flats. Beyond the flats lies land: always out of water, strong sun, poor soil, wide
+# temperature swings, no currents. The world's west and east edges (abyss and inland) are a solid boundary.
+DEEP, SEA, SHALLOWS, TIDAL, LAND = 0, 1, 2, 3, 4
+HABITATS = ["deep ocean", "open sea", "reef shallows", "tidal flats", "land"]
+# what stands at the west edge of each zone: 0 = solid (the world's edge), 1 = open water or open shore, 2 = reef with a strait
+WALL_KIND = [0, 1, 2, 2, 1]
+REGION = np.array([0, 0, 1, 2, 2])   # zones joined by open boundaries see, hunt and mate across them
 TIDE = 900                 # ticks per tide cycle (three days)             # ticks during which a parent with care can feed its young
 
 SKIN, PHOTO, MOUTH, FLAG, EYE, ARMOR, STORE, NEURON, GONAD = range(9)
@@ -217,15 +225,34 @@ def species_name(sid, cnt, n):
 
 
 # ── the world ────────────────────────────────────────────────────────────
-_N_TARGET = np.where(np.arange(48)[None, :] * (240.0 / 48) < 80.0, 5.0, 2.0).astype(np.float32)
+def _new_vents(rng):
+    """Two hydrothermal vents on the floor of the deep ocean, well away from the light."""
+    return [[float(rng.uniform(10, 0.5 * BASIN_W)), float(rng.uniform(0, ARENA))] for _ in range(2)]
+
+
+_ZONE_OF_COL = (np.arange(GRID_X) * (WORLD_W / GRID_X) // BASIN_W).astype(int)
+_N_TARGET = np.tile(np.array([4.0, 5.0, 2.0, 2.0, 0.8], np.float32)[_ZONE_OF_COL][None, :], (GRID, 1))   # rich deep water, poor soil
 
 
 def basin_of(x):
     return (np.asarray(x) // BASIN_W).astype(np.int64) % BASINS
 
 
-def _wrap(d):
+def region_of(x):
+    return REGION[basin_of(x)]
+
+
+def _wrap(d):          # north-south
     return (d + ARENA / 2) % ARENA - ARENA / 2
+
+
+def _wx(d):            # west-east
+    return (d + WORLD_W / 2) % WORLD_W - WORLD_W / 2
+
+
+def _water_x(rng, n=None):
+    """A random position in the shallow water where life starts (open sea to tidal flats)."""
+    return rng.uniform(SEA * BASIN_W, LAND * BASIN_W, n)
 
 
 class Pool:
@@ -253,10 +280,12 @@ class Pool:
         self.clock_gen, self.last_mg, self.restarts, self.bank, self.seg_peak = 0.0, 0.0, 0, 0.0, 0.0
         self.spec = {}          # species id -> {founder cnt, brain, name, born_tick, born_gen, parent}
         self.next_sid = 1
-        self.N = np.full((GRID, GRID), 3.0, np.float32)    # dissolved nutrient
-        self.D = np.zeros((GRID, GRID), np.float32)        # dead matter (detritus)
+        self.N = np.full((GRID, GRID_X), 3.0, np.float32)    # dissolved nutrient
+        self.D = np.zeros((GRID, GRID_X), np.float32)        # dead matter (detritus)
+        self.world_v = 2
         self.clim = {"band": ARENA / 2, "width": 55.0, "temp": 0.0, "cur": float(self.rng.uniform(0, 6.283)),
-                     "up": [[float(self.rng.uniform(0, ARENA)), float(self.rng.uniform(0, ARENA))] for _ in range(4)],
+                     "up": [[float(_water_x(self.rng)), float(self.rng.uniform(0, ARENA))] for _ in range(4)],
+                     "vents": _new_vents(self.rng),
                      "shock_temp": 0.0, "shock_until": 0,
                      "gaps": [float(self.rng.uniform(0, ARENA)) for _ in range(BASINS)]}
         self.milestones = {}
@@ -264,7 +293,7 @@ class Pool:
         self.events = []        # catastrophes etc., kept in state for the timeline
         self.last_stats = None
         for _ in range(START):
-            self._spawn(new_genome(self.rng), self.rng.uniform(0, ARENA), self.rng.uniform(0, ARENA), 0, None, 6.0)
+            self._spawn(new_genome(self.rng), _water_x(self.rng), self.rng.uniform(0, ARENA), 0, None, 6.0)
 
     # ── bookkeeping ───────────────────────────────────────────────────
     def _plan_id(self, cells):
@@ -302,7 +331,7 @@ class Pool:
         self.alive[i] = True
         self.uid[i] = self.next_uid; self.next_uid += 1
         self.gen[i] = gen
-        self.x[i], self.y[i] = x % ARENA, y % ARENA
+        self.x[i], self.y[i] = x % WORLD_W, y % ARENA
         self.hd[i] = self.rng.uniform(0, 6.283)
         self.age[i] = 0
         self.n[i], self.cnt[i], self.expo[i] = n, cnt, expo
@@ -371,7 +400,7 @@ class Pool:
     def _die(self, idx):
         if not len(idx):
             return
-        gx = (self.x[idx] / CELL).astype(int) % GRID
+        gx = (self.x[idx] / CELL).astype(int) % GRID_X
         gy = (self.y[idx] / CELL).astype(int) % GRID
         np.add.at(self.D, (gy, gx), np.maximum(self.energy[idx], 0) + 2.0 * self.n[idx])
         np.add.at(self.N, (gy, gx), 0.8 * self.n[idx])
@@ -391,14 +420,26 @@ class Pool:
         return 0.4 + 0.55 * self.tide(t)
 
     def habitat(self, x, t=None):
-        """Per position: habitat index, light factor, current factor, temperature factor, exposed (out of water)."""
+        """Per position: habitat index, light factor, current factor, temperature factor, exposed (out of water),
+        depth (0..1, deep ocean only) and inland distance (0..1, land only)."""
+        x = np.asarray(x)
         h = basin_of(x)
-        elev = (np.asarray(x) - TIDAL * BASIN_W) / BASIN_W
-        exposed = (h == TIDAL) & (elev > self.waterline(t))
-        lightf = np.where(h == SEA, 0.9, np.where(exposed, 1.3, 1.0))
-        curf = np.where(h == SEA, 1.5, np.where(h == TIDAL, 1.25, 1.0))
-        tempf = np.where(h == SEA, 0.6, np.where(exposed, 1.6, 1.0))
-        return h, lightf, curf, tempf, exposed
+        within = (x - h * BASIN_W) / BASIN_W                    # 0 at a zone's west edge, 1 at its east edge
+        depth = np.where(h == DEEP, 1.0 - within, 0.0)          # the deep gets deeper toward the abyss (west)
+        inland = np.where(h == LAND, within, 0.0)
+        exposed = ((h == TIDAL) & (within > self.waterline(t))) | (h == LAND)
+        lightf = np.select([h == DEEP, h == SEA, h == LAND, exposed], [0.9 * np.exp(-3.6 * depth), 0.9, 1.35, 1.3], 1.0)
+        curf = np.select([h == DEEP, h == SEA, h == TIDAL, h == LAND], [0.4, 1.5, 1.25, 0.0], 1.0)
+        tempf = np.select([h == DEEP, h == SEA, h == LAND, exposed], [0.25, 0.6, 1.9, 1.6], 1.0)
+        return h, lightf, curf, tempf, exposed, depth, inland
+
+    def vent_heat(self, x, y):
+        """Hydrothermal vents warm the water around them (and feed the bacterial mats that grow there)."""
+        heat = np.zeros(len(x), np.float32)
+        for vx, vy in self.clim.get("vents", []):
+            d = np.hypot(_wx(x - vx), _wrap(y - vy))
+            heat += 0.9 * np.exp(-(d / 9.0) ** 2)
+        return heat
 
     def light(self, y, t):
         day = 0.03 + 0.97 * max(0.0, math.sin(2 * math.pi * t / DAY))
@@ -421,10 +462,16 @@ class Pool:
         c.setdefault("gaps", [float(rng.uniform(0, ARENA)) for _ in range(BASINS)])
         c["gaps"] = [float((gp + rng.normal(0, 2.0)) % ARENA) for gp in c["gaps"]]
         for k, u in enumerate(c["up"]):
-            u[0] = (u[0] + rng.normal(0, 1.5)) % ARENA
+            u[0] = (u[0] + rng.normal(0, 1.5)) % WORLD_W
             u[1] = (u[1] + rng.normal(0, 1.5)) % ARENA
             if k < 2:                       # two upwellings belong to the open sea: deep water rising
-                u[0] = float(np.clip(u[0], 4, BASIN_W - 4))
+                u[0] = float(np.clip(u[0], SEA * BASIN_W + 4, SHALLOWS * BASIN_W - 4))
+            else:                           # the others wander the shallow water, never onto land
+                u[0] = float(np.clip(u[0], SEA * BASIN_W + 4, LAND * BASIN_W - 4))
+        c.setdefault("vents", _new_vents(rng))
+        for v in c["vents"]:                # vents shift very slowly along the deep floor
+            v[0] = float(np.clip(v[0] + rng.normal(0, 0.3), 6, 0.55 * BASIN_W))
+            v[1] = float((v[1] + rng.normal(0, 0.3)) % ARENA)
         if self.tick > c["shock_until"]:
             c["shock_temp"] *= 0.9
         self._evolve_pathogens()
@@ -439,8 +486,8 @@ class Pool:
         a = np.flatnonzero(self.alive)
         killed = 0
         if kind == "impact":
-            cx, cy, r = rng.uniform(0, ARENA), rng.uniform(0, ARENA), 20 + 80 * sev
-            d = np.hypot(_wrap(self.x[a] - cx), _wrap(self.y[a] - cy))
+            cx, cy, r = rng.uniform(0, WORLD_W), rng.uniform(0, ARENA), 20 + 80 * sev
+            d = np.hypot(_wx(self.x[a] - cx), _wrap(self.y[a] - cy))
             hit = a[(d < r) & (rng.random(len(a)) < sev)]
             killed = len(hit)
             self._die(hit)
@@ -464,7 +511,13 @@ class Pool:
             gx, gy = int(ux / CELL), int(uy / CELL)
             for dx in (-1, 0, 1):
                 for dy in (-1, 0, 1):
-                    self.N[(gy + dy) % GRID, (gx + dx) % GRID] += 0.04
+                    self.N[(gy + dy) % GRID, (gx + dx) % GRID_X] += 0.04
+        for vx, vy in c.get("vents", []):   # chemosynthetic bacterial mats: food that needs no sunlight
+            gx, gy = int(vx / CELL), int(vy / CELL)
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    self.D[(gy + dy) % GRID, (gx + dx) % GRID_X] += 0.05
+                    self.N[(gy + dy) % GRID, (gx + dx) % GRID_X] += 0.02
         if self.tick % 5 == 0:
             N, D = self.N, self.D
             self.N = 0.6 * N + 0.1 * (np.roll(N, 1, 0) + np.roll(N, -1, 0) + np.roll(N, 1, 1) + np.roll(N, -1, 1))
@@ -473,6 +526,11 @@ class Pool:
             self.N += decay * 0.8
             self.N += 0.003 * (_N_TARGET - self.N)   # exchange with deep water: richer in the open sea
             self.D = 0.8 * self.D + 0.05 * (np.roll(self.D, 1, 0) + np.roll(self.D, -1, 0) + np.roll(self.D, 1, 1) + np.roll(self.D, -1, 1))
+            # marine snow: a little of the open sea's dead matter sinks down the slope into the deep
+            s0, s1 = SEA * GRID_X // BASINS, SHALLOWS * GRID_X // BASINS
+            snow = 0.03 * self.D[:, s0:s1]
+            self.D[:, s0:s1] -= snow
+            self.D[:, :s0] += snow.sum(1, keepdims=True) / s0
 
     # ── one tick ──────────────────────────────────────────────────────
     def step(self):
@@ -484,7 +542,7 @@ class Pool:
         a = np.flatnonzero(self.alive)
         if len(a) < 4:
             for _ in range(30):
-                self._spawn(new_genome(rng), rng.uniform(0, ARENA), rng.uniform(0, ARENA), 0, None, 6.0)
+                self._spawn(new_genome(rng), _water_x(rng), rng.uniform(0, ARENA), 0, None, 6.0)
             self.restarts += 1
             self.bank += self.seg_peak          # bank the time evolved before the near-extinction
             self.seg_peak = 0.0
@@ -495,41 +553,50 @@ class Pool:
             a = np.flatnonzero(self.alive)
         n = len(a)
         x, y, hd = self.x[a], self.y[a], self.hd[a]
-        gx = (x / CELL).astype(int) % GRID
+        gx = (x / CELL).astype(int) % GRID_X
         gy = (y / CELL).astype(int) % GRID
-        hab, lightf, curf, tempf, exposed = self.habitat(x, t)
+        hab, lightf, curf, tempf, exposed, depth, inland = self.habitat(x, t)
+        on_land = hab == LAND
         L = self.light(y, t) * lightf
-        Tm = self.temperature(y, t) * tempf
+        # the deep is cold and steady except beside the vents
+        Tm = self.temperature(y, t) * tempf - 0.55 * depth + self.vent_heat(x, y) * (hab == DEEP)
         Nc, Dc = self.N[gy, gx], self.D[gy, gx]
         photo = self.cnt[a, PHOTO].astype(np.float32)
         # producers compete for light within ~10-unit patches
         sx, sy = gx // 2, gy // 2
-        shade_tot = np.zeros((GRID // 2, GRID // 2), np.float32)
+        shade_tot = np.zeros((GRID // 2, GRID_X // 2), np.float32)
         own = self.expo[a]                       # a body's own cells are already accounted for by their exposure
         np.add.at(shade_tot, (sy, sx), own)
         shade = 1.0 / (1.0 + (shade_tot[sy, sx] - own) / 2.0)
-        occ = np.zeros((GRID // 2, GRID // 2), np.float32)
+        occ = np.zeros((GRID // 2, GRID_X // 2), np.float32)
         np.add.at(occ, (sy, sx), self.n[a].astype(np.float32))
         crowd = 1.0 + 0.1 * np.maximum(0.0, occ[sy, sx] - 3.0)   # space and oxygen get scarce in a packed patch
         sus = self.sus[a]
-        load = np.zeros((GRID // 2, GRID // 2), np.float32)
+        load = np.zeros((GRID // 2, GRID_X // 2), np.float32)
         np.add.at(load, (sy, sx), sus)
         sick = 1.0 + 0.5 * sus * np.minimum(np.maximum(load[sy, sx] - sus, 0.0) / 2.0, 1.5)   # infection needs other hosts nearby
 
         # neighbours (periodic)
-        pos = np.mod(np.stack([x, y], 1).astype(np.float64), ARENA)
-        pos[pos >= ARENA] = 0.0
-        tree = cKDTree(pos, boxsize=ARENA)
+        box = np.array([WORLD_W, ARENA])
+        pos = np.mod(np.stack([x, y], 1).astype(np.float64), box)
+        pos[pos >= box] = 0.0
+        tree = cKDTree(pos, boxsize=box)
         k = min(K_NEAR + 1, n)
         dist, idx = tree.query(pos, k=k, distance_upper_bound=SENSE_MAX)
         dist, idx = dist[:, 1:], idx[:, 1:]
         valid = idx < n
         idx = np.where(valid, idx, 0)
-        sense = self.sense[a][:, None]
+        # eyes need light: in the dark deep they see almost nothing. Neurons add a short-range sense of movement
+        # in the water around the body (a lateral line), which works in any light.
+        nh = np.minimum(self.cnt[a, NEURON], 3).astype(np.float32)
+        ce = self.cnt[a, EYE].astype(np.float32)
+        eye_r = np.where(ce > 0, np.minimum(SENSE_MAX - 1.5, 7.0 * ce ** 0.7), 0.0)
+        sense = np.minimum(SENSE_MAX, 1.5 + eye_r * np.clip(lightf / 0.6, 0, 1) + 3.0 * nh)[:, None]
         att, dfn, sp = self.att[a], self.dfn[a], self.species[a]
         rad = self.rad[a]
         bas = basin_of(x)
-        within = valid & (dist <= sense + rad[idx]) & (bas[idx] == bas[:, None])   # reefs block sight and reach
+        reg = REGION[bas]
+        within = valid & (dist <= sense + rad[idx]) & (reg[idx] == reg[:, None])   # reefs block sight and reach
         can_eat = within & (att[:, None] > dfn[idx])
         threat = within & (att[idx] > dfn[:, None])
         mate = within & (sp[idx] == sp[:, None]) & (self.cnt[a][idx][..., GONAD] > 0)
@@ -546,7 +613,7 @@ class Pool:
         c, s_ = np.cos(hd), np.sin(hd)
 
         def local(j, has, d):
-            dx, dy = _wrap(x[j] - x), _wrap(y[j] - y)
+            dx, dy = _wx(x[j] - x), _wrap(y[j] - y)
             lx = (dx * c + dy * s_) / np.maximum(d, 1e-3)
             ly = (-dx * s_ + dy * c) / np.maximum(d, 1e-3)
             prox = np.where(has, 1.0 - np.minimum(d, SENSE_MAX) / SENSE_MAX, 0.0)
@@ -575,19 +642,24 @@ class Pool:
         breed = 1 / (1 + np.exp(-out[:, 3]))
 
         # movement: own thrust plus a slow ocean current and jitter
-        nh = np.minimum(self.cnt[a, NEURON], 3).astype(np.float32)        # neurons: faster, finer reflexes
-        hd = (hd + 0.35 * (1 + 0.3 * nh) * turn) % 6.283
-        v = self.vmax[a] * throttle * np.where(exposed, 0.25, 1.0)     # stranded at low tide: hard to move
+        hd = (hd + 0.35 * (1 + 0.3 * nh) * turn) % 6.283              # neurons: faster, finer reflexes
+        # out of water flagella barely work; on land, stiff cells (armour, a skeleton) worked by flagella
+        # (muscle) make legs
+        n_f = self.n[a].astype(np.float32)
+        legs = np.minimum(self.cnt[a, ARMOR], self.cnt[a, FLAG]).astype(np.float32)
+        v_land = np.minimum(1.2, 0.25 * self.vmax[a] + 0.5 * legs / np.sqrt(n_f))
+        v = throttle * np.where(on_land, v_land, self.vmax[a] * np.where(exposed, 0.25, 1.0))   # stranded at low tide
         cur = self.clim["cur"]
-        nx = (x + v * np.cos(hd) + rng.normal(0, 0.05, n)) % ARENA      # currents run along the coast, so nothing piles up on a reef
+        nx = (x + v * np.cos(hd) + rng.normal(0, 0.05, n)) % WORLD_W    # currents run along the coast, so nothing piles up on a reef
         y = (y + v * np.sin(hd) + 0.012 * curf * math.sin(cur) + rng.normal(0, 0.05, n)) % ARENA
         crossed = basin_of(nx) != bas
         if crossed.any():
-            # which reef: moving right crosses the next basin's west wall, moving left this basin's west wall
-            right = _wrap(nx - x) > 0
+            # which boundary: moving east crosses the next zone's west edge, moving west this zone's own
+            right = _wx(nx - x) > 0
             wall = np.where(right, (bas + 1) % BASINS, bas)
+            kind = np.array(WALL_KIND)[wall]
             gaps = np.array(self.clim["gaps"], np.float32)
-            through = (np.abs(_wrap(y - gaps[wall])) < GAP_H / 2) & (wall != 0) & (self.rad[a] < 2.3)   # outer reef solid; giants don't fit the straits
+            through = (kind == 1) | ((kind == 2) & (np.abs(_wrap(y - gaps[wall])) < GAP_H / 2) & (self.rad[a] < 2.3))   # giants don't fit the straits
             blocked = crossed & ~through
             nx = np.where(blocked, x, nx)
             hd = np.where(blocked, (math.pi - hd) % 6.283, hd)    # bounce off the reef
@@ -599,8 +671,12 @@ class Pool:
         g_photo = 0.9 * self.expo[a] * L * nutf * shade
         mouth = self.cnt[a, MOUTH].astype(np.float32)
         g_det = np.where(eat > 0.3, np.minimum(Dc * 0.15, 0.06 * mouth), 0.0)
-        dry = np.where(exposed, 1.4, 1.0)        # drying out on the exposed flats (stage 2 adds water-holding skin)
-        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry * sick
+        # drying out of water: skin cells hold water in (about 40% skin protects fully); land dries harder further inland
+        protect = np.clip(2.5 * self.cnt[a, SKIN] / n_f, 0, 1)
+        dry = 1.0 + (1.0 - protect) * np.where(on_land, 0.9 + 0.9 * inland, np.where(exposed, 0.4, 0.0))
+        # on land nothing floats: big bodies need a skeleton (armour cells) to carry their own weight
+        support = np.where(on_land & (n_f > 8), 1.0 + 0.03 * (n_f - 8) * (1 - np.clip(self.cnt[a, ARMOR] / n_f / 0.15, 0, 1)), 1.0)
+        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry * support * sick
                 + 0.004 * v * self.n[a])
         np.subtract.at(self.N, (gy, gx), g_photo * 0.5)
         np.subtract.at(self.D, (gy, gx), g_det)
@@ -663,8 +739,8 @@ class Pool:
             ok = self.alive[m] & (self.uid[m] == self.mom_uid[kids]) & (self.care[m] > 0.02)
             if ok.any():
                 kids, m = kids[ok], m[ok]
-                near = (np.hypot(_wrap(self.x[kids] - self.x[m]), _wrap(self.y[kids] - self.y[m])) < 10) & \
-                       (basin_of(self.x[kids]) == basin_of(self.x[m]))
+                near = (np.hypot(_wx(self.x[kids] - self.x[m]), _wrap(self.y[kids] - self.y[m])) < 10) & \
+                       (region_of(self.x[kids]) == region_of(self.x[m]))
                 kids, m = kids[near], m[near]
                 if len(kids):
                     give = np.minimum(self.care[m] * 0.05, 0.02 * np.maximum(self.energy[m], 0))
@@ -677,10 +753,10 @@ class Pool:
                                & (self.age[a] >= MIN_AGE))
         if len(ready):
             rng.shuffle(ready)
-            gon = a[self.cnt[a, GONAD] > 0]
+            gon = a[(self.cnt[a, GONAD] > 0) & ~exposed]       # gametes need water: no broadcast spawning on land
             spawners = {}
             if len(gon):
-                for j, b_ in zip(gon.tolist(), basin_of(self.x[gon]).tolist()):
+                for j, b_ in zip(gon.tolist(), region_of(self.x[gon]).tolist()):
                     spawners.setdefault((int(self.species[j]), b_), []).append(j)
             for r_ in ready[:40]:
                 i = int(a[r_])
@@ -693,10 +769,10 @@ class Pool:
                     if self.alive[j] and self.energy[j] > 0.3 * self.emax[j]:
                         mate_i = j
                 broadcast = False
-                if mate_i is None and self.cnt[i, GONAD]:
+                if mate_i is None and self.cnt[i, GONAD] and not exposed[r_]:
                     # broadcast spawning: gametes released into the water can reach a distant conspecific
                     # in the same basin (how sex works for corals, urchins and most early animals)
-                    key = (int(self.species[i]), int(basin_of(np.array([self.x[i]]))[0]))
+                    key = (int(self.species[i]), int(region_of(np.array([self.x[i]]))[0]))
                     pool_ = [j for j in spawners.get(key, []) if j != i and self.alive[j]]
                     if pool_ and rng.random() < 0.6:
                         mate_i = pool_[int(rng.integers(len(pool_)))]
@@ -716,7 +792,7 @@ class Pool:
                 self.energy[i] -= share
                 ang = rng.uniform(0, 6.283)
                 off = float(self.rad[i]) + 1 + rng.uniform(0, 3)
-                if basin_of(np.array([self.x[i] + math.cos(ang) * off]))[0] != basin_of(np.array([self.x[i]]))[0]:
+                if region_of(np.array([(self.x[i] + math.cos(ang) * off) % WORLD_W]))[0] != region_of(np.array([self.x[i]]))[0]:
                     ang = math.pi - ang                 # born on the parent's side of the reef
                 k_ = self._spawn(child, self.x[i] + math.cos(ang) * off, self.y[i] + math.sin(ang) * off,
                                  int(self.gen[i]) + 1, int(self.species[i]), share + gift, float(self.tl[i]), mom=i)
@@ -799,6 +875,7 @@ class Pool:
             "warm_mean": round(float(self.warm[a].mean()), 4), "warm_share": round(float((self.warm[a] >= 0.5).mean()), 4),
             "care_mean": round(float(self.care[a].mean()), 4), "care_share": round(float((self.care[a] >= 0.3).mean()), 4),
             "basins": np.bincount(basin_of(self.x[a]), minlength=BASINS).astype(int).tolist(),
+            "skin_share": round(float((cnt[:, SKIN] > 0).mean()), 4),
             "habitats": {HABITATS[h]: {"population": int((basin_of(self.x[a]) == h).sum()),
                                        "cells_mean": round(float(ncell[basin_of(self.x[a]) == h].mean()), 2) if (basin_of(self.x[a]) == h).any() else None}
                          for h in range(BASINS)},
@@ -828,6 +905,10 @@ class Pool:
         ("parental_care", "Parental care (parents feeding their young)", lambda s, p: p["sp_care"] >= 1),
         ("warm_blood", "Warm-blooded lineages", lambda s, p: p["sp_warm"] >= 1),
         ("warm_care_brain", "Warm-blooded, caring, big-brained species (the mammal-like package)", lambda s, p: p["sp_mammal"] >= 1),
+        ("deep_life", "Life settles the deep ocean", lambda s, p: p["deep"] >= 15),
+        ("vent_community", "A community living off the hydrothermal vents", lambda s, p: p["vent"] >= 10),
+        ("land_life", "Life on land", lambda s, p: p["land"] >= 10),
+        ("land_species", "A species that lives mostly on land", lambda s, p: p["sp_land"] >= 1),
     ]
     MS_STREAK = 5
 
@@ -840,6 +921,14 @@ class Pool:
         types = (cnt > 0).sum(1)
         p = {"types3": int((types >= 3).sum()), "types5": int((types >= 5).sum()), "c10": int((nc >= 10).sum()),
              "c20": int((nc >= 20).sum()), "c40": int((nc >= 40).sum()), "neur3": int((cnt[:, NEURON] >= 3).sum())}
+        xs, ys = self.x[a], self.y[a]
+        zone = basin_of(xs)
+        p["deep"] = int(((zone == DEEP) & (xs < 0.5 * BASIN_W)).sum())
+        p["vent"] = int(((zone == DEEP) & (self.vent_heat(xs, ys) > 0.3)).sum())
+        p["land"] = int((zone == LAND).sum())
+        sp_ids, sp_n = np.unique(self.species[a], return_counts=True)
+        land_n = np.array([int(((self.species[a] == sid) & (zone == LAND)).sum()) for sid in sp_ids]) if len(sp_ids) else np.array([])
+        p["sp_land"] = int(((sp_n >= 8) & (land_n >= 0.6 * sp_n)).sum()) if len(sp_ids) else 0
         sp, inv, counts = np.unique(self.species[a], return_inverse=True, return_counts=True)
         mean_cells = np.bincount(inv, weights=nc.astype(float)) / counts
         big = counts >= 10                       # a species, not a handful of mutants
@@ -908,7 +997,8 @@ class Pool:
                 "light": round(float(self.light(np.array([self.clim["band"]]), self.tick)[0]), 3),
                 "upwellings": [[round(u[0], 1), round(u[1], 1)] for u in self.clim["up"]],
                 "current": round(float(self.clim["cur"]), 3),
-                "reefs": [round(k * BASIN_W, 1) for k in range(BASINS)],
+                "reefs": [round(k * BASIN_W, 1) for k in range(BASINS)], "walls": WALL_KIND,
+                "world": [WORLD_W, ARENA], "vents": [[round(v[0], 1), round(v[1], 1)] for v in self.clim.get("vents", [])],
                 "habitats": HABITATS, "basin_w": BASIN_W, "tide": round(self.tide(), 3), "waterline": round(self.waterline(), 3),
                 "day": round(max(0.0, math.sin(2 * math.pi * self.tick / DAY)), 3),
                 "season": round(math.sin(2 * math.pi * self.tick / YEAR), 3),
@@ -937,6 +1027,21 @@ def from_blob(b: bytes) -> Pool:
         p.sus = np.zeros(CAP, np.float32)
         for i in np.flatnonzero(p.alive):
             p.sus[i] = p._susceptibility(_mhc(p.genomes[i], p.rng))
+    if getattr(p, "world_v", 1) < 2:           # Oct 29: the world grows a deep ocean (west) and land (east)
+        a = p.alive
+        p.x[a] = p.x[a] + BASIN_W               # the old bay (open sea, shallows, flats) keeps its place in the middle
+        oldN, oldD = p.N, p.D
+        p.N = _N_TARGET.copy(); p.D = np.zeros((GRID, GRID_X), np.float32)
+        c0 = GRID_X // BASINS
+        p.N[:, c0:c0 + oldN.shape[1]] = oldN; p.D[:, c0:c0 + oldD.shape[1]] = oldD
+        g = p.clim.get("gaps", [])
+        p.clim["gaps"] = [float(p.rng.uniform(0, ARENA)), float(p.rng.uniform(0, ARENA))] + [float(v) for v in g[1:3]] + [float(p.rng.uniform(0, ARENA))]
+        for u in p.clim["up"]:
+            u[0] = float(u[0] + BASIN_W)
+        p.clim["vents"] = _new_vents(p.rng)
+        p.world_v = 2
+        _ledger("pool.world_expanded", {"era": p.era, "tick": int(p.tick), "habitats": HABITATS,
+                                        "note": "deep ocean and land added; the bay keeps its creatures"})
     if not hasattr(p, "bank"):
         p.bank, p.seg_peak = _clock_from_history(p.era)
         p.clock_gen = p.bank + p.seg_peak
@@ -1003,7 +1108,7 @@ def load_or_create() -> Pool:
 
 def write_live(p: Pool, frames):
     data = {"frames": frames[-3:], "plans": {}, "env": p.env(), "stats": p.last_stats, "era": p.era,
-            "version": VERSION, "tick": int(p.tick), "arena": ARENA, "years_per_generation": YEARS_PER_GEN,
+            "version": VERSION, "tick": int(p.tick), "arena": ARENA, "world": [WORLD_W, ARENA], "years_per_generation": YEARS_PER_GEN,
             "geo_ma": p.geo_ma(), "milestones": sorted(p.milestones.values(), key=lambda m: m["tick"]),
             "catastrophes": p.events[-12:], "species": p.species_table(), "exemplar": p.exemplar(),
             "names": {str(int(k)): p.spec.get(int(k), {}).get("name") for k in np.unique(p.species[p.alive])},
