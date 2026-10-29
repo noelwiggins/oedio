@@ -730,6 +730,26 @@
      "source_label": "Library of Congress"
     },
     {
+     "slug": "blaeu-1634-v2-transcription",
+     "title": "Insulae Americanae in Oceano Septentrionali (1634) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Map",
+     "year": 1634,
+     "loc_item": "2003630536",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "blaeu-1634-v2-english",
+     "title": "Insulae Americanae in Oceano Septentrionali (1634) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Map",
+     "year": 1634,
+     "loc_item": "2003630536",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "thornton-1680-v2",
      "role": "Map",
      "title": "A Chart of the Caribe Ilands (1680)",
@@ -1015,6 +1035,26 @@
      "loc_item": "2021667855",
      "note": "Book X's survey of 'the people, their virtues and vices' includes an unusually direct passage on Aztec medicine and physicians, describing what qualities distinguished a good healer from a bad one -- one of the few places in the Codex where Nahua concepts of professional competence and ethics are laid out explicitly.",
      "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book10-transcription",
+     "title": "Book 10: The People (their Virtues and Vices, and other Nations) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 10",
+     "year": 1577,
+     "loc_item": "2021667855",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book10-english",
+     "title": "Book 10: The People (their Virtues and Vices, and other Nations) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 10",
+     "year": 1577,
+     "loc_item": "2021667855",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "florentine-codex-book11",
