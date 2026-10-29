@@ -239,6 +239,26 @@
      "source_url": "https://archive.org/details/westcott-hort-the-new-testament-in-the-original-greek"
     },
     {
+     "slug": "greek-nt-westcotthort-1895-transcription",
+     "title": "Greek New Testament (Westcott-Hort, 1895 printing) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Original text",
+     "year": 1895,
+     "loc_item": "02013451",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "greek-nt-westcotthort-1895-english",
+     "title": "Greek New Testament (Westcott-Hort, 1895 printing) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Original text",
+     "year": 1895,
+     "loc_item": "02013451",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "dore-gallery-1890-transcription",
      "role": "Illustrated Editions",
      "title": "The Doré Bible Gallery — full captions (AI transcription)",
@@ -1150,6 +1170,26 @@
      "source_label": "Internet Archive"
     },
     {
+     "slug": "dhammapada-thai-chulalongkorn-transcription",
+     "title": "Tipitaka Vol. 25: Dhammapada et al. (King Chulalongkorn Edition, 1893) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Thai Tradition",
+     "year": 1893,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dhammapada-thai-chulalongkorn-english",
+     "title": "Tipitaka Vol. 25: Dhammapada et al. (King Chulalongkorn Edition, 1893) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Thai Tradition",
+     "year": 1893,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "buddha-jayanti-sutta-pitaka",
      "role": "Sinhala Tradition",
      "title": "Buddha Jayanti Sutta Pitaka (1957–1989 edition)",
@@ -1169,6 +1209,16 @@
      "year": 1957,
      "loc_item": "",
      "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "buddha-jayanti-sutta-pitaka-english",
+     "title": "Buddha Jayanti Sutta Pitaka (1957–1989 edition) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Sinhala Tradition",
+     "year": 1957,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
      "facsimile": false
     },
     {
@@ -1225,6 +1275,16 @@
      "year": 1957,
      "loc_item": "",
      "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "buddha-jayanti-abhidhamma-pitaka-english",
+     "title": "Buddha Jayanti Abhidhamma Pitaka (1957 edition) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Sinhala Tradition",
+     "year": 1957,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
      "facsimile": false
     },
     {
@@ -1297,6 +1357,26 @@
      "tradition": "greek_roman"
     },
     {
+     "slug": "dioscorides-materia-medica-transcription",
+     "title": "De Materia Medica (early Byzantine manuscript, c. 500 CE) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Ancient Mediterranean",
+     "year": 512,
+     "loc_item": "2021667873",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dioscorides-materia-medica-english",
+     "title": "De Materia Medica (early Byzantine manuscript, c. 500 CE) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Ancient Mediterranean",
+     "year": 512,
+     "loc_item": "2021667873",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "charaka-samhita",
      "role": "South & Central Asia",
      "title": "Charaka Samhita, Vol. 1 (ed. Mihir Chandra, 1898)",
@@ -1311,13 +1391,33 @@
     {
      "slug": "bencao-gangmu",
      "role": "East Asia",
-     "title": "Illustrated Manual of Medical Plants (1830 manuscript)",
-     "contributor": "Chinese herbal tradition, in the lineage of Li Shizhen's Bencao Gangmu",
+     "title": "Honzō Zufu — Illustrated Manual of Medicinal Plants (Japan, 1830)",
+     "contributor": "Iwasaki Tsunemasa (Kan’en)",
      "year": 1830,
      "loc_item": "2021666420",
-     "note": "This 1830 illustrated Chinese herbal stands in a tradition stretching back to Li Shizhen's 1596 Bencao Gangmu, a 27-year labor that catalogued nearly 1,900 medicinal substances and became the most comprehensive materia medica produced anywhere in the world up to that point -- later editions and derivative works, like this one, kept extending and illustrating that original catalogue for centuries after Li Shizhen's death.",
+     "note": "A Japanese illustrated herbal, the Honzō Zufu (本草圖譜), by the Edo-period botanist Iwasaki Tsunemasa: hand-painted plates of medicinal plants with their names and short notes in kanji and kana. It descends from Li Shizhen's 1596 Chinese Bencao Gangmu, the materia medica that organised Japanese pharmacy (honzōgaku) for two centuries, but Iwasaki drew his plants from life and arranged them by the Bencao Gangmu's categories, making it the largest illustrated botanical work of the Edo period.",
      "facsimile": true,
-     "tradition": "chinese"
+     "tradition": "kampo"
+    },
+    {
+     "slug": "bencao-gangmu-transcription",
+     "title": "Honzō Zufu — Illustrated Manual of Medicinal Plants (Japan, 1830) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "East Asia",
+     "year": 1830,
+     "loc_item": "2021666420",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "bencao-gangmu-english",
+     "title": "Honzō Zufu — Illustrated Manual of Medicinal Plants (Japan, 1830) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "East Asia",
+     "year": 1830,
+     "loc_item": "2021666420",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "bencao-jing",
