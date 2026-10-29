@@ -1137,6 +1137,26 @@
      "facsimile": true
     },
     {
+     "slug": "florentine-codex-book12-transcription",
+     "title": "Book 12: The Conquest of Mexico — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 12",
+     "year": 1577,
+     "loc_item": "2021667857",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book12-english",
+     "title": "Book 12: The Conquest of Mexico — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 12",
+     "year": 1577,
+     "loc_item": "2021667857",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "florentine-codex-book11-transcription",
      "role": "Book 11",
      "title": "Book 11: Natural Things — Spanish text (AI transcription)",
@@ -1318,6 +1338,26 @@
      "source_label": "Internet Archive"
     },
     {
+     "slug": "dhammapada-fausboll-1855-transcription",
+     "title": "The Dhammapada (ed. Viggo Fausbøll, 1855) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Original text",
+     "year": 1855,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "dhammapada-fausboll-1855-english",
+     "title": "The Dhammapada (ed. Viggo Fausbøll, 1855) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Original text",
+     "year": 1855,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "dhammapada-thai-chulalongkorn",
      "role": "Thai Tradition",
      "title": "Tipitaka Vol. 25: Dhammapada et al. (King Chulalongkorn Edition, 1893)",
@@ -1413,6 +1453,16 @@
      "year": 1957,
      "loc_item": "",
      "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "buddha-jayanti-vinaya-pitaka-english",
+     "title": "Buddha Jayanti Vinaya Pitaka (1957 edition) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Sinhala Tradition",
+     "year": 1957,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
      "facsimile": false
     },
     {
