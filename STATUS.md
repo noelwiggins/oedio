@@ -8,7 +8,11 @@ Phones get static/m/ (index.html, m.css, m.js) at "/" (UA check in app.py); "Ful
 book page with editions grouped by role, filter for big collections, multi-volume sets), Search (pages via FTS + books),
 Saved (localStorage). Reader loads one page at a time from /api/m/read/<mega>/<work>/<n>[?page=P] with every aligned
 layer (Original / English) as a segmented switch; tile.loc.gov images go through /img-proxy. Other endpoints:
-/api/m/library, /api/m/book/<slug>. Darwin and Book Studio stay desktop-only.
+/api/m/library, /api/m/book/<slug>.
+Darwin and Book Studio work on phones too: the mobile library shelves the slim green "Origin of Species" spine beside the
+science books (opens /darwin/), and every book page has "Make a printed book" (/book/<slug>/studio). Darwin on phones
+(<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
+inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
 ## DARWIN Tidal Pool — Red Queen update (2026-10-27)
 Why neurons/sex stalled: neuron cells were the costliest cell and unmasked randomly-drifted hidden units (pure harm at first);

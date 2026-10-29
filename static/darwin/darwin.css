@@ -326,3 +326,37 @@ table.t td.mono, table.t td .mono, table.t td.mono.small { white-space: nowrap; 
 .bxe-table th, .bxe-table td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
 .bxe-table th { font-family: var(--dw-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--md-sys-color-on-surface-variant); }
 @media (max-width: 600px) { .bxe-uni { height: 120px; } }
+
+/* ── phones: bottom navigation + "More" sheet, stacked forms, scrollable tables ── */
+.dw-bottom, .dw-sheet, .dw-sheet-scrim { display: none; }
+@media (max-width: 760px) {
+  .dw-nav { display: none; }
+  .dw-bar { padding-top: calc(env(safe-area-inset-top) + 8px); }
+  .dw-bottom { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; height: calc(66px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom); background: var(--md-sys-color-surface-container); border-top: 1px solid var(--md-sys-color-outline-variant); }
+  .dw-bottom a, .dw-bottom button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; background: none;
+    text-decoration: none; color: var(--md-sys-color-on-surface-variant); font: 500 12px var(--dw-sans); cursor: pointer; }
+  .dw-bottom svg { width: 60px; height: 30px; padding: 3px 18px; box-sizing: border-box; border-radius: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+  .dw-bottom .on { color: var(--md-sys-color-on-surface); }
+  .dw-bottom .on svg { background: var(--md-sys-color-secondary-container); }
+  body { padding-bottom: calc(66px + env(safe-area-inset-bottom)); }
+  .dw-sheet-scrim:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.45); }
+  .dw-sheet:not([hidden]) { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 80; max-height: 82dvh; overflow-y: auto;
+    background: var(--md-sys-color-surface-container-high); border-radius: 22px 22px 0 0; padding: 8px 12px calc(16px + env(safe-area-inset-bottom)); }
+  .dw-sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--md-sys-color-outline); margin: 6px auto 10px; opacity: .6; }
+  .dw-sheet a { display: block; padding: 12px 14px; border-radius: 14px; text-decoration: none; color: var(--md-sys-color-on-surface); }
+  .dw-sheet a b { display: block; font-size: 16px; font-weight: 600; }
+  .dw-sheet a span { display: block; font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-top: 1px; }
+  .dw-sheet a.on { background: var(--md-sys-color-secondary-container); }
+  body.dw-sheet-open { overflow: hidden; }
+  .dw-foot { padding-bottom: 24px; }
+  /* forms and side-by-side panels stack */
+  form.grid, .grid[style*="grid-template-columns:minmax(0,1.6fr)"] { grid-template-columns: 1fr !important; }
+  .g2 { grid-template-columns: 1fr; }
+  /* wide tables scroll inside their card instead of spilling off the page */
+  table.t { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.t td, table.t th { min-width: 0; }
+  input, select, textarea { font-size: 16px; }   /* stops iOS zooming into fields */
+  .btn, .chip { min-height: 40px; }
+  h1.page { font-size: 24px; }
+}

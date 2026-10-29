@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/darwin/darwin.css?v=9">
+<link rel="stylesheet" href="/static/darwin/darwin.css?v=10">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e1513'/%3E%3Cpath d='M16 26V14M16 14c0-4 3-7 7-8M16 18c0-3-3-6-7-7M16 22c2-2 5-3 7-3' stroke='%237dd8b5' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 {% block head %}{% endblock %}
@@ -36,6 +36,38 @@
   <div class="dw-spacer"></div>
   <a class="dw-owner {{ 'on' if is_owner }}" href="/darwin/owner">{{ 'Owner' if is_owner else 'Visitor' }}</a>
 </header>
+{# Phones: a bottom navigation bar for the three places people go most, and a sheet for everything else #}
+{% set here = request.path %}
+{% set in_more = not (here == '/darwin/' or here.startswith('/darwin/pool') or here.startswith('/darwin/barricelli')) %}
+<nav class="dw-bottom" aria-label="Darwin">
+  <a href="/darwin/" class="{{ 'on' if here == '/darwin/' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.5 2.5 13.5 0 16M12 4c-2.5 2.5-2.5 13.5 0 16"/></svg><span>World</span></a>
+  <a href="/darwin/pool" class="{{ 'on' if here.startswith('/darwin/pool') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15c3 0 3-2 6-2s3 2 6 2 3-2 6-2"/><path d="M3 19c3 0 3-2 6-2s3 2 6 2 3-2 6-2"/><circle cx="9" cy="7" r="2"/><circle cx="16" cy="8" r="1.5"/></svg><span>Tidal pool</span></a>
+  <a href="/darwin/barricelli" class="{{ 'on' if here.startswith('/darwin/barricelli') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M8 4v16M16 4v16" opacity=".5"/></svg><span>Barricelli</span></a>
+  <button type="button" class="{{ 'on' if in_more }}" id="dw-more-btn" aria-controls="dw-sheet" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>More</span></button>
+</nav>
+<div class="dw-sheet-scrim" id="dw-scrim" hidden></div>
+<div class="dw-sheet" id="dw-sheet" role="dialog" aria-label="All of Darwin" hidden>
+  <div class="dw-sheet-handle"></div>
+  <a href="/darwin/lab/life" class="{{ 'on' if here.startswith('/darwin/lab/life') }}"><b>Life Lab</b><span>Design an experiment and let Darwin evolve an answer</span></a>
+  <a href="/darwin/lab/web" class="{{ 'on' if here.startswith('/darwin/lab/web') }}"><b>Web Lab</b><span>Evolving strategies for finding usability problems</span></a>
+  <a href="/darwin/intelligence" class="{{ 'on' if here.startswith('/darwin/intelligence') }}"><b>Intelligence</b><span>Does experience help on new problems?</span></a>
+  <a href="/darwin/memory" class="{{ 'on' if here.startswith('/darwin/memory') }}"><b>Memory</b><span>What Darwin has learned, and what failed</span></a>
+  <a href="/darwin/history" class="{{ 'on' if here.startswith('/darwin/history') or here.startswith('/darwin/experiment') }}"><b>History</b><span>Every experiment, what it cost and found</span></a>
+  <a href="/darwin/ledger" class="{{ 'on' if here.startswith('/darwin/ledger') }}"><b>Ledger</b><span>The permanent record of every event</span></a>
+  <a href="/darwin/snapshots" class="{{ 'on' if here.startswith('/darwin/snapshots') }}"><b>Snapshots</b><span>Frozen copies of Darwin's state</span></a>
+  <a href="/darwin/system" class="{{ 'on' if here.startswith('/darwin/system') }}"><b>System</b><span>What works, what is experimental</span></a>
+  <a href="/darwin/owner" class="{{ 'on' if here.startswith('/darwin/owner') }}"><b>{{ 'Owner' if is_owner else 'Owner sign-in' }}</b><span>{{ 'Signed in as owner' if is_owner else 'For running larger experiments' }}</span></a>
+  <a href="/" onclick="Darwin.exitToLibrary(event)"><b>Back to the library</b><span>Return through the bookcase</span></a>
+</div>
+<script>
+(function () {
+  var btn = document.getElementById('dw-more-btn'), sheet = document.getElementById('dw-sheet'), scrim = document.getElementById('dw-scrim');
+  function set(open) { sheet.hidden = !open; scrim.hidden = !open; btn.setAttribute('aria-expanded', open); document.body.classList.toggle('dw-sheet-open', open); }
+  btn.onclick = function () { set(sheet.hidden); };
+  scrim.onclick = function () { set(false); };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+})();
+</script>
 <main>
 {% block content %}{% endblock %}
 </main>

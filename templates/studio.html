@@ -123,6 +123,43 @@
   .lightbox img { max-width:100%; max-height:100%; border-radius:6px; }
   .lightbox .lbf { position:relative; background:#fff; box-shadow:0 10px 40px #000; }
   .lightbox .lbf iframe { position:absolute; left:0; top:0; border:0; transform-origin:0 0; }
+
+  /* phones */
+  .src-filter { display:none; }
+  .st-actionbar { display:none; }
+  @media (max-width:640px) {
+    .st-wrap { overflow-x:hidden; }
+    .st-grid { margin-top:14px; gap:14px; grid-template-columns:minmax(0,1fr); }
+    .st-form, .st-preview, .card { min-width:0; }
+    .chips, #sides, #sides > * { flex-wrap:wrap; min-width:0; }
+    .card { padding:16px; border-radius:14px; }
+    .card h2 { font-size:13px; }
+    .src-filter { display:block; margin:0 0 10px; width:100%; box-sizing:border-box; height:44px; padding:0 14px; border-radius:22px; font:inherit; font-size:16px;
+      border:1px solid var(--md-sys-color-outline-variant); background:var(--md-sys-color-surface-container-low); color:var(--md-sys-color-on-surface); outline:none; }
+    .src-list { grid-template-columns:1fr; max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:2px;
+      border-radius:12px; }
+    .src { padding:10px; min-height:84px; }
+    .st-wrap input[type=text], .st-wrap input[type=number], .st-wrap select, .st-wrap textarea { font-size:16px; padding:11px 12px; }
+    .chip { padding:9px 14px; font-size:14px; }
+    .seg { display:flex; width:100%; }
+    .seg button { flex:1; padding:10px 6px; font-size:14px; }
+    .check { font-size:15px; min-height:36px; }
+    .check input { width:20px; height:20px; }
+    .mono-styles { grid-template-columns:repeat(2,1fr); }
+    .tabs { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+    .tabs::-webkit-scrollbar { display:none; }
+    .tabs button { padding:9px 14px; font-size:14px; white-space:nowrap; }
+    .stage { min-height:240px; padding:10px; }
+    .pv-nav button { width:40px; height:40px; }
+    .result .acts .btn { flex:1 1 140px; justify-content:center; }
+    #buildbtn { width:100%; justify-content:center; }
+    .st-actionbar { display:flex; position:fixed; left:0; right:0; bottom:0; z-index:900; gap:10px; align-items:center;
+      padding:10px 14px calc(10px + env(safe-area-inset-bottom)); background:var(--md-sys-color-surface-container-high);
+      border-top:1px solid var(--md-sys-color-outline-variant); }
+    .st-actionbar .sum { flex:1; min-width:0; font-size:13px; color:var(--md-sys-color-on-surface-variant); line-height:1.35; }
+    .st-actionbar .btn { flex:none; }
+    .st-wrap { padding-bottom:90px; }
+  }
 </style>
 {% endblock %}
 
@@ -141,6 +178,7 @@
     <div class="card">
       <h2><span class="n">1</span>Sources <span style="font-weight:400;letter-spacing:0;text-transform:none;opacity:.7">(choose up to 4)</span></h2>
       <div class="sel-bar" id="selbar"></div>
+      <input type="search" class="src-filter" id="srcfilter" placeholder="Find a source" aria-label="Find a source">
       <div class="src-list" id="srclist"><p class="hint">Loading sources&hellip;</p></div>
       <div class="warn" id="srcwarn" style="display:none"></div>
     </div>
@@ -295,6 +333,9 @@
 </div>
 
 <div class="lightbox" id="lightbox"></div>
+
+<div class="st-actionbar" id="stbar"><div class="sum" id="stbar_sum">Choose your sources, then build.</div>
+  <button class="btn" type="button" id="stbar_build"><span class="material-symbols-outlined">auto_stories</span>Build</button></div>
 
 <form id="pvform" method="post" action="/studio/preview" style="display:none">
   <input name="spec"><input name="kind"><input name="p"><input name="side">
@@ -682,6 +723,29 @@
     $("reswarn").innerHTML = (p.warnings || []).map(w => '<div class="warn">' + esc(w) + "</div>").join("");
     $("result").classList.add("on"); $("result").scrollIntoView({behavior:"smooth", block:"center"});
   }
+})();
+</script>
+<script>
+// Phones: filter the long source list, and keep "Build" one tap away at the bottom of the screen.
+(function () {
+  var f = document.getElementById('srcfilter'), list = document.getElementById('srclist');
+  if (f && list) f.addEventListener('input', function () {
+    var q = f.value.trim().toLowerCase();
+    list.querySelectorAll('.src').forEach(function (b) { b.style.display = !q || b.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none'; });
+  });
+  var est = document.getElementById('est'), sum = document.getElementById('stbar_sum'), build = document.getElementById('buildbtn');
+  function sync() {
+    var t = (est && est.textContent || '').replace(/\s+/g, ' ').trim();
+    if (sum) sum.textContent = t ? t.slice(0, 110) : 'Choose your sources, then build.';
+  }
+  if (est && window.MutationObserver) new MutationObserver(sync).observe(est, { childList: true, subtree: true, characterData: true });
+  sync();
+  var b = document.getElementById('stbar_build');
+  if (b && build) b.onclick = function () {
+    build.click();
+    var target = document.getElementById('progbox');
+    setTimeout(function () { (target && target.style.display !== 'none' ? target : build).scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
+  };
 })();
 </script>
 {% endblock %}

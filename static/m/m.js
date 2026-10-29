@@ -86,10 +86,15 @@
               var h = 168 + ((b.title.length * 7 + i * 13) % 46);
               return '<a class="spine" href="#/book/' + esc(b.slug) + '" style="height:' + h + 'px;background:' + esc(spineBg(b.spine)) + '" aria-label="' + esc(b.title + (b.author ? ', ' + b.author : '')) + '">' +
                 '<b>' + esc(b.title) + '</b>' + (b.author && b.author.length < 22 ? '<i>' + esc(b.author) + '</i>' : '') + '</a>';
-            }).join('') + '</div>';
+            }).join('') + (s.slug === 'science' ? secretSpine() : '') + '</div>';
         }).join('') + foot();
       wireSearch();
     }).catch(function () { view.innerHTML = '<div class="empty"><b>The library could not be loaded</b>Check your connection and try again.</div>'; });
+  }
+
+  // The slim green volume filed beside the science books opens Darwin, as on the full site
+  function secretSpine() {
+    return '<a class="spine secret" href="/darwin/?via=portal" style="height:176px;background:#1d3a2f;width:30px" aria-label="A slim green volume"><b style="font-size:11px;letter-spacing:.12em">ORIGIN OF SPECIES</b></a>';
   }
 
   function workRow(slug, w) {
@@ -112,6 +117,7 @@
       view.innerHTML = '<div class="bookhero" style="background:' + esc(spineBg(b.spine)) + '"><div class="sect">' + esc(b.section || '') + '</div><h1>' + esc(b.title) + '</h1>' +
         (b.author ? '<div class="by">' + esc(b.author) + '</div>' : '') + '</div>' +
         (b.default ? '<a class="btn block" href="#/read/' + esc(b.slug) + '/' + encodeURIComponent(b.default) + '/1">Start reading</a>' : '') +
+        '<a class="btn tonal block" style="margin-top:10px" href="/book/' + esc(b.slug) + '/studio">Make a printed book</a>' +
         (b.overview || b.description ? '<p class="prose clamp" id="ov">' + esc(b.overview || b.description) + '</p><button class="btn text" id="ovmore">Read more</button>' : '') +
         '<h2 class="sec">' + b.works.length + (b.works.length === 1 ? ' work' : ' works') + ' in this collection</h2>' +
         (many ? '<input class="filter" id="wfilter" type="search" placeholder="Find a work in this collection" aria-label="Find a work">' +

@@ -22,6 +22,11 @@
   .top-app-bar button.bar-link:hover, .top-app-bar button.bar-link.active {
     background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary); }
   .top-app-bar button.bar-link { background:none; border:none; cursor:pointer; font-family:inherit; }
+  @media (max-width:520px) {
+    .top-app-bar { gap:4px; padding:0 10px; }
+    .top-app-bar .tagline { display:none; }
+    .top-app-bar a.bar-link, .top-app-bar button.bar-link { padding:8px 11px; }
+  }
 
   .site-index-overlay { display:none; position:fixed; inset:0; z-index:1200;
     background:rgba(0,0,0,.72); align-items:flex-start; justify-content:center; padding:70px 20px 20px; }
