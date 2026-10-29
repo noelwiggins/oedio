@@ -311,6 +311,26 @@
      "facsimile": true,
      "source_url": "https://commons.wikimedia.org/wiki/Category:Garima_Gospels",
      "source_label": "Wikimedia Commons (credit: Ethiopian Heritage Fund, public domain)"
+    },
+    {
+     "slug": "garima-gospels-transcription",
+     "title": "The Garima Gospels (Ge’ez, c. 330–650 CE) — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Ancient Manuscript",
+     "year": 450,
+     "loc_item": "",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "garima-gospels-english",
+     "title": "The Garima Gospels (Ge’ez, c. 330–650 CE) — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Ancient Manuscript",
+     "year": 450,
+     "loc_item": "",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     }
    ],
    "overview": "No single book has shaped more of the world's literature, law, art, and moral vocabulary than the Bible, a collection of texts written across roughly a thousand years by dozens of authors in Hebrew, Aramaic, and Greek, later assembled, translated, and re-translated by successive religious and scholarly communities. The editions gathered here reflect that long history of transmission itself: the King James Version's Jacobean English shaped the sound of English prose for centuries after; scholarly variorum editions track the countless small disagreements between ancient manuscripts; and Gustave Doré's engravings gave the 19th century its most enduring visual imagination of the text's central scenes.",
@@ -927,6 +947,26 @@
      "facsimile": true
     },
     {
+     "slug": "florentine-codex-book05-transcription",
+     "title": "Book 5: The Omens — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 5",
+     "year": 1577,
+     "loc_item": "2021667850",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book05-english",
+     "title": "Book 5: The Omens — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 5",
+     "year": 1577,
+     "loc_item": "2021667850",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
+    },
+    {
      "slug": "florentine-codex-book06",
      "role": "Book 6",
      "title": "Book 6: Rhetoric and Moral Philosophy",
@@ -935,6 +975,26 @@
      "loc_item": "2021667851",
      "note": "Rhetoric and Moral Philosophy is widely considered the literary high point of the entire Codex -- it preserves huehuetlatolli, formal Nahuatl speeches on subjects from childbirth to death, that represent some of the most sophisticated surviving examples of pre-conquest Nahuatl oratory, valued today as much for their literary quality as their historical content.",
      "facsimile": true
+    },
+    {
+     "slug": "florentine-codex-book06-transcription",
+     "title": "Book 6: Rhetoric and Moral Philosophy — original-language text (AI transcription)",
+     "contributor": "Transcribed from the scans by Claude (AI)",
+     "role": "Book 6",
+     "year": 1577,
+     "loc_item": "2021667851",
+     "note": "An AI transcription of the original-language text, beside the original scans. Unverified.",
+     "facsimile": false
+    },
+    {
+     "slug": "florentine-codex-book06-english",
+     "title": "Book 6: Rhetoric and Moral Philosophy — English (AI translation)",
+     "contributor": "Translated by Claude (AI)",
+     "role": "Book 6",
+     "year": 1577,
+     "loc_item": "2021667851",
+     "note": "An AI English translation, generated directly from the original pages. Unverified.",
+     "facsimile": false
     },
     {
      "slug": "florentine-codex-book07",

@@ -18,6 +18,7 @@ Resumable: merges into existing output files, skipping already-done pages.
 """
 import base64, json, os, re, sys, time
 import urllib.request
+import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY") or open(
@@ -86,6 +87,12 @@ def fetch_image_b64(url):
         # from disk before the images are deployed and have a real URL yet.
         with open(url, "rb") as f:
             return base64.b64encode(f.read()).decode()
+    if "upload.wikimedia.org/wikipedia/commons/" in url and "/thumb/" not in url:
+        # Wikimedia rate-limits bulk fetches of full-size originals; its standard thumbnail sizes are allowed
+        u = url.split("?")[0]
+        head, tail = u.split("/wikipedia/commons/", 1)
+        fname = tail.rsplit("/", 1)[-1]
+        url = f"{head}/wikipedia/commons/thumb/{tail}/1280px-{fname}" + (".jpg" if fname.lower().endswith((".tif", ".tiff", ".pdf")) else "")
     if "wikimedia.org" in url:
         # Wikimedia's robot policy requires concurrency of at most 1 and a
         # delay of at least 1 second between requests -- enforce both here
@@ -96,10 +103,17 @@ def fetch_image_b64(url):
             elapsed = time.time() - _wikimedia_last_request[0]
             if elapsed < 1.2:
                 time.sleep(1.2 - elapsed)
-            req = urllib.request.Request(url, headers=headers)
-            data = urllib.request.urlopen(req, timeout=60).read()
+            for attempt in range(4):
+                try:
+                    req = urllib.request.Request(url, headers=headers)
+                    data = urllib.request.urlopen(req, timeout=60).read()
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code != 429 or attempt == 3:
+                        raise
+                    time.sleep(30 * (attempt + 1))
             _wikimedia_last_request[0] = time.time()
-            return base64.b64encode(data).decode()
+            return base64.b64encode(_fit_image(data)).decode()
     for attempt in range(4):
         try:
             req = urllib.request.Request(url, headers=headers)
