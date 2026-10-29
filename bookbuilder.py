@@ -376,6 +376,13 @@ def _spread_sources(left, right, ids):
         seen.add(v)
 
 
+def is_consecutive(spec: dict) -> bool:
+    """Both pages of a spread show the same single source in full: then the book reads straight through,
+    page p on the left and p+1 on the right, instead of the same page twice."""
+    L, R = spec["left"], spec["right"]
+    return (spec["mode"] == "spread" and L["layout"] == "full" and R["layout"] == "full" and L["src"] == R["src"])
+
+
 def normalize_spec(raw: dict) -> dict:
     if not isinstance(raw, dict):
         raise SpecError("Spec must be an object")
@@ -1287,12 +1294,20 @@ def build_plan(ctx: Ctx, entries):
     pad("verso")
     body_start = len(items)
     rng = spec["range"]
-    for p in range(rng["from"], rng["to"] + 1):
-        if spread:
+    if spread and is_consecutive(spec):
+        for p in range(rng["from"], rng["to"] + 1, 2):
             add("body", p=p, side="L")
-            add("body", p=p, side="R")
-        else:
-            add("body", p=p, side="S")
+            if p + 1 <= rng["to"]:
+                add("body", p=p + 1, side="R")
+            else:
+                add("blank")
+    else:
+        for p in range(rng["from"], rng["to"] + 1):
+            if spread:
+                add("body", p=p, side="L")
+                add("body", p=p, side="R")
+            else:
+                add("body", p=p, side="S")
     pad("verso")
     add("back")
     return items, body_start, toc_start
@@ -1327,6 +1342,12 @@ def preview_html(raw_spec: dict, kind: str, p=None, side="L") -> str:
         p = max(rng["from"], min(rng["to"], int(p or rng["from"])))
         if ctx.spec["mode"] == "single":
             side = "S"
+        if is_consecutive(ctx.spec):
+            p = rng["from"] + ((p - rng["from"]) // 2) * 2       # spreads start on from, from+2, ...
+            if side == "R":
+                p += 1
+                if p > rng["to"]:
+                    return doc_html(ctx, [sec("", "blank")])
         return doc_html(ctx, [body_leaf(ctx, p, "R" if side == "R" else ("S" if side == "S" else "L"))])
     if kind == "toc":
         ent = toc_entries(ctx)[: toc_rows_per_page(ctx)]
@@ -1346,7 +1367,8 @@ def estimate(raw_spec: dict) -> dict:
     spec = ctx.spec
     n_pages = spec["range"]["to"] - spec["range"]["from"] + 1
     imgs = 0
-    sides = ("L", "R") if spec["mode"] == "spread" else ("S",)
+    consec = is_consecutive(spec)
+    sides = ("L",) if consec else (("L", "R") if spec["mode"] == "spread" else ("S",))
     for side in sides:
         lay = ctx.spec["left"] if side in ("L", "S") else ctx.spec["right"]
         ids = []
@@ -1359,7 +1381,7 @@ def estimate(raw_spec: dict) -> dict:
     q = QUALITY[spec["quality"]]
     text_pages = n_pages * len(sides)
     est_bytes = imgs * q["est"] + text_pages * 6_000 + 400_000
-    mult = 2 if spec["mode"] == "spread" else 1
+    mult = 2 if spec["mode"] == "spread" and not consec else 1
     return {
         "body_pages": n_pages, "pdf_pages": n_pages * mult + 12, "images": imgs,
         "est_bytes": int(est_bytes), "est_seconds": int(20 + imgs * 0.6 + n_pages * mult * 0.12),

@@ -524,6 +524,10 @@
     const box = $("sides"); box.innerHTML = "";
     if (S.mode === "spread") { box.appendChild(sideEditor("left", S.left, "Left-hand page (verso)")); box.appendChild(sideEditor("right", S.right, "Right-hand page (recto)")); }
     else box.appendChild(sideEditor("left", S.left, "Every page"));
+    const n = document.createElement("p"); n.className = "hint"; n.id = "consec_hint"; n.style.margin = "10px 0 0";
+    n.textContent = "Both pages show the same source, so the book reads straight through: each spread shows two consecutive pages.";
+    n.style.display = consecutive() ? "" : "none";
+    box.appendChild(n);
   }
   function renderPresets() {
     const n = S.sources.length, P = $("presets"); P.innerHTML = "";
@@ -605,8 +609,10 @@
   }
   $("pvtabs").onclick = (e) => { const k = e.target.dataset && e.target.dataset.k; if (!k) return; S.tab = k;
     $("pvtabs").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === k)); drawPreview(); };
-  $("pv_prev").onclick = () => { $("pv_p").value = Math.max(parseInt($("pfrom").value) || 1, (parseInt($("pv_p").value) || 1) - 1); drawPreview(); };
-  $("pv_next").onclick = () => { $("pv_p").value = Math.min(parseInt($("pto").value) || 1, (parseInt($("pv_p").value) || 1) + 1); drawPreview(); };
+  // one source in full on both pages: the book reads straight through, two consecutive pages per spread
+  function consecutive() { return S.mode === "spread" && S.left.layout === "full" && S.right.layout === "full" && S.left.src === S.right.src; }
+  $("pv_prev").onclick = () => { $("pv_p").value = Math.max(parseInt($("pfrom").value) || 1, (parseInt($("pv_p").value) || 1) - (consecutive() ? 2 : 1)); drawPreview(); };
+  $("pv_next").onclick = () => { $("pv_p").value = Math.min(parseInt($("pto").value) || 1, (parseInt($("pv_p").value) || 1) + (consecutive() ? 2 : 1)); drawPreview(); };
   $("pv_p").onchange = drawPreview;
   let pvSeq = 0;
   function makePage(kind, side, p, widthPx, parent) {
@@ -622,13 +628,16 @@
   }
   function drawPreview() {
     const st = $("stage"); st.innerHTML = ""; const nav = $("pvnav"); nav.style.display = "none";
+    const ch = $("consec_hint"); if (ch) ch.style.display = consecutive() ? "" : "none";
     if (!S.sources.length) return;
     const k = S.tab; const avail = Math.min(404, st.clientWidth - 28 || 404);
     if (k === "spread") {
       nav.style.display = "flex";
       let p = parseInt($("pv_p").value) || parseInt($("pfrom").value) || 1;
       const from = parseInt($("pfrom").value) || 1, to = parseInt($("pto").value) || 1;
-      p = Math.max(from, Math.min(to, p)); $("pv_p").value = p;
+      p = Math.max(from, Math.min(to, p));
+      if (consecutive()) p = from + Math.floor((p - from) / 2) * 2;
+      $("pv_p").value = p;
       if (S.mode === "spread") { const w = Math.floor((avail - 4) / 2); makePage("body", "L", p, w, st); makePage("body", "R", p, w, st); }
       else makePage("body", "S", p, Math.floor(avail * 0.8), st);
     } else makePage(k, "L", "", Math.floor(avail * 0.8), st);
