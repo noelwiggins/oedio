@@ -14,6 +14,30 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 (<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
+## ALGOGENESIS — panel I (2026-11-10)
+New Darwin tab /darwin/algogenesis (kiosk panel /darwin/algogenesis/panel, ?quiet=1 ?nochron=1 ?strata=0).
+Engine darwin/algogenesis/engine.py (numpy+scipy only, portable): 1200x800 coast (sea level drifts), flowering plants
+(7 genes; seed needs pollen from same-hue flower carried by animals; 12% runners), animals (20 genes: hue/sat/hue2/
+pattern/glow/segs/limbs/size/tail/crest/fin/diet/pref_flower/pref_mate/choosy + steering weights + repro), vigour
+(good-genes sexual selection: display = conspicuousness*vigour*condition), predation by detectability, JC upkeep,
+refugia bank, fossil strata per EPOCH (12 days = 28,800 ticks), events, emigrants()/immigrate() for networked panels.
+Cloud: darwin/algogenesis/cloud.py process (web.ensure_algo, lock 774415, ALGO_TPS=20, ALGO=off disables), tables
+darwin_algo_checkpoints/live(id1 frame, id2 history)/chronicle; journal per epoch via openlab._call (claude-haiku-4-5,
+ALGO_CLOUD_MODEL). On site: python -m darwin.algogenesis.standalone (file checkpoints in ALGO_HOME, port 8765,
+ALGO_LLM_URL OpenAI-compatible local model, ALGO_PEERS migration). Renderer static/darwin/algo/panel.{html,js}.
+Local 40-day test: no crashes, ~10 effective animal species, complexity 3 -> 8; predators had not yet evolved.
+Next: watch for predators/glow/colour; tune if the world stalls; panel-to-panel migration test with two standalones.
+
+## DARWIN Tidal Pool — Janzen-Connell + refugia (2026-11-10)
+Analysis of the live history (770 Ma, 203 re-seeds): the pool alternates between an "animal world" (motile 10-40-cell
+bodies, ~5 effective species, 61% of time) and a "plankton meadow" (single cells at the 1,100 cap, ~18 species). Animal
+worlds end in monocultures (eff. species 1-3, disease ~0.5 vs 0.25 when diverse), then re-seed from single cells, so
+complexity never accumulates. Changes (darwin/pool.py): JC=1.2, JC_FREE=0.15 — upkeep x(1+JC*max(0, species share-0.15));
+seed bank (p.seedbank, BANK_MAX 48: most complex half + most recent half, filled every STATS_EVERY from the 8 commonest
+species' most complex member); on near-extinction up to BANK_SEED=24 banked lineages respawn as same-species pairs at 70%
+energy, plus 6-10 fresh founders. Event kind "near-extinction · N lineages recolonise from refugia". Migration: empty bank,
+filled at load. Watch: species_eff in animal phases, restarts rate, cells_max trend, sexual_share, neurons_mean.
+
 ## DARWIN Tidal Pool — deep ocean and land (2026-10-29)
 World is now 400 x 240 (was 240 x 240): five zones of 80 west to east — deep ocean, open sea, reef shallows, tidal flats,
 land (BASINS=5, WALL_KIND [solid, open, reef, reef, open], REGION joins deep+sea and flats+land for sight/hunting/mating).

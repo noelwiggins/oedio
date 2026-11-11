@@ -99,9 +99,23 @@ def ensure_worker():
     _ensure_group("life")
     _ensure_group("weblab")
     ensure_pool()
+    ensure_algo()
 
 
 _pool_proc = {"p": None}
+_algo_proc = {"p": None}
+
+
+def ensure_algo():
+    """Algogenesis runs in its own process too (darwin.algogenesis.cloud); its advisory lock prevents duplicates."""
+    if os.environ.get("ALGO", "on") == "off":
+        return
+    with _worker_lock:
+        p = _algo_proc["p"]
+        if p is not None and p.poll() is None:
+            return
+        _algo_proc["p"] = subprocess.Popen([sys.executable, "-m", "darwin.algogenesis.cloud", "run"], cwd=ROOT,
+                                           start_new_session=True)
 
 
 def ensure_pool():
@@ -292,6 +306,68 @@ def api_pool_archive():
         row = c.execute(sa.select(S.events.c.ts, S.events.c.payload).where(S.events.c.type == "world.archived")
                         .order_by(S.events.c.id.desc()).limit(1)).first()
     return jsonify({"archived": bool(row), "ts": row[0] if row else None, "record": S.loads(row[1], {}) if row else None})
+
+
+# ── Algogenesis: an evolving world for a display panel ────────────────────
+ALGO_PANEL = os.path.join(ROOT, "static", "darwin", "algo", "panel.html")
+
+
+@bp.route("/algogenesis")
+def algo_page():
+    ensure_algo()
+    return render_template("darwin/algogenesis.html")
+
+
+@bp.route("/algogenesis/panel")
+def algo_panel():
+    """The panel itself: full screen, no chrome. The same file is served by the on-site runner."""
+    ensure_algo()
+    html = open(ALGO_PANEL, encoding="utf-8").read().replace("__ALGO_API__", "/darwin/api/algo")
+    r = make_response(html)
+    r.headers["Content-Type"] = "text/html; charset=utf-8"
+    return r
+
+
+@bp.route("/api/algo/live")
+def api_algo_live():
+    from .algogenesis import cloud
+    try:
+        ensure_algo()
+    except Exception:
+        pass
+    d = cloud.read_live()
+    if d is None:
+        return jsonify({"standby": True, "note": "the world is being created"})
+    try:
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(d["written_at"])).total_seconds()
+    except Exception:
+        age = 0
+    d["age_s"] = round(age, 1)
+    d["stale"] = age > 20
+    return jsonify(d)
+
+
+@bp.route("/api/algo/terrain")
+def api_algo_terrain():
+    from .algogenesis import cloud, engine as E
+    with store.engine().connect() as c:
+        row = c.execute(sa.select(store.algo_checkpoints.c.blob).order_by(store.algo_checkpoints.c.id.desc())
+                        .limit(1)).first()
+    if row is None:
+        return jsonify({"standby": True})
+    return jsonify(E.from_bytes(row[0]).terrain_payload())
+
+
+@bp.route("/api/algo/history")
+def api_algo_history():
+    from .algogenesis import cloud
+    return jsonify(cloud.read_history())
+
+
+@bp.route("/api/algo/chronicle")
+def api_algo_chronicle():
+    from .algogenesis import cloud
+    return jsonify(cloud.recent_chronicle(min(int(request.args.get("n", 60)), 500)))
 
 
 # ── live world ───────────────────────────────────────────────────────────

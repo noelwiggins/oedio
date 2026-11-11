@@ -98,6 +98,16 @@ IN, H, OUT = 16, 8, 4
 MHC = 4                    # immune "lock" genes; pathogens evolve keys that fit the commonest locks (the Red Queen)
 STRAINS = 3
 PATH_R = 0.22              # how close a key must be to a lock to infect
+# Janzen-Connell effect: every species carries its own specialist enemies (parasites, grazers, viruses) that
+# multiply with it. Once one species holds more than JC_FREE of all life, its upkeep rises with its share, so a
+# runaway winner is reined in before it turns the world into a monoculture that crashes.
+JC = 1.2
+JC_FREE = 0.15
+# Refugia: survivors in sheltered pockets, dormant cysts, eggs in the sediment. The pool keeps a bank of the
+# most complex and most recent successful genomes; after a near-extinction life recolonises from it instead
+# of restarting from single cells, so complexity is not thrown away with each crash.
+BANK_MAX = 48
+BANK_SEED = 24             # banked lineages that recolonise after a near-extinction
 NW = IN * H + H + H * OUT + OUT
 
 
@@ -541,15 +551,18 @@ class Pool:
         self._fields()
         a = np.flatnonzero(self.alive)
         if len(a) < 4:
-            for _ in range(30):
+            refuge = self._recolonise()
+            for _ in range(30 - refuge if refuge < 20 else 10):
                 self._spawn(new_genome(rng), _water_x(rng), rng.uniform(0, ARENA), 0, None, 6.0)
             self.restarts += 1
             self.bank += self.seg_peak          # bank the time evolved before the near-extinction
             self.seg_peak = 0.0
-            ev = {"tick": int(t), "kind": "near-extinction · life re-seeded", "severity": 1.0, "killed": 0,
-                  "geo_ma": self.geo_ma()}
+            kind = (f"near-extinction · {refuge} lineages recolonise from refugia" if refuge
+                    else "near-extinction · life re-seeded")
+            ev = {"tick": int(t), "kind": kind, "severity": 1.0, "killed": 0, "geo_ma": self.geo_ma()}
             self.events.append(ev)
-            _ledger("pool.reseeded", {"era": self.era, "tick": int(t), "survivors": int(len(a)), "geo_ma": ev["geo_ma"]})
+            _ledger("pool.reseeded", {"era": self.era, "tick": int(t), "survivors": int(len(a)), "refugia": int(refuge),
+                                      "geo_ma": ev["geo_ma"]})
             a = np.flatnonzero(self.alive)
         n = len(a)
         x, y, hd = self.x[a], self.y[a], self.hd[a]
@@ -575,6 +588,8 @@ class Pool:
         load = np.zeros((GRID // 2, GRID_X // 2), np.float32)
         np.add.at(load, (sy, sx), sus)
         sick = 1.0 + 0.5 * sus * np.minimum(np.maximum(load[sy, sx] - sus, 0.0) / 2.0, 1.5)   # infection needs other hosts nearby
+        _, sp_inv, sp_cnt = np.unique(self.species[a], return_inverse=True, return_counts=True)
+        jc = 1.0 + JC * np.maximum(0.0, sp_cnt[sp_inv] / n - JC_FREE)   # specialist enemies of the commonest species
 
         # neighbours (periodic)
         box = np.array([WORLD_W, ARENA])
@@ -676,7 +691,7 @@ class Pool:
         dry = 1.0 + (1.0 - protect) * np.where(on_land, 0.9 + 0.9 * inland, np.where(exposed, 0.4, 0.0))
         # on land nothing floats: big bodies need a skeleton (armour cells) to carry their own weight
         support = np.where(on_land & (n_f > 8), 1.0 + 0.03 * (n_f - 8) * (1 - np.clip(self.cnt[a, ARMOR] / n_f / 0.15, 0, 1)), 1.0)
-        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry * support * sick
+        cost = (self.metab[a] * (1 + 0.4 * np.minimum(temp_mis ** 2, 1.5)) * (1 + 0.5 * warm) * crowd * dry * support * sick * jc
                 + 0.004 * v * self.n[a])
         np.subtract.at(self.N, (gy, gx), g_photo * 0.5)
         np.subtract.at(self.D, (gy, gx), g_det)
@@ -803,6 +818,7 @@ class Pool:
         if self.tick % STATS_EVERY == 0:
             self._advance_clock()
             self._prune()
+            self._bank()
             self.last_stats = self.stats()
             self._milestones(self.last_stats)
             return self.last_stats
@@ -817,6 +833,63 @@ class Pool:
         self.seg_peak = max(self.seg_peak, mg)
         self.clock_gen = self.bank + self.seg_peak
         self.last_mg = mg
+
+    def _bank(self):
+        """Keep the genomes of successful species: for each of the commonest species, its most complex member.
+        The bank holds the most complex half and the most recent half."""
+        a = np.flatnonzero(self.alive)
+        if len(a) < 10:
+            return
+        bank = getattr(self, "seedbank", None)
+        if bank is None:
+            bank = self.seedbank = []
+        sp, inv, counts = np.unique(self.species[a], return_inverse=True, return_counts=True)
+        types = (self.cnt[a] > 0).sum(1)
+        score_all = self.n[a].astype(np.float32) * types
+        by_sid = {e["sid"]: e for e in bank}
+        for k in np.argsort(-counts)[:8]:
+            if counts[k] < 5:
+                break
+            m = np.flatnonzero(inv == k)
+            j = m[int(np.argmax(score_all[m]))]
+            i, g = int(a[j]), self.genomes[int(a[j])]
+            if g is None:
+                continue
+            e = {"sid": int(sp[k]), "score": float(score_all[j]), "tick": int(self.tick), "cells": int(self.n[i]),
+                 "g": {**g, "body": [list(x) for x in g["body"]], "brain": g["brain"].copy(),
+                       "mhc": list(_mhc(g, self.rng))}}
+            old = by_sid.get(e["sid"])
+            if old is None or e["score"] >= old["score"] or self.tick - old["tick"] > 50 * STATS_EVERY:
+                by_sid[e["sid"]] = e
+        allv = list(by_sid.values())
+        best = sorted(allv, key=lambda e: -e["score"])[:BANK_MAX // 2]
+        ids = {id(e) for e in best}
+        recent = sorted((e for e in allv if id(e) not in ids), key=lambda e: -e["tick"])[:BANK_MAX - len(best)]
+        self.seedbank = best + recent
+
+    def _recolonise(self):
+        """After a near-extinction, banked lineages come back out of their refugia (mutated: time has passed)."""
+        bank = getattr(self, "seedbank", None) or []
+        if not bank:
+            return 0
+        rng = self.rng
+        pick = rng.permutation(len(bank))[:BANK_SEED]
+        n = 0
+        for k in pick:
+            g = mutate(bank[int(k)]["g"], rng)
+            x = _water_x(rng) if rng.random() < 0.8 else rng.uniform(0, WORLD_W)
+            y = rng.uniform(0, ARENA)
+            first = None
+            for _ in range(2):              # a pair, side by side and of one species, so sexual lineages can mate
+                sid = int(self.species[first]) if first is not None else None
+                i = self._spawn(g, x + rng.normal(0, 2), y + rng.normal(0, 2), 0, sid, 0.0)
+                if i is None:
+                    break
+                self.energy[i] = 0.7 * self.emax[i]
+                if first is None:
+                    first = i
+                    n += 1
+        return n
 
     def _prune(self):
         """Forget body plans and species nobody alive (or any milestone) refers to, so state stays small."""
@@ -1042,6 +1115,9 @@ def from_blob(b: bytes) -> Pool:
         p.world_v = 2
         _ledger("pool.world_expanded", {"era": p.era, "tick": int(p.tick), "habitats": HABITATS,
                                         "note": "deep ocean and land added; the bay keeps its creatures"})
+    if not hasattr(p, "seedbank"):             # Nov 10: Janzen-Connell enemies and refugia
+        p.seedbank = []
+        p._bank()
     if not hasattr(p, "bank"):
         p.bank, p.seg_peak = _clock_from_history(p.era)
         p.clock_gen = p.bank + p.seg_peak

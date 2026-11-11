@@ -180,6 +180,33 @@ pool_live = sa.Table(          # one row: the latest frames, written by the pool
     sa.Column("data", J),
 )
 
+# ── Algogenesis: an evolving world for a display panel, run by its own process ─────
+algo_checkpoints = sa.Table(
+    "darwin_algo_checkpoints", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("tick", sa.BigInteger),
+    sa.Column("blob", sa.LargeBinary),
+)
+
+algo_live = sa.Table(          # one row: the latest frame, written by the Algogenesis process
+    "darwin_algo_live", md,
+    sa.Column("id", sa.Integer, primary_key=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("data", J),
+)
+
+algo_chronicle = sa.Table(
+    "darwin_algo_chronicle", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("tick", sa.BigInteger),
+    sa.Column("day", sa.Float),
+    sa.Column("kind", T),
+    sa.Column("text", T),
+    sa.Column("facts", J),
+)
+
 snapshots = sa.Table(
     "darwin_snapshots", md,
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),

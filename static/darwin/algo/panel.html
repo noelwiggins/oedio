@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Algogenesis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #020407; overflow: hidden; }
+  body { cursor: none; }
+  body.awake { cursor: default; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  .veil { position: fixed; inset: 0; display: grid; place-items: center; color: #8fa3a7; font: 400 22px "Cormorant Garamond", Georgia, serif;
+          letter-spacing: .08em; transition: opacity 2s; pointer-events: none; }
+  .veil.gone { opacity: 0; }
+  .fs { position: fixed; right: 18px; top: 16px; font: 500 11px "IBM Plex Mono", monospace; letter-spacing: .12em; color: #c9d6d3;
+        background: rgba(8,14,18,.55); border: 1px solid rgba(201,214,211,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer;
+        opacity: 0; transition: opacity .4s; }
+  body.awake .fs { opacity: 1; }
+</style>
+</head>
+<body data-api="__ALGO_API__">
+<canvas id="cv" aria-label="Algogenesis: a living world evolving in real time"></canvas>
+<div class="veil" id="veil">a world is waking</div>
+<button class="fs" id="fs" type="button">FULL SCREEN</button>
+<script src="/static/darwin/algo/panel.js?v=1"></script>
+</body>
+</html>

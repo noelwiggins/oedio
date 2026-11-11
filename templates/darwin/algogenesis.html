@@ -1,0 +1,145 @@
+{% extends "darwin/base.html" %}
+{% block title %}Algogenesis — DARWIN{% endblock %}
+{% block head %}
+<style>
+  .ag-frame { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 18px; overflow: hidden; background: #020407;
+              border: 1px solid var(--md-sys-color-outline-variant); }
+  .ag-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .ag-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; }
+  .ag-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+  .ag-entry { border-left: 2px solid var(--md-sys-color-outline-variant); padding: 2px 0 2px 14px; margin: 0 0 16px; }
+  .ag-entry p { margin: 4px 0 0; font-family: "Cormorant Garamond", Georgia, serif; font-size: 19px; line-height: 1.45; font-style: italic; }
+  .ag-entry .when { font: 500 11px var(--dw-mono); letter-spacing: .1em; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; }
+  .ag-journal { max-height: 520px; overflow-y: auto; padding-right: 6px; }
+  .ag-list li { margin-bottom: 8px; }
+  @media (max-width: 760px) { .ag-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap">
+{% endblock %}
+{% block content %}
+<p class="eyebrow">Algogenesis · Panel I</p>
+<h1 style="margin:0 0 6px">A living world for a wall</h1>
+<p class="lede">A coast where flowers and animals evolve without a script: bodies, colours, patterns and light are all grown from genes,
+and they change only when evolution pays for the change. This is the first panel of an installation, running in the cloud
+for now; the same program is built to run on a computer behind a 4' × 6' screen.</p>
+
+<div class="ag-frame"><iframe id="panel" src="/darwin/algogenesis/panel" title="Algogenesis live panel" allow="fullscreen; screen-wake-lock"></iframe></div>
+<div class="ag-actions">
+  <button class="btn" type="button" id="fsbtn">Full screen</button>
+  <a class="btn tonal" href="/darwin/algogenesis/panel" target="_blank" rel="noopener">Open the panel on its own</a>
+  <a class="btn tonal" href="/darwin/algogenesis/panel?quiet=1" target="_blank" rel="noopener">Without text</a>
+</div>
+
+<div class="ag-metrics">
+  <div class="card flat metric"><div class="k">World age</div><div class="v" id="m-day">—</div><div class="n" id="m-ep">days</div></div>
+  <div class="card flat metric"><div class="k">Animals</div><div class="v" id="m-an">—</div><div class="n" id="m-ans"></div></div>
+  <div class="card flat metric"><div class="k">Flowers</div><div class="v" id="m-pl">—</div><div class="n" id="m-pls"></div></div>
+  <div class="card flat metric"><div class="k">Body complexity</div><div class="v" id="m-cx">—</div><div class="n" id="m-cxn">parts per animal, mean · max</div></div>
+</div>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2 style="margin-top:0">The journal</h2>
+    <p class="small muted" style="margin-top:-4px">At the end of every epoch (12 world days) a language model writes one entry from the facts the world measured.
+      It describes; it never decides what evolves.</p>
+    <div class="ag-journal" id="journal"><p class="small muted">The first entries appear as the world ages.</p></div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">What is evolving</h2>
+    <svg class="chart" id="c-cx" aria-label="Body complexity over time"></svg><div class="legend small" id="l-cx"></div>
+    <svg class="chart" id="c-sx" aria-label="Colour, glow and choosiness over time" style="margin-top:14px"></svg><div class="legend small" id="l-sx"></div>
+    <svg class="chart" id="c-sp" aria-label="Species over time" style="margin-top:14px"></svg><div class="legend small" id="l-sp"></div>
+  </div>
+</section>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2 style="margin-top:0">How the world works</h2>
+    <ul class="small ag-list" style="padding-left:18px;margin:0">
+      <li><b>A coast with tides of years.</b> Deep water, shallows, beaches and meadows. The sea rises and falls slowly, moving the shore and the flowers with it.</li>
+      <li><b>Flowers need animals.</b> A flower sets seed only when an animal brings pollen from another flower of its own kind. Animals drink nectar and are drawn to the colours they prefer, so flowers and their pollinators evolve together.</li>
+      <li><b>Bodies are grown from genes:</b> segments, pairs of legs, size, a tail, a crest of spines, fins or feet, two colours laid out as stripes or spots, and the ability to glow. A diet gene runs from nectar to meat.</li>
+      <li><b>Beauty has a cost and a reason.</b> Mates are chosen by colour and display, and only an animal in good condition can afford a bright one, so choosy parents have healthier young. The same brightness makes an animal easier for a hunter to find. By day colour shows; at night only light does.</li>
+      <li><b>No single winner.</b> Each species carries its own enemies, which multiply as it spreads, so a runaway success is held back before the world becomes a monoculture.</li>
+      <li><b>Refugia.</b> The world keeps a bank of past lineages. If animals nearly vanish, banked lineages return, so a crash costs time but not everything that has evolved.</li>
+      <li><b>The fossil record</b> along the bottom of the panel lays down one layer per epoch: the leading animals in their colours above, the leading flowers below.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">From the cloud to the wall</h2>
+    <ul class="small ag-list" style="padding-left:18px;margin:0">
+      <li><b>Now:</b> the world runs on Oedio's server at 20 steps a second (a day lasts two minutes) and saves itself every minute. Any browser can show it.</li>
+      <li><b>On site:</b> the same engine runs on a small computer behind the panel with <code>python -m darwin.algogenesis.standalone</code>. It needs only Python, numpy and scipy, keeps its world and journal in a folder, survives power cuts, and serves the panel to a full-screen browser.</li>
+      <li><b>The journal on site</b> uses a local language model through any OpenAI-compatible server (for example Ollama on an NVIDIA Jetson Orin or a small PC with a graphics card), so the installation needs no internet.</li>
+      <li><b>Several panels:</b> each starts from its own seed and becomes its own world. Panels on the same network can trade a few migrants every few epochs, a few genomes at a time (set <code>ALGO_PEERS</code>), so they diverge like islands and occasionally exchange travellers.</li>
+      <li><b>Display:</b> a 4' × 6' screen is 3:2; the panel letterboxes to fit any screen. Use LCD or LED rather than OLED for a picture that runs day and night.</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const API = '/darwin/api/algo';
+  document.getElementById('fsbtn').onclick = () => { const f = document.getElementById('panel'); (f.requestFullscreen || f.webkitRequestFullscreen || function () {}).call(f); };
+  const fmt = n => (n == null ? '—' : Number(n).toLocaleString());
+  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  async function live() {
+    try {
+      const d = await (await fetch(API + '/live', { cache: 'no-store' })).json();
+      if (!d.standby) {
+        const s = d.stats || {};
+        document.getElementById('m-day').textContent = fmt(Math.floor(d.day));
+        document.getElementById('m-ep').textContent = `days · epoch ${(d.strata || []).length}`;
+        document.getElementById('m-an').textContent = fmt(s.animals);
+        document.getElementById('m-ans').textContent = `${fmt(s.animal_species)} species · ${fmt(s.animal_species_eff)} effective`;
+        document.getElementById('m-pl').textContent = fmt(s.plants);
+        document.getElementById('m-pls').textContent = `${fmt(s.plant_species)} species · ${fmt(s.pollinations)} pollinations`;
+        document.getElementById('m-cx').textContent = s.complexity_mean != null ? `${s.complexity_mean} · ${s.complexity_max}` : '—';
+      }
+    } catch (e) {}
+    setTimeout(live, 3000);
+  }
+
+  async function journal() {
+    try {
+      const rows = await (await fetch(API + '/chronicle?n=80', { cache: 'no-store' })).json();
+      if (rows.length) document.getElementById('journal').innerHTML = rows.map(r =>
+        `<div class="ag-entry"><div class="when">Day ${fmt(Math.floor(r.day))}${r.kind === 'genesis' ? ' · genesis' : ''}</div><p>${esc(r.text)}</p></div>`).join('');
+    } catch (e) {}
+    setTimeout(journal, 60000);
+  }
+
+  function chart(id, legendId, rows, series, opts = {}) {
+    const svg = document.getElementById(id), w = svg.clientWidth || 500, h = svg.clientHeight || 200, pad = 28;
+    if (rows.length < 2) { svg.innerHTML = `<text x="10" y="20" fill="currentColor" opacity=".6" font-size="12">Collecting the first measurements…</text>`; return; }
+    const xs = rows.map(r => r.day), x0 = xs[0], x1 = xs[xs.length - 1] || 1;
+    let ymax = opts.ymax || Math.max(...series.flatMap(s => rows.map(r => r[s.k] || 0))) * 1.1 || 1;
+    const X = v => pad + (v - x0) / (x1 - x0 || 1) * (w - pad - 8), Y = v => h - 18 - (v / ymax) * (h - 30);
+    let out = `<line x1="${pad}" y1="${h - 18}" x2="${w - 8}" y2="${h - 18}" stroke="currentColor" opacity=".25"/>`;
+    out += `<text x="${pad}" y="${h - 4}" font-size="10" fill="currentColor" opacity=".6">day ${Math.floor(x0)}</text><text x="${w - 8}" y="${h - 4}" font-size="10" fill="currentColor" opacity=".6" text-anchor="end">day ${Math.floor(x1)}</text>`;
+    out += `<text x="2" y="14" font-size="10" fill="currentColor" opacity=".6">${+ymax.toFixed(2)}</text>`;
+    for (const s of series) {
+      const d = rows.map((r, i) => `${i ? 'L' : 'M'}${X(r.day).toFixed(1)},${Y(r[s.k] || 0).toFixed(1)}`).join('');
+      out += `<path d="${d}" fill="none" stroke="${s.c}" stroke-width="1.8"/>`;
+    }
+    svg.innerHTML = out;
+    document.getElementById(legendId).innerHTML = series.map(s => `<span><i style="display:inline-block;width:10px;height:3px;background:${s.c};margin-right:6px;vertical-align:middle"></i>${s.label}</span>`).join('');
+  }
+
+  async function history() {
+    try {
+      const d = await (await fetch(API + '/history', { cache: 'no-store' })).json();
+      const rows = (d.history || []).filter((r, i, a) => a.length < 400 || i % Math.ceil(a.length / 400) === 0);
+      chart('c-cx', 'l-cx', rows, [{ k: 'complexity_mean', label: 'Body complexity, mean', c: '#7dd8b5' }, { k: 'complexity_max', label: 'most complex animal', c: '#e7b86b' }]);
+      chart('c-sx', 'l-sx', rows, [{ k: 'colour_mean', label: 'Colour (saturation)', c: '#e58bb0' }, { k: 'glow_mean', label: 'Glow', c: '#8fd0ff' }, { k: 'choosy_mean', label: 'Choosiness in mates', c: '#c9b6ff' }], { ymax: 1 });
+      chart('c-sp', 'l-sp', rows, [{ k: 'animal_species_eff', label: 'Animal species (effective)', c: '#7dd8b5' }, { k: 'plant_species_eff', label: 'Flower species (effective)', c: '#e58bb0' }]);
+    } catch (e) {}
+    setTimeout(history, 120000);
+  }
+  live(); journal(); history();
+})();
+</script>
+{% endblock %}
