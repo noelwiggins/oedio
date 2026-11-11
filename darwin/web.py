@@ -100,10 +100,24 @@ def ensure_worker():
     _ensure_group("weblab")
     ensure_pool()
     ensure_algo()
+    ensure_genesis()
 
 
 _pool_proc = {"p": None}
 _algo_proc = {"p": None}
+_genesis_proc = {"p": None}
+
+
+def ensure_genesis():
+    """The Algogenesis concept worlds run together in one process (darwin.algogenesis.genesis_cloud)."""
+    if os.environ.get("GENESIS", "on") == "off":
+        return
+    with _worker_lock:
+        p = _genesis_proc["p"]
+        if p is not None and p.poll() is None:
+            return
+        _genesis_proc["p"] = subprocess.Popen([sys.executable, "-m", "darwin.algogenesis.genesis_cloud", "run"], cwd=ROOT,
+                                              start_new_session=True)
 
 
 def ensure_algo():
@@ -313,9 +327,85 @@ ALGO_PANEL = os.path.join(ROOT, "static", "darwin", "algo", "panel.html")
 
 
 @bp.route("/algogenesis")
+def algo_gallery():
+    from .algogenesis.worlds import CONCEPTS, LIVE
+    ensure_algo()
+    ensure_genesis()
+    return render_template("darwin/algogenesis_gallery.html", concepts=CONCEPTS, live=LIVE)
+
+
+@bp.route("/algogenesis/coast")
 def algo_page():
     ensure_algo()
     return render_template("darwin/algogenesis.html")
+
+
+@bp.route("/algogenesis/<slug>")
+def algo_world_page(slug):
+    from .algogenesis.worlds import concept, world_class
+    c = concept(slug)
+    if c is None:
+        abort(404)
+    meta = world_class(slug).meta() if c["live"] else None
+    if c["live"]:
+        ensure_genesis()
+    return render_template("darwin/algogenesis_world.html", c=c, meta=meta)
+
+
+@bp.route("/algogenesis/<slug>/panel")
+def algo_world_panel(slug):
+    from .algogenesis.worlds import concept
+    c = concept(slug)
+    if c is None or not c["live"]:
+        abort(404)
+    ensure_genesis()
+    html = open(os.path.join(ROOT, "static", "darwin", "algo", "cabinet.html"), encoding="utf-8").read()
+    html = html.replace("__ALGO_API__", f"/darwin/api/algo/w/{slug}").replace("__ALGO_WORLD__", slug)
+    r = make_response(html)
+    r.headers["Content-Type"] = "text/html; charset=utf-8"
+    return r
+
+
+@bp.route("/api/algo/w/<slug>/live")
+def api_algo_world_live(slug):
+    from .algogenesis import genesis_cloud as G
+    from .algogenesis.worlds import LIVE
+    if slug not in LIVE:
+        abort(404)
+    try:
+        ensure_genesis()
+    except Exception:
+        pass
+    d = G.read_live(slug)
+    if d is None:
+        return jsonify({"standby": True, "note": "the world is being created"})
+    try:
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(d["written_at"])).total_seconds()
+    except Exception:
+        age = 0
+    d["age_s"] = round(age, 1)
+    d["stale"] = age > 20
+    return jsonify(d)
+
+
+@bp.route("/api/algo/w/<slug>/meta")
+def api_algo_world_meta(slug):
+    from .algogenesis.worlds import LIVE, world_class
+    if slug not in LIVE:
+        abort(404)
+    return jsonify(world_class(slug).meta())
+
+
+@bp.route("/api/algo/w/<slug>/history")
+def api_algo_world_history(slug):
+    from .algogenesis import genesis_cloud as G
+    return jsonify(G.read_live(slug + ":history") or {"history": []})
+
+
+@bp.route("/api/algo/w/<slug>/chronicle")
+def api_algo_world_chronicle(slug):
+    from .algogenesis import genesis_cloud as G
+    return jsonify(G.recent_journal(slug, min(int(request.args.get("n", 60)), 500)))
 
 
 @bp.route("/algogenesis/panel")

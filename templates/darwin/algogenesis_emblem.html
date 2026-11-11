@@ -1,0 +1,56 @@
+{# A flat emblem for each concept, drawn in the cabinet's palette. Expects `slug`. #}
+<svg viewBox="0 0 100 70" aria-hidden="true" stroke="#2a1d14" stroke-width="1.4" stroke-linejoin="round">
+{% if slug == 'protogenesis' %}
+  <rect x="0" y="0" width="100" height="70" fill="#3f97b5" stroke="none"/><rect x="0" y="0" width="100" height="18" fill="#8fd3c8" stroke="none"/>
+  <path d="M30 70 L38 50 L46 50 L54 70Z" fill="#e5602a"/>
+  {% for x,y,c in [(28,30,'#e5602a'),(35,30,'#f2b33d'),(42,30,'#3f97b5'),(49,30,'#a8c94a'),(56,30,'#e5602a'),(63,30,'#f2b33d')] %}<circle cx="{{x}}" cy="{{y}}" r="3.4" fill="{{c}}"/>{% endfor %}
+  <circle cx="45.5" cy="30" r="22" fill="none" stroke="#d8b447" stroke-width="2.4"/>
+  {% for x,y,c in [(15,50,'#a8c94a'),(80,45,'#e5602a'),(72,58,'#3f97b5'),(18,15,'#f2b33d'),(85,18,'#a8c94a')] %}<circle cx="{{x}}" cy="{{y}}" r="2.6" fill="{{c}}"/>{% endfor %}
+{% elif slug == 'epigenesis' %}
+  <rect width="100" height="70" fill="#f6e7bf" stroke="none"/>
+  <circle cx="20" cy="35" r="7" fill="#f2b33d"/><circle cx="44" cy="30" r="5" fill="#f2b33d"/><circle cx="44" cy="42" r="5" fill="#e5602a"/>
+  <circle cx="70" cy="22" r="4" fill="#f2b33d"/><circle cx="70" cy="33" r="4" fill="#a8c94a"/><circle cx="70" cy="44" r="4" fill="#e5602a"/><circle cx="70" cy="55" r="4" fill="#3f97b5"/>
+  <path d="M27 35 L39 30 M27 35 L39 42 M49 30 L66 22 M49 30 L66 33 M49 42 L66 44 M49 42 L66 55" fill="none"/>
+{% elif slug == 'noogenesis' %}
+  <rect width="100" height="70" fill="#2b5f86" stroke="none"/>
+  {% for x,y in [(20,20),(40,15),(62,22),(80,30),(28,45),(50,40),(70,52),(45,60)] %}<circle cx="{{x}}" cy="{{y}}" r="3.6" fill="#f2b33d"/>{% endfor %}
+  <path d="M20 20 L40 15 L62 22 L80 30 M28 45 L50 40 L70 52 M40 15 L50 40 L45 60 M62 22 L50 40" fill="none" stroke="#fbf3dc"/>
+{% elif slug == 'biogenesis' %}
+  <rect width="100" height="70" fill="#8fd3c8" stroke="none"/>
+  <circle cx="34" cy="35" r="15" fill="#a8c94a"/><circle cx="64" cy="35" r="15" fill="#a8c94a"/><path d="M49 26 C 46 32, 46 38, 49 44" fill="none"/>
+  <circle cx="34" cy="35" r="4" fill="#e5602a"/><circle cx="64" cy="35" r="4" fill="#e5602a"/>
+{% elif slug == 'morphogenesis' %}
+  <rect width="100" height="70" fill="#8fd3c8" stroke="none"/><rect y="0" width="100" height="16" fill="#cfeee6" stroke="none"/>
+  <path d="M0 62 Q 30 56 50 60 T 100 58 L100 70 L0 70Z" fill="#d9c27a"/>
+  <path d="M30 60 L30 30 M30 42 L20 32 M30 36 L40 24 M70 59 L70 20 M70 34 L80 26 M70 46 L60 38" fill="none" stroke-width="2.6"/>
+  {% for x,y in [(20,32),(40,24),(30,28),(80,26),(60,38),(70,18)] %}<ellipse cx="{{x}}" cy="{{y}}" rx="5" ry="3.5" fill="#a8c94a"/>{% endfor %}
+{% elif slug == 'cosmogenesis' %}
+  <rect width="100" height="70" fill="#1f4566" stroke="none"/>
+  <path d="M50 35 m-30 0 a30 12 0 1 0 60 0 a30 12 0 1 0 -60 0" fill="none" stroke="#f2b33d" stroke-width="2"/>
+  <circle cx="50" cy="35" r="7" fill="#e5602a"/>{% for x,y in [(15,12),(85,15),(78,58),(20,58),(62,8)] %}<circle cx="{{x}}" cy="{{y}}" r="1.8" fill="#fbf3dc"/>{% endfor %}
+{% elif slug == 'anthropogenesis' %}
+  <rect width="100" height="70" fill="#f2b33d" stroke="none"/><path d="M0 52 L100 52 L100 70 L0 70Z" fill="#a8c94a"/>
+  <circle cx="50" cy="20" r="6" fill="#e5602a"/><path d="M50 26 L50 44 M50 32 L40 40 M50 32 L60 40 M50 44 L43 56 M50 44 L57 56" fill="none" stroke-width="3"/>
+{% elif slug == 'psychogenesis' %}
+  <rect width="100" height="70" fill="#c9b6ff" stroke="none"/>
+  <path d="M50 35 m0 -4 a4 4 0 1 1 -4 4 a8 8 0 1 1 8 -8 a12 12 0 1 1 -12 12 a16 16 0 1 1 16 -16" fill="none" stroke-width="2.4"/>
+{% elif slug == 'autopoiesis' %}
+  <rect width="100" height="70" fill="#f6e7bf" stroke="none"/>
+  <circle cx="50" cy="35" r="20" fill="#e58bb0" fill-opacity=".55"/>
+  <circle cx="50" cy="35" r="20" fill="none" stroke="#2a1d14" stroke-width="7" stroke-dasharray="4.6 3.25" stroke-linecap="round"/>
+  <circle cx="50" cy="35" r="20" fill="none" stroke="#ee7d22" stroke-width="4.6" stroke-dasharray="3 4.85" stroke-linecap="round"/>
+  <circle cx="50" cy="35" r="6" fill="#e5602a"/>
+{% elif slug == 'palingenesis' %}
+  <rect width="100" height="70" fill="#e5602a" stroke="none"/>
+  <path d="M50 12 A23 23 0 1 1 27 35" fill="none" stroke="#fbf3dc" stroke-width="5"/><path d="M27 35 L20 28 L34 28Z" fill="#fbf3dc"/>
+  <circle cx="50" cy="35" r="6" fill="#f2b33d"/>
+{% elif slug == 'anagenesis' %}
+  <rect width="100" height="70" fill="#fbf3dc" stroke="none"/>
+  {% for k in range(5) %}<circle cx="{{ 14 + k * 18 }}" cy="{{ 50 - k * 6 }}" r="{{ 4 + k * 1.6 }}" fill="#a8c94a"/>{% endfor %}
+  <path d="M12 58 L92 22" fill="none" stroke-dasharray="3 3"/>
+{% elif slug == 'ontogeny' %}
+  <rect width="100" height="70" fill="#8fd3c8" stroke="none"/>
+  <circle cx="18" cy="38" r="4" fill="#f2b33d"/><circle cx="38" cy="38" r="7" fill="#f2b33d"/><path d="M62 38 m-11 0 a11 9 0 1 0 22 0 a11 9 0 1 0 -22 0" fill="#f2b33d"/>
+  <path d="M84 38 m-12 0 a12 10 0 1 0 24 0 a12 10 0 1 0 -24 0" fill="#e5602a"/><circle cx="90" cy="35" r="1.6" fill="#2a1d14"/>
+{% endif %}
+</svg>

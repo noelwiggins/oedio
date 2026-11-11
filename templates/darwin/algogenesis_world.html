@@ -1,0 +1,121 @@
+{% extends "darwin/base.html" %}
+{% block title %}{{ c.title }} — Algogenesis — DARWIN{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap">
+<style>
+  .ag-frame { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 18px; overflow: hidden; background: #1a0f08;
+              border: 1px solid var(--md-sys-color-outline-variant); }
+  .ag-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .ag-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; }
+  .ag-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+  .ag-entry { border-left: 2px solid var(--md-sys-color-outline-variant); padding: 2px 0 2px 14px; margin: 0 0 16px; }
+  .ag-entry p { margin: 4px 0 0; font-family: "Cormorant Garamond", Georgia, serif; font-size: 19px; line-height: 1.45; font-style: italic; }
+  .ag-entry .when { font: 500 11px var(--dw-mono); letter-spacing: .1em; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; }
+  .ag-journal { max-height: 520px; overflow-y: auto; padding-right: 6px; }
+  .ag-def { font: italic 400 24px/1.3 "Cormorant Garamond", Georgia, serif; margin: 2px 0 10px; }
+  .ag-soon { border-radius: 18px; padding: 28px; background: var(--md-sys-color-surface-container); }
+  .ag-soon .ag-glass { width: 260px; max-width: 100%; border-radius: 14px; background: #fbf3dc; border: 4px solid #d8dde2; outline: 1.5px solid #2a1d14; overflow: hidden; margin-bottom: 14px; }
+  @media (max-width: 760px) { .ag-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+{% endblock %}
+{% block content %}
+<p class="eyebrow"><a href="/darwin/algogenesis" style="color:inherit">Algogenesis</a> · {{ c.title }}</p>
+<h1 style="margin:0 0 2px;font-family:Righteous,sans-serif;letter-spacing:.04em;text-transform:uppercase">{{ c.title }}</h1>
+<p class="ag-def">{{ c.definition }}</p>
+
+{% if not c.live %}
+<div class="ag-soon">
+  <div class="ag-glass">{% set slug = c.slug %}{% include "darwin/algogenesis_emblem.html" %}</div>
+  <p>This panel is in preparation. Protogenesis, Morphogenesis and Autopoiesis are running now; the remaining panels
+  follow once their look and depth are agreed.</p>
+  <p><a class="btn tonal" href="/darwin/algogenesis">Back to all panels</a></p>
+</div>
+{% else %}
+<p class="lede">{{ meta.tagline }}</p>
+<div class="ag-frame"><iframe id="panel" src="/darwin/algogenesis/{{ c.slug }}/panel" title="{{ c.title }} live panel" allow="fullscreen; screen-wake-lock"></iframe></div>
+<div class="ag-actions">
+  <button class="btn" type="button" id="fsbtn">Full screen</button>
+  <a class="btn tonal" href="/darwin/algogenesis/{{ c.slug }}/panel" target="_blank" rel="noopener">Open the panel on its own</a>
+  <a class="btn tonal" href="/darwin/algogenesis/{{ c.slug }}/panel?quiet=1" target="_blank" rel="noopener">Without the keys</a>
+  <a class="btn text" href="/darwin/algogenesis">All panels</a>
+</div>
+
+<div class="ag-metrics" id="metrics"></div>
+
+<section class="section grid g2">
+  <div class="card">
+    <h2 style="margin-top:0">The journal</h2>
+    <p class="small muted" style="margin-top:-4px">At the end of every epoch a language model writes one entry from the facts this world measured.</p>
+    <div class="ag-journal" id="journal"><p class="small muted">The first entry appears at the end of the first epoch.</p></div>
+  </div>
+  <div class="card">
+    <h2 style="margin-top:0">What is changing</h2>
+    {% for ser in meta.series %}
+    <svg class="chart" id="c{{ loop.index }}" style="{{ 'margin-top:14px' if not loop.first }}"></svg><div class="legend small" id="l{{ loop.index }}"></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section card">
+  <h2 style="margin-top:0">How this world works</h2>
+  {% for p in meta.about %}<p>{{ p }}</p>{% endfor %}
+  <p class="small muted">Runs on Oedio's server at {{ meta.tps|int }} steps a second; an epoch is {{ meta.epoch }} steps. Like every Algogenesis panel it
+  depends only on Python, numpy and scipy, so it can move onto a small computer behind its own screen.</p>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if c.live %}
+<script>
+(function () {
+  const API = '/darwin/api/algo/w/{{ c.slug }}';
+  const META = {{ meta|tojson }};
+  document.getElementById('fsbtn').onclick = () => { const f = document.getElementById('panel'); (f.requestFullscreen || f.webkitRequestFullscreen || function () {}).call(f); };
+  const fmt = n => (n == null ? '—' : Number(n).toLocaleString());
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  async function live() {
+    try {
+      const d = await (await fetch(API + '/live', { cache: 'no-store' })).json();
+      if (!d.standby) {
+        const s = d.stats || {};
+        document.getElementById('metrics').innerHTML = META.stat_labels.slice(0, 8).map(([k, lab]) =>
+          `<div class="card flat metric"><div class="k">${esc(lab)}</div><div class="v">${fmt(s[k])}</div></div>`).join('');
+      }
+    } catch (e) {}
+    setTimeout(live, 3000);
+  }
+  async function journal() {
+    try {
+      const rows = await (await fetch(API + '/chronicle?n=80', { cache: 'no-store' })).json();
+      if (rows.length) document.getElementById('journal').innerHTML = rows.map(r =>
+        `<div class="ag-entry"><div class="when">Epoch ${fmt(r.epoch)}</div><p>${esc(r.text)}</p></div>`).join('');
+    } catch (e) {}
+    setTimeout(journal, 60000);
+  }
+  function chart(id, legendId, rows, series) {
+    const svg = document.getElementById(id), w = svg.clientWidth || 500, h = svg.clientHeight || 200, pad = 28;
+    if (rows.length < 2) { svg.innerHTML = `<text x="10" y="20" fill="currentColor" opacity=".6" font-size="12">Collecting the first measurements…</text>`; return; }
+    const x0 = rows[0].tick, x1 = rows[rows.length - 1].tick;
+    const ymax = Math.max(...series.flatMap(s => rows.map(r => r[s[0]] || 0))) * 1.1 || 1;
+    const X = v => pad + (v - x0) / (x1 - x0 || 1) * (w - pad - 8), Y = v => h - 18 - (v / ymax) * (h - 30);
+    let out = `<line x1="${pad}" y1="${h - 18}" x2="${w - 8}" y2="${h - 18}" stroke="currentColor" opacity=".25"/>`;
+    out += `<text x="${pad}" y="${h - 4}" font-size="10" fill="currentColor" opacity=".6">step ${fmt(x0)}</text><text x="${w - 8}" y="${h - 4}" font-size="10" fill="currentColor" opacity=".6" text-anchor="end">step ${fmt(x1)}</text>`;
+    out += `<text x="2" y="14" font-size="10" fill="currentColor" opacity=".6">${+ymax.toFixed(2)}</text>`;
+    for (const [k, , c] of series) out += `<path d="${rows.map((r, i) => `${i ? 'L' : 'M'}${X(r.tick).toFixed(1)},${Y(r[k] || 0).toFixed(1)}`).join('')}" fill="none" stroke="${c}" stroke-width="1.8"/>`;
+    svg.innerHTML = out;
+    document.getElementById(legendId).innerHTML = series.map(([, lab, c]) => `<span><i style="display:inline-block;width:10px;height:3px;background:${c};margin-right:6px;vertical-align:middle"></i>${esc(lab)}</span>`).join('');
+  }
+  async function history() {
+    try {
+      const d = await (await fetch(API + '/history', { cache: 'no-store' })).json();
+      const rows = (d.history || []).filter((r, i, a) => a.length < 400 || i % Math.ceil(a.length / 400) === 0);
+      META.series.forEach((ser, i) => chart('c' + (i + 1), 'l' + (i + 1), rows, ser));
+    } catch (e) {}
+    setTimeout(history, 120000);
+  }
+  live(); journal(); history();
+})();
+</script>
+{% endif %}
+{% endblock %}

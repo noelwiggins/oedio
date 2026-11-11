@@ -1,0 +1,46 @@
+{% extends "darwin/base.html" %}
+{% block title %}Algogenesis — DARWIN{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Cormorant+Garamond:ital,wght@1,400&display=swap">
+<style>
+  .ag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 22px; }
+  .ag-tile { position: relative; display: flex; flex-direction: column; border-radius: 22px; padding: 14px; text-decoration: none; color: #2a1d14;
+             background: linear-gradient(#f6913a, #ee7d22 55%, #d9661a); border: 2px solid #2a1d14; min-height: 250px;
+             box-shadow: 0 3px 0 #b9560c; transition: transform .15s; }
+  .ag-tile:hover { transform: translateY(-2px); }
+  .ag-glass { flex: 1; border-radius: 14px; background: #fbf3dc; border: 4px solid #d8dde2; outline: 1.5px solid #2a1d14; position: relative; overflow: hidden;
+              display: grid; place-items: center; min-height: 128px; }
+  .ag-glass svg { width: 78%; height: 78%; }
+  .ag-plate { margin-top: 12px; background: #d8b447; border: 1.5px solid #2a1d14; border-radius: 12px; padding: 9px 12px 10px; }
+  .ag-plate h3 { margin: 0; font: 400 19px "Righteous", sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+  .ag-plate p { margin: 3px 0 0; font: italic 400 16px/1.3 "Cormorant Garamond", Georgia, serif; }
+  .ag-badge { position: absolute; top: 22px; right: 22px; font: 500 10.5px var(--dw-mono); letter-spacing: .12em; text-transform: uppercase;
+              border-radius: 999px; padding: 3px 9px; border: 1.5px solid #2a1d14; background: #a8c94a; }
+  .ag-badge.soon { background: #fbf3dc; opacity: .85; }
+  .ag-tile.soon { filter: saturate(.55); }
+  .ag-tile.soon .ag-glass svg { opacity: .55; }
+</style>
+{% endblock %}
+{% block content %}
+<p class="eyebrow">Algogenesis</p>
+<h1 style="margin:0 0 6px">Living panels</h1>
+<p class="lede">A set of wall panels, each a world that runs on its own and changes for as long as it is plugged in. Each panel
+takes one idea about how things come into being and lets it happen, rather than illustrating it. Every panel sits in the same
+vintage pachinko cabinet; all its words are behind the keys in its tray.</p>
+
+<div class="ag-grid">
+  <a class="ag-tile" href="/darwin/algogenesis/coast">
+    <span class="ag-badge">Live</span>
+    <div class="ag-glass"><svg viewBox="0 0 100 70"><rect x="0" y="0" width="100" height="70" fill="#3f97b5"/><path d="M38 0 C 30 20, 50 35, 36 70 L100 70 L100 0Z" fill="#a8c94a" stroke="#2a1d14"/><path d="M60 10 C 80 5, 95 25, 85 40 C 70 45, 62 30, 60 10Z" fill="#f2b33d" stroke="#2a1d14"/><circle cx="52" cy="40" r="3" fill="#e5602a" stroke="#2a1d14"/><circle cx="58" cy="48" r="2.4" fill="#c9b6ff" stroke="#2a1d14"/><circle cx="46" cy="55" r="2" fill="#e5602a" stroke="#2a1d14"/></svg></div>
+    <div class="ag-plate"><h3>The Coast</h3><p>Panel I: flowers, pollinators, mates, hunters and families on an evolving shore.</p></div>
+  </a>
+  {% for slug, title, definition in concepts %}
+  {% set on = slug in live %}
+  <a class="ag-tile {{ '' if on else 'soon' }}" href="/darwin/algogenesis/{{ slug }}">
+    <span class="ag-badge {{ '' if on else 'soon' }}">{{ 'Live' if on else 'In preparation' }}</span>
+    <div class="ag-glass">{% include "darwin/algogenesis_emblem.html" %}</div>
+    <div class="ag-plate"><h3>{{ title }}</h3><p>{{ definition }}</p></div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -14,6 +14,16 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 (<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
+## ALGOGENESIS — concept panels (2026-11-11)
+/darwin/algogenesis is now a gallery: The Coast (Panel I, moved to /darwin/algogenesis/coast; its kiosk stays at
+/darwin/algogenesis/panel) + 12 concept panels. LIVE: protogenesis, morphogenesis, autopoiesis (worlds/*.py on
+worlds/base.World). One process runs them all: darwin.algogenesis.genesis_cloud (web.ensure_genesis, lock 774416,
+GENESIS=off disables, GENESIS_SPEED multiplies TPS). Tables darwin_algo_worlds (slug, blob), darwin_algo_world_live
+(key slug / slug:history), darwin_algo_world_journal. Pages /darwin/algogenesis/<slug> (+/panel kiosk = static/darwin/
+algo/cabinet.html + cabinet.js + worlds/<slug>.js plugin). APIs /darwin/api/algo/w/<slug>/{live,meta,history,chronicle}.
+Next nine to build (user approved "first three, then the rest"): epigenesis, noogenesis, biogenesis, cosmogenesis,
+anthropogenesis, psychogenesis, palingenesis, anagenesis, ontogeny — add worlds/<slug>.py + LIVE entry + JS plugin.
+
 ## ALGOGENESIS — panel I (2026-11-10)
 New Darwin tab /darwin/algogenesis (kiosk panel /darwin/algogenesis/panel, ?quiet=1 ?nochron=1 ?strata=0).
 Engine darwin/algogenesis/engine.py (numpy+scipy only, portable): 1200x800 coast (sea level drifts), flowering plants

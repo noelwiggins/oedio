@@ -207,6 +207,33 @@ algo_chronicle = sa.Table(
     sa.Column("facts", J),
 )
 
+# the concept panels (Protogenesis, Morphogenesis, ...), all run by one process
+algo_worlds = sa.Table(
+    "darwin_algo_worlds", md,
+    sa.Column("slug", T, primary_key=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("tick", sa.BigInteger),
+    sa.Column("blob", sa.LargeBinary),
+)
+
+algo_world_live = sa.Table(    # key: "<slug>" for the latest frame, "<slug>:history" for the charts
+    "darwin_algo_world_live", md,
+    sa.Column("key", T, primary_key=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("data", J),
+)
+
+algo_world_journal = sa.Table(
+    "darwin_algo_world_journal", md,
+    sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),
+    sa.Column("slug", T, index=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("tick", sa.BigInteger),
+    sa.Column("epoch", sa.Integer),
+    sa.Column("text", T),
+    sa.Column("facts", J),
+)
+
 snapshots = sa.Table(
     "darwin_snapshots", md,
     sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),

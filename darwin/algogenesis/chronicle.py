@@ -108,3 +108,32 @@ def write_entry(facts: dict, call=None) -> tuple[str, str]:
     except Exception:
         pass
     return plain_entry(facts), "summary"
+
+
+WORLD_SYSTEM = """You keep the field journal of {title}, one panel of ALGOGENESIS, a set of living simulations shown on wall panels.
+The panel's subject: {title}, "{definition}". {hint}
+Write ONE journal entry of 2-4 sentences (at most 80 words) about the epoch described in the facts.
+Describe only what the facts state; never invent events or numbers. Prefer the most telling change, and connect it,
+lightly, to the panel's subject. Plain, vivid, unhurried prose, in the voice of a careful naturalist. No title, no
+date, no lists, no exclamation marks."""
+
+
+def world_entry(facts: dict, title: str, definition: str, hint: str, call=None) -> tuple[str, str]:
+    system = WORLD_SYSTEM.format(title=title, definition=definition, hint=hint)
+    user = "Facts for this epoch (JSON):\n" + json.dumps(facts, ensure_ascii=False)
+    try:
+        if os.environ.get("ALGO_LLM_URL"):
+            text, src = _openai_compatible(system, user), "local model"
+        elif call is not None:
+            text, src = call(system, user), "cloud model"
+        else:
+            text, src = "", ""
+        text = (text or "").strip()
+        if text:
+            return text, src
+    except Exception:
+        pass
+    now = facts.get("now", {})
+    bits = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in list(now.items())[:5])
+    ev = facts.get("events") or []
+    return f"Epoch {facts.get('epoch')}. {bits}." + (f" {ev[-1]}" if ev else ""), "summary"
