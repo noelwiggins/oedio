@@ -27,6 +27,11 @@ ALGO_CLOUD_MODEL). On site: python -m darwin.algogenesis.standalone (file checkp
 ALGO_LLM_URL OpenAI-compatible local model, ALGO_PEERS migration). Renderer static/darwin/algo/panel.{html,js}.
 Local 40-day test: no crashes, ~10 effective animal species, complexity 3 -> 8; predators had not yet evolved.
 Next: watch for predators/glow/colour; tune if the world stalls; panel-to-panel migration test with two standalones.
+2026-11-11: v1.1 — pachinko cabinet renderer (flat zone plains, no stems, ink-outlined decal animals, pins, rail, gold
+tray with fossil window and 5 touch keys + nameplate; no text on canvas). Families: CARE gene (index 20), MATURE=700,
+juveniles scaled 0.4->1, fed (0.02*care*size/tick) and guarded by parent within 25-30 units; frame rows now
+[id,x,y,h,sp,grown,parentId,...look]. Live world migrated at day ~319 (gen ~507, 46 animals, 3 species, complexity ~15).
+Pace: ~48 generations per real hour. Watch: low animal count (choosiness high, colour low), whether care spreads.
 
 ## DARWIN Tidal Pool — Janzen-Connell + refugia (2026-11-10)
 Analysis of the live history (770 Ma, 203 re-seeds): the pool alternates between an "animal world" (motile 10-40-cell
