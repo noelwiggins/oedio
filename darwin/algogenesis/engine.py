@@ -26,7 +26,7 @@ import zlib
 
 import numpy as np
 
-VERSION = "algogenesis-1.0"
+VERSION = "algogenesis-1.1"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
 DAY = 2400                        # ticks per day (about two minutes at 20 ticks/s)
@@ -35,16 +35,17 @@ STATS_EVERY = 600
 CAP_F, CAP_P = 420, 900           # animals, plants
 SENSE = 60.0
 BANK_MAX = 40
+MATURE = 700                      # ticks until an animal is grown: before that it is small, slow and easy prey
 
 # animal genes
 (HUE, SAT, HUE2, PATTERN, GLOW, SEGS, LIMBS, SIZE, TAIL, CREST, FIN, DIET,
- PREF_FLOWER, PREF_MATE, CHOOSY, W_FOOD, W_FLEE, W_MATE, WANDER, REPRO) = range(20)
-NG = 20
+ PREF_FLOWER, PREF_MATE, CHOOSY, W_FOOD, W_FLEE, W_MATE, WANDER, REPRO, CARE) = range(21)
+NG = 21
 CIRC = {HUE, HUE2, PREF_FLOWER, PREF_MATE}
-LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45], np.float32)
-HI = np.array([1, 1, 1, 1, 1, 9, 4, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9], np.float32)
-STEP = np.array([.03, .04, .04, .06, .04, .35, .25, .08, .05, .05, .05, .04, .03, .03, .04, .15, .15, .15, .05, .02],
-                np.float32)
+LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45, 0], np.float32)
+HI = np.array([1, 1, 1, 1, 1, 9, 4, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1], np.float32)
+STEP = np.array([.03, .04, .04, .06, .04, .35, .25, .08, .05, .05, .05, .04, .03, .03, .04, .15, .15, .15, .05, .02,
+                 .04], np.float32)
 # plant genes
 P_HUE, P_PETALS, P_SIZE, P_NECTAR, P_HEIGHT, P_SAT, P_HUE2 = range(7)
 NPG = 7
@@ -84,6 +85,12 @@ class World:
         # the brightest display (which only a vigorous animal can afford) passes good condition on. This is
         # the "good genes" reason colour and choosiness pay, as in birds of paradise.
         self.fvig = np.ones(CAP_F, np.float32)
+        # families: each young animal knows its parent. A parent with the CARE gene shares food with its
+        # young and guards them; young of caring parents follow them. Care costs the parent and pays only
+        # if more of its young live to grow up.
+        self.fpar = np.full(CAP_F, -1, np.int64)
+        self.fparid = np.zeros(CAP_F, np.int64)
+        self.fed_young = 0
         self.fpollen = np.full((CAP_F, NPG), np.nan, np.float32)   # pollen carried (the donor's genes)
         self.fpsp = np.zeros(CAP_F, np.int64)                         # donor plant's species
         self.G = np.zeros((CAP_F, NG), np.float32)
@@ -161,7 +168,7 @@ class World:
                 return parent
         return self._new_species(kind, genes, parent, gen)
 
-    def _spawn_animal(self, g, x, y, gen, parent, energy, vig=1.0):
+    def _spawn_animal(self, g, x, y, gen, parent, energy, vig=1.0, mother=-1):
         free = np.flatnonzero(~self.f_alive)
         if not len(free):
             return None
@@ -178,6 +185,8 @@ class World:
         self.max_gen = max(self.max_gen, int(gen))
         self.fpollen[i] = np.nan
         self.fvig[i] = float(np.clip(vig, 0.5, 1.25))
+        self.fpar[i] = mother
+        self.fparid[i] = int(self.f_id[mother]) if mother >= 0 else 0
         self.fsp[i] = self._species_of("animal", g, parent, gen)
         self.births += 1
         return i
@@ -218,7 +227,7 @@ class World:
         g[GLOW], g[SEGS], g[LIMBS], g[SIZE] = 0.0, rng.integers(1, 3), 0, rng.uniform(0.7, 1.1)
         g[TAIL], g[CREST], g[FIN], g[DIET] = rng.uniform(0.2, 0.6), 0, rng.uniform(0.3, 0.7), rng.uniform(0, 0.35)
         g[PREF_FLOWER], g[PREF_MATE], g[CHOOSY] = rng.random(), g[HUE] + rng.normal(0, 0.05), 0.1
-        g[W_FOOD], g[W_FLEE], g[W_MATE], g[WANDER], g[REPRO] = 1.5, 1.0, 1.0, 0.4, 0.6
+        g[W_FOOD], g[W_FLEE], g[W_MATE], g[WANDER], g[REPRO], g[CARE] = 1.5, 1.0, 1.0, 0.4, 0.6, 0.05
         g = _clip(g, LO, HI, CIRC)
         x, y = self._water_spot()
         first = None
@@ -330,7 +339,14 @@ class World:
         water = depth < 0
         consp = light * (0.25 + 0.75 * G[:, SAT]) + (1 - light) * (0.08 + 0.92 * G[:, GLOW])
         vig = self.fvig[F]
-        size = G[:, SIZE] * np.sqrt(G[:, SEGS])
+        grown = np.clip(0.4 + 0.6 * self.fage[F] / MATURE, 0.4, 1.0)
+        size = G[:, SIZE] * np.sqrt(G[:, SEGS]) * grown
+        par = self.fpar[F]
+        has_par = (par >= 0) & (self.fage[F] < MATURE)
+        pidx = np.where(has_par, par, 0)
+        has_par &= self.f_alive[pidx] & (self.f_id[pidx] == self.fparid[F])
+        pcare = np.where(has_par, self.G[pidx, CARE], 0.0)
+        pdist = np.where(has_par, np.hypot(self.fx[pidx] - x, self.fy[pidx] - y), np.inf)
         herb = np.clip(1 - G[:, DIET] * 1.4, 0, 1)
         meat = np.clip((G[:, DIET] - 0.3) / 0.7, 0, 1)
         emax = 18.0 * G[:, SIZE] * np.sqrt(G[:, SEGS])
@@ -377,7 +393,7 @@ class World:
             jf = iP0[np.arange(n), j]
             dfl = np.where(hf, dP[np.arange(n), j], np.inf)
 
-        mate_ready = (efrac > G[:, REPRO]) & (self.fage[F] > 300)
+        mate_ready = (efrac > G[:, REPRO]) & (self.fage[F] > MATURE)
         mate = validF & mate_ready[:, None] & mate_ready[iF] & (self.fsp[F][iF] == self.fsp[F][:, None])
         jm, hm, _ = nearest(mate)
 
@@ -391,11 +407,12 @@ class World:
         fx_prey, fy_prey = toward(x[jp], y[jp], hp)
         fx_th, fy_th = toward(x[jt], y[jt], ht)
         fx_m, fy_m = toward(x[jm], y[jm], hm)
+        fx_par, fy_par = toward(self.fx[pidx], self.fy[pidx], has_par & (pdist > 8))
         wf, wfl, wm = G[:, W_FOOD], G[:, W_FLEE], G[:, W_MATE]
         vx = (wf * hungry * (herb * fx_food + meat * fx_prey) - wfl * fx_th + wm * mate_ready * fx_m
-              + G[:, WANDER] * np.cos(hd))
+              + G[:, WANDER] * np.cos(hd) + 2.5 * pcare * fx_par)
         vy = (wf * hungry * (herb * fy_food + meat * fy_prey) - wfl * fy_th + wm * mate_ready * fy_m
-              + G[:, WANDER] * np.sin(hd))
+              + G[:, WANDER] * np.sin(hd) + 2.5 * pcare * fy_par)
         # swimmers keep to the water, walkers to the land
         h_ahead = self.height(x + 12 * np.cos(hd), y + 12 * np.sin(hd)) - self.sea
         wrong = np.where(G[:, FIN] > 0.5, h_ahead > 0.02, h_ahead < -0.02)
@@ -406,7 +423,7 @@ class World:
         hd = (hd + np.clip(turn, -0.25, 0.25) + rng.normal(0, 0.06, n)) % (2 * math.pi)
         sp_water = (0.35 + 1.1 * G[:, FIN] * (0.5 + 0.5 * G[:, TAIL]))
         sp_land = (0.15 + 0.32 * G[:, LIMBS] * (1 - 0.7 * G[:, FIN]))
-        speed = np.where(water, sp_water, sp_land) / np.sqrt(G[:, SIZE]) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
+        speed = np.where(water, sp_water, sp_land) / np.sqrt(G[:, SIZE]) * (0.6 + 0.4 * grown) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
         nx, ny = x + speed * np.cos(hd), y + speed * np.sin(hd)
         bounce_x = (nx < 2) | (nx > W - 2)
         bounce_y = (ny < 2) | (ny > H - 2)
@@ -419,10 +436,19 @@ class World:
         jc = 1 + JC * np.maximum(0, cnt[inv] / n - JC_FREE)
         cost = (0.003 * G[:, SIZE] ** 0.75 * np.sqrt(G[:, SEGS]) + 0.009 * G[:, GLOW] * (1 - light)
                 + 0.0012 * G[:, SAT] + 0.0018 * G[:, CREST] + 0.0012 * G[:, LIMBS] + 0.0009 * G[:, CHOOSY]
-                + 0.0015 * speed * G[:, SIZE])
+                + 0.0015 * speed * G[:, SIZE]) * grown
         cost = cost * jc / vig * (1 + 0.8 * np.where(water, 1 - G[:, FIN], G[:, FIN] * (G[:, LIMBS] < 1)))
         self.fe[F] -= cost
         self.fage[F] += 1
+
+        # parents feed the young that stay close
+        fed = np.flatnonzero(has_par & (pdist < 30) & (pcare > 0.05))
+        if len(fed):
+            pe = self.fe[par[fed]] / (18.0 * self.G[par[fed], SIZE] * np.sqrt(self.G[par[fed], SEGS]))
+            give = np.where(pe > 0.3, 0.02 * pcare[fed] * self.G[par[fed], SIZE], 0.0).astype(np.float32)
+            np.subtract.at(self.fe, par[fed], give)
+            self.fe[F[fed]] = np.minimum(self.fe[F[fed]] + 0.9 * give, emax[fed])
+            self.fed_young += int((give > 0).sum())
 
         # feeding at flowers: nectar, and pollen carried from flower to flower
         if len(Pi):
@@ -458,6 +484,8 @@ class World:
                     continue
                 att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a]
                 dfn = size[b] * (1 + 0.8 * G[b, CREST])
+                if has_par[b] and pdist[b] < 25:      # a parent stands over its young
+                    dfn += 2.0 * float(pcare[b]) * float(self.G[pidx[b], SIZE] * np.sqrt(self.G[pidx[b], SEGS]))
                 if rng.random() < att / (att + dfn):
                     i, j = int(F[a]), int(F[b])
                     food = max(float(self.fe[j]), 0) + 6 * float(size[b])
@@ -508,7 +536,7 @@ class World:
             gift = 0.45 * (float(self.fe[i]) - build)
             self.fe[i] -= build + gift
             k_ = self._spawn_animal(g, x[a] + rng.normal(0, 3), y[a] + rng.normal(0, 3), int(self.fgen[i]) + 1,
-                                    int(self.fsp[i]), gift, cv)
+                                    int(self.fsp[i]), gift, cv, i)
             if k_ is None:
                 self.fe[i] += gift
                 break
@@ -635,6 +663,9 @@ class World:
                 "pollinators": round(float((G[:, DIET] < 0.35).mean()), 3),
                 "on_land": round(float((self.height(self.fx[F], self.fy[F]) - self.sea >= 0).mean()), 3),
                 "mean_generation": round(float(self.fgen[F].mean()), 1),
+                "care_mean": round(float(G[:, CARE].mean()), 3),
+                "young": round(float((self.fage[F] < MATURE).mean()), 3),
+                "families": int(((self.fpar[F] >= 0) & (self.fage[F] < MATURE)).sum()),
             })
         if len(Pi):
             sp, cnt = np.unique(self.psp[Pi], return_counts=True)
@@ -648,7 +679,8 @@ class World:
     def frame(self):
         F, Pi = np.flatnonzero(self.f_alive), np.flatnonzero(self.p_alive)
         animals = [[int(self.f_id[i]), round(float(self.fx[i]), 1), round(float(self.fy[i]), 1), round(float(self.fh[i]), 2),
-                    int(self.fsp[i]), *_look(self.G[i])] for i in F]
+                    int(self.fsp[i]), round(min(1.0, 0.4 + 0.6 * float(self.fage[i]) / MATURE), 2),
+                    int(self.fparid[i]) if self.fage[i] < MATURE else 0, *_look(self.G[i])] for i in F]
         plants = [[int(self.p_id[i]), round(float(self.px[i]), 1), round(float(self.py[i]), 1),
                    round(float(self.P[i, P_HUE]), 3), round(float(self.P[i, P_PETALS]), 1), round(float(self.P[i, P_SIZE]), 2),
                    round(float(self.P[i, P_HEIGHT]), 2), round(float(self.P[i, P_SAT]), 2), round(float(self.P[i, P_HUE2]), 3),
@@ -724,4 +756,19 @@ def to_bytes(w: World) -> bytes:
 
 
 def from_bytes(b: bytes) -> World:
-    return pickle.loads(zlib.decompress(b))
+    w = pickle.loads(zlib.decompress(b))
+    if w.G.shape[1] < NG:                     # v1.0 worlds: add the care gene (a little care, so it can evolve)
+        pad = np.full((w.G.shape[0], NG - w.G.shape[1]), 0.05, np.float32)
+        w.G = np.concatenate([w.G, pad], 1)
+        for e in w.bank:
+            if len(e["g"]) < NG:
+                e["g"] = np.concatenate([e["g"], np.full(NG - len(e["g"]), 0.05, np.float32)])
+        for sp in w.species.values():
+            if sp["kind"] == "animal" and len(sp["g"]) < NG:
+                sp["g"] = np.concatenate([sp["g"], np.full(NG - len(sp["g"]), 0.05, np.float32)])
+    if not hasattr(w, "fpar"):
+        w.fpar = np.full(CAP_F, -1, np.int64)
+        w.fparid = np.zeros(CAP_F, np.int64)
+        w.fed_young = 0
+    w.version = VERSION
+    return w

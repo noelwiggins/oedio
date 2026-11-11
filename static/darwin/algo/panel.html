@@ -7,26 +7,58 @@
 <title>Algogenesis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Cormorant+Garamond:ital,wght@0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-  :root { color-scheme: dark; }
-  html, body { margin: 0; height: 100%; background: #020407; overflow: hidden; }
-  body { cursor: none; }
+  :root { color-scheme: light; --orange: #ee7d22; --rim: #b9560c; --cream: #fbf3dc; --ink: #2a1d14; --gold: #d8b447; }
+  html, body { margin: 0; height: 100%; background: #1a0f08; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+  body { cursor: none; user-select: none; }
   body.awake { cursor: default; }
   canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
-  .veil { position: fixed; inset: 0; display: grid; place-items: center; color: #8fa3a7; font: 400 22px "Cormorant Garamond", Georgia, serif;
-          letter-spacing: .08em; transition: opacity 2s; pointer-events: none; }
+  .veil { position: fixed; inset: 0; display: grid; place-items: center; color: var(--cream); font: 400 26px "Righteous", sans-serif;
+          letter-spacing: .14em; transition: opacity 2s; pointer-events: none; text-shadow: 0 2px 0 var(--rim); }
   .veil.gone { opacity: 0; }
-  .fs { position: fixed; right: 18px; top: 16px; font: 500 11px "IBM Plex Mono", monospace; letter-spacing: .12em; color: #c9d6d3;
-        background: rgba(8,14,18,.55); border: 1px solid rgba(201,214,211,.25); border-radius: 999px; padding: 7px 14px; cursor: pointer;
-        opacity: 0; transition: opacity .4s; }
-  body.awake .fs { opacity: 1; }
+  /* the machine's buttons: chrome rings with a coloured "tulip" inside */
+  #keys { position: fixed; display: flex; gap: 2.2vmin; align-items: center; }
+  .key { width: 7.4vmin; height: 7.4vmin; border-radius: 50%; border: 0; padding: 0; cursor: pointer; position: relative;
+         background: radial-gradient(circle at 35% 30%, #ffffff 0, #d8dde2 18%, #8d969e 52%, #e7ebee 70%, #6c757d 100%);
+         box-shadow: 0 .5vmin .9vmin rgba(0,0,0,.45), inset 0 0 0 .25vmin rgba(255,255,255,.35); }
+  .key i { position: absolute; inset: 16%; border-radius: 50%; display: grid; place-items: center; background: var(--c);
+           box-shadow: inset 0 -.6vmin 0 rgba(0,0,0,.22), inset 0 .5vmin 0 rgba(255,255,255,.35); border: .3vmin solid var(--ink); }
+  .key svg { width: 58%; height: 58%; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .key:active i { transform: translateY(.3vmin); }
+  .key.on i { box-shadow: 0 0 2.2vmin var(--c), inset 0 -.6vmin 0 rgba(0,0,0,.22); }
+  /* the cards behind the keys */
+  #card { position: fixed; background: var(--cream); color: var(--ink); border-radius: 2.4vmin; padding: 2.6vmin 3vmin 2.4vmin;
+          border: .9vmin solid var(--orange); box-shadow: 0 0 0 .35vmin var(--ink), 0 2vmin 5vmin rgba(0,0,0,.55);
+          opacity: 0; transform: translateY(2vmin) scale(.98); transition: opacity .35s, transform .35s; pointer-events: none;
+          overflow: hidden; display: flex; flex-direction: column; }
+  #card.open { opacity: 1; transform: none; pointer-events: auto; }
+  #card h2 { margin: 0 0 .4em; font: 400 3.6vmin "Righteous", sans-serif; letter-spacing: .06em; color: var(--rim); text-transform: uppercase; }
+  #card .x { position: absolute; right: 1.6vmin; top: 1.4vmin; width: 4.6vmin; height: 4.6vmin; border-radius: 50%; border: .3vmin solid var(--ink);
+             background: var(--orange); color: var(--ink); font: 400 2.6vmin "Righteous", sans-serif; cursor: pointer; line-height: 1; }
+  #card .body { overflow-y: auto; font: 400 2.05vmin/1.5 "IBM Plex Mono", monospace; padding-right: 1vmin; }
+  #card .entry { margin: 0 0 1.6vmin; }
+  #card .entry b { display: block; font: 500 1.55vmin "IBM Plex Mono", monospace; letter-spacing: .12em; color: #8a5a2b; text-transform: uppercase; }
+  #card .entry p { margin: .3vmin 0 0; font: italic 400 2.7vmin/1.38 "Cormorant Garamond", Georgia, serif; }
+  #card table { border-collapse: collapse; width: 100%; }
+  #card td { padding: .5vmin 0; border-bottom: .15vmin dashed rgba(42,29,20,.25); }
+  #card td:last-child { text-align: right; font-weight: 500; }
+  #card .sw { display: inline-block; width: 2vmin; height: 2vmin; border-radius: 50%; border: .25vmin solid var(--ink); vertical-align: -0.35vmin; margin-right: .8vmin; }
+  #card p.note { font: 400 2.2vmin/1.5 "IBM Plex Mono", monospace; margin: 0 0 1.2vmin; }
+  body.quiet #keys { display: none; }
 </style>
 </head>
 <body data-api="__ALGO_API__">
 <canvas id="cv" aria-label="Algogenesis: a living world evolving in real time"></canvas>
-<div class="veil" id="veil">a world is waking</div>
-<button class="fs" id="fs" type="button">FULL SCREEN</button>
-<script src="/static/darwin/algo/panel.js?v=1"></script>
+<div class="veil" id="veil">A WORLD IS WAKING</div>
+<div id="keys" role="toolbar" aria-label="Panel">
+  <button class="key" data-card="world" style="--c:#f2b33d" aria-label="The world now"><i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16M12 4c-3 3-3 13 0 16"/></svg></i></button>
+  <button class="key" data-card="journal" style="--c:#e5602a" aria-label="The journal"><i><svg viewBox="0 0 24 24"><path d="M4 6c3-1.5 5.5-1.5 8 0v13c-2.5-1.5-5-1.5-8 0zM20 6c-3-1.5-5.5-1.5-8 0v13c2.5-1.5 5-1.5 8 0z"/></svg></i></button>
+  <button class="key" data-card="fossils" style="--c:#a8c94a" aria-label="The fossil record"><i><svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4-9 4z M3 12l9 4 9-4 M3 16l9 4 9-4"/></svg></i></button>
+  <button class="key" data-card="families" style="--c:#8fd3c8" aria-label="Families"><i><svg viewBox="0 0 24 24"><circle cx="9" cy="10" r="4"/><circle cx="17" cy="15" r="2.5"/><circle cx="12.5" cy="18.5" r="1.8"/></svg></i></button>
+  <button class="key" data-card="about" style="--c:#c9b6ff" aria-label="How it works"><i><svg viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4 2.8c-.8.4-1 1-1 1.7V15"/><circle cx="12" cy="18.5" r=".6" fill="#2a1d14"/></svg></i></button>
+</div>
+<div id="card" role="dialog" aria-modal="false"><button class="x" type="button" aria-label="Close">×</button><h2></h2><div class="body"></div></div>
+<script src="/static/darwin/algo/panel.js?v=2"></script>
 </body>
 </html>
