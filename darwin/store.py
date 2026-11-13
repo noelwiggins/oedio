@@ -207,6 +207,14 @@ algo_chronicle = sa.Table(
     sa.Column("facts", J),
 )
 
+# visitors' dial settings for each panel ("coast" or a concept slug): {dial: [value, unix time]}
+algo_controls = sa.Table(
+    "darwin_algo_controls", md,
+    sa.Column("key", T, primary_key=True),
+    sa.Column("ts", T, nullable=False),
+    sa.Column("data", J),
+)
+
 # the concept panels (Protogenesis, Morphogenesis, ...), all run by one process
 algo_worlds = sa.Table(
     "darwin_algo_worlds", md,

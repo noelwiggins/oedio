@@ -18,6 +18,7 @@ import math
 
 import numpy as np
 
+from ..dials import D, mult
 from .base import World
 
 W, H = 1200.0, 800.0
@@ -49,6 +50,10 @@ class Autopoiesis(World):
     SERIES = [[("cells", "Cells", "#e5602a"), ("rings", "Rings", "#f2b33d"), ("catalysts", "Catalysts", "#3f97b5")],
               [("oldest_cell", "Oldest cell", "#a8c94a"), ("mean_cell_age", "Average cell age", "#8fd3c8")],
               [("produce_mean", "Link-making rate", "#c9b6ff"), ("stick_mean", "Stickiness", "#e58bb0")]]
+    DIALS = [D("food", "Substrate", "drop", "#d8b447", "Thin", "Rich",
+               "How much substrate drifts through the dish. Rich water lets catalysts build fast; thin water starves membranes of repairs."),
+             D("decay", "Decay", "clock", "#e5602a", "Gentle", "Harsh",
+               "How fast links fall apart. Harsh decay tests whether a cell can repair itself quickly enough to stay whole.")]
     JOURNAL_HINT = ("This is a chemistry of membranes and catalysts, not organisms. Speak of rings, cells, catalysts, "
                     "links, gaps, repairs, divisions and how long cells hold themselves together.")
 
@@ -130,7 +135,7 @@ class Autopoiesis(World):
         # substrate: free diffusion, steady supply
         self.sx[S] = (self.sx[S] + rng.normal(0, 2.4, len(S))) % W
         self.sy[S] = (self.sy[S] + rng.normal(0, 2.4, len(S))) % H
-        if len(S) < 2300:
+        if len(S) < 2300 * min(1.12, mult(self.dial("food"), 1.6)):
             free = np.flatnonzero(~self.s_alive)[:6]
             self.s_alive[free] = True
             self.sx[free], self.sy[free] = rng.uniform(0, W, len(free)), rng.uniform(0, H, len(free))
@@ -263,7 +268,7 @@ class Autopoiesis(World):
         Lk = np.flatnonzero(self.l_alive)
         if len(Lk):
             bonded = (self.nb[Lk] >= 0).sum(1)
-            p = np.where(bonded == 2, 0.0005, np.where(bonded == 1, 0.0012, 0.002))
+            p = np.where(bonded == 2, 0.0005, np.where(bonded == 1, 0.0012, 0.002)) * mult(self.dial("decay"), 2.2)
             die = Lk[rng.random(len(Lk)) < p]
             for i in die:
                 self._unbond(int(i))

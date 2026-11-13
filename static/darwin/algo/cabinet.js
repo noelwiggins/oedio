@@ -34,7 +34,8 @@
   addEventListener('resize', resize);
   function placeKeys() {
     const t = L.tray, d = L.dpr;
-    keys.style.left = ((t.x + t.w * 0.7) / d) + 'px'; keys.style.top = ((t.y + t.h / 2) / d) + 'px'; keys.style.transform = 'translateY(-50%)';
+    keys.style.left = 'auto'; keys.style.right = ((L.cw - (t.x + t.w) + L.u * 0.03) / d) + 'px';
+    keys.style.top = ((t.y + t.h / 2) / d) + 'px'; keys.style.transform = 'translateY(-50%)';
     const pf = L.pf, cw = Math.min(pf.w * 0.5, L.u * 0.95), chh = pf.h * 0.78;
     card.style.width = (cw / d) + 'px'; card.style.maxHeight = (chh / d) + 'px';
     card.style.left = ((pf.x + (pf.w - cw) / 2) / d) + 'px'; card.style.top = ((pf.y + pf.h * 0.1) / d) + 'px';
@@ -42,7 +43,17 @@
 
   // ── data ─────────────────────────────────────────────────────────────
   async function getJSON(u) { const r = await fetch(API + u, { cache: 'no-store' }); return r.json(); }
-  async function loadMeta() { try { meta = await getJSON('/meta'); } catch (e) { setTimeout(loadMeta, 5000); } }
+  async function loadMeta() {
+    try {
+      meta = await getJSON('/meta');
+      if (window.AlgoDials) AlgoDials.mount({ container: keys, post: API + '/dial', dials: meta.dials || [], show: showCard });
+    } catch (e) { setTimeout(loadMeta, 5000); }
+  }
+  function showCard(title, html) {
+    openCard = 'dial'; card.querySelector('h2').textContent = title; card.querySelector('.body').innerHTML = html;
+    card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
+    clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 60000);
+  }
   async function poll() {
     try {
       const d = await getJSON('/live');
@@ -51,6 +62,7 @@
         const sz = WORLD.size(d);
         if (sz[0] !== size[0] || sz[1] !== size[1]) { size = sz; fit(); }
         WORLD.ingest(d, performance.now());
+        if (window.AlgoDials) AlgoDials.update(d.dials);
         veil.classList.add('gone');
         if (openCard === 'world') renderCard('world');
       }
@@ -131,7 +143,7 @@
     for (let i = 1; i < 7; i++) for (let j = 1; j < 7; j++) { ctx.beginPath(); ctx.arc(gx + gs * i / 7, gy + gs * j / 7, u * 0.003, 0, Math.PI * 2); ctx.fill(); }
     // nameplate: the concept's name
     const title = ((meta && meta.title) || 'ALGOGENESIS').toUpperCase();
-    const nx = gx + gs + u * 0.04, nw = T.w * 0.24, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
+    const nx = gx + gs + u * 0.035, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
     L.nameplate = { x: nx, y: ny, w: nw, h: nh };
     rrect(nx, ny, nw, nh, nh / 2); ctx.fillStyle = CREAM; ctx.fill(); ctx.lineWidth = u * 0.004; ctx.strokeStyle = INK; ctx.stroke();
     rrect(nx + u * 0.005, ny + u * 0.005, nw - u * 0.01, nh - u * 0.01, nh / 2); ctx.lineWidth = u * 0.0015; ctx.stroke();
@@ -141,7 +153,8 @@
     ctx.fillText(title, nx + nw / 2, ny + nh / 2 + fs * 0.05);
     ctx.textBaseline = 'alphabetic';
     // the fossil window
-    const wx = nx + nw + u * 0.04, ww = T.x + T.w * 0.68 - wx, wy = T.y + T.h * 0.18, wh = T.h * 0.64;
+    const kl = keys.getBoundingClientRect().left * L.dpr;
+    const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.68) - wx), wy = T.y + T.h * 0.18, wh = T.h * 0.64;
     L.fossilWin = { x: wx, y: wy, w: ww, h: wh };
     rrect(wx, wy, ww, wh, u * 0.01); ctx.fillStyle = '#1b130d'; ctx.fill(); ctx.lineWidth = u * 0.006; ctx.strokeStyle = chrome(wx, wy, wx + ww, wy + wh); ctx.stroke();
     const strata = live && live.strata;

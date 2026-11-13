@@ -18,11 +18,7 @@ CONCEPTS = [
     ("ontogeny", "Ontogeny", "The development of an organism from its earliest stages"),
 ]
 
-LIVE = {
-    "protogenesis": ("darwin.algogenesis.worlds.protogenesis", "Protogenesis"),
-    "morphogenesis": ("darwin.algogenesis.worlds.morphogenesis", "Morphogenesis"),
-    "autopoiesis": ("darwin.algogenesis.worlds.autopoiesis", "Autopoiesis"),
-}
+LIVE = {slug: (f"darwin.algogenesis.worlds.{slug}", title) for slug, title, _ in CONCEPTS}
 
 
 def world_class(slug):

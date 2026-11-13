@@ -16,7 +16,7 @@ import time
 import sqlalchemy as sa
 
 from .. import store as S
-from . import chronicle, engine as E
+from . import chronicle, controls, engine as E
 
 TPS = float(os.environ.get("ALGO_TPS", "20"))
 LEADER_KEY = 774415
@@ -142,6 +142,7 @@ def run():
     chron = recent_chronicle()
     prev_stats, since = (w.history[-1] if w.history else None), w.tick
     budget = 1.0 / TPS
+    ctl, ctl_read = controls.Applier("coast"), 0.0
     while not stop["now"]:
         t0 = time.time()
         w.step()
@@ -156,6 +157,9 @@ def run():
                 chron = recent_chronicle()
             except Exception:
                 pass
+        if now - ctl_read > 2.5:
+            ctl_read = now
+            ctl.apply(w)
         if now - last_live >= 0.5:
             last_live = now
             try:

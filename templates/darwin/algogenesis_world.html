@@ -26,8 +26,7 @@
 {% if not c.live %}
 <div class="ag-soon">
   <div class="ag-glass">{% set slug = c.slug %}{% include "darwin/algogenesis_emblem.html" %}</div>
-  <p>This panel is in preparation. Protogenesis, Morphogenesis and Autopoiesis are running now; the remaining panels
-  follow once their look and depth are agreed.</p>
+  <p>This panel is in preparation.</p>
   <p><a class="btn tonal" href="/darwin/algogenesis">Back to all panels</a></p>
 </div>
 {% else %}
@@ -54,6 +53,15 @@
     <svg class="chart" id="c{{ loop.index }}" style="{{ 'margin-top:14px' if not loop.first }}"></svg><div class="legend small" id="l{{ loop.index }}"></div>
     {% endfor %}
   </div>
+</section>
+
+<section class="section card">
+  <h2 style="margin-top:0">The dials</h2>
+  <p>Two knobs in the panel's tray let anyone change this world's surroundings, the way food changes a fish tank. Drag a knob round to turn it; tap it to read what it does.</p>
+  <ul style="padding-left:18px">
+  {% for d in meta.dials %}<li><b>{{ d.label }}</b> ({{ d.low }} ↔ {{ d.high }}). {{ d.help }}</li>{% endfor %}
+  </ul>
+  <p class="small muted">A dial never touches a genome or picks a winner; it changes conditions, and selection carries on under them. A setting eases in over about a minute and wears off over about twenty, so the world always drifts back to its own course, and every noticeable turn is written into the world's record and journal.</p>
 </section>
 
 <section class="section card">

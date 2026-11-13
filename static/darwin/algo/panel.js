@@ -35,7 +35,7 @@
 
   function placeKeys() {
     const t = L.tray, d = L.dpr;
-    keys.style.left = ((t.x + t.w * 0.66) / d) + 'px';
+    keys.style.left = 'auto'; keys.style.right = ((L.cw - (t.x + t.w) + L.u * 0.03) / d) + 'px';
     keys.style.top = ((t.y + t.h / 2) / d) + 'px';
     keys.style.transform = 'translateY(-50%)';
     const pf = L.pf, cw = Math.min(pf.w * 0.5, L.u * 0.95), chh = pf.h * 0.78;
@@ -60,6 +60,7 @@
     const now = performance.now();
     if (live && d.tick === live.tick) return;
     live = d;
+    if (window.AlgoDials) AlgoDials.update(d.dials);
     const seen = new Set();
     for (const a of d.animals) {
       const [id, x, y, h, sp, grown, parent, ...look] = a;
@@ -389,7 +390,8 @@
     ctx.fillText('ALGOGENESIS', nx + nw / 2, ny + nh / 2 + fs * 0.05);
     ctx.textBaseline = 'alphabetic';
     // the fossil window: one column per epoch, the newest on the right
-    const wx = nx + nw + u * 0.04, ww = T.x + T.w * 0.64 - wx, wy = T.y + T.h * 0.18, wh = T.h * 0.64;
+    const kl = keys.getBoundingClientRect().left * L.dpr;
+    const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.64) - wx), wy = T.y + T.h * 0.18, wh = T.h * 0.64;
     L.fossilWin = { x: wx, y: wy, w: ww, h: wh };
     rrect(wx, wy, ww, wh, u * 0.01); ctx.fillStyle = '#1b130d'; ctx.fill(); ctx.lineWidth = u * 0.006; ctx.strokeStyle = chrome(wx, wy, wx + ww, wy + wh); ctx.stroke();
     if (strata && strata.length) {
@@ -525,6 +527,13 @@
   addEventListener('dblclick', () => { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { terrCanvas = terrCanvas; });
+
+  function showCard(title, html) {
+    openCard = 'dial'; card.querySelector('h2').textContent = title; card.querySelector('.body').innerHTML = html;
+    card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
+    clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 60000);
+  }
+  getJSON('/meta').then(m => { if (window.AlgoDials) { AlgoDials.mount({ container: keys, post: API + '/dial', dials: m.dials || [], show: showCard }); placeKeys(); } }).catch(() => {});
 
   resize();
   loadTerrain();

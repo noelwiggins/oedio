@@ -388,6 +388,43 @@ def api_algo_world_live(slug):
     return jsonify(d)
 
 
+_dial_last = {}
+
+
+def _dial_post(key, specs):
+    """A visitor turns a dial. Light rate limit per address, so one hand cannot spin a world."""
+    from .algogenesis import controls
+    body = request.get_json(silent=True) or {}
+    dial, value = body.get("key"), body.get("value")
+    if dial not in {d["key"] for d in specs}:
+        return jsonify({"error": "no such dial"}), 400
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return jsonify({"error": "bad value"}), 400
+    ip = (request.headers.get("X-Forwarded-For") or request.remote_addr or "?").split(",")[0].strip()
+    now = time.time()
+    if now - _dial_last.get((ip, key), 0) < 1.2:
+        return jsonify({"ok": False, "note": "a moment between turns"}), 429
+    _dial_last[(ip, key)] = now
+    controls.write(key, dial, value)
+    return jsonify({"ok": True, "key": dial, "value": max(-1.0, min(1.0, value))})
+
+
+@bp.route("/api/algo/dial", methods=["POST"])
+def api_algo_dial():
+    from .algogenesis.engine import World as CoastWorld
+    return _dial_post("coast", CoastWorld.DIALS)
+
+
+@bp.route("/api/algo/w/<slug>/dial", methods=["POST"])
+def api_algo_world_dial(slug):
+    from .algogenesis.worlds import LIVE, world_class
+    if slug not in LIVE:
+        abort(404)
+    return _dial_post(slug, world_class(slug).DIALS)
+
+
 @bp.route("/api/algo/w/<slug>/meta")
 def api_algo_world_meta(slug):
     from .algogenesis.worlds import LIVE, world_class
@@ -435,6 +472,12 @@ def api_algo_live():
     d["age_s"] = round(age, 1)
     d["stale"] = age > 20
     return jsonify(d)
+
+
+@bp.route("/api/algo/meta")
+def api_algo_meta():
+    from .algogenesis.engine import World as CoastWorld
+    return jsonify({"title": "The Coast", "dials": CoastWorld.DIALS})
 
 
 @bp.route("/api/algo/terrain")

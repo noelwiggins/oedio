@@ -15,7 +15,7 @@ import time
 import sqlalchemy as sa
 
 from .. import store as S
-from . import chronicle
+from . import chronicle, controls
 from .worlds import LIVE, world_class
 from .worlds.base import from_bytes, to_bytes
 
@@ -127,7 +127,7 @@ def run():
     for slug, w in worlds.items():
         state[slug] = {"due": time.time(), "dt": 1.0 / (w.TPS * SPEED), "live": 0.0, "ck": time.time() + 20 * len(state),
                        "prev": w.history[-1] if w.history else None, "since": w.tick, "chron": recent_journal(slug),
-                       "chron_read": time.time()}
+                       "chron_read": time.time(), "ctl": controls.Applier(slug), "ctl_read": 0.0}
         print(f"[genesis] {slug} from tick {w.tick} at {w.TPS * SPEED:g}/s", flush=True)
     while not stop["now"]:
         slug = min(state, key=lambda s: state[s]["due"])
@@ -155,6 +155,9 @@ def run():
                 st["chron"] = recent_journal(slug)
             except Exception:
                 pass
+        if now - st["ctl_read"] > 2.5:
+            st["ctl_read"] = now
+            st["ctl"].apply(w)
         if now - st["live"] >= 0.9:
             st["live"] = now
             try:

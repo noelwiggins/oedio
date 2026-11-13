@@ -14,6 +14,21 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 (<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
+## ALGOGENESIS — all twelve concept panels + dials (2026-11-12)
+All 12 concepts LIVE (worlds/__init__: LIVE built from CONCEPTS). New engines: epigenesis (GRN embryos in 16 wells,
+maternal pole/radial gradients), noogenesis (recurrent-brain foragers, blinking orbiting blooms, dark-meal metric),
+biogenesis (dividing cells, 3 nutrients, live tree of life; reinoculation from frozen stock), cosmogenesis (particle-mesh
+FFT gravity, star formation/supernovae/metals/planets), anthropogenesis (bands, carrying capacity, cumulative culture,
+ice-age cycles), psychogenesis (instinct + within-life learning, meanings reshuffle), palingenesis (fire/regrowth grid,
+bark/cones/reach traits; frame = base64 bytes), anagenesis (single lineage tracking a drifting optimum; ancestor
+parade), ontogeny (soft-cell development, organiser signal fates, 6 siblings, best parents next gen).
+DIALS: darwin/algogenesis/dials.py (DialsMixin, D(), mult(); ease 45 s, half-life 20 min, events logged). Every world
+has 2 (Coast: flora, fauna). Channel: table darwin_algo_controls (key "coast" or slug), controls.py Applier polled every
+2.5 s by the concept runner and the Coast runner; POST /darwin/api/algo/dial and /darwin/api/algo/w/<slug>/dial (1.2 s
+per-IP limit); /darwin/api/algo/meta gives the Coast's dial specs. UI: static/darwin/algo/dials.js (knobs in the tray,
+drag to turn, tap for card). Live frames carry "dials": {key: [current, target]}.
+Local dev note: the new container needed `pip install -r requirements.txt`.
+
 ## ALGOGENESIS — concept panels (2026-11-11)
 /darwin/algogenesis is now a gallery: The Coast (Panel I, moved to /darwin/algogenesis/coast; its kiosk stays at
 /darwin/algogenesis/panel) + 12 concept panels. LIVE: protogenesis, morphogenesis, autopoiesis (worlds/*.py on

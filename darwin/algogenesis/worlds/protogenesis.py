@@ -17,6 +17,7 @@ import math
 
 import numpy as np
 
+from ..dials import D, mult
 from .base import World
 
 NT = 4                      # monomer types: 0 A, 1 B, 2 C, 3 D
@@ -51,6 +52,10 @@ class Protogenesis(World):
               [("best_activity", "Best catalyst", "#f2b33d"), ("mean_activity", "Average catalysis", "#a8c94a"),
                ("mean_fold", "Average folding", "#c9b6ff")],
               [("families", "Families of copies", "#8fd3c8"), ("max_generation", "Generations", "#e58bb0")]]
+    DIALS = [D("food", "Building blocks", "drop", "#3f97b5", "Scarce", "Plenty",
+               "How fast the vents and the sunlight make new building blocks. Plenty feeds every chain; scarcity rewards chains that copy fast or last long."),
+             D("mutation", "Copying", "spark", "#e5602a", "Faithful", "Sloppy",
+               "How often a copy slips. Sloppy copying explores more sequences but can melt good ones away (Eigen's error threshold).")]
     JOURNAL_HINT = ("This is a prebiotic pond, before life. Speak of building blocks, chains, templates, copies, "
                     "folding, catalysts and parasites, never of organisms or creatures.")
 
@@ -147,11 +152,12 @@ class Protogenesis(World):
         light = self.light()
         # supply: vents always, sunlight by day; keep the pond from overfilling
         n_m = int(self.m_alive.sum())
-        if n_m < 3300:
+        food = mult(self.dial("food"), 2.0)
+        if n_m < 3300 * min(1.15, food):
             for vx in self.vents:
-                if rng.random() < 1.0:
+                if rng.random() < 1.0 * food:
                     self._new_monomer(vx + rng.normal(0, 25), H - rng.uniform(5, 40))
-            if rng.random() < 1.6 * light:
+            if rng.random() < 1.6 * light * food:
                 self._new_monomer(rng.uniform(5, W - 5), rng.uniform(5, 60))
         # motion: monomers jiggle, with a slow overturning current (up over the vents, down elsewhere)
         M = np.flatnonzero(self.m_alive)
@@ -260,7 +266,7 @@ class Protogenesis(World):
         rng = self.rng
         L = int(self.clen[i])
         child = COMP[self.seq[i, :L]].copy()
-        err = rng.random(L) < 0.015                     # copying mistakes
+        err = rng.random(L) < 0.015 * mult(self.dial("mutation"), 3.0)                     # copying mistakes
         child[err] = rng.integers(0, NT, int(err.sum()))
         fam = int(self.cfam[i])
         if fam == 0:

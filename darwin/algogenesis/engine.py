@@ -26,6 +26,8 @@ import zlib
 
 import numpy as np
 
+from .dials import D, DialsMixin, mult
+
 VERSION = "algogenesis-1.1"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
@@ -68,7 +70,13 @@ def _clip(g, lo, hi, circ=()):
     return np.clip(g, lo, hi)
 
 
-class World:
+class World(DialsMixin):
+    TPS = 20.0
+    DIALS = [D("flora", "Flora", "leaf", "#a8c94a", "Sparse", "Lush",
+               "Feeds the flowers: turned up, plants grow faster, spread more and their seeds vary more; turned down, the meadows thin out and change slowly."),
+             D("fauna", "Fauna", "fish", "#e5602a", "Lean", "Teeming",
+               "Feeds the animals: turned up, life is cheaper to live and their young vary more; turned down, every animal must earn its keep.")]
+
     def __init__(self, seed: int = 1, name: str = "Panel I"):
         self.seed, self.name, self.version = seed, name, VERSION
         self.rng = np.random.default_rng(seed)
@@ -248,8 +256,9 @@ class World:
     def _mutate(self, g, lo, hi, step, circ):
         rng = self.rng
         g = g.copy()
-        m = rng.random(len(g)) < 0.25
-        g[m] += rng.normal(0, 1, int(m.sum())).astype(np.float32) * step[m]
+        mm = mult(self.dial("flora" if step is PSTEP else "fauna"), 2.5)
+        m = rng.random(len(g)) < min(0.6, 0.25 * mm)
+        g[m] += rng.normal(0, 1, int(m.sum())).astype(np.float32) * step[m] * mm
         if rng.random() < 0.01:            # a rare big jump: a gene duplicated or lost
             k = int(rng.integers(len(g)))
             g[k] += rng.normal(0, 6) * step[k]
@@ -274,6 +283,7 @@ class World:
         from scipy.spatial import cKDTree
         rng = self.rng
         self.tick += 1
+        self.ease_dials()
         t = self.tick
         if t % 50 == 0:
             self.sea = self._sea_level()
@@ -293,7 +303,7 @@ class World:
             np.add.at(cg, (cy, cx), Pg[:, P_SIZE])
             shade = 1.0 / (1.0 + np.maximum(cg[cy, cx] - Pg[:, P_SIZE], 0) / 6.0)
             fert = self._fertility(px, py)
-            gain = 4 * (0.022 * light * fert * shade * Pg[:, P_SIZE] * (0.7 + 0.3 * Pg[:, P_HEIGHT]))
+            gain = 4 * mult(self.dial("flora"), 1.7) * (0.022 * light * fert * shade * Pg[:, P_SIZE] * (0.7 + 0.3 * Pg[:, P_HEIGHT]))
             upkeep = 4 * (0.0035 * Pg[:, P_SIZE] * (0.6 + 0.4 * Pg[:, P_HEIGHT]) + 0.0025 * Pg[:, P_NECTAR]
                           + 0.0006 * Pg[:, P_SAT] * Pg[:, P_PETALS])
             _, inv, cnt = np.unique(self.psp[Pi], return_inverse=True, return_counts=True)
@@ -316,7 +326,7 @@ class World:
                     g = self._mutate(self._cross(self.P[i], pol), PLO, PHI, PSTEP, (P_HUE, P_HUE2))
                     seeds = 3
                     self.ppollen[i] = np.nan
-                elif rng.random() < 0.12:
+                elif rng.random() < 0.12 * mult(self.dial("flora"), 1.7):
                     g = self._mutate(self.P[i], PLO, PHI, PSTEP, (P_HUE, P_HUE2))
                     seeds = 1
                 else:
@@ -437,7 +447,7 @@ class World:
         cost = (0.003 * G[:, SIZE] ** 0.75 * np.sqrt(G[:, SEGS]) + 0.009 * G[:, GLOW] * (1 - light)
                 + 0.0012 * G[:, SAT] + 0.0018 * G[:, CREST] + 0.0012 * G[:, LIMBS] + 0.0009 * G[:, CHOOSY]
                 + 0.0015 * speed * G[:, SIZE]) * grown
-        cost = cost * jc / vig * (1 + 0.8 * np.where(water, 1 - G[:, FIN], G[:, FIN] * (G[:, LIMBS] < 1)))
+        cost = cost * jc / vig / mult(self.dial("fauna"), 1.5) * (1 + 0.8 * np.where(water, 1 - G[:, FIN], G[:, FIN] * (G[:, LIMBS] < 1)))
         self.fe[F] -= cost
         self.fage[F] += 1
 
@@ -589,6 +599,9 @@ class World:
         self.restarts += 1
         self._event("near-extinction", f"{refuge} animal lineages return from refugia" if refuge else "life re-seeded")
 
+    def event(self, kind, text):
+        self._event(kind, text)
+
     def _event(self, kind, text):
         self.events.append({"tick": int(self.tick), "day": self.day(), "kind": kind, "text": text})
         self.events = self.events[-300:]
@@ -691,7 +704,7 @@ class World:
         for sid in set(int(s) for s in self.fsp[F]) | set(int(s) for s in self.psp[Pi]):
             names[sid] = self.species[sid]["name"]
         return {"tick": int(self.tick), "day": self.day(), "light": round(self.daylight(), 3), "sea": round(self.sea, 3),
-                "animals": animals, "plants": plants, "names": names}
+                "animals": animals, "plants": plants, "names": names, "dials": self.dials_payload()}
 
     def terrain_payload(self):
         return {"w": W, "h": H, "gx": GX, "gy": GY, "h_": [round(float(v), 3) for v in self.terrain.ravel()],

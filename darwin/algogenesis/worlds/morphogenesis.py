@@ -17,6 +17,7 @@ import math
 
 import numpy as np
 
+from ..dials import D, mult
 from .base import World, rle
 
 GW, GH = 180, 96                # cells (the panel's proportions)
@@ -56,6 +57,10 @@ class Morphogenesis(World):
     SERIES = [[("tallest", "Tallest form", "#e5602a"), ("mean_height", "Average height", "#f2b33d")],
               [("branching", "Branch points per form", "#a8c94a"), ("leaf_share", "Leaf share", "#3f97b5")],
               [("organisms", "Organisms", "#8fd3c8"), ("lineages", "Lineages", "#c9b6ff")]]
+    DIALS = [D("light", "Light", "sun", "#f2b33d", "Dim", "Bright",
+               "How much light falls from the surface. Bright water feeds tall, leafy forms; dim water rewards thrift."),
+             D("mutation", "Mutation", "spark", "#e5602a", "Steady", "Restless",
+               "How much each spore's growth program differs from its parent's. Restless spores try more new shapes; most fail.")]
     JOURNAL_HINT = ("These are sessile, plant-like forms on a sea floor seen from the side, growing by developmental "
                     "rules and competing for light. Describe shapes and how growth programs change.")
 
@@ -103,8 +108,9 @@ class Morphogenesis(World):
     def _mutate(self, g):
         rng = self.rng
         g = g.copy()
-        m = rng.random(NG) < 0.2
-        g[m] += rng.normal(0, 1, int(m.sum())).astype(np.float32) * STEP[m]
+        mm = mult(self.dial("mutation"), 2.5)
+        m = rng.random(NG) < min(0.6, 0.2 * mm)
+        g[m] += rng.normal(0, 1, int(m.sum())).astype(np.float32) * STEP[m] * mm
         if rng.random() < 0.02:
             k = int(rng.integers(NG))
             g[k] += rng.normal(0, 5) * STEP[k]
@@ -163,7 +169,7 @@ class Morphogenesis(World):
     # ── one step ─────────────────────────────────────────────────────────
     def _step(self):
         rng = self.rng
-        sun = 0.15 + 0.85 * self.light()
+        sun = (0.15 + 0.85 * self.light()) * mult(self.dial("light"), 1.7)
         if self.tick % 2:
             return
         lightf = self._lightfield(sun)

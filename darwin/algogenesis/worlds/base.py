@@ -10,8 +10,10 @@ import zlib
 
 import numpy as np
 
+from ..dials import DialsMixin
 
-class World:
+
+class World(DialsMixin):
     SLUG = ""
     TITLE = ""
     DEFINITION = ""
@@ -43,6 +45,7 @@ class World:
 
     def step(self):
         self.tick += 1
+        self.ease_dials()
         self._step()
         out = None
         if self.tick % self.STATS_EVERY == 0:
@@ -91,14 +94,14 @@ class World:
         d = self.frame()
         d.update({"slug": self.SLUG, "tick": int(self.tick), "epoch": int(self.epoch_no()), "light": round(self.light(), 3),
                   "stats": self.last_stats or self.stats(), "events": self.events[-12:], "strata": self.strata[-240:],
-                  "milestones": self.milestones, "name": self.name, "tps": self.TPS})
+                  "milestones": self.milestones, "name": self.name, "tps": self.TPS, "dials": self.dials_payload()})
         return d
 
     @classmethod
     def meta(cls) -> dict:
         return {"slug": cls.SLUG, "title": cls.TITLE, "definition": cls.DEFINITION, "tagline": cls.TAGLINE,
                 "about": cls.ABOUT, "stat_labels": cls.STAT_LABELS, "series": cls.SERIES, "tps": cls.TPS,
-                "epoch": cls.EPOCH, "light_cycle": cls.LIGHT_CYCLE}
+                "epoch": cls.EPOCH, "light_cycle": cls.LIGHT_CYCLE, "dials": cls.DIALS}
 
     def facts(self, prev: dict | None, since_tick: int) -> dict:
         s = self.stats()
@@ -106,7 +109,8 @@ class World:
         return {"world": self.TITLE, "definition": self.DEFINITION, "epoch": int(self.epoch_no()), "tick": int(self.tick),
                 "now": s, "change_since_last_epoch": change,
                 "events": [e["text"] for e in self.events if e["tick"] > since_tick][-10:],
-                "milestones_so_far": len(self.milestones)}
+                "milestones_so_far": len(self.milestones),
+                "dials_now": {k: v[0] for k, v in self.dials_payload().items() if abs(v[0]) > 0.05}}
 
 
 def to_bytes(w: World) -> bytes:

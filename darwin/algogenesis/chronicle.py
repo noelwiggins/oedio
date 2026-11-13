@@ -63,6 +63,7 @@ def facts_for_epoch(world: E.World, prev_stats: dict | None, since_tick: int) ->
                 change[k] = [prev_stats[k], s[k]]
     return {
         "world": world.name, "day": world.day(), "epoch": len(world.strata),
+        "visitors_dials_now": {k: v[0] for k, v in world.dials_payload().items() if abs(v[0]) > 0.05},
         "leading_animals": [{"name": a["name"], "count": a["n"], "looks": describe_look(a["look"])} for a in layer["animals"]],
         "leading_flowers": [{"name": p["name"], "count": p["n"], "colour": _hue_word(p["hue"]), "petals": round(p["petals"])}
                             for p in layer["plants"]],
