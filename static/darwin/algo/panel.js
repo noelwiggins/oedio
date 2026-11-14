@@ -513,7 +513,9 @@
     if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) return toggleCard('about');
     const sg = L.grille;
     if (sg && window.AlgoSound && x > sg.x && x < sg.x + sg.w && y > sg.y && y < sg.y + sg.h) {
-      if (AlgoSound.toggle()) { feedSound(live); showCard('Listening', AlgoSound.legend()); } else if (openCard === 'dial') closeCard();
+      if (!AlgoSound.isOn()) { AlgoSound.start(); feedSound(live); }
+      showCard('Sound', AlgoSound.mixerHTML()); AlgoSound.mountMixer(card.querySelector('.body'));
+      clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 180000);
       return;
     }
     if (f && x > f.x && x < f.x + f.w && y > f.y && y < f.y + f.h) return toggleCard('fossils');
