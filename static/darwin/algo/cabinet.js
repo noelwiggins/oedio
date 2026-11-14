@@ -35,7 +35,13 @@
   function placeKeys() {
     const t = L.tray, d = L.dpr;
     keys.style.left = 'auto'; keys.style.right = ((L.cw - (t.x + t.w) + L.u * 0.03) / d) + 'px';
-    keys.style.top = ((t.y + t.h / 2) / d) + 'px'; keys.style.transform = 'translateY(-50%)';
+    keys.style.top = ((t.y + t.h / 2) / d) + 'px';
+    // fit the knobs and keys beside the fossil window: shrink them on narrow screens rather than overlap
+    keys.style.transform = 'translateY(-50%)'; keys.style.transformOrigin = 'right center';
+    const gsz = t.h * 0.56, leftLimit = t.x + L.u * 0.06 + gsz + L.u * 0.04 + t.w * 0.2 + L.u * 0.04 + L.u * 0.14;
+    const allowed = (t.x + t.w - L.u * 0.03) - leftLimit, natural = keys.offsetWidth * d;
+    const k = natural > 0 ? Math.min(1, allowed / natural) : 1;
+    keys.style.transform = `translateY(-50%) scale(${Math.max(0.45, k).toFixed(3)})`;
     const pf = L.pf, cw = Math.min(pf.w * 0.5, L.u * 0.95), chh = pf.h * 0.78;
     card.style.width = (cw / d) + 'px'; card.style.maxHeight = (chh / d) + 'px';
     card.style.left = ((pf.x + (pf.w - cw) / 2) / d) + 'px'; card.style.top = ((pf.y + pf.h * 0.1) / d) + 'px';
@@ -46,7 +52,7 @@
   async function loadMeta() {
     try {
       meta = await getJSON('/meta');
-      if (window.AlgoDials) AlgoDials.mount({ container: keys, post: API + '/dial', dials: meta.dials || [], show: showCard });
+      if (window.AlgoDials) { AlgoDials.mount({ container: keys, post: API + '/dial', dials: meta.dials || [], show: showCard }); placeKeys(); }
     } catch (e) { setTimeout(loadMeta, 5000); }
   }
   function showCard(title, html) {

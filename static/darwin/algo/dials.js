@@ -41,6 +41,10 @@
   .dial .cap svg { width: 56%; height: 56%; fill: none; stroke: var(--c); stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
   .dial .notch { position: absolute; left: 50%; top: 23%; width: .55vmin; height: 1.8vmin; margin-left: -.275vmin; border-radius: .3vmin;
                  background: #fbf3dc; transform-origin: 50% 2.27vmin; }
+  .dial-num { position: absolute; left: 50%; top: -3.6vmin; transform: translateX(-50%); min-width: 4.6vmin; padding: .15vmin .8vmin;
+              border-radius: 999px; background: #fbf3dc; border: .25vmin solid #2a1d14; color: #2a1d14; text-align: center;
+              font: 400 2.1vmin/1.25 "Righteous", sans-serif; letter-spacing: .02em; pointer-events: none; white-space: nowrap; }
+  .dial-num.max { background: var(--c); }
   .dial-sep { width: .35vmin; height: 7vmin; background: rgba(42,29,20,.45); border-radius: .2vmin; margin: 0 .6vmin; }
   body.quiet .dial, body.quiet .dial-sep { display: none; }`;
   document.head.appendChild(css);
@@ -64,7 +68,7 @@
           <path d="${arcPath(47, -SWEEP, SWEEP)}" fill="none" stroke="rgba(42,29,20,.55)" stroke-width="5" stroke-linecap="round"/>
           <path class="val" d="" fill="none" stroke="${spec.colour}" stroke-width="5" stroke-linecap="round"/>
           <circle cx="50" cy="3" r="2.2" fill="#2a1d14"/></svg>
-        <div class="cap"><svg viewBox="0 0 24 24">${ICONS[spec.icon] || ICONS.gauge}</svg></div><div class="notch"></div>`;
+        <div class="cap"><svg viewBox="0 0 24 24">${ICONS[spec.icon] || ICONS.gauge}</svg></div><div class="notch"></div><div class="dial-num">0</div>`;
       frag.appendChild(b);
       knobs[spec.key] = { el: b, spec, cur: 0, target: 0, local: null, localAt: 0 };
       wire(knobs[spec.key]);
@@ -115,13 +119,14 @@
     const how = Math.abs(v) > 0.66 ? 'strongly' : Math.abs(v) > 0.33 ? 'well' : 'a little';
     return `${how} toward ${(v > 0 ? spec.high : spec.low).toLowerCase()}`;
   }
+  function fmtNum(v) { const n = Math.round(v * 10); return n > 0 ? '+' + n : n < 0 ? '\u2212' + Math.abs(n) : '0'; }
   function openCard(k) {
     if (!cfg.show) return;
     const s = k.spec, esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     cfg.show(`${s.label} dial`, `<p class="note">${esc(s.help)}</p>
       <table><tr><td>Turned left</td><td>${esc(s.low)}</td></tr><tr><td>Turned right</td><td>${esc(s.high)}</td></tr>
-      <tr><td>Set now</td><td>${esc(word(s, k.target))}</td></tr><tr><td>Taking effect</td><td>${esc(word(s, k.cur))}</td></tr></table>
-      <p class="note" style="margin-top:1.4vmin">Drag the knob round to turn it. A setting takes about a minute to be felt and wears off over about twenty, like food in a tank, so the world always drifts back to its own course. Every turn is written into the world's record.</p>`);
+      <tr><td>Set now</td><td>${esc(fmtNum(k.target))} · ${esc(word(s, k.target))}</td></tr><tr><td>Taking effect</td><td>${esc(fmtNum(k.cur))} · ${esc(word(s, k.cur))}</td></tr></table>
+      <p class="note" style="margin-top:1.4vmin">Drag the knob round to turn it; the number above it runs from \u221210 to +10. A setting takes about a minute to be felt and wears off over about twenty, like food in a tank, so the world always drifts back to its own course. Every turn is written into the world's record.</p>`);
   }
 
   function draw() {
@@ -134,6 +139,10 @@
       val.setAttribute('d', Math.abs(a) < 1 ? '' : arcPath(47, Math.min(0, a), Math.max(0, a)));
       k.el.querySelector('.notch').style.transform = `rotate(${shown * SWEEP}deg)`;
       k.el.querySelector('.cap').style.transform = `rotate(${shown * SWEEP * 0.25}deg)`;
+      // the setting as a number from -10 to +10, lit at either end
+      const num = Math.round(shown * 10), lab = k.el.querySelector('.dial-num');
+      lab.textContent = fmtNum(shown);
+      lab.classList.toggle('max', Math.abs(num) >= 10);
     }
   }
 
