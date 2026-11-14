@@ -55,6 +55,8 @@
       if (window.AlgoDials) { AlgoDials.mount({ container: keys, post: API + '/dial', dials: meta.dials || [], show: showCard }); placeKeys(); }
     } catch (e) { setTimeout(loadMeta, 5000); }
   }
+  function feedSound(d) { if (window.AlgoSound && d) AlgoSound.feed(d); }
+  if (window.AlgoSound) AlgoSound.init(document.body.dataset.world);
   function showCard(title, html) {
     openCard = 'dial'; card.querySelector('h2').textContent = title; card.querySelector('.body').innerHTML = html;
     card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
@@ -69,6 +71,7 @@
         if (sz[0] !== size[0] || sz[1] !== size[1]) { size = sz; fit(); }
         WORLD.ingest(d, performance.now());
         if (window.AlgoDials) AlgoDials.update(d.dials);
+        feedSound(d);
         veil.classList.add('gone');
         if (openCard === 'world') renderCard('world');
       }
@@ -144,9 +147,13 @@
       ctx.strokeStyle = INK; ctx.lineWidth = u * 0.0015; ctx.stroke(); ctx.beginPath(); ctx.moveTo(sx - u * 0.005, sy); ctx.lineTo(sx + u * 0.005, sy); ctx.stroke();
     }
     const gx = T.x + u * 0.06, gy = T.y + T.h * 0.22, gs = T.h * 0.56;
-    rrect(gx, gy, gs, gs, u * 0.01); ctx.fillStyle = '#c9a63c'; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = u * 0.002; ctx.stroke();
-    ctx.fillStyle = 'rgba(42,29,20,0.55)';
-    for (let i = 1; i < 7; i++) for (let j = 1; j < 7; j++) { ctx.beginPath(); ctx.arc(gx + gs * i / 7, gy + gs * j / 7, u * 0.003, 0, Math.PI * 2); ctx.fill(); }
+    L.grille = { x: gx, y: gy, w: gs, h: gs };           // the speaker: touch it for sound
+    if (window.AlgoSound) AlgoSound.drawGrille(ctx, gx, gy, gs, u);
+    else {
+      rrect(gx, gy, gs, gs, u * 0.01); ctx.fillStyle = '#c9a63c'; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = u * 0.002; ctx.stroke();
+      ctx.fillStyle = 'rgba(42,29,20,0.55)';
+      for (let i = 1; i < 7; i++) for (let j = 1; j < 7; j++) { ctx.beginPath(); ctx.arc(gx + gs * i / 7, gy + gs * j / 7, u * 0.003, 0, Math.PI * 2); ctx.fill(); }
+    }
     // nameplate: the concept's name
     const title = ((meta && meta.title) || 'ALGOGENESIS').toUpperCase();
     const nx = gx + gs + u * 0.035, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
@@ -211,7 +218,8 @@
           : '<p class="note">The first layer is laid down at the end of the first epoch.</p>');
     } else {
       h2.textContent = m.title || 'Algogenesis';
-      body.innerHTML = `<p class="def">${esc(m.definition || '')}</p>` + (m.about || []).map(p => `<p class="note">${esc(p)}</p>`).join('');
+      body.innerHTML = `<p class="def">${esc(m.definition || '')}</p>` + (m.about || []).map(p => `<p class="note">${esc(p)}</p>`).join('') +
+        (window.AlgoSound ? '<h3 style="font:400 2.2vmin Righteous,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#b9560c;margin:2.4vmin 0 1vmin">What you hear</h3>' + AlgoSound.legend() : '');
     }
   }
   function toggleCard(kind) {
@@ -226,6 +234,11 @@
   cv.addEventListener('click', e => {
     const x = e.clientX * L.dpr, y = e.clientY * L.dpr, n = L.nameplate, f = L.fossilWin;
     if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) return toggleCard('about');
+    const sg = L.grille;
+    if (sg && window.AlgoSound && x > sg.x && x < sg.x + sg.w && y > sg.y && y < sg.y + sg.h) {
+      if (AlgoSound.toggle()) { feedSound(live); showCard('Listening', AlgoSound.legend()); } else if (openCard === 'dial') closeCard();
+      return;
+    }
     if (f && x > f.x && x < f.x + f.w && y > f.y && y < f.y + f.h) return toggleCard('fossils');
     if (openCard) closeCard();
   });

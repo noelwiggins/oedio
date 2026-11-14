@@ -70,6 +70,7 @@
     if (live && d.tick === live.tick) return;
     live = d;
     if (window.AlgoDials) AlgoDials.update(d.dials);
+    feedSound(d);
     const seen = new Set();
     for (const a of d.animals) {
       const [id, x, y, h, sp, grown, parent, ...look] = a;
@@ -385,9 +386,13 @@
     }
     // speaker grille
     const gx = T.x + u * 0.06, gy = T.y + T.h * 0.22, gs = T.h * 0.56;
-    rrect(gx, gy, gs, gs, u * 0.01); ctx.fillStyle = '#c9a63c'; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = u * 0.002; ctx.stroke();
-    ctx.fillStyle = 'rgba(42,29,20,0.55)';
-    for (let i = 1; i < 7; i++) for (let j = 1; j < 7; j++) { ctx.beginPath(); ctx.arc(gx + gs * i / 7, gy + gs * j / 7, u * 0.003, 0, Math.PI * 2); ctx.fill(); }
+    L.grille = { x: gx, y: gy, w: gs, h: gs };           // the speaker: touch it for sound
+    if (window.AlgoSound) AlgoSound.drawGrille(ctx, gx, gy, gs, u);
+    else {
+      rrect(gx, gy, gs, gs, u * 0.01); ctx.fillStyle = '#c9a63c'; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = u * 0.002; ctx.stroke();
+      ctx.fillStyle = 'rgba(42,29,20,0.55)';
+      for (let i = 1; i < 7; i++) for (let j = 1; j < 7; j++) { ctx.beginPath(); ctx.arc(gx + gs * i / 7, gy + gs * j / 7, u * 0.003, 0, Math.PI * 2); ctx.fill(); }
+    }
     // nameplate (it is also a key: touch it to read about the machine)
     const nx = gx + gs + u * 0.04, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
     L.nameplate = { x: nx, y: ny, w: nw, h: nh };
@@ -485,6 +490,7 @@
         <p class="note">About ${fmt(Math.round((s.mean_generation || 0) / Math.max(1, (d.tick || 1) / ((d.tps || 20) * 60))))} generations pass every hour here.</p>`;
     }
     h2.textContent = title;
+    if (kind === 'about' && window.AlgoSound) html += '<h3 style="font:400 2.2vmin Righteous,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#b9560c;margin:2.4vmin 0 1vmin">What you hear</h3>' + AlgoSound.legend();
     if (html) { body.innerHTML = html; if (kind !== 'journal') delete body.dataset.loaded; }
   }
   function toggleCard(kind) {
@@ -505,6 +511,11 @@
   cv.addEventListener('click', e => {
     const x = e.clientX * L.dpr, y = e.clientY * L.dpr, n = L.nameplate, f = L.fossilWin;
     if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) return toggleCard('about');
+    const sg = L.grille;
+    if (sg && window.AlgoSound && x > sg.x && x < sg.x + sg.w && y > sg.y && y < sg.y + sg.h) {
+      if (AlgoSound.toggle()) { feedSound(live); showCard('Listening', AlgoSound.legend()); } else if (openCard === 'dial') closeCard();
+      return;
+    }
     if (f && x > f.x && x < f.x + f.w && y > f.y && y < f.y + f.h) return toggleCard('fossils');
     if (openCard) closeCard();
     if (window.AlgoFossils && AlgoFossils.isOpen()) AlgoFossils.close();
@@ -548,6 +559,8 @@
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
   if (document.fonts) document.fonts.ready.then(() => { terrCanvas = terrCanvas; });
 
+  function feedSound(d) { if (window.AlgoSound && d) AlgoSound.feed(d); }
+  if (window.AlgoSound) AlgoSound.init('coast');
   function showCard(title, html) {
     openCard = 'dial'; card.querySelector('h2').textContent = title; card.querySelector('.body').innerHTML = html;
     card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
