@@ -17,6 +17,11 @@ The world, in brief
   (its own parasites and specialist enemies), and the world keeps a bank of past lineages (refugia) that
   recolonise after a near-extinction instead of restarting from nothing.
 - A fossil record: every epoch the leading species are laid down as a stratum.
+- Seasons and warm blood (v1.2): a 36-day year, cold nights, cold uplands, a mild sea. Cold-blooded animals slow
+  down in the cold but live cheaply; an animal can evolve endothermy (it stays active in any weather, at a high
+  running cost, and small bodies lose heat fastest) and insulation (fur or feathers: less heat lost, but it overheats
+  in summer). Warm parents keep their young warm. Flowers can evolve frost-hardiness. The sea grows plankton,
+  so swimmers have food of their own; and animals recognise their own kin by colour and do not hunt them.
 """
 from __future__ import annotations
 
@@ -28,11 +33,13 @@ import numpy as np
 
 from .dials import D, DialsMixin, mult
 
-VERSION = "algogenesis-1.1"
+VERSION = "algogenesis-1.2"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
 DAY = 2400                        # ticks per day (about two minutes at 20 ticks/s)
 EPOCH = 12 * DAY                  # a fossil stratum and a chronicle entry
+YEAR = 36 * DAY                   # one turn of the seasons (about 72 minutes at 20 ticks/s)
+LAPSE = 26.0                      # degrees lost per unit of height above the sea
 STATS_EVERY = 600
 CAP_F, CAP_P = 420, 900           # animals, plants
 SENSE = 60.0
@@ -41,19 +48,19 @@ MATURE = 700                      # ticks until an animal is grown: before that 
 
 # animal genes
 (HUE, SAT, HUE2, PATTERN, GLOW, SEGS, LIMBS, SIZE, TAIL, CREST, FIN, DIET,
- PREF_FLOWER, PREF_MATE, CHOOSY, W_FOOD, W_FLEE, W_MATE, WANDER, REPRO, CARE) = range(21)
-NG = 21
+ PREF_FLOWER, PREF_MATE, CHOOSY, W_FOOD, W_FLEE, W_MATE, WANDER, REPRO, CARE, ENDO, INSUL) = range(23)
+NG = 23
 CIRC = {HUE, HUE2, PREF_FLOWER, PREF_MATE}
-LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45, 0], np.float32)
-HI = np.array([1, 1, 1, 1, 1, 9, 4, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1], np.float32)
+LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45, 0, 0, 0], np.float32)
+HI = np.array([1, 1, 1, 1, 1, 9, 4, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1, 1, 1], np.float32)
 STEP = np.array([.03, .04, .04, .06, .04, .35, .25, .08, .05, .05, .05, .04, .03, .03, .04, .15, .15, .15, .05, .02,
-                 .04], np.float32)
+                 .04, .04, .05], np.float32)
 # plant genes
-P_HUE, P_PETALS, P_SIZE, P_NECTAR, P_HEIGHT, P_SAT, P_HUE2 = range(7)
-NPG = 7
-PLO = np.array([0, 3, 0.6, 0.05, 0.3, 0.2, 0], np.float32)
-PHI = np.array([1, 9, 2.0, 1.0, 1.6, 1.0, 1], np.float32)
-PSTEP = np.array([.025, .3, .05, .05, .05, .04, .04], np.float32)
+P_HUE, P_PETALS, P_SIZE, P_NECTAR, P_HEIGHT, P_SAT, P_HUE2, P_COLD = range(8)
+NPG = 8
+PLO = np.array([0, 3, 0.6, 0.05, 0.3, 0.2, 0, 0], np.float32)
+PHI = np.array([1, 9, 2.0, 1.0, 1.6, 1.0, 1, 1], np.float32)
+PSTEP = np.array([.025, .3, .05, .05, .05, .04, .04, .04], np.float32)
 
 JC, JC_FREE = 1.2, 0.18           # specialist enemies of the commonest species
 
@@ -111,6 +118,9 @@ class World(DialsMixin):
         self.psp, self.pgen = np.zeros(CAP_P, np.int64), np.zeros(CAP_P, np.int64)
         self.ppollen = np.full((CAP_P, NPG), np.nan, np.float32)
         self.P = np.zeros((CAP_P, NPG), np.float32)
+        self.plank = np.zeros((GY // 3, GX // 3), np.float32)        # plankton in the sea, food for swimmers
+        self.carrion = np.zeros((GY // 3, GX // 3), np.float32)      # the dead, food for scavengers
+        self.firsts = set()
         self.next_id = 1
         self.species = {}          # sid -> {kind, founder genes, name, born, parent, peak}
         self.next_sid = 1
@@ -150,6 +160,27 @@ class World(DialsMixin):
         t = self.tick if t is None else t
         return float(np.clip(0.5 + 0.75 * math.sin(2 * math.pi * t / DAY), 0, 1))
 
+    # ── climate ──────────────────────────────────────────────────────────
+    def season(self, t=None):
+        """+1 at midsummer, -1 at midwinter."""
+        t = self.tick if t is None else t
+        return math.sin(2 * math.pi * t / YEAR)
+
+    def air(self, light=None):
+        """Air temperature at sea level on land, in degrees: the season, and the warmth of the day."""
+        light = self.daylight() if light is None else light
+        return 15.0 + 10.0 * self.season() + 10.0 * (light - 0.5)
+
+    def water_temp(self):
+        return 13.0 + 4.0 * self.season()          # the sea is slow to warm and slow to cool
+
+    def temp(self, depth, light=None):
+        return np.where(depth < 0, self.water_temp(), self.air(light) - LAPSE * np.maximum(depth, 0)).astype(np.float32)
+
+    def season_name(self):
+        ph = (self.tick % YEAR) / YEAR
+        return ["spring", "summer", "autumn", "winter"][int(((ph + 0.125) % 1.0) * 4) % 4]
+
     def _sea_level(self):
         t = self.tick
         return 0.10 * math.sin(2 * math.pi * t / (DAY * 120)) + 0.04 * math.sin(2 * math.pi * t / (DAY * 23) + 1.3)
@@ -169,10 +200,11 @@ class World(DialsMixin):
             if kind == "animal":
                 d = _hd(genes[HUE], f["g"][HUE]) * 3 + _hd(genes[PREF_MATE], f["g"][PREF_MATE]) * 2 + \
                     abs(genes[SEGS] - f["g"][SEGS]) / 3 + abs(genes[LIMBS] - f["g"][LIMBS]) / 2 + \
-                    abs(genes[DIET] - f["g"][DIET]) * 2 + abs(genes[FIN] - f["g"][FIN]) + abs(genes[GLOW] - f["g"][GLOW])
+                    abs(genes[DIET] - f["g"][DIET]) * 2 + abs(genes[FIN] - f["g"][FIN]) + abs(genes[GLOW] - f["g"][GLOW]) + \
+                    abs(genes[ENDO] - f["g"][ENDO]) * 2 + abs(genes[INSUL] - f["g"][INSUL])
             else:
                 d = _hd(genes[P_HUE], f["g"][P_HUE]) * 4 + abs(genes[P_PETALS] - f["g"][P_PETALS]) / 3 + \
-                    abs(genes[P_SIZE] - f["g"][P_SIZE])
+                    abs(genes[P_SIZE] - f["g"][P_SIZE]) + abs(genes[P_COLD] - f["g"][P_COLD]) * 1.5
             if d < 0.9:
                 return parent
         return self._new_species(kind, genes, parent, gen)
@@ -224,6 +256,7 @@ class World(DialsMixin):
         g = PLO + (PHI - PLO) * rng.random(NPG).astype(np.float32)
         g[P_PETALS] = rng.integers(3, 7)
         g[P_SAT] = rng.uniform(0.3, 0.7)
+        g[P_COLD] = rng.uniform(0, 0.15)
         for _ in range(40):
             x, y = rng.uniform(10, W - 10), rng.uniform(10, H - 10)
             if self._spawn_plant(g, x, y, 0, None, 3.0) is not None:
@@ -237,6 +270,7 @@ class World(DialsMixin):
         g[TAIL], g[CREST], g[FIN], g[DIET] = rng.uniform(0.2, 0.6), 0, rng.uniform(0.3, 0.7), rng.uniform(0, 0.35)
         g[PREF_FLOWER], g[PREF_MATE], g[CHOOSY] = rng.random(), g[HUE] + rng.normal(0, 0.05), 0.1
         g[W_FOOD], g[W_FLEE], g[W_MATE], g[WANDER], g[REPRO], g[CARE] = 1.5, 1.0, 1.0, 0.4, 0.6, 0.05
+        g[ENDO], g[INSUL] = rng.uniform(0, 0.08), rng.uniform(0, 0.08)      # every founder is cold-blooded and bare
         g = _clip(g, LO, HI, CIRC)
         x, y = self._water_spot()
         first = None
@@ -305,11 +339,18 @@ class World(DialsMixin):
             shade = 1.0 / (1.0 + np.maximum(cg[cy, cx] - Pg[:, P_SIZE], 0) / 6.0)
             fert = self._fertility(px, py)
             gain = 4 * mult(self.dial("flora"), 1.7) * (0.022 * light * fert * shade * Pg[:, P_SIZE] * (0.7 + 0.3 * Pg[:, P_HEIGHT]))
+            # warmth: a hardy plant grows in the cold but more slowly; frost hurts the tender ones
+            Tp = self.temp(self.height(px, py) - self.sea, light)
+            hard = Pg[:, P_COLD]
+            gt = np.clip((Tp - (1 - 12 * hard)) / 16, 0.12, 1)
+            gain = gain * gt * (1 - 0.2 * hard)
             upkeep = 4 * (0.0035 * Pg[:, P_SIZE] * (0.6 + 0.4 * Pg[:, P_HEIGHT]) + 0.0025 * Pg[:, P_NECTAR]
                           + 0.0006 * Pg[:, P_SAT] * Pg[:, P_PETALS])
             _, inv, cnt = np.unique(self.psp[Pi], return_inverse=True, return_counts=True)
             upkeep = upkeep * (1 + JC * np.maximum(0, cnt[inv] / len(Pi) - JC_FREE)) * (0.3 + 0.7 * light)  # plants idle at night
-            self.pe[Pi] += gain - upkeep
+            upkeep = upkeep * (0.35 + 0.65 * gt)                              # and lie dormant in the cold
+            frost = 4 * 0.003 * (1 - hard) * np.maximum(0, 2 - Tp)
+            self.pe[Pi] += gain - upkeep - frost
             make = np.minimum(Pg[:, P_NECTAR] * 0.08 * min(1.0, 0.3 + light), np.maximum(self.pe[Pi] * 0.02, 0))
             room = np.maximum(Pg[:, P_NECTAR] * 2.0 - self.pnec[Pi], 0)
             make = np.minimum(make, room)
@@ -339,6 +380,10 @@ class World(DialsMixin):
                         self.pe[i] -= 1.8
             Pi = np.flatnonzero(self.p_alive)
 
+        # plankton: grows in the sea with light and warmth, richest in the shallows
+        if t % 4 == 0:
+            self._grow_plankton(light)
+
         if not len(F):
             self._after_tick()
             return self.last_stats if t % STATS_EVERY == 0 else None
@@ -349,6 +394,11 @@ class World(DialsMixin):
         depth = self.height(x, y) - self.sea
         water = depth < 0
         consp = light * (0.25 + 0.75 * G[:, SAT]) + (1 - light) * (0.08 + 0.92 * G[:, GLOW])
+        # warmth: a cold-blooded animal is as lively as the air around it; a warm-blooded one is always lively
+        Tamb = self.temp(depth, light)
+        Eg, Ig = G[:, ENDO], G[:, INSUL]
+        warm_e = np.clip((Tamb - 2.0) / 20.0, 0.08, 1.0)
+        act = 1.2 * Eg + (1 - Eg) * warm_e        # warm blood also brings stamina: a little more speed in any weather
         vig = self.fvig[F]
         grown = np.clip(0.4 + 0.6 * self.fage[F] / MATURE, 0.4, 1.0)
         size = G[:, SIZE] * np.sqrt(G[:, SEGS]) * grown
@@ -358,6 +408,8 @@ class World(DialsMixin):
         has_par &= self.f_alive[pidx] & (self.f_id[pidx] == self.fparid[F])
         pcare = np.where(has_par, self.G[pidx, CARE], 0.0)
         pdist = np.where(has_par, np.hypot(self.fx[pidx] - x, self.fy[pidx] - y), np.inf)
+        # a warm parent keeps its young warm (brooding, nursing)
+        act = np.where(has_par & (pdist < 20), np.maximum(act, self.G[pidx, ENDO] * (0.4 + 0.6 * pcare)), act)
         herb = np.clip(1 - G[:, DIET] * 1.4, 0, 1)
         meat = np.clip((G[:, DIET] - 0.3) / 0.7, 0, 1)
         emax = 18.0 * G[:, SIZE] * np.sqrt(G[:, SEGS])
@@ -374,7 +426,8 @@ class World(DialsMixin):
         # threats: anything that eats meat, is bigger, and is close; prey: smaller, and seen
         threat = validF & (meat[iF] > 0.2) & (size[iF] > 0.8 * size[:, None])
         prey = validF & (meat[:, None] > 0.2) & (size[iF] < 1.25 * size[:, None]) & \
-            (rng.random(dF.shape) < 0.35 + 0.65 * consp[iF]) & (self.fsp[F][iF] != self.fsp[F][:, None])
+            (rng.random(dF.shape) < 0.35 + 0.65 * consp[iF]) & (self.fsp[F][iF] != self.fsp[F][:, None]) & \
+            (_hd(G[iF, HUE], G[:, HUE][:, None]) > 0.07)          # kin, known by colour, are not hunted
 
         def nearest(mask):
             dd = np.where(mask, dF, np.inf)
@@ -404,7 +457,8 @@ class World(DialsMixin):
             jf = iP0[np.arange(n), j]
             dfl = np.where(hf, dP[np.arange(n), j], np.inf)
 
-        mate_ready = (efrac > G[:, REPRO]) & (self.fage[F] > MATURE)
+        mate_ready = (efrac > G[:, REPRO]) & (self.fage[F] > MATURE) & \
+            (rng.random(n) < np.clip((act - 0.2) / 0.5, 0, 1))        # cold-blooded animals breed when it is warm
         mate = validF & mate_ready[:, None] & mate_ready[iF] & (self.fsp[F][iF] == self.fsp[F][:, None])
         jm, hm, _ = nearest(mate)
 
@@ -435,6 +489,7 @@ class World(DialsMixin):
         sp_water = (0.35 + 1.1 * G[:, FIN] * (0.5 + 0.5 * G[:, TAIL]))
         sp_land = (0.15 + 0.32 * G[:, LIMBS] * (1 - 0.7 * G[:, FIN]))
         speed = np.where(water, sp_water, sp_land) / np.sqrt(G[:, SIZE]) * (0.6 + 0.4 * grown) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
+        speed = speed * (0.3 + 0.7 * act)
         nx, ny = x + speed * np.cos(hd), y + speed * np.sin(hd)
         bounce_x = (nx < 2) | (nx > W - 2)
         bounce_y = (ny < 2) | (ny > H - 2)
@@ -448,9 +503,18 @@ class World(DialsMixin):
         cost = (0.003 * G[:, SIZE] ** 0.75 * np.sqrt(G[:, SEGS]) + 0.009 * G[:, GLOW] * (1 - light)
                 + 0.0012 * G[:, SAT] + 0.0018 * G[:, CREST] + 0.0012 * G[:, LIMBS] + 0.0009 * G[:, CHOOSY]
                 + 0.0015 * speed * G[:, SIZE]) * grown
-        cost = cost * jc / vig / mult(self.dial("fauna"), 1.5) * (1 + 0.8 * np.where(water, 1 - G[:, FIN], G[:, FIN] * (G[:, LIMBS] < 1)))
+        # the price of warmth: a warm body burns far more, and loses heat to cold air (water steals it twice as fast,
+        # small bodies faster than big ones) unless it is insulated; a coat overheats in summer
+        bulk = np.cbrt(G[:, SIZE] * np.sqrt(G[:, SEGS]))
+        metab = (1 - Eg) * (0.15 + 0.85 * warm_e) + Eg * 1.5        # a cold reptile all but stops; a mammal never does
+        heat = 0.003 * Eg * np.maximum(0, 30 - Tamb) / 30 * (1 - 0.85 * Ig) * (1 + water) / bulk
+        hot = 0.002 * Ig * np.maximum(0, Tamb - 21) / 10 + 0.0004 * Ig
+        cost = (cost * metab + (heat + hot) * grown) * jc / vig / mult(self.dial("fauna"), 1.5) * \
+            (1 + 0.8 * np.where(water, 1 - G[:, FIN], G[:, FIN] * (G[:, LIMBS] < 1)))
         self.fe[F] -= cost
-        self.fage[F] += 1
+        # the young of cold-blooded animals develop with the warmth (degree-days); warm young grow at their own pace
+        young = self.fage[F] < MATURE
+        self.fage[F] += np.where(young, rng.random(n) < 0.25 + 0.75 * act, 1).astype(np.int32)
 
         # parents feed the young that stay close
         fed = np.flatnonzero(has_par & (pdist < 30) & (pcare > 0.05))
@@ -468,9 +532,9 @@ class World(DialsMixin):
                 i, pi = int(F[a]), int(Pi[jf[a]])
                 if not self.p_alive[pi]:
                     continue
-                take = min(float(self.pnec[pi]), 1.2 * float(herb[a]))
+                take = min(float(self.pnec[pi]), 1.2 * float(herb[a]) * (1 + 0.6 * float(Eg[a])))   # warm bodies feed faster
                 self.pnec[pi] -= take
-                self.fe[i] = min(self.fe[i] + 4.0 * take, emax[a])
+                self.fe[i] = min(self.fe[i] + 4.0 * take * (0.25 + 0.75 * act[a]), emax[a])
                 if take < 0.05 and herb[a] > 0.5 and efrac[a] < 0.5:     # no nectar: graze the leaves
                     bite = min(max(float(self.pe[pi]) - 1.5, 0.0), 0.08 * float(G[a, SIZE]))
                     self.pe[pi] -= bite
@@ -484,6 +548,37 @@ class World(DialsMixin):
                 self.fpollen[i] = self.P[pi]
                 self.fpsp[i] = self.psp[pi]
 
+        # swimmers that eat plants graze the plankton where they are
+        if t % 4 == 0:
+            sw = np.flatnonzero(water & (herb > 0.1))
+            if len(sw):
+                cx = np.clip((x[sw] / W * (GX // 3)).astype(int), 0, GX // 3 - 1)
+                cy = np.clip((y[sw] / H * (GY // 3)).astype(int), 0, GY // 3 - 1)
+                for k, a in enumerate(sw):
+                    bite = min(float(self.plank[cy[k], cx[k]]), 0.07 * float(herb[a]) * float(G[a, SIZE]) * (0.4 + 0.6 * float(G[a, FIN])) * (1 + 0.6 * float(Eg[a])))
+                    if bite <= 0:
+                        continue
+                    self.plank[cy[k], cx[k]] -= bite
+                    i = int(F[a])
+                    self.fe[i] = min(self.fe[i] + 3.0 * bite * (0.25 + 0.75 * float(act[a])), emax[a])
+
+        # scavengers: anything with a taste for meat eats the dead where it finds them
+        if t % 4 == 0:
+            if not hasattr(self, "carrion"):
+                self.carrion = np.zeros_like(self.plank)
+            self.carrion *= 0.985                                        # rot
+            sc = np.flatnonzero(meat > 0.02)
+            if len(sc):
+                cx = np.clip((x[sc] / W * (GX // 3)).astype(int), 0, GX // 3 - 1)
+                cy = np.clip((y[sc] / H * (GY // 3)).astype(int), 0, GY // 3 - 1)
+                for k, a in enumerate(sc):
+                    bite = min(float(self.carrion[cy[k], cx[k]]), 0.25 * float(meat[a]) * float(G[a, SIZE]))
+                    if bite <= 0:
+                        continue
+                    self.carrion[cy[k], cx[k]] -= bite
+                    i = int(F[a])
+                    self.fe[i] = min(self.fe[i] + 2.5 * bite * (0.25 + 0.75 * float(act[a])), emax[a])
+
         # predation
         hunt = np.flatnonzero(hp & (meat > 0.2) & (dpp < 3 + 2 * size) & (efrac < 0.9))
         if len(hunt):
@@ -493,8 +588,8 @@ class World(DialsMixin):
                 b = int(jp[a])
                 if b in taken or a in taken:
                     continue
-                att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a]
-                dfn = size[b] * (1 + 0.8 * G[b, CREST])
+                att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a] * (0.4 + 0.6 * act[a])
+                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b])      # the cold and sluggish are easy to catch
                 if has_par[b] and pdist[b] < 25:      # a parent stands over its young
                     dfn += 2.0 * float(pcare[b]) * float(self.G[pidx[b], SIZE] * np.sqrt(self.G[pidx[b], SEGS]))
                 if rng.random() < att / (att + dfn):
@@ -512,6 +607,10 @@ class World(DialsMixin):
         al = self.f_alive[F]
         die = F[al & ((self.fe[F] <= 0) | (self.fage[F] > self.flife[F]))]
         self.f_alive[die] = False
+        if len(die) and hasattr(self, "carrion"):                         # the body stays where it fell
+            cx = np.clip((self.fx[die] / W * (GX // 3)).astype(int), 0, GX // 3 - 1)
+            cy = np.clip((self.fy[die] / H * (GY // 3)).astype(int), 0, GY // 3 - 1)
+            np.add.at(self.carrion, (cy, cx), (4.0 * self.G[die, SIZE] * np.sqrt(self.G[die, SEGS])).astype(np.float32))
         self.deaths += len(die)
 
         # courtship and birth: the choosy pick by colour and display; asexual budding is a slow fallback
@@ -556,6 +655,8 @@ class World(DialsMixin):
 
     def _after_tick(self):
         t = self.tick
+        if t % (DAY // 4) == 0 or t % YEAR in (0, YEAR // 4, YEAR // 2, 3 * YEAR // 4):
+            self._climate_events()
         if t % STATS_EVERY == 0:
             self.last_stats = self.stats()
             self.history.append(self.last_stats)
@@ -564,6 +665,44 @@ class World(DialsMixin):
         if t % EPOCH == 0:
             self._lay_stratum()
             self._bank_lineages()
+
+    def _grow_plankton(self, light):
+        if not hasattr(self, "_pk_depth"):
+            gy, gx = self.plank.shape
+            yy, xx = np.mgrid[0:gy, 0:gx]
+            self._pk_xy = ((xx + 0.5) * W / gx, (yy + 0.5) * H / gy)
+        d = self.height(*self._pk_xy) - self.sea
+        wet = d < 0
+        cap = np.where(d > -0.2, 1.2, 0.6) * wet
+        rate = 0.02 * (0.3 + 0.7 * light) * (0.6 + 0.4 * (self.water_temp() - 9) / 8)
+        self.plank = np.where(wet, self.plank + rate * (cap - self.plank), 0).astype(np.float32)
+
+    def _climate_events(self):
+        t = self.tick
+        ph = t % YEAR
+        for frac, text in ((0.0, "Spring comes to the coast"), (0.25, "Midsummer: the long warm days"),
+                           (0.5, "Autumn: the days cool"), (0.75, "Midwinter: frost on the uplands, the meadows still")):
+            if ph == int(frac * YEAR):
+                self._event("season", text)
+        F, Pi = np.flatnonzero(self.f_alive), np.flatnonzero(self.p_alive)
+        firsts = self.__dict__.setdefault("firsts", set())
+        if len(F):
+            sp, inv, cnt = np.unique(self.fsp[F], return_inverse=True, return_counts=True)
+            for k in np.flatnonzero(cnt >= 8):
+                m = F[inv == k]
+                e, ins = float(self.G[m, ENDO].mean()), float(self.G[m, INSUL].mean())
+                name = self.species[int(sp[k])]["name"]
+                if e > 0.5 and "warm" not in firsts:
+                    firsts.add("warm"); self._event("milestone", f"The first warm-blooded animals: {name}")
+                if ins > 0.5 and "coat" not in firsts:
+                    firsts.add("coat"); self._event("milestone", f"The first fur and feathers: {name} keeps its warmth in a coat")
+                if e > 0.5 and ins > 0.5 and "both" not in firsts and "warm" in firsts:
+                    firsts.add("both"); self._event("milestone", f"Warm blood and a warm coat together: {name} can live through the winter")
+        if len(Pi):
+            sp, inv, cnt = np.unique(self.psp[Pi], return_inverse=True, return_counts=True)
+            for k in np.flatnonzero(cnt >= 12):
+                if float(self.P[Pi[inv == k], P_COLD].mean()) > 0.6 and "hardy" not in firsts:
+                    firsts.add("hardy"); self._event("milestone", f"Flowers that survive frost: {self.species[int(sp[k])]['name']}")
 
     # ── refugia ──────────────────────────────────────────────────────────
     def _bank_lineages(self):
@@ -759,13 +898,21 @@ class World(DialsMixin):
                 "care_mean": round(float(G[:, CARE].mean()), 3),
                 "young": round(float((self.fage[F] < MATURE).mean()), 3),
                 "families": int(((self.fpar[F] >= 0) & (self.fage[F] < MATURE)).sum()),
+                "warm_blooded": round(float((G[:, ENDO] > 0.5).mean()), 3), "endo_mean": round(float(G[:, ENDO].mean()), 3),
+                "insul_mean": round(float(G[:, INSUL].mean()), 3),
+                "in_sea": int((self.height(self.fx[F], self.fy[F]) - self.sea < 0).sum()),
+                "scavengers": round(float(((G[:, DIET] > 0.32) & (G[:, DIET] <= 0.6)).mean()), 3),
             })
         if len(Pi):
             sp, cnt = np.unique(self.psp[Pi], return_counts=True)
             p = cnt / cnt.sum()
             out.update({"plant_species": int(len(sp)), "plant_species_eff": round(float(1 / (p * p).sum()), 2),
                         "petals_mean": round(float(self.P[Pi, P_PETALS].mean()), 2),
-                        "nectar_mean": round(float(self.P[Pi, P_NECTAR].mean()), 3)})
+                        "nectar_mean": round(float(self.P[Pi, P_NECTAR].mean()), 3),
+                        "hardy": round(float((self.P[Pi, P_COLD] > 0.5).mean()), 3)})
+        out.update({"season": round(self.season(), 3), "season_name": self.season_name(), "year": int(self.tick // YEAR) + 1,
+                    "air": round(self.air(), 1), "water_temp": round(self.water_temp(), 1),
+                    "plankton": round(float(self.plank.mean()), 3) if hasattr(self, "plank") else 0})
         return out
 
     # ── what the panel draws ─────────────────────────────────────────────
@@ -784,6 +931,7 @@ class World(DialsMixin):
         for sid in set(int(s) for s in self.fsp[F]) | set(int(s) for s in self.psp[Pi]):
             names[sid] = self.species[sid]["name"]
         return {"tick": int(self.tick), "day": self.day(), "light": round(self.daylight(), 3), "sea": round(self.sea, 3),
+                "season": round(self.season(), 3), "air": round(self.air(), 1), "water_temp": round(self.water_temp(), 1), "lapse": LAPSE,
                 "animals": animals, "plants": plants, "names": names, "dials": self.dials_payload()}
 
     def terrain_payload(self):
@@ -814,15 +962,16 @@ def _look(g):
     """The genes the renderer needs, rounded."""
     return [round(float(g[HUE]), 3), round(float(g[SAT]), 2), round(float(g[HUE2]), 3), round(float(g[PATTERN]), 2),
             round(float(g[GLOW]), 2), int(round(float(g[SEGS]))), int(round(float(g[LIMBS]))), round(float(g[SIZE]), 2),
-            round(float(g[TAIL]), 2), round(float(g[CREST]), 2), round(float(g[FIN]), 2), round(float(g[DIET]), 2)]
+            round(float(g[TAIL]), 2), round(float(g[CREST]), 2), round(float(g[FIN]), 2), round(float(g[DIET]), 2),
+            round(float(g[ENDO]), 2), round(float(g[INSUL]), 2)]
 
 
 def _plook(g):
     return [round(float(g[P_HUE]), 3), round(float(g[P_PETALS]), 1), round(float(g[P_SIZE]), 2), round(float(g[P_HEIGHT]), 2),
-            round(float(g[P_SAT]), 2), round(float(g[P_HUE2]), 3), round(float(g[P_NECTAR]), 2)]
+            round(float(g[P_SAT]), 2), round(float(g[P_HUE2]), 3), round(float(g[P_NECTAR]), 2), round(float(g[P_COLD]), 2)]
 
 
-PLOOK_KEYS = ["hue", "petals", "size", "height", "sat", "hue2", "nectar"]
+PLOOK_KEYS = ["hue", "petals", "size", "height", "sat", "hue2", "nectar", "cold"]
 ZONES = [(-0.42, "the deep"), (-0.16, "the open sea"), (0.0, "the shallows"), (0.045, "the shore"), (0.30, "the meadow"),
          (0.58, "the uplands"), (9e9, "the heights")]
 
@@ -834,7 +983,7 @@ def zone_name(d):
     return ZONES[-1][1]
 
 
-LOOK_KEYS = ["hue", "sat", "hue2", "pattern", "glow", "segs", "limbs", "size", "tail", "crest", "fin", "diet"]
+LOOK_KEYS = ["hue", "sat", "hue2", "pattern", "glow", "segs", "limbs", "size", "tail", "crest", "fin", "diet", "endo", "insul"]
 
 _SYL = ["la", "mi", "or", "ve", "sa", "lu", "ten", "ca", "ri", "no", "phe", "ly", "ae", "zo", "qui", "ar", "el", "thy"]
 _ROOT_A = ["Lumin", "Chrom", "Vel", "Pisc", "Ambul", "Pteryg", "Lept", "Nect"]
@@ -874,8 +1023,29 @@ def from_bytes(b: bytes) -> World:
             if len(e["g"]) < NG:
                 e["g"] = np.concatenate([e["g"], np.full(NG - len(e["g"]), 0.05, np.float32)])
         for sp in w.species.values():
-            if sp["kind"] == "animal" and len(sp["g"]) < NG:
-                sp["g"] = np.concatenate([sp["g"], np.full(NG - len(sp["g"]), 0.05, np.float32)])
+            if sp["kind"] == "animal":
+                for k in ("g", "pg"):
+                    if k in sp and len(sp[k]) < NG:
+                        sp[k] = np.concatenate([sp[k], np.full(NG - len(sp[k]), 0.05, np.float32)])
+    if w.P.shape[1] < NPG:                    # v1.1 worlds: frost-hardiness, a little of it, so it can evolve
+        rng = w.rng
+        def padp(a, nan_rows=False):
+            col = rng.uniform(0, 0.15, (a.shape[0], NPG - a.shape[1])).astype(np.float32)
+            if nan_rows:
+                col[np.isnan(a[:, 0])] = np.nan
+            return np.concatenate([a, col], 1)
+        w.P, w.ppollen, w.fpollen = padp(w.P), padp(w.ppollen, True), padp(w.fpollen, True)
+        for sp in w.species.values():
+            if sp["kind"] == "plant":
+                for k in ("g", "pg"):
+                    if k in sp and len(sp[k]) < NPG:
+                        sp[k] = np.concatenate([sp[k], np.float32([0.05])])
+    if not hasattr(w, "carrion"):
+        w.carrion = np.zeros((GY // 3, GX // 3), np.float32)
+    if not hasattr(w, "plank"):
+        w.plank = np.zeros((GY // 3, GX // 3), np.float32)
+        w.firsts = set()
+        w._event("climate", "The seasons begin: from now on the coast has summers and winters, cold nights and cold heights")
     if not hasattr(w, "fpar"):
         w.fpar = np.full(CAP_F, -1, np.int64)
         w.fparid = np.zeros(CAP_F, np.int64)

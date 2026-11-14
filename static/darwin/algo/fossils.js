@@ -76,6 +76,17 @@
         }
       }
     }
+    const insul = look[13] || 0;
+    if (insul > 0.3) {                         // a coat of fur or feathers
+      const fr = 0.18 + 0.32 * insul;
+      for (const pass of [0, 1]) {
+        g.fillStyle = pass ? alt : INK;
+        for (const [px, py, r, a] of pts) for (let k = 0; k < 7; k++) {
+          const aa = a + k / 7 * Math.PI * 2, rr = r * (1 + fr * 0.55);
+          g.beginPath(); g.arc(px + Math.cos(aa) * rr, py + Math.sin(aa) * rr, r * fr + (pass ? 0 : ow), 0, 7); g.fill();
+        }
+      }
+    }
     g.fillStyle = INK;
     for (const [px, py, r] of pts) { g.beginPath(); g.arc(px, py, r + ow, 0, 7); g.fill(); }
     for (let i = pts.length - 1; i >= 0; i--) {
@@ -140,12 +151,15 @@
               ['Moves by', fin > 0.5 ? 'swimming, with broad fins' : limbs ? 'walking and paddling' : 'drifting and wriggling'],
               ['Markings', `${segs > 1 || pat > 0.66 ? pattern(pat) : 'plain'}${crest > 0.25 ? ', crested' : ''}${tail > 0.15 ? ', tailed' : ''}`],
               ['Light', glow > 0.3 ? 'glows brightly at night' : glow > 0.12 ? 'a faint glow at night' : 'none'],
+              ['Blood', L[12] == null ? 'cold (before the seasons)' : L[12] > 0.5 ? 'warm: active in any weather' : L[12] > 0.25 ? 'partly warm' : 'cold: slows down in the cold'],
+              ['Coat', L[13] == null ? '—' : L[13] > 0.5 ? 'thick fur or feathers' : L[13] > 0.25 ? 'a light coat' : 'bare'],
               ['Size', size < 0.4 ? 'small' : size < 0.8 ? 'middling' : 'large']];
     }
     const [, petals, size, height, , , nectar] = L;
     return [['Petals', Math.round(petals)], ['Bloom', size < 1 ? 'small' : size < 1.6 ? 'middling' : 'large'],
             ['Stands', height < 1 ? 'low' : height < 1.5 ? 'medium' : 'tall'],
-            ['Nectar', nectar < 0.35 ? 'little' : nectar < 0.7 ? 'some' : 'rich']];
+            ['Nectar', nectar < 0.35 ? 'little' : nectar < 0.7 ? 'some' : 'rich'],
+            ['Frost', L[7] == null ? '—' : L[7] > 0.6 ? 'hardy: blooms through frost' : L[7] > 0.3 ? 'half-hardy' : 'tender: frost hurts it']];
   }
 
   // ── the cabinet of specimens ─────────────────────────────────────────

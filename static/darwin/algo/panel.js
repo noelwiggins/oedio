@@ -11,7 +11,7 @@
   const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22', RIM = '#b9560c';
-  let W = 1200, H = 800, terrain = null, terrCanvas = null, terrSea = null, pins = [];
+  let W = 1200, H = 800, terrain = null, terrCanvas = null, terrSea = null, terrSnow = null, pins = [];
   let L = {};                                   // layout, in canvas pixels
   let live = null;
   const animals = new Map(), plants = new Map();
@@ -112,10 +112,19 @@
     const fx = Math.max(0, Math.min(1, gx - x0)), fy = Math.max(0, Math.min(1, gy - y0)), T = terrain.h_, n = terrain.gx;
     return (T[y0 * n + x0] * (1 - fx) + T[y0 * n + x1] * fx) * (1 - fy) + (T[y1 * n + x0] * (1 - fx) + T[y1 * n + x1] * fx) * fy;
   }
+  // snow lies where the day's mean temperature is below freezing: the uplands every winter, the meadows in a hard one
+  function snowLine() {
+    if (!live || live.season == null) return 9;
+    const meanAir = 15 + 10 * live.season, lapse = live.lapse || 26;
+    return Math.round(meanAir / lapse * 50) / 50;          // height above the sea, in steps of 0.02
+  }
   function buildTerrain(sea) {
     const ts = Math.min(L.s, 1600 / W), tw = Math.round(W * ts), th = Math.round(H * ts), step = 1 / ts;
-    const zone = new Uint8Array(tw * th);
-    for (let py = 0; py < th; py++) for (let px = 0; px < tw; px++) zone[py * tw + px] = zoneOf(hAt(px * step, py * step) - sea);
+    const zone = new Uint8Array(tw * th), snow = snowLine(), snowy = new Uint8Array(tw * th);
+    for (let py = 0; py < th; py++) for (let px = 0; px < tw; px++) {
+      const d = hAt(px * step, py * step) - sea; zone[py * tw + px] = zoneOf(d);
+      if (d > snow && d > 0.045) snowy[py * tw + px] = 1;
+    }
     const c = document.createElement('canvas'); c.width = tw; c.height = th;
     const g = c.getContext('2d'), img = g.createImageData(tw, th), D = img.data;
     const ow = Math.max(1, Math.round(1.6 * ts));         // outline weight
@@ -126,8 +135,10 @@
         for (let k = 1; k <= ow && !edge; k++) {
           if (px + k < tw && zone[py * tw + px + k] !== z) edge = true;
           else if (py + k < th && zone[(py + k) * tw + px] !== z) edge = true;
+          else if (px + k < tw && snowy[py * tw + px + k] !== snowy[py * tw + px]) edge = true;
         }
         let col = ZONES[z][1];
+        if (snowy[py * tw + px]) col = ((px + py) % 9 === 0) ? [214, 226, 236] : [246, 248, 250];   // snow, lightly stippled
         // a fine halftone screen on the water, like old printed playfields
         if (!edge && z <= 1 && (px % 7 === 3) && (py % 7 === 3)) col = col.map(v => v * 0.86);
         const k4 = (py * tw + px) * 4;
@@ -136,7 +147,7 @@
       }
     }
     g.putImageData(img, 0, 0);
-    terrCanvas = c; terrSea = sea;
+    terrCanvas = c; terrSea = sea; terrSnow = snow;
     // brass pins along the coast and the hill lines, as on a pachinko board
     pins = [];
     const grid = 26;
@@ -249,6 +260,24 @@
         }
       }
     }
+    // a coat: fur or feathers drawn as a soft scalloped fringe, the thicker the coat the deeper the fringe
+    const endo = o.look[12] || 0, insul = o.look[13] || 0;
+    if (insul > 0.3) {
+      const fr = 0.18 + 0.32 * insul, nb = 7;
+      for (const pass of [0, 1]) {
+        ctx.fillStyle = pass ? alt : INK;
+        for (const [px, py, r, a] of pts) {
+          if (r < 1.5) continue;
+          ctx.beginPath();
+          for (let k = 0; k < nb; k++) {
+            const aa = a + k / nb * Math.PI * 2 + Math.sin(ph * 0.5 + k) * 0.08, rr = r * (1 + fr * 0.55);
+            ctx.moveTo(px + Math.cos(aa) * rr, py + Math.sin(aa) * rr);
+            ctx.arc(px + Math.cos(aa) * rr, py + Math.sin(aa) * rr, r * fr + (pass ? 0 : ow), 0, Math.PI * 2);
+          }
+          ctx.fill();
+        }
+      }
+    }
     // body: an ink silhouette, then the colours
     ctx.fillStyle = INK;
     for (const [px, py, r] of pts) { ctx.beginPath(); ctx.arc(px, py, r + ow, 0, Math.PI * 2); ctx.fill(); }
@@ -268,6 +297,19 @@
     if (diet > 0.6) {
       ctx.strokeStyle = CREAM; ctx.lineWidth = Math.max(0.8, hr * 0.18);
       ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.75, hy + Math.sin(p.h) * hr * 0.75, hr * 0.35, p.h - 1.0, p.h + 1.0); ctx.stroke();
+    }
+    // breath: a warm-blooded animal's breath clouds in cold air
+    if (endo > 0.5 && live && live.air != null) {
+      const d = hAt(p.x, p.y) - (live.sea || 0);
+      const T = d < 0 ? live.water_temp : live.air - (live.lapse || 26) * Math.max(0, d);
+      if (T < 8 && d >= 0) {
+        const cyc = ((t + o.phase) % 2.8) / 2.8;
+        if (cyc < 0.55) {
+          const k = cyc / 0.55, br = hr * (0.4 + 1.3 * k), bx = hx + Math.cos(p.h) * hr * (1.1 + 1.6 * k), by = hy + Math.sin(p.h) * hr * (1.1 + 1.6 * k) - k * hr * 0.6;
+          ctx.globalAlpha = alpha * 0.75 * (1 - k) * Math.min(1, (8 - T) / 6);
+          ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.arc(bx + br * 0.7, by - br * 0.3, br * 0.7, 0, Math.PI * 2); ctx.fill();
+        }
+      }
     }
     ctx.globalAlpha = 1;
     if (glow > 0.12 && light < 0.85) glowLayer.push([pts, hue, glow, alpha, t + o.phase]);
@@ -453,8 +495,13 @@
         <tr><td>Flowers · species</td><td>${fmt(s.plants)} · ${fmt(s.plant_species)}</td></tr>
         <tr><td>Body complexity, mean · most</td><td>${s.complexity_mean ?? '—'} · ${s.complexity_max ?? '—'}</td></tr>
         <tr><td>Colour · glow · choosiness</td><td>${s.colour_mean ?? '—'} · ${s.glow_mean ?? '—'} · ${s.choosy_mean ?? '—'}</td></tr>
-        <tr><td>Hunters · pollinators</td><td>${Math.round((s.predators || 0) * 100)}% · ${Math.round((s.pollinators || 0) * 100)}%</td></tr>
-        <tr><td>On land</td><td>${Math.round((s.on_land || 0) * 100)}%</td></tr>
+        <tr><td>Season · year</td><td>${esc(s.season_name || '—')} · ${fmt(s.year)}</td></tr>
+        <tr><td>Air at the shore · sea</td><td>${s.air != null ? Math.round(s.air) + '°' : '—'} · ${s.water_temp != null ? Math.round(s.water_temp) + '°' : '—'}</td></tr>
+        <tr><td>Warm-blooded</td><td>${Math.round((s.warm_blooded || 0) * 100)}% (warmth, mean ${s.endo_mean ?? '—'})</td></tr>
+        <tr><td>Fur and feathers, mean</td><td>${s.insul_mean ?? '—'}</td></tr>
+        <tr><td>Frost-hardy flowers</td><td>${Math.round((s.hardy || 0) * 100)}%</td></tr>
+        <tr><td>Hunters · scavengers · pollinators</td><td>${Math.round((s.predators || 0) * 100)}% · ${Math.round((s.scavengers || 0) * 100)}% · ${Math.round((s.pollinators || 0) * 100)}%</td></tr>
+        <tr><td>On land · in the sea</td><td>${Math.round((s.on_land || 0) * 100)}% · ${fmt(s.in_sea)}</td></tr>
         <tr><td>Pollinations so far</td><td>${fmt(s.pollinations)}</td></tr></table>
         <p class="note" style="margin-top:1.6vmin">${(d.events || []).slice(-4).reverse().map(e => `Day ${fmt(Math.floor(e.day))}: ${esc(e.text)}`).join('<br>')}</p>`;
     } else if (kind === 'journal') {
@@ -533,7 +580,7 @@
     drawCabinet();
     if (!terrain) { drawTray(null, t); return; }
     const sea = live ? live.sea : 0;
-    if (!terrCanvas || Math.abs(terrSea - sea) > 0.004) buildTerrain(sea);
+    if (!terrCanvas || Math.abs(terrSea - sea) > 0.004 || terrSnow !== snowLine()) buildTerrain(sea);
     smoothLight += ((live ? live.light : 1) - smoothLight) * 0.02;
     const night = Math.max(0, 1 - smoothLight);
     const pf = L.pf;

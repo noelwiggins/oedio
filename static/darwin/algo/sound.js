@@ -28,7 +28,7 @@
                       room: [5, 2.2, 1.63, 0.36], progress: ['complexity_mean', 2, 20],
                       rain: [['births', 'drip', 'births'], ['pollinations', 'glass', 'pollinations', 0.004], ['kills', 'thump', 'kills']],
                       sound: 'wooden marimba and breathing pads over a slow surf',
-                      words: 'animals are wooden mallet notes, flowers are slow breathing pads; hunters sit lower and darker' },
+                      words: 'cold-blooded animals are wooden mallet notes, warm-blooded ones are bowed strings, flowers are slow breathing pads; hunters sit lower and darker' },
     protogenesis:   { gain: 1.0, scale: [0, 2, 4, 6, 8, 10], root: 52, voice: 'harmonica', chime: 'celesta', bed: 'deep', drone: [0, 6, 12],
                       room: [7.5, 2, 0.92, 0.42], progress: ['best_activity', 0, 1],
                       rain: [['copies', 'bubble', 'copies made']],
@@ -415,7 +415,7 @@
       for (const [sp, r] of anim) {
         const [hue, , , , glow, segs, , size, , , , diet] = r.look;
         const deg = Math.floor(hue * pal.scale.length * 2);
-        out.set('a' + sp, { share: r.n / ta, n: r.n, deg, oct: size > 0.75 ? -1 : size < 0.35 ? 1 : 0, timbre: pal.voice,
+        out.set('a' + sp, { share: r.n / ta, n: r.n, deg, oct: size > 0.75 ? -1 : size < 0.35 ? 1 : 0, timbre: (r.look[12] || 0) > 0.5 ? 'cello' : pal.voice,
                             dark: diet > 0.6, oct2: diet > 0.6 ? -1 : 0, glow, segs, name: (d.names || {})[sp] });
       }
       for (const [sp, r] of flor) {
