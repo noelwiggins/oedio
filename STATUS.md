@@ -15,6 +15,8 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
 ## ALGOGENESIS — all twelve concept panels + dials (2026-11-12)
+
+**2026-11-13 dial fixes (492d424):** −10..+10 number pill above each knob (lights in the dial colour at ±10); Coast dial info cards no longer overwritten by the per-frame about-card re-render (`openCard !== 'dial'` guard in panel.js); knobs + keys scale (min 0.45, origin right-center) in placeKeys of panel.js and cabinet.js so they never cover the fossil window. Verified at 1106×835 @2x.
 All 12 concepts LIVE (worlds/__init__: LIVE built from CONCEPTS). New engines: epigenesis (GRN embryos in 16 wells,
 maternal pole/radial gradients), noogenesis (recurrent-brain foragers, blinking orbiting blooms, dark-meal metric),
 biogenesis (dividing cells, 3 nutrients, live tree of life; reinoculation from frozen stock), cosmogenesis (particle-mesh
