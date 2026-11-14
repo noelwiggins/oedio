@@ -20,35 +20,104 @@
   const hash = s => { let h = 2166136261; s = String(s); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  // ── one palette per panel: scale, key, timbres, what counts as rain, what counts as progress ─────────────────
+  // ── one sound world per panel: its instruments, its tuning, its room, its weather ───────────────────────────
+  // voice: the loops (voice2 for the second population); chime: a new variant; rain: [stat, instrument, words, scale]
+  // room: [reverb seconds, reverb decay, echo seconds, echo feedback]; bed: the background texture; drone: intervals
   const P = {
-    coast:          { scale: [0, 2, 4, 7, 9], root: 50, voice: 'marimba', voice2: 'pad', progress: ['complexity_mean', 2, 20],
+    coast:          { gain: 0.8, scale: [0, 2, 4, 7, 9], root: 50, voice: 'marimba', voice2: 'pad', chime: 'glass', bed: 'surf', drone: [0, 7, 12],
+                      room: [5, 2.2, 1.63, 0.36], progress: ['complexity_mean', 2, 20],
                       rain: [['births', 'drip', 'births'], ['pollinations', 'glass', 'pollinations', 0.004], ['kills', 'thump', 'kills']],
+                      sound: 'wooden marimba and breathing pads over a slow surf',
                       words: 'animals are wooden mallet notes, flowers are slow breathing pads; hunters sit lower and darker' },
-    protogenesis:   { scale: [0, 2, 4, 6, 8, 10], root: 52, voice: 'glass', progress: ['best_activity', 0, 1],
-                      rain: [['copies', 'drip', 'copies made']], words: 'each family of self-copying chains is a glass tone; copies are droplets' },
-    autopoiesis:    { scale: [0, 3, 7, 10, 14], root: 45, voice: 'pad', progress: ['mean_cell_age', 0, 3000],
-                      rain: [['divisions', 'glass', 'cells dividing'], ['repairs', 'drip', 'membrane repairs', 0.02]], words: 'each family of cells is a held pad; repairs are droplets' },
-    epigenesis:     { scale: [0, 3, 5, 7, 10], root: 48, voice: 'pad', progress: ['mean_types', 1, 10],
-                      rain: [['embryos', 'pluck', 'embryos grown']], words: 'each lineage of embryos is a pad; each embryo grown is a pluck' },
-    noogenesis:     { scale: [0, 2, 3, 7, 8], root: 45, voice: 'bell', progress: ['memory', 0, 1],
-                      rain: [['meals', 'drip', 'meals found', 0.05], ['dark_meals', 'glass', 'meals found in the dark']], words: 'each lineage of foragers is a bell; meals found in the dark ring as glass' },
-    biogenesis:     { scale: [0, 2, 4, 7, 9], root: 43, voice: 'marimba', progress: ['depth', 0, 2500],
-                      rain: [['divisions', 'drip', 'divisions', 0.05]], words: 'each lineage of cells is a mallet note; divisions are droplets' },
-    morphogenesis:  { scale: [0, 2, 5, 7, 9], root: 41, voice: 'reed', progress: ['mean_height', 1, 12],
-                      rain: [['spores', 'drip', 'spores released', 0.05]], words: 'each lineage of growing forms is a reed; spores are droplets' },
-    cosmogenesis:   { scale: [0, 7, 12, 14, 19], root: 36, voice: 'bell', progress: ['metals', 0, 60],
-                      rain: [['supernovae', 'boom', 'stars exploding'], ['planets_total', 'glass', 'planets formed']], words: 'clusters of stars are deep bells; supernovae are distant booms, new planets are glass' },
-    anthropogenesis:{ scale: [0, 2, 4, 5, 7, 9, 11], root: 48, voice: 'pluck', voice2: 'reed', progress: ['tools_mean', 0, 300],
-                      rain: [['people', 'drip', 'people born', 0.01]], words: 'each people is a plucked string; the more tools, the richer the tone' },
-    psychogenesis:  { scale: [0, 1, 5, 7, 8], root: 50, voice: 'glass', progress: ['learning', 0, 1],
-                      rain: [['changes', 'pluck', 'minds changed'], ['poisoned', 'thump', 'creatures poisoned']], words: 'each lineage of minds is a glass tone; a lesson learned is a pluck' },
-    palingenesis:   { scale: [0, 2, 5, 7, 10], root: 43, voice: 'reed', progress: ['cover', 0, 100],
-                      rain: [['fires', 'crackle', 'fires']], words: 'each kind of tree is a reed; fires crackle, then the forest comes back' },
-    anagenesis:     { scale: [0, 2, 4, 7, 11], root: 47, voice: 'marimba', progress: ['fitness', 0, 1],
-                      rain: [['generations', 'pluck', 'generations']], words: 'each lineage is a mallet note; every generation is a pluck' },
-    ontogeny:       { scale: [0, 4, 7, 11, 14], root: 52, voice: 'bell', progress: ['mean_score', 0, 3],
-                      rain: [['generation', 'pluck', 'generations']], words: 'each lineage of bodies is a bell; each generation is a pluck' },
+    protogenesis:   { gain: 1.0, scale: [0, 2, 4, 6, 8, 10], root: 52, voice: 'harmonica', chime: 'celesta', bed: 'deep', drone: [0, 6, 12],
+                      room: [7.5, 2, 0.92, 0.42], progress: ['best_activity', 0, 1],
+                      rain: [['copies', 'bubble', 'copies made']],
+                      sound: 'glass harmonica in whole tones, bubbles rising through deep water',
+                      words: 'each family of self-copying chains is a glass-harmonica tone; every copy made is a rising bubble' },
+    autopoiesis:    { gain: 1.08, scale: [0, 3, 7, 10, 14], root: 45, voice: 'choir', chime: 'harmonica', bed: 'pulse', drone: [0, 7, 10],
+                      room: [4.5, 2.4, 2.1, 0.3], progress: ['mean_cell_age', 0, 3000],
+                      rain: [['divisions', 'kalimba', 'cells dividing'], ['repairs', 'drip', 'membrane repairs', 0.02]],
+                      sound: 'a soft wordless choir over a slow heartbeat',
+                      words: 'each family of cells is a voice in a choir; divisions are thumb-piano notes, repairs are droplets' },
+    epigenesis:     { gain: 1.8, scale: [0, 3, 5, 7, 10], root: 48, voice: 'celesta', voice2: 'harmonica', chime: 'celesta', bed: 'shimmer', drone: [0, 12, 19],
+                      room: [3.5, 2.6, 0.75, 0.4], progress: ['mean_types', 1, 10],
+                      rain: [['embryos', 'kalimba', 'embryos grown']],
+                      sound: 'a music box over a faint shimmer, like a nursery at night',
+                      words: 'each lineage of embryos is a music-box note; each embryo grown is a thumb-piano note' },
+    noogenesis:     { gain: 1.35, scale: [0, 2, 3, 7, 8], root: 45, voice: 'vibes', chime: 'glass', bed: 'brook', drone: [0, 7, 15],
+                      room: [5, 2.2, 1.21, 0.38], progress: ['memory', 0, 1],
+                      rain: [['meals', 'drip', 'meals found', 0.05], ['dark_meals', 'glass', 'meals found in the dark']],
+                      sound: 'vibraphone over a running brook',
+                      words: 'each lineage of foragers is a vibraphone note; meals are droplets, meals found in the dark ring as glass' },
+    biogenesis:     { gain: 1.9, scale: [0, 2, 4, 7, 9], root: 43, voice: 'handpan', chime: 'kalimba', bed: 'bubbles', drone: [0, 7, 14],
+                      room: [4, 2.3, 1.4, 0.35], progress: ['depth', 0, 2500],
+                      rain: [['divisions', 'bubble', 'divisions', 0.05]],
+                      sound: 'handpan in a warm pool, with bubbles',
+                      words: 'each lineage of cells is a handpan note; every division is a bubble' },
+    morphogenesis:  { gain: 0.9, scale: [0, 2, 5, 7, 9], root: 41, voice: 'flute', chime: 'kalimba', bed: 'wind', drone: [0, 5, 12],
+                      room: [6, 2, 2.4, 0.33], progress: ['mean_height', 1, 12],
+                      rain: [['spores', 'drip', 'spores released', 0.05]],
+                      sound: 'breathy wooden flute in a high wind',
+                      words: 'each lineage of growing forms is a flute; spores are droplets' },
+    cosmogenesis:   { gain: 0.85, scale: [0, 7, 12, 14, 19], root: 36, voice: 'bowl', chime: 'glass', bed: 'space', drone: [0, 7, 19],
+                      room: [9, 1.8, 3.1, 0.45], progress: ['metals', 0, 60],
+                      rain: [['supernovae', 'boom', 'stars exploding'], ['planets_total', 'glass', 'planets formed']],
+                      sound: 'singing bowls in a vast dark hall, with distant booms',
+                      words: 'clusters of stars are singing bowls; supernovae are distant booms, new planets are glass' },
+    anthropogenesis:{ gain: 1.15, scale: [0, 2, 4, 5, 7, 9, 11], root: 48, voice: 'harp', voice2: 'flute', chime: 'harp', bed: 'hearth', drone: [0, 7, 12],
+                      room: [3, 2.6, 0.9, 0.3], progress: ['tools_mean', 0, 300],
+                      rain: [['people', 'pluck', 'people born', 0.01]],
+                      sound: 'harp and flute beside a hearth',
+                      words: 'each people is a harp string; the more tools they have, the richer the tone' },
+    psychogenesis:  { gain: 2.6, scale: [0, 1, 5, 7, 8], root: 50, voice: 'rhodes', chime: 'vibes', bed: 'tape', drone: [0, 5, 13],
+                      room: [3.5, 2.5, 0.55, 0.45], progress: ['learning', 0, 1],
+                      rain: [['changes', 'kalimba', 'minds changed'], ['poisoned', 'thump', 'creatures poisoned']],
+                      sound: 'a soft electric piano in a small warm room',
+                      words: 'each lineage of minds is an electric-piano note; a mind changed is a thumb-piano note' },
+    palingenesis:   { gain: 0.72, scale: [0, 2, 5, 7, 10], root: 43, voice: 'cello', chime: 'flute', bed: 'forest', drone: [0, 7, 10],
+                      room: [6, 2.1, 1.9, 0.32], progress: ['cover', 0, 100],
+                      rain: [['fires', 'crackle', 'fires']],
+                      sound: 'bowed strings in a forest, with birds and the crackle of fire',
+                      words: 'each kind of tree is a bowed string; fires crackle, and the birds come back with the trees' },
+    anagenesis:     { gain: 2.4, scale: [0, 2, 4, 7, 11], root: 47, voice: 'bamboo', chime: 'kalimba', bed: 'patter', drone: [0, 7, 11],
+                      room: [4, 2.4, 1.1, 0.34], progress: ['fitness', 0, 1],
+                      rain: [['generations', 'drip', 'generations']],
+                      sound: 'hollow bamboo chimes in light rain',
+                      words: 'each lineage is a bamboo chime; every generation is a raindrop' },
+    ontogeny:       { gain: 1.55, scale: [0, 4, 7, 11, 14], root: 52, voice: 'tubular', chime: 'celesta', bed: 'breath', drone: [0, 4, 12],
+                      room: [7, 2, 2.7, 0.38], progress: ['mean_score', 0, 3],
+                      rain: [['generation', 'celesta', 'generations']],
+                      sound: 'tubular bells and slow breathing',
+                      words: 'each lineage of bodies is a tubular bell; each generation is a music-box note' },
+  };
+
+  // ── the instruments ──────────────────────────────────────────────────
+  // fm: one carrier, one modulator.  add: partials [ratio, level, decay share], each slightly detuned so they beat.
+  // sub: filtered sawtooth or triangle with vibrato, optional vowel formants and breath.
+  const INST = {
+    marimba:  { kind: 'fm', ratio: 4, idx: 0.7, a: 0.035, d: 3.4 },
+    bell:     { kind: 'fm', ratio: 3.5, idx: 1.1, a: 0.05, d: 7.5 },
+    glass:    { kind: 'fm', ratio: 2.76, idx: 0.55, a: 0.08, d: 5.5 },
+    pluck:    { kind: 'fm', ratio: 2, idx: 0.8, a: 0.03, d: 2.2 },
+    pad:      { kind: 'fm', ratio: 1, idx: 0.35, a: 4, d: 9, sus: 0.7, hold: 3 },
+    reed:     { kind: 'fm', ratio: 1, idx: 0.9, a: 1.4, d: 5, sus: 0.6, hold: 1.8 },
+    drip:     { kind: 'fm', ratio: 5.1, idx: 0.3, a: 0.025, d: 0.9 },
+    thump:    { kind: 'fm', ratio: 0.5, idx: 0.4, a: 0.05, d: 1.4 },
+    boom:     { kind: 'fm', ratio: 0.5, idx: 0.25, a: 0.25, d: 5 },
+    bubble:   { kind: 'fm', ratio: 1, idx: 0.15, a: 0.02, d: 0.35, rise: 1.6 },
+    kalimba:  { kind: 'add', a: 0.012, d: 2.6, parts: [[1, 1, 1], [5.95, 0.16, 0.15], [8.7, 0.05, 0.1]] },
+    celesta:  { kind: 'add', a: 0.01, d: 2.8, oct: 1, parts: [[1, 1, 1], [2, 0.3, 0.6], [3, 0.12, 0.4], [4.02, 0.08, 0.3]] },
+    harmonica:{ kind: 'add', a: 0.9, d: 5, sus: 0.75, hold: 1.6, trem: [5.5, 0.12], parts: [[1, 1, 1], [2, 0.32, 1], [3, 0.12, 1]] },
+    bowl:     { kind: 'add', a: 0.6, d: 13, beat: 0.9, parts: [[1, 1, 1], [2.71, 0.45, 0.9], [5.15, 0.2, 0.7], [8.45, 0.08, 0.5]] },
+    tubular:  { kind: 'add', a: 0.015, d: 9, parts: [[1, 0.8, 1], [2.76, 0.5, 0.75], [5.4, 0.28, 0.5], [8.93, 0.1, 0.3]] },
+    bamboo:   { kind: 'add', a: 0.008, d: 1.5, oct: 1, parts: [[1, 1, 1], [2.32, 0.4, 0.45], [3.95, 0.15, 0.3]] },
+    handpan:  { kind: 'add', a: 0.02, d: 4.8, sag: 0.985, parts: [[1, 1, 1], [2, 0.42, 0.7], [3, 0.12, 0.45]] },
+    harp:     { kind: 'add', a: 0.008, d: 3.6, parts: [[1, 1, 1], [2, 0.45, 0.6], [3, 0.25, 0.4], [4, 0.12, 0.3], [5, 0.06, 0.22]] },
+    vibes:    { kind: 'add', a: 0.02, d: 5.5, trem: [4.2, 0.35], parts: [[1, 1, 1], [4, 0.22, 0.3], [10, 0.03, 0.08]] },
+    rhodes:   { kind: 'add', a: 0.015, d: 4.5, trem: [2.2, 0.15], parts: [[1, 1, 1], [2, 0.22, 0.5], [3, 0.06, 0.3], [14, 0.025, 0.04]] },
+    flute:    { kind: 'sub', wave: 'triangle', cut: 4, a: 0.7, d: 3.5, sus: 0.7, hold: 1.8, vib: [5, 9], breath: 0.25 },
+    cello:    { kind: 'sub', wave: 'sawtooth', cut: 3.2, a: 1.4, d: 4.5, sus: 0.75, hold: 2.6, vib: [5.4, 12] },
+    choir:    { kind: 'sub', wave: 'sawtooth', cut: 9, a: 2.4, d: 6, sus: 0.8, hold: 3.2, vib: [4.6, 10], formants: [700, 1150, 2500], detune: 7 },
   };
 
   // ── the listener's own settings (this device only; they never touch the world) ───────────────────
@@ -56,7 +125,7 @@
   let MIX = Object.assign({}, MIX_DEFAULT);
   try { Object.assign(MIX, JSON.parse(localStorage.getItem('algo-sound-mix') || '{}')); } catch (e) {}
   let sleepEnd = 0, sleepMin = 0, sleepT = null;
-  const volGain = () => 3.2 * MIX.volume * MIX.volume * sleepFade();
+  const volGain = () => 3.2 * MIX.volume * MIX.volume * sleepFade() * (pal.gain || 1);   // panels levelled to one loudness
   const droneMul = () => MIX.drone <= -0.95 ? 0 : Math.pow(2, MIX.drone * 2);
   const voicesAudible = () => Math.round(clamp(10 + 4 * MIX.pace, 4, 14));
   const rainBudget = () => MIX.rain <= -0.95 ? 0 : Math.max(0, Math.round(3 * Math.pow(2, MIX.rain * 1.3)));
@@ -121,16 +190,17 @@
     dry = A.createGain(); dry.gain.value = 0.55; dry.connect(out);
     // a long hall
     verb = A.createGain(); verb.gain.value = 1;
-    const conv = A.createConvolver(); conv.buffer = impulse(5, 2.2); wet = A.createGain(); wet.gain.value = 0.85;
+    getNoise();
+    const conv = A.createConvolver(); conv.buffer = impulse(pal.room[0], pal.room[1]); wet = A.createGain(); wet.gain.value = 0.85;
     verb.connect(conv); conv.connect(wet); wet.connect(out);
     // a slow tape echo, darkening on each repeat
     echo = A.createGain(); echo.gain.value = 1;
-    const dl = A.createDelay(4); dl.delayTime.value = 1.63; const fb = A.createGain(); fb.gain.value = 0.36;
+    const dl = A.createDelay(4); dl.delayTime.value = pal.room[2]; const fb = A.createGain(); fb.gain.value = pal.room[3];
     const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1900;
     echo.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(verb); const ew = A.createGain(); ew.gain.value = 0.35; lp.connect(ew); ew.connect(out);
     // the drone: root and fifth, slowly beating, through a filter that opens by day
     const dg = A.createGain(); dg.gain.value = 0; const df = A.createBiquadFilter(); df.type = 'lowpass'; df.frequency.value = 400; df.Q.value = 0.7;
-    const oscs = [0, 7, 12].map((iv, i) => { const o = A.createOscillator(); o.type = i === 1 ? 'triangle' : 'sine'; o.detune.value = (i - 1) * 4; const g = A.createGain(); g.gain.value = i === 2 ? 0.25 : 0.5; o.connect(g); g.connect(df); o.start(); return { o, iv }; });
+    const oscs = pal.drone.map((iv, i) => { const o = A.createOscillator(); o.type = i === 1 ? 'triangle' : 'sine'; o.detune.value = (i - 1) * 4; const g = A.createGain(); g.gain.value = i === 2 ? 0.25 : 0.5; o.connect(g); g.connect(df); o.start(); return { o, iv }; });
     const lfo = A.createOscillator(); lfo.frequency.value = 0.031; const lg = A.createGain(); lg.gain.value = 160; lfo.connect(lg); lg.connect(df.frequency); lfo.start();
     df.connect(dg); dg.connect(dry); dg.connect(verb);
     // the halo: a high shimmer that opens as the panel's measure of progress rises
@@ -139,6 +209,7 @@
     const hl = A.createOscillator(); hl.frequency.value = 0.07; const hlg = A.createGain(); hlg.gain.value = 0.5; hl.connect(hlg); hl.start();
     hf.connect(hg); hg.connect(verb);
     drone = { dg, df, oscs, hg, hf, halo };
+    startBed();
     retune(0);
   }
   function root() { return pal.root + keyShift; }
@@ -153,46 +224,167 @@
 
   // ── notes ────────────────────────────────────────────────────────────
   // FM voice: one carrier, one modulator; richness opens the modulation index (more overtones)
-  function note(t, freq, gain, timbre, opt = {}) {
-    if (!A || gain <= 0.0005 || live >= 32) return;          // a polyphony ceiling keeps the audio thread relaxed
-    const T = {
-      marimba: { ratio: 4, idx: 0.7, a: 0.035, d: 3.4, sus: 0 },
-      bell:    { ratio: 3.5, idx: 1.1, a: 0.05, d: 7.5, sus: 0 },
-      glass:   { ratio: 2.76, idx: 0.55, a: 0.08, d: 5.5, sus: 0 },
-      pluck:   { ratio: 2, idx: 0.8, a: 0.03, d: 2.2, sus: 0 },
-      pad:     { ratio: 1, idx: 0.35, a: 4, d: 9, sus: 0.7, hold: 3 },
-      reed:    { ratio: 1, idx: 0.9, a: 1.4, d: 5, sus: 0.6, hold: 1.8 },
-      drip:    { ratio: 5.1, idx: 0.3, a: 0.025, d: 0.9, sus: 0 },
-      thump:   { ratio: 0.5, idx: 0.4, a: 0.05, d: 1.4, sus: 0 },
-      boom:    { ratio: 0.5, idx: 0.25, a: 0.25, d: 5, sus: 0 },
-    }[timbre] || { ratio: 2, idx: 1, a: 0.01, d: 2, sus: 0 };
-    const r = opt.rich != null ? opt.rich : rich;
-    const c = A.createOscillator(), m = A.createOscillator(), mg = A.createGain(), env = A.createGain(), pan = A.createStereoPanner ? A.createStereoPanner() : null;
-    c.type = 'sine'; m.type = 'sine';
-    c.frequency.setValueAtTime(freq, t); m.frequency.setValueAtTime(freq * (opt.ratio || T.ratio), t);
-    if (opt.glide) { c.frequency.exponentialRampToValueAtTime(freq * opt.glide, t + T.a + T.d); m.frequency.exponentialRampToValueAtTime(freq * opt.glide * (opt.ratio || T.ratio), t + T.a + T.d); }
-    const I = freq * T.idx * (0.12 + 0.9 * r) * (opt.dark ? 0.45 : 1) * Math.pow(2, MIX.tone);
-    mg.gain.setValueAtTime(I, t); mg.gain.exponentialRampToValueAtTime(Math.max(1, I * 0.15), t + T.a + T.d);
-    m.connect(mg); mg.connect(c.frequency);
+  function envelope(env, t, gain, T, opt) {
     env.gain.setValueAtTime(0.0001, t);
     env.gain.exponentialRampToValueAtTime(gain, t + T.a);
-    let end;
-    if (T.sus) { const h = (T.hold || 1) * (opt.hold || 1); env.gain.setTargetAtTime(gain * T.sus, t + T.a, 0.8); env.gain.setTargetAtTime(0.0001, t + T.a + h, T.d / 5); env.gain.setValueAtTime(0, t + T.a + h + T.d * 1.6); end = t + T.a + h + T.d * 1.65; }
-    else { env.gain.exponentialRampToValueAtTime(0.0001, t + T.a + T.d); env.gain.setValueAtTime(0, t + T.a + T.d + 0.05); end = t + T.a + T.d + 0.1; }
-    c.connect(env);
-    let node = env;
-    if (pan) { pan.pan.value = opt.pan || 0; env.connect(pan); node = pan; }
-    node.connect(dry); const s = A.createGain(); s.gain.value = opt.wet != null ? opt.wet : 0.7; node.connect(s); s.connect(verb);
-    if (opt.echo) { const e = A.createGain(); e.gain.value = opt.echo; node.connect(e); e.connect(echo); }
-    live++; c.onended = () => { live--; try { node.disconnect(); } catch (e) {} };
-    c.start(t); m.start(t); c.stop(end); m.stop(end);
+    if (T.sus) {
+      const h = (T.hold || 1) * (opt.hold || 1);
+      env.gain.setTargetAtTime(gain * T.sus, t + T.a, 0.8); env.gain.setTargetAtTime(0.0001, t + T.a + h, T.d / 5);
+      env.gain.setValueAtTime(0, t + T.a + h + T.d * 1.6); return t + T.a + h + T.d * 1.65;
+    }
+    env.gain.exponentialRampToValueAtTime(0.0001, t + T.a + T.d); env.gain.setValueAtTime(0, t + T.a + T.d + 0.05);
+    return t + T.a + T.d + 0.1;
   }
-  function noise(t, dur, gain, freq, q) {
-    if (live >= 32) return;
-    if (!noiseBuf) {                    // one buffer of noise, made once
+  function route(node, opt, srcs, end) {
+    let out_ = node;
+    if (A.createStereoPanner) { const pan = A.createStereoPanner(); pan.pan.value = opt.pan || 0; node.connect(pan); out_ = pan; }
+    out_.connect(dry); const s = A.createGain(); s.gain.value = opt.wet != null ? opt.wet : 0.7; out_.connect(s); s.connect(verb);
+    if (opt.echo) { const e = A.createGain(); e.gain.value = opt.echo; out_.connect(e); e.connect(echo); }
+    live++; srcs[0].onended = () => { live--; try { out_.disconnect(); node.disconnect(); } catch (e) {} };
+    for (const o of srcs) { o.start(srcs.t0); o.stop(end); }
+  }
+  function note(t, freq, gain, timbre, opt = {}) {
+    if (!A || gain <= 0.0005 || live >= 32) return;          // a polyphony ceiling keeps the audio thread relaxed
+    const T = INST[timbre] || INST.pluck, r = opt.rich != null ? opt.rich : rich, bright = Math.pow(2, MIX.tone);
+    if (T.oct) freq *= Math.pow(2, T.oct);
+    while (freq > 2400) freq /= 2;                             // keep everything soft: nothing shrill
+    const env = A.createGain(), srcs = []; srcs.t0 = t;
+    const end = envelope(env, t, gain, T, opt), span = end - t;
+    if (T.kind === 'fm') {
+      const c = A.createOscillator(), m = A.createOscillator(), mg = A.createGain(), ratio = opt.ratio || T.ratio;
+      c.frequency.setValueAtTime(freq, t); m.frequency.setValueAtTime(freq * ratio, t);
+      const g = opt.glide || T.rise;
+      if (g) { c.frequency.exponentialRampToValueAtTime(freq * g, t + T.a + T.d); m.frequency.exponentialRampToValueAtTime(freq * g * ratio, t + T.a + T.d); }
+      const I = freq * T.idx * (0.12 + 0.9 * r) * (opt.dark ? 0.45 : 1) * bright;
+      mg.gain.setValueAtTime(I, t); mg.gain.exponentialRampToValueAtTime(Math.max(1, I * 0.15), t + T.a + T.d);
+      m.connect(mg); mg.connect(c.frequency); c.connect(env); srcs.push(c, m);
+    } else if (T.kind === 'add') {
+      // partials: progress lets the upper ones speak; the tone knob too
+      const keep = clamp(0.35 + 0.9 * r, 0.3, 1.25) * bright * (opt.dark ? 0.6 : 1);
+      T.parts.forEach(([ratio, lvl, dec], i) => {
+        const f = freq * ratio; if (f > 7000) return;
+        const o = A.createOscillator(), g = A.createGain();
+        o.frequency.setValueAtTime(f, t);
+        if (T.beat) o.detune.value = (i % 2 ? 1 : -1) * T.beat * 3;
+        if (T.sag) o.frequency.exponentialRampToValueAtTime(f * T.sag, t + 0.25);
+        if (opt.glide) o.frequency.exponentialRampToValueAtTime(f * opt.glide, end);
+        const L = (i === 0 ? lvl : lvl * keep) / Math.sqrt(T.parts.length);
+        g.gain.setValueAtTime(L, t);
+        if (dec < 1) g.gain.setTargetAtTime(0, t + T.a, Math.max(0.05, (T.d * dec) / 3));
+        o.connect(g); g.connect(env); srcs.push(o);
+      });
+      if (T.beat) {                                   // a bowl's slow beating: a second fundamental, a breath apart
+        const o = A.createOscillator(), g = A.createGain(); o.frequency.value = freq + T.beat; g.gain.value = 0.5;
+        o.connect(g); g.connect(env); srcs.push(o);
+      }
+    } else {                                          // sub: bowed, blown or sung
+      const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.6;
+      lp.frequency.setValueAtTime(freq * 1.5, t); lp.frequency.linearRampToValueAtTime(Math.min(5000, freq * T.cut * (0.6 + 0.6 * r) * bright), t + T.a);
+      const vib = A.createOscillator(), vg = A.createGain(); vib.frequency.value = T.vib[0]; vg.gain.setValueAtTime(0, t);
+      vg.gain.linearRampToValueAtTime(T.vib[1], t + T.a + 0.6); vib.connect(vg); srcs.push(vib);
+      const n = T.detune ? 2 : 1;
+      for (let i = 0; i < n; i++) {
+        const o = A.createOscillator(); o.type = T.wave; o.frequency.setValueAtTime(freq, t);
+        if (opt.glide) o.frequency.exponentialRampToValueAtTime(freq * opt.glide, end);
+        o.detune.value = n > 1 ? (i ? T.detune : -T.detune) : 0; vg.connect(o.detune);
+        const g = A.createGain(); g.gain.value = (T.wave === 'sawtooth' ? 0.45 : 0.9) / n; o.connect(g); g.connect(lp); srcs.push(o);
+      }
+      if (T.formants) {                               // a vowel: "ah"
+        const sum = A.createGain(); sum.gain.value = 2.2;
+        T.formants.forEach((F, i) => { const b = A.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = F; b.Q.value = 6; const g = A.createGain(); g.gain.value = [1, 0.5, 0.2][i]; lp.connect(b); b.connect(g); g.connect(sum); });
+        sum.connect(env);
+      } else lp.connect(env);
+      if (T.breath && noiseBuf) {                     // air over the embouchure
+        const ns = A.createBufferSource(); ns.buffer = noiseBuf; ns.loop = true;
+        const bp = A.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = Math.min(3000, freq * 2); bp.Q.value = 3;
+        const g = A.createGain(); g.gain.value = T.breath * 0.25; ns.connect(bp); bp.connect(g); g.connect(env); srcs.push(ns);
+      }
+    }
+    if (T.trem) {                                     // vibraphone fan, electric-piano tremolo
+      const tr = A.createOscillator(), tg = A.createGain(), out2 = A.createGain();
+      tr.frequency.value = T.trem[0]; tg.gain.value = T.trem[1] * 0.5; out2.gain.value = 1 - T.trem[1] * 0.5;
+      tr.connect(tg); tg.connect(out2.gain); env.connect(out2); srcs.push(tr);
+      return route(out2, opt, srcs, end);
+    }
+    route(env, opt, srcs, end);
+  }
+  function getNoise() {                 // one buffer of noise, made once
+    if (!noiseBuf) {
       const n = A.sampleRate * 4; noiseBuf = A.createBuffer(1, n, A.sampleRate); const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
     }
+    return noiseBuf;
+  }
+
+  // ── the weather of each panel: a quiet bed under the music ────────────
+  let bedG = null, bedNext = 0, bedAux = 0;
+  function loopNoise(type, f, q) {
+    const s = A.createBufferSource(); s.buffer = getNoise(); s.loop = true; s.start(A.currentTime, Math.random() * 3);
+    const b = A.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; s.connect(b); return b;
+  }
+  function lfo(rate, depth, target, base) {
+    const o = A.createOscillator(), g = A.createGain(); o.frequency.value = rate; g.gain.value = depth; o.connect(g); g.connect(target);
+    if (base != null) target.value = base; o.start(); return o;
+  }
+  function swell(src, rate, lvl) {                 // a gain that rises and falls slowly, like a wave or a breath
+    const g = A.createGain(); g.gain.value = lvl * 0.55; lfo(rate, lvl * 0.45, g.gain); src.connect(g); g.connect(bedG); return g;
+  }
+  function startBed() {
+    bedG = A.createGain(); bedG.gain.value = 0; const bw = A.createGain(); bw.gain.value = 0.6;
+    bedG.connect(dry); bedG.connect(bw); bw.connect(verb);
+    const t = pal.bed;
+    if (t === 'surf') { swell(loopNoise('lowpass', 520, 0.5), 0.085, 0.5); swell(loopNoise('lowpass', 900, 0.4), 0.061, 0.22); }
+    else if (t === 'deep') { swell(loopNoise('bandpass', 240, 1.8), 0.045, 0.9); }
+    else if (t === 'wind') { const b = loopNoise('bandpass', 600, 1.6); lfo(0.037, 260, b.frequency); swell(b, 0.07, 0.75); }
+    else if (t === 'forest') { const b = loopNoise('bandpass', 520, 1.4); lfo(0.029, 180, b.frequency); swell(b, 0.05, 0.4); }
+    else if (t === 'brook') { const b = loopNoise('bandpass', 760, 1.3); const g = swell(b, 0.13, 0.55); lfo(3.3, 0.08, g.gain); lfo(1.7, 0.06, g.gain); }
+    else if (t === 'breath') { swell(loopNoise('bandpass', 560, 1.1), 0.14, 0.7); }
+    else if (t === 'hearth') { swell(loopNoise('lowpass', 380, 0.6), 0.03, 0.45); }
+    else if (t === 'tape') { swell(loopNoise('lowpass', 300, 0.5), 0.02, 0.35); }
+    else if (t === 'space' || t === 'shimmer') {
+      const ivs = t === 'space' ? [31, 38, 43] : [36, 40, 43, 47];
+      for (const [i, iv] of ivs.entries()) {
+        const o = A.createOscillator(); o.frequency.value = mtof(Math.min(84, pal.root + iv)); o.detune.value = (i - 1) * 5; o.start();
+        const g = A.createGain(); g.gain.value = 0; lfo(0.03 + i * 0.017, 0.012, g.gain, 0.012); o.connect(g); g.connect(bedG);
+      }
+      if (t === 'space') swell(loopNoise('lowpass', 260, 0.5), 0.02, 0.35);
+    }
+  }
+  function bedEvents(t) {                          // the beds that are made of small events
+    if (!bedG || t < bedNext) return;
+    const b = pal.bed, q = clamp(droneMul(), 0, 3), quiet = 0.45 + 0.55 * light;
+    if (!q) { bedNext = t + 2; return; }
+    if (b === 'pulse') {                           // a resting heartbeat: lub-dub
+      const f = mtof(lift(pal.root - 12));
+      note(t + 0.05, f, 0.03 * q, 'thump', { wet: 0.5, rich: 0 }); note(t + 0.33, f * 0.94, 0.018 * q, 'thump', { wet: 0.5, rich: 0 });
+      bedNext = t + 1.6 + Math.random() * 0.5 + (1 - light) * 0.6;
+    } else if (b === 'bubbles') {
+      note(t + 0.05, mtof(pal.root + 24 + Math.floor(Math.random() * 12)), 0.008 * q * quiet, 'bubble', { pan: (Math.random() - 0.5) * 1.6, wet: 0.9 });
+      bedNext = t + 0.6 + Math.random() * 3.5;
+    } else if (b === 'forest') {                   // a bird, now and then, by day
+      if (light > 0.3 && Math.random() < 0.8) {
+        const f0 = 1600 + Math.random() * 1400, n = 2 + Math.floor(Math.random() * 4), pan = (Math.random() - 0.5) * 1.8;
+        for (let i = 0; i < n; i++) chirp(t + 0.1 + i * (0.16 + Math.random() * 0.1), f0 * (1 + (Math.random() - 0.5) * 0.15), 0.006 * q, pan);
+      }
+      bedNext = t + 5 + Math.random() * 14;
+    } else if (b === 'hearth') {
+      noise(t + 0.05, 0.12 + Math.random() * 0.2, 0.012 * q, 700 + Math.random() * 900, 1.6);
+      bedNext = t + 0.4 + Math.random() * 2.8;
+    } else if (b === 'patter') {                   // light rain on leaves
+      noise(t + 0.02, 0.06 + Math.random() * 0.05, 0.006 * q * quiet, 1300 + Math.random() * 1500, 2.5);
+      bedNext = t + 0.08 + Math.random() * 0.45;
+    } else bedNext = t + 5;
+  }
+  function chirp(t, f, gain, pan) {
+    if (live >= 32) return;
+    const o = A.createOscillator(), g = A.createGain(); o.frequency.setValueAtTime(f, t);
+    o.frequency.exponentialRampToValueAtTime(f * (1.25 + Math.random() * 0.3), t + 0.07); o.frequency.exponentialRampToValueAtTime(f * 0.9, t + 0.14);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.02); g.gain.linearRampToValueAtTime(0, t + 0.15);
+    o.connect(g); route(g, { pan, wet: 1.1 }, Object.assign([o], { t0: t }), t + 0.2);
+  }
+  function noise(t, dur, gain, freq, q) {
+    if (live >= 32) return;
+    getNoise();
     const s = A.createBufferSource(); s.buffer = noiseBuf; const f = A.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
     const g = A.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.04); g.gain.setTargetAtTime(0, t + 0.06, dur / 4);
     s.connect(f); f.connect(g); g.connect(dry); const w = A.createGain(); w.gain.value = 0.9; g.connect(w); w.connect(verb);
@@ -268,7 +460,7 @@
         voices.set(k, o);
         const back = heard.get(k);              // a kind that only flickered out for a moment is not new
         if (!firstFrame && (!back || t - back > 90) && chimes-- > 0)
-          note(t + Math.random() * 1.5, pitch(v.deg, (v.oct || 0) + 1), 0.022, 'glass', { pan: o.pan, echo: 0.5, wet: 1.1 });
+          note(t + Math.random() * 1.5, pitch(v.deg, (v.oct || 0) + 1), 0.022, pal.chime, { pan: o.pan, echo: 0.5, wet: 1.1 });
       }
       Object.assign(o, v, { miss: 0 });
       heard.set(k, t);
@@ -278,7 +470,7 @@
       if (++o.miss < 4) continue;               // gone for several frames running: it has died out here
       voices.delete(k);
       if (!firstFrame && o.rank < 20 && farewells-- > 0)
-        note(t + Math.random() * 2, pitch(o.deg, o.oct || 0), 0.03, 'reed', { glide: 0.8, wet: 1.4, echo: 0.6, pan: o.pan, hold: 2 });
+        note(t + Math.random() * 2, pitch(o.deg, o.oct || 0), 0.03, o.timbre || pal.voice, { glide: 0.8, wet: 1.4, echo: 0.6, pan: o.pan, hold: 2 });
     }
     if (heard.size > 4000) heard.clear();
     // the rain: counters that rose since the last frame
@@ -312,15 +504,15 @@
       if (kind.includes('milestone') || kind.includes('record')) {
         keyShift = ((keyShift + 7) % 12 + 12) % 12; if (keyShift > 6) keyShift -= 12;
         retune(6);
-        [0, 4, 7, 14].forEach((iv, i) => note(t + 0.6 + i * 0.7, mtof(root() + iv), 0.03, 'bell', { wet: 1.3, echo: 0.4, pan: (i - 1.5) * 0.4 }));
+        [0, 4, 7, 14].forEach((iv, i) => note(t + 0.6 + i * 0.7, mtof(lift(root() + iv)), 0.03, pal.chime, { wet: 1.3, echo: 0.4, pan: (i - 1.5) * 0.4 }));
       } else if (kind.includes('extinct') || txt.includes(' is gone')) {
-        note(t + 0.3, pitch(-2, 0), 0.028, 'reed', { glide: 0.7, wet: 1.6, echo: 0.6, hold: 2.5 });
+        note(t + 0.3, pitch(-2, 0), 0.028, pal.voice, { glide: 0.7, wet: 1.6, echo: 0.6, hold: 2.5 });
       } else if (txt.includes('established')) {
         const v = [...voices.values()].find(v => v.name && txt.includes(v.name.toLowerCase())) || { deg: 2, oct: 0 };
-        note(t + 0.2, pitch(v.deg, v.oct || 0), 0.035, 'pad', { wet: 1.1, hold: 1.6 });
-        note(t + 1.4, pitch(v.deg + 2, v.oct || 0), 0.025, 'pad', { wet: 1.1, hold: 1.4 });
+        note(t + 0.2, pitch(v.deg, v.oct || 0), 0.035, pal.voice2 || pal.voice, { wet: 1.1, hold: 1.6 });
+        note(t + 1.4, pitch(v.deg + 2, v.oct || 0), 0.025, pal.voice2 || pal.voice, { wet: 1.1, hold: 1.4 });
       } else {
-        note(t + 0.2, pitch(4, 0), 0.02, 'bell', { wet: 1.2, echo: 0.4 });
+        note(t + 0.2, pitch(4, 0), 0.02, pal.chime, { wet: 1.2, echo: 0.4 });
       }
     }
     if (ev.length) lastEventTick = Math.max(lastEventTick == null ? -1 : lastEventTick, ...ev.map(e => e.tick || 0));
@@ -329,6 +521,7 @@
     const pop = slug === 'coast' ? ((s.animals || 0) + (s.plants || 0) / 6) : [...kinds.values()].reduce((a, v) => a + (v.n || 0), 0);
     const dl = clamp(0.008 + Math.log1p(pop) * 0.0035, 0.008, 0.035);
     drone.dg.gain.setTargetAtTime(dl * droneMul(), t, 4);
+    if (bedG) bedG.gain.setTargetAtTime(0.05 * droneMul() * (0.55 + 0.45 * light), t, 5);
     drone.df.frequency.setTargetAtTime(180 + 500 * light + 300 * rich, t, 6);
     drone.hg.gain.setTargetAtTime((0.002 + 0.025 * rich * rich) * droneMul(), t, 8);
     firstFrame = false;
@@ -344,13 +537,14 @@
   function scheduler() {
     if (!A || !on) return;
     const t = A.currentTime, dens = (0.8 + 0.5 * (1 - light)) * Math.pow(2, -MIX.pace), audible = voicesAudible();
+    bedEvents(t);
     for (const [, o] of voices) {
       if (o.rank >= audible) { while (o.next < t + 0.4) o.next += o.period; continue; }
       while (o.next < t + 0.4) {
         if (o.next > t - 0.5) {
           const g = clamp(0.018 + 0.07 * Math.sqrt(o.share || 0), 0.015, 0.08);
           note(Math.max(o.next, t + 0.02), pitch(o.deg, (o.oct || 0) + (o.oct2 || 0)), g, o.timbre, { pan: o.pan, dark: o.dark, echo: 0.25 + 0.2 * (1 - light), wet: 0.6 + 0.4 * (1 - light) });
-          if (o.glow > 0.3) note(o.next + 0.08, pitch(o.deg, (o.oct || 0) + 1), g * 0.2 * o.glow, 'glass', { pan: o.pan, wet: 1.2 });
+          if (o.glow > 0.3) note(o.next + 0.08, pitch(o.deg, (o.oct || 0) + 1), g * 0.2 * o.glow, pal.chime, { pan: o.pan, wet: 1.2 });
         }
         o.next += o.period * dens;
       }
@@ -520,7 +714,7 @@
   }
   function legend() {
     const p = pal;
-    return `<p class="note">Everything you hear is made by the world as it changes. Nothing is recorded or composed.</p><table>
+    return `<p class="note">This panel's sound: ${esc(p.sound)}. Everything you hear is made by the world as it changes. Nothing is recorded or composed.</p><table>
       <tr><td>A steady loop of one note</td><td>one living kind (${esc(p.words)})</td></tr>
       <tr><td>How loud its loop is</td><td>how many of it there are</td></tr>
       <tr><td>A high chime, then a new loop</td><td>a new variant has appeared</td></tr>
@@ -529,7 +723,7 @@
       <tr><td>Rain of small notes</td><td>${esc((p.rain || []).map(r => r[2]).join(', '))}</td></tr>
       <tr><td>Overtones and the high halo</td><td>progress: ${esc(p.progress[0].replace(/_/g, ' '))}, now ${Math.round(rich * 100)}% of the way</td></tr>
       <tr><td>A ringing chord, then a new key</td><td>a milestone</td></tr>
-      <tr><td>The drone underneath</td><td>the whole population; it darkens at night</td></tr></table>
+      <tr><td>The drone and the ${esc(p.bed === 'pulse' ? 'heartbeat' : p.bed)} beneath</td><td>the whole population; both darken and thin out at night</td></tr></table>
       <p class="note" style="margin-top:1.4vmin">Tap the speaker grille for the sound knobs (or press S to turn it on and off). Loops now: ${Math.min(14, voices.size)} sounding, ${voices.size} kinds alive.</p>`;
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
