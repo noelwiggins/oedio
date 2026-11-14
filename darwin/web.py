@@ -497,6 +497,94 @@ def api_algo_history():
     return jsonify(cloud.read_history())
 
 
+# ── the Coast's fossil archive: every kind that has ever lived ─────────────
+def _fossil_row(r, day):
+    d = store.loads(r.data, {}) or {}
+    return {"sid": int(r.sid), "kind": r.kind, "name": r.name, "parent": r.parent, "born": round(r.born / day, 1),
+            "gone": None if r.gone is None else round(r.gone / day, 1), "peak": int(r.peak or 0),
+            "peak_day": None if r.peak_tick is None else round(r.peak_tick / day, 1), "gen": int(r.gen or 0),
+            "look": d.get("look"), "zone": d.get("zone")}
+
+
+def _fossil_now(day):
+    """The archive's own clock: the latest moment it has heard of (it is written every minute)."""
+    F = store.algo_fossils
+    with store.engine().connect() as c:
+        r = c.execute(sa.select(sa.func.max(F.c.born), sa.func.max(F.c.gone), sa.func.max(F.c.peak_tick))
+                      .where(F.c.world == "coast")).first()
+    v = max([x for x in (r or []) if x is not None] or [0])
+    return round(v / day, 1)
+
+
+@bp.route("/api/algo/fossils")
+def api_algo_fossils():
+    from .algogenesis.engine import DAY
+    F = store.algo_fossils
+    kind, status = request.args.get("kind", "all"), request.args.get("status", "all")
+    sort, q = request.args.get("sort", "peak"), (request.args.get("q") or "").strip()[:40]
+    notable = request.args.get("notable") == "1"
+    offset = max(0, request.args.get("offset", type=int, default=0))
+    limit = min(120, max(1, request.args.get("limit", type=int, default=60)))
+    base = F.c.world == "coast"
+    cond = [base]
+    if kind in ("animal", "plant"):
+        cond.append(F.c.kind == kind)
+    if status == "living":
+        cond.append(F.c.gone.is_(None))
+    elif status == "gone":
+        cond.append(F.c.gone.isnot(None))
+    if notable:
+        cond.append(F.c.peak >= 8)
+    if q:
+        cond.append(F.c.name.ilike(f"%{q}%"))
+    order = {"oldest": [F.c.born.asc()], "newest": [F.c.born.desc()],
+             "lost": [F.c.gone.is_(None), F.c.gone.desc()]}.get(sort, [F.c.peak.desc(), F.c.born.asc()])
+    with store.engine().connect() as c:
+        total = c.execute(sa.select(sa.func.count()).select_from(F).where(*cond)).scalar() or 0
+        rows = c.execute(sa.select(F).where(*cond).order_by(*order, F.c.sid).offset(offset).limit(limit)).all()
+        by = c.execute(sa.select(F.c.kind, F.c.gone.is_(None), sa.func.count(), sa.func.sum(sa.case((F.c.peak >= 8, 1), else_=0)))
+                       .where(base).group_by(F.c.kind, F.c.gone.is_(None))).all()
+    counts = {"all": 0, "animal": 0, "plant": 0, "living": 0, "gone": 0, "notable": 0}
+    for k, alive, n, nn in by:
+        counts["all"] += n; counts[k] = counts.get(k, 0) + n; counts["living" if alive else "gone"] += n
+        counts["notable"] += int(nn or 0)
+    return jsonify({"total": int(total), "offset": offset, "counts": counts, "now_day": _fossil_now(DAY),
+                    "items": [_fossil_row(r, DAY) for r in rows]})
+
+
+@bp.route("/api/algo/fossils/<int:sid>")
+def api_algo_fossil(sid):
+    from .algogenesis import cloud
+    from .algogenesis.engine import DAY
+    F = store.algo_fossils
+    with store.engine().connect() as c:
+        r = c.execute(sa.select(F).where(F.c.world == "coast", F.c.sid == sid)).first()
+        if r is None:
+            abort(404)
+        out = _fossil_row(r, DAY)
+        chain, p, guard = [], r.parent, 0          # its ancestors, back to the first of its line
+        while p is not None and guard < 30:
+            a = c.execute(sa.select(F).where(F.c.world == "coast", F.c.sid == p)).first()
+            if a is None:
+                chain.append({"sid": int(p), "name": None})
+                break
+            chain.append(_fossil_row(a, DAY)); p, guard = a.parent, guard + 1
+        kids_q = sa.select(F).where(F.c.world == "coast", F.c.parent == sid)
+        n_kids = c.execute(sa.select(sa.func.count()).select_from(kids_q.subquery())).scalar() or 0
+        kids = c.execute(kids_q.order_by(F.c.peak.desc(), F.c.born.asc()).limit(18)).all()
+        C = store.algo_chronicle
+        notes = c.execute(sa.select(C.c.day, C.c.text).where(C.c.text.ilike(f"%{r.name}%")).order_by(C.c.id.asc()).limit(6)).all()
+    events = []
+    try:
+        events = [e for e in (cloud.read_history() or {}).get("events", []) if r.name in e.get("text", "")][-8:]
+    except Exception:
+        pass
+    out.update({"now_day": _fossil_now(DAY), "ancestors": chain, "children": [_fossil_row(k, DAY) for k in kids], "n_children": int(n_kids),
+                "journal": [{"day": d, "text": t} for d, t in notes],
+                "events": [{"day": e.get("day"), "kind": e.get("kind"), "text": e.get("text")} for e in events]})
+    return jsonify(out)
+
+
 @bp.route("/api/algo/chronicle")
 def api_algo_chronicle():
     from .algogenesis import cloud

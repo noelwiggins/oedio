@@ -160,6 +160,7 @@ class World(DialsMixin):
         self.next_sid += 1
         self.species[sid] = {"kind": kind, "g": genes.copy(), "name": species_name(sid, kind, genes),
                              "born": int(self.tick), "parent": parent, "peak": 0, "gen": int(gen)}
+        self._fossil(sid)
         return sid
 
     def _species_of(self, kind, genes, parent, gen):
@@ -634,17 +635,96 @@ class World(DialsMixin):
                 s["extinct"] = int(self.tick)
                 self.extinct += 1
                 self._event("extinction", f"{s['name']} ({s['kind']}) is gone after {self._days(self.tick - s['born'])} days")
-        F, Pi = self.f_alive, self.p_alive
-        for arr, alive in ((self.fsp, F), (self.psp, Pi)):
-            sp, cnt = np.unique(arr[alive], return_counts=True)
-            for sid, c in zip(sp.tolist(), cnt.tolist()):
+        for sid, s in self.species.items():           # the archive notes when every kind, however small, disappears
+            if sid not in live and s.get("gone") is None:
+                s["gone"] = int(self.tick)
+                self._fossil(sid)
+        for kind, arr, alive, X, Y, Gm in (("animal", self.fsp, self.f_alive, self.fx, self.fy, self.G),
+                                           ("plant", self.psp, self.p_alive, self.px, self.py, self.P)):
+            idx = np.flatnonzero(alive)
+            if not len(idx):
+                continue
+            sp, inv, cnt = np.unique(arr[idx], return_inverse=True, return_counts=True)
+            for k, (sid, c) in enumerate(zip(sp.tolist(), cnt.tolist())):
                 s = self.species[sid]
                 if s.get("peak", 0) < 8 <= c:
                     self._event("new species", f"{s['name']} ({s['kind']}) is established")
-                s["peak"] = max(s.get("peak", 0), c)
+                if s.get("gone") is not None:           # back from refugia
+                    s["gone"] = None
+                    self._fossil(sid)
+                if c > s.get("peak", 0):
+                    m = idx[inv == k]
+                    s["peak"], s["peak_tick"] = c, int(self.tick)
+                    s["pg"] = Gm[m].mean(0)                # its portrait: the average member at its height
+                    s["zone"] = zone_name(float(np.median(self.height(X[m], Y[m]))) - self.sea)
+                    self._fossil(sid)
         keep = live | {s["parent"] for sid, s in self.species.items() if sid in live and s["parent"]}
         if len(self.species) > 3 * len(keep) + 600:
             self.species = {k: v for k, v in self.species.items() if k in keep or v.get("extinct", 0) > self.tick - 20 * EPOCH}
+
+    # ── the archive: every kind that has ever lived ──────────────────────
+    def _fossil(self, sid):
+        """Queue the archive record of one species; the runner writes the queue to the database."""
+        s = self.species.get(sid)
+        if s is None:
+            return
+        q = self.__dict__.setdefault("fossil_q", {})
+        g = s.get("pg", s["g"])
+        q[int(sid)] = {"sid": int(sid), "kind": s["kind"], "name": s["name"],
+                       "parent": int(s["parent"]) if s.get("parent") is not None else None,
+                       "born": int(s["born"]), "gone": s.get("gone"), "peak": int(s.get("peak", 0)),
+                       "peak_tick": s.get("peak_tick"), "gen": int(s.get("gen", 0)),
+                       "look": _look(g) if s["kind"] == "animal" else _plook(g), "zone": s.get("zone")}
+
+    def take_fossils(self):
+        return list((self.__dict__.get("fossil_q") or {}).values())
+
+    def clear_fossils(self, rows):
+        """Forget queued records once they are safely written (a record re-queued since then stays)."""
+        q = self.__dict__.get("fossil_q") or {}
+        for r in rows:
+            if q.get(r["sid"]) is r:
+                del q[r["sid"]]
+
+    def fossil_backfill(self):
+        """Once, for a world that ran before the archive existed: every kind still on file, and every kind that
+        ever led a fossil layer (the strata reach back to the first epoch)."""
+        live = set(np.unique(self.fsp[self.f_alive]).tolist()) | set(np.unique(self.psp[self.p_alive]).tolist())
+        seen = {}
+        for L in self.strata:
+            for kind, key in (("animal", "animals"), ("plant", "plants")):
+                for e in L.get(key, []):
+                    r = seen.setdefault(e["sid"], {"kind": kind, "name": e["name"], "first": L["tick"], "last": L["tick"],
+                                                   "peak": 0, "peak_tick": L["tick"], "e": e})
+                    r["last"] = L["tick"]
+                    if e["n"] > r["peak"]:
+                        r["peak"], r["peak_tick"], r["e"] = e["n"], L["tick"], e
+        for kind, arr, alive, X, Y, Gm in (("animal", self.fsp, self.f_alive, self.fx, self.fy, self.G),
+                                           ("plant", self.psp, self.p_alive, self.px, self.py, self.P)):
+            idx = np.flatnonzero(alive)
+            for sid in np.unique(arr[idx]).tolist():
+                s = self.species[sid]
+                if "pg" not in s:                      # a portrait and a home for the living, from how they are now
+                    m = idx[arr[idx] == sid]
+                    s["pg"] = Gm[m].mean(0)
+                    s["zone"] = zone_name(float(np.median(self.height(X[m], Y[m]))) - self.sea)
+        for sid, s in self.species.items():
+            if sid not in live and s.get("gone") is None:
+                s["gone"] = int(s.get("extinct") or self.tick)
+            if "peak_tick" not in s and sid in seen:
+                s["peak_tick"] = int(seen[sid]["peak_tick"])
+            self._fossil(sid)
+        q = self.__dict__.setdefault("fossil_q", {})
+        for sid, r in seen.items():
+            if sid in self.species:
+                continue
+            e = r["e"]
+            look = e["look"] if r["kind"] == "animal" else \
+                [e["hue"], e["petals"], 0.5, 0.5, 0.6, round((e["hue"] + 0.12) % 1, 3), 0.5]
+            q[int(sid)] = {"sid": int(sid), "kind": r["kind"], "name": r["name"], "parent": None,
+                           "born": int(max(0, r["first"] - EPOCH)), "gone": int(r["last"] + EPOCH), "peak": int(r["peak"]),
+                           "peak_tick": int(r["peak_tick"]), "gen": 0, "look": look, "zone": None}
+        self.fossil_backfilled = True
 
     # ── measurement ──────────────────────────────────────────────────────
     def day(self):
@@ -735,6 +815,23 @@ def _look(g):
     return [round(float(g[HUE]), 3), round(float(g[SAT]), 2), round(float(g[HUE2]), 3), round(float(g[PATTERN]), 2),
             round(float(g[GLOW]), 2), int(round(float(g[SEGS]))), int(round(float(g[LIMBS]))), round(float(g[SIZE]), 2),
             round(float(g[TAIL]), 2), round(float(g[CREST]), 2), round(float(g[FIN]), 2), round(float(g[DIET]), 2)]
+
+
+def _plook(g):
+    return [round(float(g[P_HUE]), 3), round(float(g[P_PETALS]), 1), round(float(g[P_SIZE]), 2), round(float(g[P_HEIGHT]), 2),
+            round(float(g[P_SAT]), 2), round(float(g[P_HUE2]), 3), round(float(g[P_NECTAR]), 2)]
+
+
+PLOOK_KEYS = ["hue", "petals", "size", "height", "sat", "hue2", "nectar"]
+ZONES = [(-0.42, "the deep"), (-0.16, "the open sea"), (0.0, "the shallows"), (0.045, "the shore"), (0.30, "the meadow"),
+         (0.58, "the uplands"), (9e9, "the heights")]
+
+
+def zone_name(d):
+    for lim, name in ZONES:
+        if d <= lim:
+            return name
+    return ZONES[-1][1]
 
 
 LOOK_KEYS = ["hue", "sat", "hue2", "pattern", "glow", "segs", "limbs", "size", "tail", "crest", "fin", "diet"]

@@ -207,6 +207,22 @@ algo_chronicle = sa.Table(
     sa.Column("facts", J),
 )
 
+# the Coast's fossil archive: one row for every kind of animal or flower that has ever lived there
+algo_fossils = sa.Table(
+    "darwin_algo_fossils", md,
+    sa.Column("world", T, primary_key=True),
+    sa.Column("sid", sa.BigInteger, primary_key=True, autoincrement=False),
+    sa.Column("kind", T, index=True),
+    sa.Column("name", T),
+    sa.Column("parent", sa.BigInteger, index=True),
+    sa.Column("born", sa.BigInteger),
+    sa.Column("gone", sa.BigInteger),
+    sa.Column("peak", sa.Integer, index=True),
+    sa.Column("peak_tick", sa.BigInteger),
+    sa.Column("gen", sa.Integer),
+    sa.Column("data", J),
+)
+
 # visitors' dial settings for each panel ("coast" or a concept slug): {dial: [value, unix time]}
 algo_controls = sa.Table(
     "darwin_algo_controls", md,

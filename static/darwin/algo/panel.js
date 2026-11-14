@@ -46,6 +46,10 @@
     const pf = L.pf, cw = Math.min(pf.w * 0.5, L.u * 0.95), chh = pf.h * 0.78;
     card.style.width = (cw / d) + 'px'; card.style.maxHeight = (chh / d) + 'px';
     card.style.left = ((pf.x + (pf.w - cw) / 2) / d) + 'px'; card.style.top = ((pf.y + pf.h * 0.1) / d) + 'px';
+    if (window.AlgoFossils) {
+      const fw = Math.min(pf.w * 0.9, L.u * 1.5), fh = pf.h * 0.92;
+      AlgoFossils.place({ x: (pf.x + (pf.w - fw) / 2) / d, y: (pf.y + (pf.h - fh) / 2) / d, w: fw / d, h: fh / d });
+    }
   }
 
   // ── data ─────────────────────────────────────────────────────────────
@@ -399,8 +403,10 @@
     const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.64) - wx), wy = T.y + T.h * 0.18, wh = T.h * 0.64;
     L.fossilWin = { x: wx, y: wy, w: ww, h: wh };
     rrect(wx, wy, ww, wh, u * 0.01); ctx.fillStyle = '#1b130d'; ctx.fill(); ctx.lineWidth = u * 0.006; ctx.strokeStyle = chrome(wx, wy, wx + ww, wy + wh); ctx.stroke();
+    ctx.save(); rrect(wx, wy, ww, wh, u * 0.01); ctx.clip();
+    const imprints = window.AlgoFossils ? AlgoFossils.drawStrip.bind(null, ctx, wx, wy, ww, wh, t) : null;
     if (strata && strata.length) {
-      ctx.save(); rrect(wx, wy, ww, wh, u * 0.01); ctx.clip();
+      ctx.globalAlpha = imprints ? 0.32 : 1;      // the strata lie behind the imprints, like layers of rock
       const n = strata.length, cwid = Math.max(2, Math.min(ww / Math.max(n, 40), u * 0.02)), pad = wh * 0.08, hh = wh - 2 * pad;
       for (let i = 0; i < n; i++) {
         const Ly = strata[i], x = wx + ww - (n - i) * cwid - u * 0.006;
@@ -413,8 +419,10 @@
         const ptot = Ly.plants.reduce((a, b) => a + b.n, 0) || 1; yy += hh * 0.02;
         for (const p of Ly.plants) { const hg = hh * 0.3 * p.n / ptot; ctx.fillStyle = `hsl(${p.hue * 360},60%,62%)`; ctx.fillRect(x, yy, cwid - 1, hg); yy += hg; }
       }
-      ctx.restore();
+      ctx.globalAlpha = 1;
     }
+    if (imprints) imprints();
+    ctx.restore();
     // glass glare
     ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + ww * 0.3, wy); ctx.lineTo(wx + ww * 0.15, wy + wh); ctx.lineTo(wx, wy + wh); ctx.closePath(); ctx.fill();
   }
@@ -480,6 +488,12 @@
     if (html) { body.innerHTML = html; if (kind !== 'journal') delete body.dataset.loaded; }
   }
   function toggleCard(kind) {
+    if (kind === 'fossils' && window.AlgoFossils) {   // the fossil record is a cabinet of its own
+      closeCard();
+      if (AlgoFossils.isOpen()) AlgoFossils.close(); else AlgoFossils.open();
+      return;
+    }
+    if (window.AlgoFossils && AlgoFossils.isOpen()) AlgoFossils.close();
     document.querySelectorAll('.key').forEach(k => k.classList.toggle('on', k.dataset.card === kind && openCard !== kind));
     if (openCard === kind) { closeCard(); return; }
     openCard = kind; card.querySelector('.body').dataset.loaded = ''; renderCard(kind, false); card.classList.add('open');
@@ -493,6 +507,7 @@
     if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) return toggleCard('about');
     if (f && x > f.x && x < f.x + f.w && y > f.y && y < f.y + f.h) return toggleCard('fossils');
     if (openCard) closeCard();
+    if (window.AlgoFossils && AlgoFossils.isOpen()) AlgoFossils.close();
   });
 
   // ── the frame loop ───────────────────────────────────────────────────
@@ -537,6 +552,11 @@
     openCard = 'dial'; card.querySelector('h2').textContent = title; card.querySelector('.body').innerHTML = html;
     card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
     clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 60000);
+  }
+  if (window.AlgoFossils) {
+    AlgoFossils.mount({ api: API,
+      onOpen: () => document.querySelectorAll('.key').forEach(k => k.classList.toggle('on', k.dataset.card === 'fossils')),
+      onClose: () => document.querySelectorAll('.key[data-card="fossils"]').forEach(k => k.classList.remove('on')) });
   }
   getJSON('/meta').then(m => { if (window.AlgoDials) { AlgoDials.mount({ container: keys, post: API + '/dial', dials: m.dials || [], show: showCard }); placeKeys(); } }).catch(() => {});
 

@@ -16,6 +16,8 @@ inside their cards. Studio on phones (<=640px): single column, source filter + s
 
 ## ALGOGENESIS — all twelve concept panels + dials (2026-11-12)
 
+**2026-11-13 fossil archive:** every Coast species ever named is archived in `darwin_algo_fossils` (world, sid, kind, name, parent, born, gone, peak, peak_tick, gen, data{look, zone}). Engine queues records (`_fossil`, on birth / new peak / disappearance / return), `cloud.checkpoint` upserts them each minute and clears the queue only after commit; `fossil_backfill()` runs once on an old world (species dict + every stratum leader since epoch 1). APIs `/darwin/api/algo/fossils` (filters kind/status/sort/notable/q, paging) and `/fossils/<sid>` (ancestors, descendants, journal + event mentions). UI `static/darwin/algo/fossils.js`: specimen renderer from genes, archive cabinet over the playfield (fossils key or tray window), detail sheet with lineage and history; tray window shows a moving strip of imprints over the strata. Concept worlds not included (they have no species).
+
 **2026-11-13 dial fixes (492d424):** −10..+10 number pill above each knob (lights in the dial colour at ±10); Coast dial info cards no longer overwritten by the per-frame about-card re-render (`openCard !== 'dial'` guard in panel.js); knobs + keys scale (min 0.45, origin right-center) in placeKeys of panel.js and cabinet.js so they never cover the fossil window. Verified at 1106×835 @2x.
 All 12 concepts LIVE (worlds/__init__: LIVE built from CONCEPTS). New engines: epigenesis (GRN embryos in 16 wells,
 maternal pole/radial gradients), noogenesis (recurrent-brain foragers, blinking orbiting blooms, dark-meal metric),

@@ -67,11 +67,33 @@ def checkpoint(w: E.World):
         old = c.execute(sa.select(S.algo_checkpoints.c.id).order_by(S.algo_checkpoints.c.id.desc()).offset(3)).scalars().all()
         if old:
             c.execute(S.algo_checkpoints.delete().where(S.algo_checkpoints.c.id.in_(old)))
+        written = flush_fossils(w, c)
         hist = json.dumps({"history": w.history[-1500:], "strata": w.strata, "events": w.events[-200:]},
                           separators=(",", ":"))
         r = c.execute(S.algo_live.update().where(S.algo_live.c.id == 2).values(ts=S.now(), data=hist))
         if r.rowcount == 0:
             c.execute(S.algo_live.insert().values(id=2, ts=S.now(), data=hist))
+    w.clear_fossils(written)
+
+
+def flush_fossils(w: E.World, c):
+    """Write the archive records the world has queued since the last checkpoint (insert or update)."""
+    if not getattr(w, "fossil_backfilled", False):
+        w.fossil_backfill()
+    rows = w.take_fossils()
+    if not rows:
+        return []
+    from sqlalchemy.dialects import postgresql, sqlite
+    ins = (postgresql.insert if c.dialect.name == "postgresql" else sqlite.insert)(S.algo_fossils)
+    vals = [{"world": "coast", "sid": r["sid"], "kind": r["kind"], "name": r["name"], "parent": r["parent"],
+             "born": r["born"], "gone": r["gone"], "peak": r["peak"], "peak_tick": r["peak_tick"], "gen": r["gen"],
+             "data": json.dumps({"look": r["look"], "zone": r["zone"]}, separators=(",", ":"))} for r in rows]
+    for i in range(0, len(vals), 500):
+        st = ins.values(vals[i:i + 500])
+        c.execute(st.on_conflict_do_update(index_elements=["world", "sid"],
+                                           set_={k: st.excluded[k] for k in ("kind", "name", "parent", "born", "gone",
+                                                                             "peak", "peak_tick", "gen", "data")}))
+    return rows
 
 
 def live_payload(w: E.World, chron=None) -> dict:
