@@ -88,24 +88,40 @@
 
   // ── the audio graph ──────────────────────────────────────────────────
   let A = null, out, dry, verb, echo, warm, wet, drone = null, analyser, buf, slug = 'coast', pal = P.coast, on = false;
-  let lastRainT = 0, voices = new Map(), heard = new Map(), prevStats = null, lastEventTick = null, keyShift = 0, rich = 0.3, light = 1, tickT = null, firstFrame = true, lastLvl = 0;
+  let live = 0, noiseBuf = null, lastRainT = 0, voices = new Map(), heard = new Map(), prevStats = null, lastEventTick = null, keyShift = 0, rich = 0.3, light = 1, tickT = null, firstFrame = true, lastLvl = 0;
 
+  const TRIM = 0.45;
   function impulse(sec, decay) {
     const n = Math.floor(A.sampleRate * sec), b = A.createBuffer(2, n, A.sampleRate);
-    for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay); }
+    // a room, not a hiss: the noise is filtered ever darker as it decays, and fades in over 20 ms
+    for (let c = 0; c < 2; c++) {
+      const d = b.getChannelData(c); let y = 0;
+      for (let i = 0; i < n; i++) {
+        const f = i / n, cut = 0.5 * Math.pow(1 - f, 3) + 0.015;      // one-pole coefficient: bright early, dark late
+        y += cut * ((Math.random() * 2 - 1) - y);
+        d[i] = y * Math.pow(1 - f, decay) * Math.min(1, i / (A.sampleRate * 0.02)) * 0.9;
+      }
+    }
     return b;
   }
   function build() {
-    A = new (window.AudioContext || window.webkitAudioContext)();
+    const AC = window.AudioContext || window.webkitAudioContext;
+    try { A = new AC({ latencyHint: 'playback' }); } catch (e) { A = new AC(); }   // big buffers: no underrun crackle
     out = A.createGain(); out.gain.value = 0;
-    const comp = A.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 3; comp.attack.value = 0.05; comp.release.value = 0.6;
+    const comp = A.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.5;
+    // small speakers cannot move deep bass cleanly and rattle like static: keep the sound above ~90 Hz
+    const hp1 = A.createBiquadFilter(), hp2 = A.createBiquadFilter(), shelf = A.createBiquadFilter();
+    hp1.type = hp2.type = 'highpass'; hp1.frequency.value = hp2.frequency.value = 85; hp1.Q.value = hp2.Q.value = 0.6;
+    shelf.type = 'lowshelf'; shelf.frequency.value = 220; shelf.gain.value = -6;
+    const trim = A.createGain(); trim.gain.value = TRIM;      // the compressors add make-up gain; take it back
+    const lim = A.createDynamicsCompressor(); lim.threshold.value = -1; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.15;
     analyser = A.createAnalyser(); analyser.fftSize = 512; buf = new Float32Array(analyser.fftSize);
     warm = A.createBiquadFilter(); warm.type = 'lowpass'; warm.Q.value = 0.5;
-    out.connect(warm); warm.connect(comp); comp.connect(analyser); analyser.connect(A.destination);
+    out.connect(hp1); hp1.connect(hp2); hp2.connect(shelf); shelf.connect(warm); warm.connect(comp); comp.connect(trim); trim.connect(lim); lim.connect(analyser); analyser.connect(A.destination);
     dry = A.createGain(); dry.gain.value = 0.55; dry.connect(out);
     // a long hall
     verb = A.createGain(); verb.gain.value = 1;
-    const conv = A.createConvolver(); conv.buffer = impulse(8, 2.4); wet = A.createGain(); wet.gain.value = 0.85;
+    const conv = A.createConvolver(); conv.buffer = impulse(5, 2.2); wet = A.createGain(); wet.gain.value = 0.85;
     verb.connect(conv); conv.connect(wet); wet.connect(out);
     // a slow tape echo, darkening on each repeat
     echo = A.createGain(); echo.gain.value = 1;
@@ -126,9 +142,10 @@
     retune(0);
   }
   function root() { return pal.root + keyShift; }
+  const lift = m => { while (m < 43) m += 12; return m; };        // nothing below G2 (98 Hz)
   function retune(glide) {
     if (!drone) return;
-    const t = A.currentTime, r = root() - 12;
+    const t = A.currentTime, r = lift(root() - 12);
     for (const { o, iv } of drone.oscs) o.frequency.setTargetAtTime(mtof(r + iv), t, glide || 0.01);
     for (const { o, iv } of drone.halo) o.frequency.setTargetAtTime(mtof(root() + iv), t, glide || 0.01);
     drone.hf.frequency.setTargetAtTime(mtof(root() + 31), t, glide || 0.01);
@@ -137,7 +154,7 @@
   // ── notes ────────────────────────────────────────────────────────────
   // FM voice: one carrier, one modulator; richness opens the modulation index (more overtones)
   function note(t, freq, gain, timbre, opt = {}) {
-    if (!A || gain <= 0.0005) return;
+    if (!A || gain <= 0.0005 || live >= 32) return;          // a polyphony ceiling keeps the audio thread relaxed
     const T = {
       marimba: { ratio: 4, idx: 0.7, a: 0.035, d: 3.4, sus: 0 },
       bell:    { ratio: 3.5, idx: 1.1, a: 0.05, d: 7.5, sus: 0 },
@@ -160,31 +177,36 @@
     env.gain.setValueAtTime(0.0001, t);
     env.gain.exponentialRampToValueAtTime(gain, t + T.a);
     let end;
-    if (T.sus) { const h = (T.hold || 1) * (opt.hold || 1); env.gain.setTargetAtTime(gain * T.sus, t + T.a, 0.8); env.gain.setTargetAtTime(0.0001, t + T.a + h, T.d / 4); end = t + T.a + h + T.d * 1.4; }
-    else { env.gain.exponentialRampToValueAtTime(0.0001, t + T.a + T.d); end = t + T.a + T.d + 0.1; }
+    if (T.sus) { const h = (T.hold || 1) * (opt.hold || 1); env.gain.setTargetAtTime(gain * T.sus, t + T.a, 0.8); env.gain.setTargetAtTime(0.0001, t + T.a + h, T.d / 5); env.gain.setValueAtTime(0, t + T.a + h + T.d * 1.6); end = t + T.a + h + T.d * 1.65; }
+    else { env.gain.exponentialRampToValueAtTime(0.0001, t + T.a + T.d); env.gain.setValueAtTime(0, t + T.a + T.d + 0.05); end = t + T.a + T.d + 0.1; }
     c.connect(env);
     let node = env;
     if (pan) { pan.pan.value = opt.pan || 0; env.connect(pan); node = pan; }
     node.connect(dry); const s = A.createGain(); s.gain.value = opt.wet != null ? opt.wet : 0.7; node.connect(s); s.connect(verb);
     if (opt.echo) { const e = A.createGain(); e.gain.value = opt.echo; node.connect(e); e.connect(echo); }
+    live++; c.onended = () => { live--; try { node.disconnect(); } catch (e) {} };
     c.start(t); m.start(t); c.stop(end); m.stop(end);
   }
   function noise(t, dur, gain, freq, q) {
-    const n = Math.floor(A.sampleRate * dur), b = A.createBuffer(1, n, A.sampleRate), d = b.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
-    for (let i = 0; i < Math.min(n, 2000); i++) d[i] *= i / 2000;          // no click at the start
-    const s = A.createBufferSource(); s.buffer = b; const f = A.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
-    const g = A.createGain(); g.gain.value = gain; s.connect(f); f.connect(g); g.connect(dry); const w = A.createGain(); w.gain.value = 0.9; g.connect(w); w.connect(verb);
-    s.start(t);
+    if (live >= 32) return;
+    if (!noiseBuf) {                    // one buffer of noise, made once
+      const n = A.sampleRate * 4; noiseBuf = A.createBuffer(1, n, A.sampleRate); const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const s = A.createBufferSource(); s.buffer = noiseBuf; const f = A.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
+    const g = A.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.04); g.gain.setTargetAtTime(0, t + 0.06, dur / 4);
+    s.connect(f); f.connect(g); g.connect(dry); const w = A.createGain(); w.gain.value = 0.9; g.connect(w); w.connect(verb);
+    live++; s.onended = () => { live--; try { g.disconnect(); } catch (e) {} };
+    s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.3);
   }
   function boom(t, gain) {
-    note(t, mtof(root() - 12), gain, 'boom', { glide: 0.6, wet: 1.4, rich: 0.1 });
-    noise(t + 0.05, 4, gain * 0.12, 80, 1.4);
+    note(t, mtof(lift(root() - 12)), gain, 'boom', { glide: 0.75, wet: 1.4, rich: 0.1 });
+    noise(t + 0.05, 3, gain * 0.08, 160, 1.2);
   }
   // a pitch from the scale: degree within the current key
   function pitch(deg, oct) {
     const S = pal.scale, n = S.length, k = ((deg % n) + n) % n, o = Math.floor(deg / n);
-    return mtof(root() + S[k] + 12 * (o + (oct || 0)));
+    return mtof(lift(root() + S[k] + 12 * (o + (oct || 0))));
   }
 
   // ── reading a frame: who is alive, how many, what they are like ────────
@@ -277,7 +299,7 @@
           const at = t + 0.1 + Math.random() * span;
           if (timbre === 'boom') boom(at, 0.06);
           else if (timbre === 'crackle') noise(at, 0.3 + Math.random() * 0.5, 0.018, 900 + Math.random() * 1200, 1.5);
-          else note(at, pitch(v.deg + (timbre === 'drip' ? 7 : 0), timbre === 'thump' ? -2 : 1), timbre === 'drip' ? 0.011 : 0.018, timbre, { pan: (Math.random() - 0.5) * 1.4, wet: 1 });
+          else note(at, pitch(v.deg + (timbre === 'drip' ? 7 : 0), timbre === 'thump' ? -1 : 1), timbre === 'drip' ? 0.011 : 0.018, timbre, { pan: (Math.random() - 0.5) * 1.4, wet: 1 });
         }
       }
     }
@@ -305,7 +327,7 @@
     prevStats = Object.assign({}, s);
     // the drone follows the whole population, and the night
     const pop = slug === 'coast' ? ((s.animals || 0) + (s.plants || 0) / 6) : [...kinds.values()].reduce((a, v) => a + (v.n || 0), 0);
-    const dl = clamp(0.012 + Math.log1p(pop) * 0.005, 0.012, 0.05);
+    const dl = clamp(0.008 + Math.log1p(pop) * 0.0035, 0.008, 0.035);
     drone.dg.gain.setTargetAtTime(dl * droneMul(), t, 4);
     drone.df.frequency.setTargetAtTime(180 + 500 * light + 300 * rich, t, 6);
     drone.hg.gain.setTargetAtTime((0.002 + 0.025 * rich * rich) * droneMul(), t, 8);
