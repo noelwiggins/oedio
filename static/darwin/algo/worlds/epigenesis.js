@@ -36,8 +36,10 @@ window.ALGO_WORLD = (function () {
       const cr = R * 0.9 * grow / Math.sqrt(n) * 0.95;
       const breathe = 1 + 0.03 * Math.sin(t * 1.5 + i);
       ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(cx, cy, R * 0.9 * grow * breathe + cr * 0.9, 0, Math.PI * 2); ctx.fill();
+      const dead = new Set(w.dead || []);
       for (let k = 0; k < n; k++) {
         const [px, py] = pos[k], x = cx + px * R * 0.9 * grow * breathe, y = cy + py * R * 0.9 * grow * breathe;
+        if (dead.has(k)) { ctx.fillStyle = '#5a4a3a'; ctx.beginPath(); ctx.arc(x, y, cr * 0.45, 0, Math.PI * 2); ctx.fill(); continue; }
         ctx.fillStyle = PAL[w.types[k] % 16];
         ctx.beginPath(); ctx.arc(x, y, cr * 1.05, 0, Math.PI * 2); ctx.fill();
       }
@@ -56,5 +58,41 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
   }
-  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawGlow };
+  // the dark side, Epilysis: living tissue dim in its colours, cells that chose to die glowing bone,
+  // and a dissolving embryo giving itself back in amber
+  function drawDark(ctx, V, now, t) {
+    ctx.fillStyle = '#0e0b14'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!d) return;
+    const cols = 8, rows = 2, mx = 105, cw = (W - 2 * mx) / cols, ch = H / rows;
+    d.wells.forEach((w, i) => {
+      const cx = V.ox + (mx + (i % cols + 0.5) * cw) * V.s, cy = V.oy + (Math.floor(i / cols) + 0.5) * ch * V.s;
+      const R = Math.min(cw, ch) * 0.4 * V.s;
+      ctx.strokeStyle = 'rgba(232,220,196,0.18)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.1, 0, Math.PI * 2); ctx.stroke();
+      const pos = d.positions[String(w.stage)], n = pos.length, grow = (0.35 + 0.65 * w.stage / 6);
+      const cr = R * 0.9 * grow / Math.sqrt(n) * 0.95, dead = new Set(w.dead || []), dis = w.dissolve || 0;
+      if (dis > 0) {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.2);
+        g.addColorStop(0, `rgba(231,162,59,${0.35 * dis})`); g.addColorStop(1, 'rgba(231,162,59,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.2, 0, Math.PI * 2); ctx.fill();
+      }
+      for (let k = 0; k < n; k++) {
+        const [px, py] = pos[k], x = cx + px * R * 0.9 * grow, y = cy + py * R * 0.9 * grow;
+        if (dead.has(k)) {
+          if (dis > 0) {                                   // dissolving: drifting amber motes
+            const a = (k * 2.4) % (Math.PI * 2), r = cr * (1 + 4 * dis);
+            ctx.fillStyle = `rgba(231,162,59,${0.7 * (1 - dis)})`;
+            ctx.beginPath(); ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, cr * 0.35, 0, Math.PI * 2); ctx.fill();
+          } else {                                         // carved: a bone ring where a cell chose to die
+            ctx.strokeStyle = 'rgba(232,220,196,0.85)'; ctx.lineWidth = Math.max(1, cr * 0.25);
+            ctx.beginPath(); ctx.arc(x, y, cr * 0.7, 0, Math.PI * 2); ctx.stroke();
+          }
+          continue;
+        }
+        ctx.globalAlpha = 0.35; ctx.fillStyle = PAL[w.types[k] % 16];
+        ctx.beginPath(); ctx.arc(x, y, cr, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+      }
+    });
+  }
+  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawGlow, drawDark };
 })();

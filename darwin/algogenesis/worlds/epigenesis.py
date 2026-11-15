@@ -69,6 +69,13 @@ class Epigenesis(World):
                "How strongly cells hear their neighbours. Loud signals tie cells into large tissues; quiet ones leave each cell to its own network."),
              D("mutation", "Mutation", "spark", "#e5602a", "Steady", "Restless",
                "How much a new embryo's gene network differs from its parent's.")]
+    LYSIS_NAME = "Epilysis"
+    LYSIS_ABOUT = [
+        "Epilysis: development undone. Bodies are carved as much as built: at each stage, a cell that disagrees with every neighbour, a stray speck in the wrong tissue, may be told to die. Programmed cell death is how real embryos free fingers from a paddle.",
+        "Each lineage inherits its own readiness to carve. Too little and the tissues stay speckled; too much and the embryo eats itself. The right amount is found by selection, not set.",
+        "And a finished embryo does not last: when its well is needed, it dissolves cell by cell, and its substance becomes the yolk of the next egg.",
+        "On the underside the living tissues are dim, cells that chose to die glow in bone, and a dissolving embryo glows amber as it gives itself back.",
+    ]
     JOURNAL_HINT = ("These are embryos developing in wells: speak of cells, divisions, gene networks, signals, cell types, "
                     "tissues and patterns, not of animals.")
 
@@ -87,6 +94,33 @@ class Epigenesis(World):
         self.hall = []                       # recent finished embryos: score, types, order, lineage, cell types
         self.done = 0
         self.rest = np.zeros(NWELL, np.int32)   # a finished embryo is shown for a while before the well clears
+        self._lysis_init()
+
+    def _lysis_init(self):
+        if not hasattr(self, "dead"):
+            self.dead = [np.zeros(len(x), bool) for x in self.state]
+            self.apop = self.rng.uniform(0.0, 0.6, NWELL).astype(np.float32)   # each lineage's readiness to carve
+            self.l_born = self.l_died = self.l_back = 0
+            self.carved = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.l_born), int(self.l_died), int(self.l_back), int(sum(int((~m).sum()) for m in self.dead)) + 50)
+
+    def _carve(self, w, s):
+        """Programmed death: cells that agree with none of their living neighbours may die."""
+        dead = self.dead[w]
+        t = self._types(self.state[w])
+        live = ~dead
+        nb = (NEIGH[s] > 0) & live[None, :]
+        agree = (nb & (t[:, None] == t[None, :])).sum(1)
+        cand = np.flatnonzero(live & (nb.sum(1) >= 2) & (agree == 0))
+        if len(cand) and live.sum() > 4:
+            kill = cand[self.rng.random(len(cand)) < self.apop[w]]
+            kill = kill[: max(0, int(live.sum()) - 4)]
+            dead[kill] = True
+            self.l_died += len(kill)
+            self.carved += len(kill)
 
     def _net(self, w, x, s):
         g = self.G[w]
@@ -97,7 +131,8 @@ class Epigenesis(World):
         p = POS[s]
         ap = p[:, 0:1]                                    # the mother's gradient from one pole to the other
         rad = np.hypot(p[:, 0:1], p[:, 1:2]) * 2 - 1      # and from the centre to the edge
-        sig = (NEIGH[s] @ x[:, 0:1]) * mult(self.dial("signal"), 2.0)
+        alive = (~self.dead[w]).astype(np.float32)[:, None] if len(self.dead[w]) == len(x) else 1.0
+        sig = (NEIGH[s] @ (x[:, 0:1] * alive)) * mult(self.dial("signal"), 2.0)
         return 1.0 / (1.0 + np.exp(-(x @ W.T + sig * sw + b + ap * pole + rad * radial) * 3.0))
 
     def _types(self, x):
@@ -107,17 +142,28 @@ class Epigenesis(World):
     def _judge(self, w):
         x = self.state[w]
         t = self._types(x)
-        kinds, counts = np.unique(t, return_counts=True)
+        live = ~self.dead[w] if len(self.dead[w]) == len(t) else np.ones(len(t), bool)
+        kinds, counts = np.unique(t[live], return_counts=True)
         real = int((counts >= 3).sum())                  # a type counts if it makes at least a small tissue
-        same = (NEIGH[STAGES - 1] > 0) & (t[:, None] == t[None, :])
-        order = float(same.sum() / max(1, (NEIGH[STAGES - 1] > 0).sum()))
+        nb = (NEIGH[STAGES - 1] > 0) & live[:, None] & live[None, :]
+        same = nb & (t[:, None] == t[None, :])
+        order = float(same.sum() / max(1, nb.sum()))
         score = real * (0.4 + order)
         return real, order, score, t
 
     def _step(self):
         rng = self.rng
+        self._lysis_init()
         for w in range(NWELL):
             if self.rest[w] > 0:
+                # the finished embryo dissolves, cell by cell, back into yolk
+                live = np.flatnonzero(~self.dead[w])
+                k = int(round(len(live) / max(1, self.rest[w])))
+                if k and len(live):
+                    go = rng.choice(live, min(k, len(live)), replace=False)
+                    self.dead[w][go] = True
+                    self.l_died += len(go)
+                    self.l_back += len(go)
                 self.rest[w] -= 1
                 if self.rest[w] == 0:
                     self._reseed(w)
@@ -129,11 +175,19 @@ class Epigenesis(World):
             self.clock[w] += 1
             if self.clock[w] >= SETTLE:
                 self.clock[w] = 0
+                if s >= 2:
+                    self._carve(w, s)
                 if s + 1 < STAGES:
-                    # division: each cell's daughters land in the next stage's disc, inheriting its state
+                    # division: each living cell's daughters land in the next stage's disc, inheriting its state;
+                    # the space a dead cell left is filled by its living neighbours' daughters
                     p0, p1 = POS[s], POS[s + 1]
-                    nearest = np.argmin(np.hypot(p1[:, None, 0] - p0[None, :, 0], p1[:, None, 1] - p0[None, :, 1]), 1)
+                    live = np.flatnonzero(~self.dead[w])
+                    if not len(live):
+                        live = np.arange(len(p0))
+                    nearest = live[np.argmin(np.hypot(p1[:, None, 0] - p0[None, live, 0], p1[:, None, 1] - p0[None, live, 1]), 1)]
                     self.state[w] = x[nearest] + rng.normal(0, 0.02, (len(p1), NGENE)).astype(np.float32)
+                    self.dead[w] = np.zeros(len(p1), bool)
+                    self.l_born += len(p1) - len(live)
                     self.stage[w] = s + 1
                 else:
                     real, order, score, t = self._judge(w)
@@ -167,14 +221,18 @@ class Epigenesis(World):
             self.G[w] = parent
             if pick != w:
                 self.lin[w] = self.lin[pick]
+            self.apop[w] = float(np.clip(self.apop[pick] + rng.normal(0, 0.06 * mm), 0, 1))
             self.gen[w] = self.gen[pick] + 1
         self.stage[w] = 0
         self.clock[w] = 0
         self.state[w] = rng.random((1, NGENE)).astype(np.float32)
+        self.dead[w] = np.zeros(1, bool)
+        self.l_born += 1
 
     def stats(self):
         fin = [l for l in self.last if l is not None]
-        out = {"embryos": int(self.done), "generations": int(self.gen.max()), "lineages": int(len(np.unique(self.lin)))}
+        out = {"embryos": int(self.done), "generations": int(self.gen.max()), "lineages": int(len(np.unique(self.lin))),
+               "carving": round(float(getattr(self, "apop", np.zeros(1)).mean()), 3), "carved": int(getattr(self, "carved", 0))}
         if fin:
             t = np.array([f[0] for f in fin]); o = np.array([f[1] for f in fin]); sc = np.array([f[2] for f in fin])
             out.update({"best_types": int(t.max()), "mean_types": round(float(t.mean()), 2), "best_order": round(float(o.max()), 3),
@@ -192,7 +250,9 @@ class Epigenesis(World):
             s = int(self.stage[w])
             t = self._types(self.state[w])
             x = self.state[w]
+            dm = self.dead[w] if hasattr(self, "dead") and len(self.dead[w]) == len(t) else np.zeros(len(t), bool)
             wells.append({"stage": s, "types": t.tolist(), "level": np.round(x.mean(1), 2).tolist(), "lin": int(self.lin[w]),
+                          "dead": np.flatnonzero(dm).tolist(), "dissolve": round(1 - float(self.rest[w]) / SETTLE, 2) if self.rest[w] > 0 else 0,
                           "gen": int(self.gen[w]), "done": bool(self.rest[w] > 0),
                           "score": round(float(self.last[w][2]), 2) if self.last[w] else None})
         return {"w": 1200, "h": 640, "wells": wells, "positions": {str(s): np.round(POS[s], 3).tolist() for s in range(STAGES)}}

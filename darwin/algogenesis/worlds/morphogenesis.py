@@ -23,7 +23,7 @@ from .base import World, rle
 GW, GH = 180, 96                # cells (the panel's proportions)
 CAP_O = 260                     # organisms at once
 # cell types
-EMPTY, STEM, LEAF, BUD, POD = 0, 1, 2, 3, 4
+EMPTY, STEM, LEAF, BUD, POD, DEBRIS = 0, 1, 2, 3, 4, 5
 # genome: three depth bands x (up, side, branch, leaf, stop) + band edges + colours + thresholds
 NB = 3
 G_UP, G_SIDE, G_BRANCH, G_LEAF, G_STOP = range(5)
@@ -61,6 +61,12 @@ class Morphogenesis(World):
                "How much light falls from the surface. Bright water feeds tall, leafy forms; dim water rewards thrift."),
              D("mutation", "Mutation", "spark", "#e5602a", "Steady", "Restless",
                "How much each spore's growth program differs from its parent's. Restless spores try more new shapes; most fail.")]
+    LYSIS_NAME = "Morpholysis"
+    LYSIS_ABOUT = [
+        "Morpholysis: the dissolving of form. A form that starves or grows old does not vanish: it comes apart, its cells breaking off and sinking through the water like marine snow, and settles on the floor as sediment.",
+        "The sediment is food. A form rooted on rich ground grows faster, so the old feed the young where they fell. And sometimes a fallen fragment takes root and grows again into the shape of the form it broke from: collapse is one of the ways a form spreads.",
+        "On the underside the sinking fragments glow in bone, and the sediment glows amber along the floor.",
+    ]
     JOURNAL_HINT = ("These are sessile, plant-like forms on a sea floor seen from the side, growing by developmental "
                     "rules and competing for light. Describe shapes and how growth programs change.")
 
@@ -88,8 +94,20 @@ class Morphogenesis(World):
         self.spores = 0
         self.lin_founder = {}
         self.next_lin = 1
+        self._lysis_init()
         for _ in range(30):
             self._sow(self._random_genome(), None, 0)
+
+    def _lysis_init(self):
+        if not hasattr(self, "sediment"):
+            self.sediment = np.zeros(GW, np.float32)      # what fallen forms have left on the floor, column by column
+            self.oroot = np.zeros(CAP_O, np.int32)        # the column each form is rooted in
+            self.l_grown = self.l_shed = self.l_settled = 0
+            self.regrown = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.l_grown), int(self.l_shed), int(self.l_settled), int((self.owner > 0).sum()) + 50)
 
     # ── genomes ──────────────────────────────────────────────────────────
     def _random_genome(self):
@@ -120,18 +138,20 @@ class Morphogenesis(World):
         g[I_T2] = max(g[I_T2], g[I_T1] + 1)
         return g
 
-    def _sow(self, g, parent_lin, gen):
+    def _sow(self, g, parent_lin, gen, at=None):
         free = np.flatnonzero(~self.o_alive)
         if not len(free):
             return None
         rng = self.rng
+        self._lysis_init()
         for _ in range(12):
-            x = int(rng.integers(1, GW - 1))
+            x = int(rng.integers(1, GW - 1)) if at is None else int(np.clip(at + rng.integers(-3, 4), 1, GW - 2))
             y = int(self.floor[x]) - 1
             if y > 2 and self.owner[y, x] == 0:
                 break
         else:
             return None
+        self.oroot[int(free[0])] = x
         k = int(free[0])
         self.o_alive[k] = True
         self.G[k] = g
@@ -181,15 +201,49 @@ class Morphogenesis(World):
         rate = np.where(self.ctype == LEAF, 0.34, 0.15).astype(np.float32)
         earn = np.bincount((own[green] - 1), weights=lightf[green] * rate[green], minlength=CAP_O)
         cells = np.bincount(flat_own, minlength=CAP_O)
-        self.oe += (earn - 0.011 * cells - 0.01).astype(np.float32)
+        self._lysis_init()
+        # rich sediment under a form's root feeds it, and is used up
+        sed = self.sediment[self.oroot]
+        feed = 0.05 * sed / (sed + 6.0) * self.o_alive
+        np.subtract.at(self.sediment, self.oroot[self.o_alive], 0.02 * feed[self.o_alive])
+        self.oe += (earn + feed - 0.011 * cells - 0.01).astype(np.float32)
         self.oage[self.o_alive] += 2
         # death: starvation or old age; the body decays
         dead = np.flatnonzero(self.o_alive & ((self.oe < 0) | (self.oage > 9000 + 40 * cells)))
         if len(dead):
             mask = np.isin(own, dead + 1)
             own[mask] = 0
-            self.ctype[mask] = EMPTY
+            self.ctype[mask] = DEBRIS                         # the body comes apart and sinks
+            self.l_shed += int(mask.sum())
             self.o_alive[dead] = False
+            for k in dead:                                    # now and then a fallen fragment roots and regrows the form
+                if rng.random() < 0.25:
+                    if self._sow(self._mutate(self.G[k]), int(self.olin[k]), int(self.ogen[k]) + 1, at=int(self.oroot[k])) is not None:
+                        self.regrown += 1
+                        self.milestone("regrown", "A fragment of a fallen form has taken root and grown again into its parent's shape.")
+        # debris sinks, cell by cell, and settles as sediment on the floor
+        dy_, dx_ = np.nonzero(self.ctype == DEBRIS)
+        if len(dy_):
+            for y, x in sorted(zip(dy_.tolist(), dx_.tolist()), reverse=True):
+                if rng.random() < 0.5:
+                    continue
+                if y + 1 >= self.floor[x] - 0:
+                    self.ctype[y, x] = EMPTY
+                    self.sediment[x] += 1.0
+                    self.l_settled += 1
+                elif self.ctype[y + 1, x] == EMPTY and own[y + 1, x] == 0:
+                    self.ctype[y, x] = EMPTY
+                    nx = x + (rng.integers(-1, 2) if rng.random() < 0.25 else 0)
+                    nx = int(np.clip(nx, 0, GW - 1))
+                    if self.ctype[y + 1, nx] == EMPTY and own[y + 1, nx] == 0 and y + 1 < self.floor[nx]:
+                        self.ctype[y + 1, nx] = DEBRIS
+                    else:
+                        self.ctype[y + 1, x] = DEBRIS
+                else:
+                    self.ctype[y, x] = EMPTY                  # caught on a living form: it crumbles where it lies
+                    self.sediment[x] += 0.5
+                    self.l_settled += 1
+            self.sediment = 0.85 * self.sediment + 0.075 * (np.roll(self.sediment, 1) + np.roll(self.sediment, -1))
         # growth: buds act on their program
         by, bx = np.nonzero(self.ctype == BUD)
         order = rng.permutation(len(by))
@@ -224,6 +278,7 @@ class Morphogenesis(World):
             _, nx, ny = pick
             own[ny, nx] = k + 1
             self.ctype[ny, nx] = BUD
+            self.l_grown += 1
             self.depth[ny, nx] = d + 1
             self.oe[k] -= 0.6
             # the old bud becomes stem, or a leaf; it may also branch
@@ -275,7 +330,9 @@ class Morphogenesis(World):
     def stats(self):
         O = np.flatnonzero(self.o_alive)
         cells = int((self.owner > 0).sum())
-        out = {"organisms": int(len(O)), "cells": cells, "spores": int(self.spores)}
+        out = {"organisms": int(len(O)), "cells": cells, "spores": int(self.spores),
+               "debris": int((self.ctype == DEBRIS).sum()), "sediment": int(getattr(self, "sediment", np.zeros(1)).sum()),
+               "regrown": int(getattr(self, "regrown", 0))}
         if len(O):
             top, dep = self._heights()
             hts = (self.floor.min() - top[O]).clip(0)
@@ -307,4 +364,4 @@ class Morphogenesis(World):
         pal = [[int(k % 250) + 1, round(float(self.G[k, I_HUE1]), 3), round(float(self.G[k, I_HUE2]), 3), int(self.olin[k])]
                for k in O]
         return {"gw": GW, "gh": GH, "types": rle(self.ctype.ravel()), "slots": rle(slot.ravel()), "palette": pal,
-                "floor": self.floor.tolist()}
+                "floor": self.floor.tolist(), "sediment": np.round(getattr(self, "sediment", np.zeros(GW)), 1).tolist()}

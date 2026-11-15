@@ -50,6 +50,12 @@ class Noogenesis(World):
                "How long the blooms stay dark. Long darkness makes memory pay; brief darkness lets simple chasers do well."),
              D("food", "Food", "drop", "#f2b33d", "Meagre", "Rich",
                "How much each bloom holds. Rich blooms feed even careless foragers; meagre ones reward the clever.")]
+    LYSIS_NAME = "Noolysis"
+    LYSIS_ABOUT = [
+        "Noolysis: the dissolving of mind. A forager's memory is held in neurons that feed back into themselves, and in old age that loop leaks: traces fade faster, and an old forager loses the dark blooms it once found by heart.",
+        "When a forager dies, its body stays where it fell as a husk, and a brain is costly tissue: the more neurons it kept, the richer the husk. Others feed on it, so the price of a mind returns to the field.",
+        "On the underside each forager shows only its memory, a violet halo that dims as it ages, and husks glow amber until eaten.",
+    ]
     JOURNAL_HINT = ("These are foragers with small evolving brains in a dark field. Speak of neurons, memory, prediction, "
                     "signals and meals found in the dark; do not claim they are conscious.")
 
@@ -80,8 +86,24 @@ class Noogenesis(World):
         self.bper = rng.integers(500, 900, NBLOOM)
         self.boff = rng.integers(0, 900, NBLOOM)
         self.bfood = np.full(NBLOOM, 30.0, np.float32)
+        self._lysis_init()
         for _ in range(70):
             self._spawn(None)
+
+    def _lysis_init(self):
+        if not hasattr(self, "husks"):
+            self.husks = []                  # [x, y, food, age]
+            self.l_born = self.l_died = 0
+            self.l_back = 0.0
+            self.husk_meals = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.l_born), int(self.l_died), int(self.l_back / 4), int(self.alive.sum()) + 20)
+
+    def _fade(self, A):
+        """How much of its own past an old brain still holds: whole until 3000 ticks, then leaking."""
+        return np.clip(1 - (self.age[A] - 3000) / 3500.0, 0.25, 1).astype(np.float32)
 
     def _spawn(self, parent):
         free = np.flatnonzero(~self.alive)
@@ -115,6 +137,8 @@ class Noogenesis(World):
             self.e[i] = 0.45 * self.e[p]
             self.e[p] *= 0.5
         self.alive[i] = True
+        self._lysis_init()
+        self.l_born += 1
         self.h[i] = rng.uniform(0, 2 * math.pi)
         self.age[i] = 0
         self.hid[i] = 0
@@ -138,7 +162,8 @@ class Noogenesis(World):
             self.event("reseed", "Few foragers were left; newcomers wander in.")
             A = np.flatnonzero(self.alive)
         bpos, lit = self._blooms()
-        self.bfood = np.minimum(self.bfood + 0.13 * mult(self.dial("food"), 2.0), 40 * mult(self.dial("food"), 1.6))
+        cap = 40 * mult(self.dial("food"), 1.6)
+        self.bfood = np.where(self.bfood > cap, self.bfood, np.minimum(self.bfood + 0.13 * mult(self.dial("food"), 2.0), cap))
         x, y, h = self.x[A], self.y[A], self.h[A]
         n = len(A)
         # senses: the nearest lit bloom, the nearest glowing forager
@@ -162,7 +187,9 @@ class Noogenesis(World):
                         np.where(hs, np.sin(srel), 0), np.where(hs, np.cos(srel), 0), hs.astype(np.float32),
                         np.clip(self.e[A] / 60, 0, 1), np.ones(n)], 1).astype(np.float32)
         m = self.mask[A].astype(np.float32)
-        hid = np.tanh(np.einsum("nhi,ni->nh", self.Win[A], inp) + np.einsum("nhk,nk->nh", self.Wh[A], self.hid[A] * m)) * m
+        self._lysis_init()
+        fade = self._fade(A)[:, None]
+        hid = np.tanh(np.einsum("nhi,ni->nh", self.Win[A], inp) + np.einsum("nhk,nk->nh", self.Wh[A], self.hid[A] * m * fade)) * m
         self.hid[A] = hid
         out = np.tanh(np.einsum("noh,nh->no", self.Wout[A], hid) + self.bout[A])
         # with no neurons, a forager still drifts toward what it sees (a reflex)
@@ -199,9 +226,31 @@ class Noogenesis(World):
             self.milestone("dark20", "One meal in five is now found in the dark: foragers are going where blooms will be, not where they are seen.")
         if self.recent and len(self.recent) >= 300 and sum(self.recent) / len(self.recent) > 0.35:
             self.milestone("dark35", "More than a third of meals are found in the dark. Memory is paying for itself.")
+        # husks rot, and what they held seeps into the nearest bloom: the dead feed the field,
+        # but only a forager that can find the bloom gets the good of it
+        if self.husks:
+            keep = []
+            for hk in self.husks:
+                hk[3] += 1
+                bb = int(np.argmin(np.hypot(bpos[:, 0] - hk[0], bpos[:, 1] - hk[1])))
+                seep = min(hk[2], 0.02)
+                hk[2] -= seep
+                self.bfood[bb] = min(self.bfood[bb] + seep, 50 * mult(self.dial("food"), 1.6))
+                self.l_back += seep
+                if len(hk) < 5:
+                    hk.append(bb)
+                else:
+                    hk[4] = bb
+                if hk[2] > 0.05:
+                    keep.append(hk)
+            self.husks = keep
         # deaths and births
         dead = A[(self.e[A] <= 0) | (self.age[A] > 6000)]
         self.alive[dead] = False
+        self.l_died += len(dead)
+        for i in dead[:6]:                                # the body stays, richer for every neuron it kept
+            self.husks.append([float(self.x[i]), float(self.y[i]), 1.0 + 0.5 * float(self.mask[i].sum()), 0])
+        self.husks = self.husks[-60:]
         for i in np.flatnonzero(self.alive & (self.e > 52))[:4]:
             if self._spawn(int(i)) is None:
                 break
@@ -218,7 +267,8 @@ class Noogenesis(World):
 
     def stats(self):
         A = np.flatnonzero(self.alive)
-        out = {"foragers": int(len(A)), "meals": int(self.meals)}
+        out = {"foragers": int(len(A)), "meals": int(self.meals), "husks": len(getattr(self, "husks", [])),
+               "returned": int(getattr(self, "l_back", 0))}
         if len(A):
             m = self.mask[A]
             wh = np.abs(self.Wh[A]) * m[:, :, None] * m[:, None, :]
@@ -242,8 +292,11 @@ class Noogenesis(World):
         bpos, lit = self._blooms()
         return {"w": W, "h": H,
                 "foragers": [[int(i), round(float(self.x[i]), 1), round(float(self.y[i]), 1), round(float(self.h[i]), 2),
-                              int(self.mask[i].sum()), int(self.glow[i] > 0.5), round((int(self.lin[i]) * 0.618034) % 1, 3)]
+                              int(self.mask[i].sum()), int(self.glow[i] > 0.5), round((int(self.lin[i]) * 0.618034) % 1, 3),
+                              round(float(np.clip(1 - (self.age[i] - 3000) / 3500.0, 0.25, 1)), 2),
+                              round(float(np.abs(self.hid[i]).mean()), 2)]
                              for i in A],
+                "husks": [[round(h[0], 1), round(h[1], 1), round(h[2], 1), h[3], h[4] if len(h) > 4 else -1] for h in getattr(self, "husks", [])],
                 "blooms": [[round(float(bpos[b, 0]), 1), round(float(bpos[b, 1]), 1), int(lit[b]), round(float(self.bfood[b]), 1),
                             round(float(self.bc[b, 0]), 1), round(float(self.bc[b, 1]), 1), round(float(self.br[b]), 1)]
                            for b in range(NBLOOM)]}

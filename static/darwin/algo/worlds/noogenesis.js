@@ -10,12 +10,12 @@ window.ALGO_WORLD = (function () {
   function ingest(f, now) {
     d = f; W = f.w; H = f.h;
     const seen = new Set();
-    for (const [id, x, y, h, nn, glow, hue] of f.foragers) {
+    for (const [id, x, y, h, nn, glow, hue, fade = 1, act = 0] of f.foragers) {
       seen.add(id);
       let o = ag.get(id);
       if (!o) { o = { x0: x, y0: y, h0: h, x1: x, y1: y, h1: h, t0: now, t1: now, born: now }; ag.set(id, o); }
       else { const p = pos(o, now); Object.assign(o, { x0: p.x, y0: p.y, h0: p.h, x1: x, y1: y, h1: h, t0: now, t1: now + LAG }); }
-      Object.assign(o, { nn, glow, hue, seen: now });
+      Object.assign(o, { nn, glow, hue, fade, act, seen: now });
     }
     for (const [id, o] of ag) if (!seen.has(id)) ag.delete(id);
   }
@@ -84,5 +84,39 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
   }
-  return { size: f => [f.w || 1200, f.h || 680], ingest, draw, drawGlow };
+  // the dark side, Noolysis: each forager shown only as its memory, a violet halo as wide as its brain and
+  // dimming as age makes the loop leak; husks glow amber, seeping in threads into the bloom that takes them back
+  function drawDark(ctx, V, now, t) {
+    ctx.fillStyle = '#08080f'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!d) return;
+    for (const [bx, by, lit, food, cx, cy, r] of d.blooms) {
+      ctx.strokeStyle = 'rgba(232,220,196,0.08)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(V.ox + cx * V.s, V.oy + cy * V.s, r * V.s, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = `rgba(232,220,196,${lit ? 0.5 : 0.18})`; ctx.lineWidth = Math.max(1, 1.2 * V.s);
+      ctx.beginPath(); ctx.arc(V.ox + bx * V.s, V.oy + by * V.s, (6 + food * 0.3) * V.s, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const [hx, hy, food, age, b] of (d.husks || [])) {
+      const X = V.ox + hx * V.s, Y = V.oy + hy * V.s, a = Math.min(1, food / 4);
+      if (b >= 0 && d.blooms[b]) {
+        const [bx, by] = d.blooms[b], ph = (t * 0.4 + hx * 0.01) % 1;
+        ctx.strokeStyle = `rgba(231,162,59,${0.18 * a})`; ctx.lineWidth = Math.max(1, V.s);
+        ctx.setLineDash([2 * V.s, 6 * V.s]); ctx.lineDashOffset = -ph * 8 * V.s;
+        ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(V.ox + bx * V.s, V.oy + by * V.s); ctx.stroke(); ctx.setLineDash([]);
+      }
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, 14 * V.s);
+      g.addColorStop(0, `rgba(231,162,59,${0.6 * a})`); g.addColorStop(1, 'rgba(231,162,59,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, 14 * V.s, 0, Math.PI * 2); ctx.fill();
+    }
+    for (const o of ag.values()) {
+      const p = pos(o, now), X = V.ox + p.x * V.s, Y = V.oy + p.y * V.s;
+      const R = (5 + 3.2 * o.nn) * V.s * (0.9 + 0.1 * Math.sin(t * 3 + o.x1)), a = 0.12 + 0.4 * (o.fade || 1) * Math.min(1, 0.3 + (o.act || 0));
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, R);
+      g.addColorStop(0, `rgba(180,140,255,${a})`); g.addColorStop(1, 'rgba(180,140,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = `rgba(232,220,196,${0.35 + 0.4 * (o.fade || 1)})`; ctx.beginPath(); ctx.arc(X, Y, 1.4 * V.s, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  return { size: f => [f.w || 1200, f.h || 680], ingest, draw, drawGlow, drawDark };
 })();
