@@ -50,6 +50,13 @@ class Psychogenesis(World):
                "How often the world changes which things are food and which are poison. A fickle world rewards learning and curiosity; a settled one lets instinct do."),
              D("danger", "Danger", "bolt", "#e5602a", "Mild", "Deadly",
                "How much harm poison does. Deadly poison makes caution and fear pay; mild poison makes tasting everything cheap.")]
+    LYSIS_NAME = "Psycholysis"
+    LYSIS_ABOUT = [
+        "Psycholysis: the dissolving of a mind's contents. What a creature learns is not kept: unused lessons slowly fade back toward instinct, and at death everything it learned is lost at once. Only instinct and temperament pass on.",
+        "But a death can teach. A creature killed by poison leaves a mark of fear where it fell, and those who pass by learn, a little, to shun what killed it. The lesson outlives the one who learned it.",
+        "A warning can also outlive its truth: when the meadow changes its rules, old marks still warn against things that are now food.",
+        "On the underside each creature shows how much it has learned beyond its instincts, lessons are lost in a bone flash when one dies, and marks of fear glow red until they fade.",
+    ]
     JOURNAL_HINT = ("These creatures learn within their lives what is food and what is poison; speak of instinct, learning, "
                     "curiosity, fear, mood, and the rules of the meadow changing. Do not overclaim feelings.")
 
@@ -77,10 +84,23 @@ class Psychogenesis(World):
         self.next_lin = 1
         self.meals = []
         self.next_change = 6000
+        self._lysis_init()
         for _ in range(CAP_O):
             self._object()
         for _ in range(60):
             self._spawn(None)
+
+    def _lysis_init(self):
+        if not hasattr(self, "marks"):
+            self.marks = []                  # [x, y, kind, age] where poison killed someone
+            self.lost = []                   # [x, y, amount learned, age] lessons lost at death
+            self.l_born = self.l_died = 0
+            self.l_back = 0.0
+            self.taught = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.l_born), int(self.l_died), int(self.l_back), int(self.alive.sum()) + 15)
 
     def _shuffle(self, first=False):
         rng = self.rng
@@ -126,6 +146,8 @@ class Psychogenesis(World):
             self.e[p] *= 0.55
             self.lin[i], self.gen[i] = self.lin[p], self.gen[p] + 1
         self.alive[i] = True
+        self._lysis_init()
+        self.l_born += 1
         self.V[i] = self.inst[i]
         self.tries[i] = 0
         self.h[i] = rng.uniform(0, 2 * math.pi)
@@ -181,6 +203,27 @@ class Psychogenesis(World):
         self.x[A] = np.clip(self.x[A] + sp * np.cos(self.h[A]), 8, W - 8)
         self.y[A] = np.clip(self.y[A] + sp * np.sin(self.h[A]), 8, H - 8)
         self.e[A] -= 0.035 + 0.01 * self.cur[A] + 0.01 * self.lr[A]
+        self._lysis_init()
+        # unused lessons fade back toward instinct
+        self.V[A] += 0.0004 * (self.inst[A] - self.V[A])
+        # marks of fear teach those who pass
+        if self.marks and self.tick % 3 == 0:
+            keep = []
+            for mk in self.marks:
+                mk[3] += 3
+                near = A[np.hypot(self.x[A] - mk[0], self.y[A] - mk[1]) < 55]
+                if len(near):
+                    k = int(mk[2])
+                    before = self.V[near, k].copy()
+                    self.V[near, k] += 0.08 * self.lr[near] * (-1 - self.V[near, k])
+                    self.l_back += float(np.abs(self.V[near, k] - before).sum()) * 3
+                    self.taught += len(near)
+                if mk[3] < 900:
+                    keep.append(mk)
+            self.marks = keep
+        for ls in self.lost:
+            ls[3] += 1
+        self.lost = [ls for ls in self.lost if ls[3] < 60]
         self.age[A] += 1
         self.fear[A] *= 1 - 0.01 / (0.2 + self.fearg[A])
         self.joy[A] *= 0.99
@@ -201,12 +244,19 @@ class Psychogenesis(World):
                 self.e[i] = min(self.e[i] + 12, 90); self.joy[i] = 1.0
             elif r < 0:
                 self.e[i] -= harm; self.fear[i] = 1.0
+                if self.e[i] <= 0:                        # killed by it: a mark of fear stays where it fell
+                    self.marks.append([float(self.x[i]), float(self.y[i]), k, 0])
+                    self.marks = self.marks[-40:]
+                    self.milestone("mark", "A creature killed by poison has left a mark of fear, and others passing it have learned to shun what killed it.")
             else:
                 self.e[i] -= 0.5
             self.meals.append(1 if r < 0 else 0)
         self.meals = self.meals[-500:]
         dead = A[(self.e[A] <= 0) | (self.age[A] > 8000)]
         self.alive[dead] = False
+        self.l_died += len(dead)
+        for i in dead[:6]:                                # what it learned beyond its instincts is lost with it
+            self.lost.append([float(self.x[i]), float(self.y[i]), round(float(np.abs(self.V[i] - self.inst[i]).sum()), 2), 0])
         for i in np.flatnonzero(self.alive & (self.e > 60))[:3]:
             self._spawn(int(i))
         if self.tick % 600 == 0:
@@ -220,7 +270,8 @@ class Psychogenesis(World):
 
     def stats(self):
         A = np.flatnonzero(self.alive)
-        out = {"creatures": int(len(A)), "changes": int(self.changes),
+        out = {"creatures": int(len(A)), "changes": int(self.changes), "marks": len(getattr(self, "marks", [])),
+               "taught": int(getattr(self, "taught", 0)),
                "poisoned": int(round(100 * sum(self.meals) / max(1, len(self.meals))))}
         if len(A):
             sig = np.sign(self.meaning)
@@ -251,5 +302,8 @@ class Psychogenesis(World):
             return ["afraid", "hungry", "content", "curious"].index(max(m, key=m.get))
         return {"w": W, "h": H,
                 "creatures": [[int(i), round(float(self.x[i]), 1), round(float(self.y[i]), 1), round(float(self.h[i]), 2), mood(i),
-                               round((int(self.lin[i]) * 0.618034) % 1, 3), round(float(self.lr[i]), 2)] for i in A],
+                               round((int(self.lin[i]) * 0.618034) % 1, 3), round(float(self.lr[i]), 2),
+                               round(float(np.abs(self.V[i] - self.inst[i]).sum()), 2)] for i in A],
+                "marks": [[round(m[0]), round(m[1]), int(m[2]), int(m[3])] for m in getattr(self, "marks", [])],
+                "lost": [[round(m[0]), round(m[1]), m[2], int(m[3])] for m in getattr(self, "lost", [])],
                 "things": np.stack([np.round(self.ox[O]), np.round(self.oy[O]), self.ok[O]], 1).astype(int).ravel().tolist()}

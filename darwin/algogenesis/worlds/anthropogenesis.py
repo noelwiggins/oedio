@@ -48,6 +48,13 @@ class Anthropogenesis(World):
                "Pushes the world toward an ice age or a warm spell. Cold squeezes bands south and makes fire precious; warmth opens the north."),
              D("bounty", "Bounty", "leaf", "#a8c94a", "Lean", "Plentiful",
                "How much the land yields. Plenty swells bands, and big bands invent; lean years break bands up and skills are lost.")]
+    LYSIS_NAME = "Anthropophthora"
+    LYSIS_ABOUT = [
+        "Anthropophthora: the undoing of what people made. Here it is not extinction but collapse. A band that dwindles away, starves in the cold or is broken by a quarrel leaves its camp behind: hearths, worked stone, painted walls.",
+        "The ruins keep what the band knew. The ice may cover them for an age and then give them back. A later band that camps on a ruin of people who knew more learns from what it finds, and a lost skill comes back into the world.",
+        "So knowledge is not only passed from the living: it is buried and rediscovered, and a collapse can seed a renaissance.",
+        "On the underside living bands are dim embers, ruins glow amber by how much they knew, ruins under the ice glow blue-white, and a rediscovery flares in bone.",
+    ]
     JOURNAL_HINT = ("These are bands of early humans: speak of bands, people, tools, fire, language, art, ice, migration, "
                     "meetings and quarrels. Do not name real places or real archaeological cultures.")
 
@@ -69,14 +76,28 @@ class Anthropogenesis(World):
         self.coop = np.zeros(CAP, np.float32)
         self.lin = np.zeros(CAP, np.int64)
         self.next_lin = 1
+        self._lysis_init()
         for _ in range(8):
             self._band(rng.uniform(400, 800), rng.uniform(450, 600), 20, 0, False, 0, 0, rng.uniform(0.3, 0.7), None)
+
+    def _lysis_init(self):
+        if not hasattr(self, "ruins"):
+            self.ruins = []                  # [x, y, tools, art, fire, lang, age]
+            self.finds = []                  # [x, y, age] recent rediscoveries
+            self.l_born = self.l_died = self.l_back = 0
+            self.collapses = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.l_born), int(self.l_died), int(getattr(self, "l_returned", 0.0)),
+                int(self.size[self.alive].sum()) + 50)
 
     def _band(self, x, y, size, tools, fire, lang, art, coop, lin):
         free = np.flatnonzero(~self.alive)
         if not len(free):
             return None
         i = int(free[0])
+        self._lysis_init()
         self.alive[i] = True
         self.x[i], self.y[i], self.size[i] = np.clip(x, 5, W - 5), np.clip(y, 5, H - 5), size
         self.tools[i], self.fire[i], self.lang[i], self.art[i], self.coop[i] = tools, fire, lang, art, coop
@@ -137,6 +158,10 @@ class Anthropogenesis(World):
         K = 46 * here * (1 + 0.08 * self.tools[A]) ** 0.5 * (1 + 0.2 * self.lang[A]) * (1 - 0.7 * chill) / (1 + 0.1 * (crowd[gy, gx] - 1))
         growth = 0.006 * (1 - size / np.maximum(K, 1)) - 0.003 * chill
         self.size[A] = size * (1 + np.clip(growth, -0.05, 0.02)) + rng.normal(0, 0.15, len(A))
+        dn = self.size[A] - size                          # for the gauge: people born and people lost
+        self._lysis_init()
+        self.l_born += float(dn[dn > 0].sum())
+        self.l_died += float(-dn[dn < 0].sum())
         # invention and loss
         for a, i in enumerate(A):
             n = float(self.size[i])
@@ -183,6 +208,7 @@ class Anthropogenesis(World):
                     self.fire[i] = self.fire[j] = self.fire[i] or self.fire[j]
                 else:
                     loser = i if self.size[i] < self.size[j] else j
+                    self.l_died += 0.15 * float(self.size[loser])
                     self.size[loser] *= 0.85
         # splitting and dying
         for i in np.flatnonzero(self.alive & (self.size > 44))[:3]:
@@ -195,13 +221,53 @@ class Anthropogenesis(World):
                        float(np.clip(self.coop[i] + rng.normal(0, 0.08), 0, 1)), int(self.lin[i]))
         dead = np.flatnonzero(self.alive & (self.size < 3))
         self.alive[dead] = False
+        self.l_died += float(self.size[dead].sum())
+        for i in dead:                                    # the camp is left behind, holding what the band knew
+            if self.tools[i] >= 1 or self.art[i] > 0:
+                self.ruins.append([float(self.x[i]), float(self.y[i]), float(self.tools[i]), float(self.art[i]),
+                                   bool(self.fire[i]), float(self.lang[i]), 0])
+                self.collapses += 1
+        self.ruins = sorted(self.ruins, key=lambda r: -r[2])[:50]
+        # ruins weather slowly (not under ice, which keeps them); a band camping on a ruin of people who knew more learns
+        if self.ruins and self.tick % 10 == 0:
+            A = np.flatnonzero(self.alive)
+            keep = []
+            for r in self.ruins:
+                rx, ry = int(np.clip(r[0] / W * GX, 0, GX - 1)), int(np.clip(r[1] / H * GY, 0, GY - 1))
+                r[6] += 10
+                if not ice[ry, rx]:
+                    r[2] -= 0.004
+                found = False
+                if len(A) and not ice[ry, rx]:
+                    dd = np.hypot(self.x[A] - r[0], self.y[A] - r[1])
+                    a = int(dd.argmin())
+                    i = int(A[a])
+                    if dd[a] < 22 and r[2] > self.tools[i] + 1:
+                        gain = 0.5 * (r[2] - self.tools[i])
+                        self.tools[i] += gain
+                        self.art[i] = max(self.art[i], r[3])
+                        self.lang[i] = max(self.lang[i], 0.8 * r[5])
+                        if r[4] and not self.fire[i]:
+                            self.fire[i] = True
+                        self.l_back += 1
+                        self.l_returned = getattr(self, "l_returned", 0.0) + 5.0 * gain
+                        self.finds.append([r[0], r[1], 0])
+                        found = True
+                        self.milestone("rediscovery", "A band has camped among the ruins of people who knew more, and learned from what they left.")
+                if not found and r[2] > 0.5:
+                    keep.append(r)
+            self.ruins = keep
+        for f in self.finds:
+            f[2] += 2
+        self.finds = [f for f in self.finds if f[2] < 200]
         if self.alive.any() and float(self.size[self.alive].sum()) > 2000:
             self.milestone("people2000", "There are now two thousand people.")
 
     def stats(self):
         A = np.flatnonzero(self.alive)
         prod, ice, cold = self.field()
-        out = {"bands": int(len(A)), "people": int(self.size[A].sum()) if len(A) else 0, "ice": int(round(100 * float(ice.mean())))}
+        out = {"bands": int(len(A)), "people": int(self.size[A].sum()) if len(A) else 0, "ice": int(round(100 * float(ice.mean()))),
+               "ruins": len(getattr(self, "ruins", [])), "rediscoveries": int(getattr(self, "l_back", 0))}
         if len(A):
             gx = np.clip((self.x[A] / W * GX).astype(int), 0, GX - 1)
             gy = np.clip((self.y[A] / H * GY).astype(int), 0, GY - 1)
@@ -231,4 +297,8 @@ class Anthropogenesis(World):
         return {"w": W, "h": H, "gx": GX, "gy": GY, "zones": zone.astype(int).ravel().tolist(), "temp": round(self.temp(), 3),
                 "bands": [[int(i), round(float(self.x[i]), 1), round(float(self.y[i]), 1), int(self.size[i]), int(self.tools[i]),
                            int(self.fire[i]), round(float(self.lang[i]), 2), int(self.art[i]), round((int(self.lin[i]) * 0.618034) % 1, 3)]
-                          for i in A]}
+                          for i in A],
+                "ruins": [[round(r[0], 1), round(r[1], 1), int(r[2]), int(r[3]), int(r[4]),
+                           int(ice[int(np.clip(r[1] / H * GY, 0, GY - 1)), int(np.clip(r[0] / W * GX, 0, GX - 1))])]
+                          for r in getattr(self, "ruins", [])],
+                "finds": [[round(f[0], 1), round(f[1], 1), f[2]] for f in getattr(self, "finds", [])]}

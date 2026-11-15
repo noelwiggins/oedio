@@ -14,12 +14,12 @@ window.ALGO_WORLD = (function () {
     d = f; W = f.w; H = f.h;
     const seen = new Set();
     for (const c of f.creatures) {
-      const [id, x, y, h, mood, hue, lr] = c;
+      const [id, x, y, h, mood, hue, lr, learned = 0] = c;
       seen.add(id);
       let o = cr.get(id);
       if (!o) { o = { x0: x, y0: y, x1: x, y1: y, h0: h, h1: h, t0: now, t1: now, born: now }; cr.set(id, o); }
       else { const p = pos(o, now); Object.assign(o, { x0: p.x, y0: p.y, h0: p.h, x1: x, y1: y, h1: h, t0: now, t1: now + LAG }); }
-      Object.assign(o, { mood, hue, lr });
+      Object.assign(o, { mood, hue, lr, learned });
     }
     for (const [id] of cr) if (!seen.has(id)) cr.delete(id);
   }
@@ -68,5 +68,43 @@ window.ALGO_WORLD = (function () {
       if (m === 3) { ctx.beginPath(); ctx.moveTo(X + fx + R * 0.1, Y + bob - R); ctx.quadraticCurveTo(X + fx + R * 0.6, Y + bob - R * 1.9, X + fx + R * 0.9, Y + bob - R * 1.6); ctx.stroke(); ctx.fillStyle = '#a8c94a'; ctx.beginPath(); ctx.arc(X + fx + R * 0.9, Y + bob - R * 1.6, R * 0.18, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
     }
   }
-  return { size: f => [f.w || 1200, f.h || 640], ingest, draw };
+  // the dark side, Psycholysis: the meadow's things as faint outlines, each creature a pale halo as wide as what it has
+  // learned beyond instinct, a bone flash where a mind's lessons are lost at death, and marks of fear glowing red
+  // with the symbol of what killed there
+  function drawDark(ctx, V, now, t) {
+    ctx.fillStyle = '#0c0b10'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!d) return;
+    const T = d.things, s = 5 * V.s;
+    ctx.save(); ctx.globalAlpha = 0.16;
+    for (let i = 0; i < T.length; i += 3) shape(ctx, T[i + 2], V.ox + T[i] * V.s, V.oy + T[i + 1] * V.s, s);
+    ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const [mx, my, k, age] of (d.marks || [])) {
+      const X = V.ox + mx * V.s, Y = V.oy + my * V.s, a = 1 - age / 900, R = 55 * V.s;
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, R);
+      g.addColorStop(0, `rgba(192,57,43,${0.45 * a})`); g.addColorStop(1, 'rgba(192,57,43,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    for (const [mx, my, k, age] of (d.marks || [])) {
+      ctx.save(); ctx.globalAlpha = 0.8 * (1 - age / 900);
+      shape(ctx, k, V.ox + mx * V.s, V.oy + my * V.s, s * 1.3); ctx.restore();
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const [lx, ly, amt, age] of (d.lost || [])) {
+      const X = V.ox + lx * V.s, Y = V.oy + ly * V.s, p = age / 60, R = (8 + 10 * Math.min(3, amt)) * V.s * (0.4 + p);
+      ctx.strokeStyle = `rgba(232,220,196,${0.7 * (1 - p)})`; ctx.lineWidth = Math.max(1, 1.5 * V.s);
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.stroke();
+    }
+    for (const o of cr.values()) {
+      const p = pos(o, now), X = V.ox + p.x * V.s, Y = V.oy + p.y * V.s, R = (6 + 9 * Math.min(2.5, o.learned || 0)) * V.s;
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, R);
+      g.addColorStop(0, `rgba(232,220,196,${0.18 + 0.12 * Math.min(2, o.learned || 0)})`); g.addColorStop(1, 'rgba(232,220,196,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = MOOD[o.mood] || '#fbf3dc'; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); ctx.arc(X, Y, 2.2 * V.s, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawDark };
 })();

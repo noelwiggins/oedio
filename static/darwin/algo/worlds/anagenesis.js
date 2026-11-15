@@ -11,14 +11,14 @@ window.ALGO_WORLD = (function () {
   function ingest(f, now) {
     d = f; W = f.w; H = f.h;
     const seen = new Set();
-    for (const a of f.animals) {
+    f.animals.forEach((a, k) => {
       const [id, x, y, h, ...g] = a;
       seen.add(id);
       let o = herd.get(id);
       if (!o) { o = { x0: x, y0: y, x1: x, y1: y, t0: now, t1: now }; herd.set(id, o); }
       else { const p = pos(o, now); Object.assign(o, { x0: p.x, y0: p.y, x1: x, y1: y, t0: now, t1: now + LAG }); }
-      o.g = g; o.h = h;
-    }
+      o.g = g; o.h = h; o.load = f.load ? f.load[k] : 0;
+    });
     for (const [id] of herd) if (!seen.has(id)) herd.delete(id);
   }
   function pos(o, now) {
@@ -93,5 +93,46 @@ window.ALGO_WORLD = (function () {
       beast(ctx, V.ox + p.x * V.s, V.oy + p.y * V.s, V.s * 1.45, o.g, flip, t * 6 + o.x1 * 0.1);
     }
   }
-  return { size: f => [f.w || 1200, f.h || 640], ingest, draw };
+  // the dark side, Anaphthora: ancestors as faint ghosts, the herd dim, each animal glowing by the load of copying errors
+  // it carries (clean bone to heavy red), bones of the dead sinking into the plain, and amber flashes where a child is
+  // born cleaner than both its parents
+  function drawDark(ctx, V, now, t) {
+    const top = d ? d.top : 150;
+    ctx.fillStyle = '#0d0b0e'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    ctx.fillStyle = '#121016'; ctx.fillRect(V.ox, V.oy, W * V.s, top * V.s);
+    ctx.strokeStyle = 'rgba(232,220,196,0.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(V.ox, V.oy + top * V.s); ctx.lineTo(V.ox + W * V.s, V.oy + top * V.s); ctx.stroke();
+    if (!d) return;
+    const P = d.parade, n = P.length, x0 = 250, span = W - 2 * x0;
+    ctx.save(); ctx.globalAlpha = 0.18;
+    P.forEach((g, i) => beast(ctx, V.ox + (x0 + (n > 1 ? i / (n - 1) : 1) * span) * V.s, V.oy + (top - 26) * V.s, V.s * 1.1, g, 1, 0));
+    ctx.restore();
+    for (const [bx, by, load, age] of (d.bones || [])) {                // bones, sinking as they age
+      const a = 0.7 * (1 - age / 1500), X = V.ox + bx * V.s, Y = V.oy + (by + age / 150) * V.s, s = 4 * V.s;
+      ctx.strokeStyle = `rgba(232,220,196,${a})`; ctx.lineWidth = Math.max(1, 1.2 * V.s);
+      ctx.beginPath(); ctx.moveTo(X - s * 2, Y); ctx.lineTo(X + s * 2, Y);
+      for (let k = -1; k <= 1; k++) { ctx.moveTo(X + k * s * 0.9, Y - s * 0.7); ctx.lineTo(X + k * s * 0.9, Y + s * 0.7); }
+      ctx.stroke();
+      ctx.beginPath(); ctx.arc(X + s * 2.6, Y - s * 0.2, s * 0.7, 0, Math.PI * 2); ctx.stroke();
+    }
+    const list = [...herd.values()].sort((a, b) => a.y1 - b.y1);
+    ctx.save(); ctx.globalAlpha = 0.22;
+    for (const o of list) { const p = pos(o, now); beast(ctx, V.ox + p.x * V.s, V.oy + p.y * V.s, V.s * 1.45, o.g, Math.cos(o.h) >= 0 ? 1 : -1, t * 6 + o.x1 * 0.1); }
+    ctx.restore();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const o of list) {
+      const p = pos(o, now), X = V.ox + p.x * V.s, Y = V.oy + (p.y - 12) * V.s, L = Math.min(1, (o.load || 0) / 4), R = 16 * V.s;
+      const col = `${Math.round(232 - 40 * L)},${Math.round(220 - 163 * L)},${Math.round(196 - 153 * L)}`;
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, R);
+      g.addColorStop(0, `rgba(${col},${0.22 + 0.25 * L})`); g.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.fill();
+    }
+    for (const [rx, ry, age] of (d.rescues || [])) {
+      const p = age / 150, X = V.ox + rx * V.s, Y = V.oy + ry * V.s, R = (6 + 30 * p) * V.s;
+      ctx.strokeStyle = `rgba(231,162,59,${0.8 * (1 - p)})`; ctx.lineWidth = Math.max(1, 1.8 * V.s);
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawDark };
 })();

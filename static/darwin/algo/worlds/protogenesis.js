@@ -135,8 +135,8 @@ window.ALGO_WORLD = (function () {
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(V.ox + vx * V.s, V.oy + H * V.s, 120 * V.s, 0, Math.PI * 2); ctx.fill();
     }
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = 'rgba(231,162,59,0.28)';
-    const r = Math.max(1, 1.6 * V.s);
+    ctx.fillStyle = 'rgba(231,162,59,0.4)';
+    const r = Math.max(1.5, 2.4 * V.s);
     for (let i = 0; i < mon.length; i += 3) ctx.fillRect(V.ox + mon[i] * V.s - r / 2, V.oy + mon[i + 1] * V.s - r / 2, r, r);
     for (let i = 0; i < breaks.length; i += 3) {
       const p = breaks[i + 2] / 240, X = V.ox + breaks[i] * V.s, Y = V.oy + breaks[i + 1] * V.s;
@@ -148,7 +148,7 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
     const R = Math.max(2, 3.2 * V.s), gap = R * 2.3;
-    ctx.strokeStyle = 'rgba(232,220,196,0.35)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(232,220,196,0.6)'; ctx.lineWidth = Math.max(1, 1.2 * V.s);
     for (const o of chains.values()) {
       if (o.dead) continue;
       const p = cpos(o, now), X = V.ox + p.x * V.s, Y = V.oy + p.y * V.s, n = o.seq.length, L = gap * n / 2;

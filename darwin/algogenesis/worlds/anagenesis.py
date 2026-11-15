@@ -51,6 +51,12 @@ class Anagenesis(World):
                "How quickly the surroundings drift. Fast change leaves the lineage chasing a target it cannot reach; slow change lets it settle into each shape."),
              D("pressure", "Pressure", "gauge", "#e5602a", "Gentle", "Fierce",
                "How strongly the surroundings judge. Fierce selection pulls the lineage quickly toward the best shape but wears its variation thin.")]
+    LYSIS_NAME = "Anaphthora"
+    LYSIS_ABOUT = [
+        "Anaphthora: decay within a lineage. Every birth brings a few small copying errors, almost all of them slightly harmful. They pile up as a load that each animal carries, and a heavy load makes a weaker animal.",
+        "Selection clears the load away, and so does sex: two parents with different errors can have a child with fewer than either, so a mating lineage is rescued where a cloning one would ratchet steadily downhill. When selection is gentle the load grows and the lineage degenerates; when it is fierce, the load is purged and its bones lie on the plain.",
+        "On the underside each animal glows by the load it carries, from clean bone to heavy red, the dead lie as bones that slowly sink into the plain, and a child born cleaner than both its parents flashes amber: rescue by recombination.",
+    ]
     JOURNAL_HINT = ("This is a single lineage changing shape over time without splitting. Speak of the lineage, its ancestors, "
                     "its body (size, neck, legs, tail, armour, horn, ears, colour), and the drifting surroundings it follows.")
 
@@ -68,6 +74,22 @@ class Anagenesis(World):
         self.generations = 0
         self.parade = [start.round(3).tolist()]
         self.births = 0
+        self._lysis_init()
+
+    def _lysis_init(self):
+        if not hasattr(self, "load"):
+            self.load = np.zeros(CAP, np.float32)          # small harmful copying errors each animal carries
+            self.bones = []                                # [x, y, load, age]
+            self.rescues = []                              # [x, y, age]
+            self.l_purged = 0.0
+            self.n_rescued = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.births), int(self.births), int(self.l_purged), CAP)
+
+    def _burden(self):
+        return np.exp(-0.05 * self.load * mult(self.dial("pressure"), 2.5))
 
     def _fitness(self, G):
         sens = np.array([1.0, 1.2, 1.0, 0.8, 1.4, 1.0, 0.8, 0.6], np.float32)
@@ -92,7 +114,8 @@ class Anagenesis(World):
         self.h[hit] += math.pi
         # a turnover of individuals: the suited leave more young
         if self.tick % 6 == 0:
-            f = self._fitness(self.G)
+            self._lysis_init()
+            f = self._fitness(self.G) * self._burden()
             for _ in range(3):
                 die = int(rng.choice(CAP, p=(1.05 - f) / (1.05 - f).sum()))
                 p = f / f.sum()
@@ -100,9 +123,26 @@ class Anagenesis(World):
                 child = 0.5 * (self.G[a] + self.G[b]) + rng.normal(0, 0.012, NT).astype(np.float32) * (HI - LO)
                 child[7] = (self.G[a, 7] if rng.random() < 0.5 else self.G[b, 7]) + rng.normal(0, 0.01)
                 self.G[die] = np.clip(child, LO, HI)
+                # the load: the dead take theirs with them; the child inherits half of each parent's errors, at random,
+                # plus new ones of its own
+                self.l_purged += float(self.load[die])
+                self.bones.append([float(self.x[die]), float(self.y[die]), float(self.load[die]), 0])
+                la, lb = int(round(self.load[a])), int(round(self.load[b]))
+                cl = rng.binomial(la, 0.5) + rng.binomial(lb, 0.5) + rng.poisson(0.12)
+                if cl < min(la, lb) and min(la, lb) >= 2:
+                    self.n_rescued += 1
+                    self.rescues.append([float(self.x[a]), float(self.y[a]), 0])
+                self.load[die] = cl
                 self.x[die], self.y[die] = self.x[a] + rng.normal(0, 5), self.y[a] + rng.normal(0, 5)
                 self.births += 1
             self.generations = self.births // CAP
+        if self.tick % 10 == 0 and hasattr(self, "bones"):
+            for b in self.bones:
+                b[3] += 10
+            self.bones = [b for b in self.bones if b[3] < 1500][-90:]
+            for r in self.rescues:
+                r[2] += 10
+            self.rescues = [r for r in self.rescues if r[2] < 150][-20:]
         if self.tick % self.EPOCH == 0:
             self.parade.append(self.G.mean(0).round(3).tolist())
             self.parade = self.parade[-400:]
@@ -119,7 +159,8 @@ class Anagenesis(World):
                "distance": round(float(np.linalg.norm((m - self.first) / (HI - LO))), 3),
                "lag": round(float(np.linalg.norm((m - self.opt) / (HI - LO))), 3),
                "variation": round(float((self.G.std(0) / (HI - LO)).mean() * 10), 3),
-               "fitness": round(float(self._fitness(self.G).mean()), 3)}
+               "fitness": round(float(self._fitness(self.G).mean()), 3),
+               "load": round(float(getattr(self, "load", np.zeros(1)).mean()), 2), "rescues": int(getattr(self, "n_rescued", 0))}
         for k, name in enumerate(TRAITS[:7]):
             out[name] = round(float(m[k]), 3)
         return out
@@ -133,4 +174,7 @@ class Anagenesis(World):
         return {"w": W, "h": H, "top": PARADE_TOP, "traits": TRAITS,
                 "animals": [[int(i), round(float(self.x[i]), 1), round(float(self.y[i]), 1), round(float(self.h[i]), 2)] +
                            np.round(self.G[i], 2).tolist() for i in idx],
+                "load": np.round(getattr(self, "load", np.zeros(CAP))[idx], 1).tolist(),
+                "bones": [[round(b[0]), round(b[1]), round(b[2], 1), b[3]] for b in getattr(self, "bones", [])],
+                "rescues": [[round(r[0]), round(r[1]), r[2]] for r in getattr(self, "rescues", [])],
                 "parade": self.parade[-30:], "parade_total": len(self.parade), "optimum": np.round(self.opt, 2).tolist()}

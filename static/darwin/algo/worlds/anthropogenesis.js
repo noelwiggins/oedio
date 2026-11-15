@@ -97,5 +97,45 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
   }
-  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawGlow, resize: () => { landCanvas = null; } };
+  // the dark side, Anthropophthora: the land in ice-blue and soot, living bands as dim embers by size, ruins glowing amber
+  // by how much their people knew (blue-white where the ice holds them), and rediscoveries flaring in bone
+  function drawDark(ctx, V, now, t) {
+    ctx.fillStyle = '#0b0c12'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!d) return;
+    const gx = d.gx, gy = d.gy, cw = W / gx * V.s, ch = H / gy * V.s;
+    for (let k = 0; k < d.zones.length; k++) {
+      const z = d.zones[k];
+      if (z === 0) ctx.fillStyle = 'rgba(160,190,220,0.16)'; else if (z === 1) ctx.fillStyle = 'rgba(160,190,220,0.07)'; else continue;
+      const x0 = Math.round(V.ox + (k % gx) * cw), y0 = Math.round(V.oy + Math.floor(k / gx) * ch);
+      ctx.fillRect(x0, y0, Math.round(V.ox + (k % gx + 1) * cw) - x0, Math.round(V.oy + (Math.floor(k / gx) + 1) * ch) - y0);
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const o of bands.values()) {
+      const p = pos(o, now), size = o.b[3], X = V.ox + p.x * V.s, Y = V.oy + p.y * V.s, R = (4 + Math.sqrt(size) * 1.6) * V.s;
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, R);
+      g.addColorStop(0, `rgba(229,96,42,${o.b[5] ? 0.45 : 0.25})`); g.addColorStop(1, 'rgba(229,96,42,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.fill();
+    }
+    for (const [rx, ry, tools, art, fire, buried] of (d.ruins || [])) {
+      const X = V.ox + rx * V.s, Y = V.oy + ry * V.s, R = (8 + 2.2 * Math.sqrt(tools)) * V.s, col = buried ? '200,225,255' : '231,162,59';
+      const g = ctx.createRadialGradient(X, Y, 0, X, Y, R * 1.6);
+      g.addColorStop(0, `rgba(${col},0.45)`); g.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, R * 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    for (const [rx, ry, tools, art, fire, buried] of (d.ruins || [])) {          // the ruin's outline: broken walls
+      const X = V.ox + rx * V.s, Y = V.oy + ry * V.s, R = (5 + 1.5 * Math.sqrt(tools)) * V.s;
+      ctx.strokeStyle = buried ? 'rgba(200,225,255,0.7)' : 'rgba(232,220,196,0.75)'; ctx.lineWidth = Math.max(1, 1.2 * V.s);
+      for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.arc(X, Y, R, k * Math.PI / 2 + 0.25, k * Math.PI / 2 + 1.2); ctx.stroke(); }
+      if (art) { ctx.fillStyle = 'rgba(192,57,43,0.8)'; ctx.fillRect(X - 1.5 * V.s, Y - 1.5 * V.s, 3 * V.s, 3 * V.s); }
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const [fx, fy, age] of (d.finds || [])) {
+      const p = age / 200, X = V.ox + fx * V.s, Y = V.oy + fy * V.s, R = (10 + 50 * p) * V.s;
+      ctx.strokeStyle = `rgba(232,220,196,${0.8 * (1 - p)})`; ctx.lineWidth = Math.max(1, 2 * V.s);
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawGlow, drawDark, resize: () => { landCanvas = null; } };
 })();
