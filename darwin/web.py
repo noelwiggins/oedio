@@ -527,7 +527,7 @@ def api_algo_fossils():
     limit = min(120, max(1, request.args.get("limit", type=int, default=60)))
     base = F.c.world == "coast"
     cond = [base]
-    if kind in ("animal", "plant"):
+    if kind in ("animal", "plant", "fungus"):
         cond.append(F.c.kind == kind)
     if status == "living":
         cond.append(F.c.gone.is_(None))

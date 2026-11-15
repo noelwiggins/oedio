@@ -22,6 +22,8 @@ The world, in brief
   running cost, and small bodies lose heat fastest) and insulation (fur or feathers: less heat lost, but it overheats
   in summer). Warm parents keep their young warm. Flowers can evolve frost-hardiness. The sea grows plankton,
   so swimmers have food of their own; and animals recognise their own kin by colour and do not hunt them.
+- The underworld (v1.3, fungi.py): the dead become litter, fungi digest it and return it as rich soil, mushrooms
+  fruit and spread spores. Genesis, stasis and lysis are measured for the panel's gauge.
 """
 from __future__ import annotations
 
@@ -32,8 +34,9 @@ import zlib
 import numpy as np
 
 from .dials import D, DialsMixin, mult
+from .fungi import FungiMixin, _mlook, fungus_name, M_HUE, M_CAP, M_TOX, M_GLOW, M_COLD, M_RATE, M_SIZE, MLOOK_KEYS
 
-VERSION = "algogenesis-1.2"
+VERSION = "algogenesis-1.3"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
 DAY = 2400                        # ticks per day (about two minutes at 20 ticks/s)
@@ -77,7 +80,7 @@ def _clip(g, lo, hi, circ=()):
     return np.clip(g, lo, hi)
 
 
-class World(DialsMixin):
+class World(DialsMixin, FungiMixin):
     TPS = 20.0
     DIALS = [D("flora", "Flora", "leaf", "#a8c94a", "Sparse", "Lush",
                "Feeds the flowers: turned up, plants grow faster, spread more and their seeds vary more; turned down, the meadows thin out and change slowly."),
@@ -121,6 +124,7 @@ class World(DialsMixin):
         self.plank = np.zeros((GY // 3, GX // 3), np.float32)        # plankton in the sea, food for swimmers
         self.carrion = np.zeros((GY // 3, GX // 3), np.float32)      # the dead, food for scavengers
         self.firsts = set()
+        self._fungi_init(seed_colonies=False)
         self.next_id = 1
         self.species = {}          # sid -> {kind, founder genes, name, born, parent, peak}
         self.next_sid = 1
@@ -202,6 +206,10 @@ class World(DialsMixin):
                     abs(genes[SEGS] - f["g"][SEGS]) / 3 + abs(genes[LIMBS] - f["g"][LIMBS]) / 2 + \
                     abs(genes[DIET] - f["g"][DIET]) * 2 + abs(genes[FIN] - f["g"][FIN]) + abs(genes[GLOW] - f["g"][GLOW]) + \
                     abs(genes[ENDO] - f["g"][ENDO]) * 2 + abs(genes[INSUL] - f["g"][INSUL])
+            elif kind == "fungus":
+                d = _hd(genes[M_HUE], f["g"][M_HUE]) * 4 + abs(genes[M_CAP] - f["g"][M_CAP]) * 1.5 + \
+                    abs(genes[M_TOX] - f["g"][M_TOX]) * 2 + abs(genes[M_GLOW] - f["g"][M_GLOW]) * 1.5 + \
+                    abs(genes[M_COLD] - f["g"][M_COLD]) * 1.5 + abs(genes[M_SIZE] - f["g"][M_SIZE])
             else:
                 d = _hd(genes[P_HUE], f["g"][P_HUE]) * 4 + abs(genes[P_PETALS] - f["g"][P_PETALS]) / 3 + \
                     abs(genes[P_SIZE] - f["g"][P_SIZE]) + abs(genes[P_COLD] - f["g"][P_COLD]) * 1.5
@@ -249,6 +257,7 @@ class World(DialsMixin):
         self.ppollen[i] = np.nan
         self.pgen[i] = gen
         self.psp[i] = self._species_of("plant", g, parent, gen)
+        self.plant_births = getattr(self, "plant_births", 0) + 1
         return i
 
     def _seed_plant(self):
@@ -344,6 +353,7 @@ class World(DialsMixin):
             hard = Pg[:, P_COLD]
             gt = np.clip((Tp - (1 - 12 * hard)) / 16, 0.12, 1)
             gain = gain * gt * (1 - 0.2 * hard)
+            gain = self.soil_boost(px, py, gain)                              # flowers grow best where things have died
             upkeep = 4 * (0.0035 * Pg[:, P_SIZE] * (0.6 + 0.4 * Pg[:, P_HEIGHT]) + 0.0025 * Pg[:, P_NECTAR]
                           + 0.0006 * Pg[:, P_SAT] * Pg[:, P_PETALS])
             _, inv, cnt = np.unique(self.psp[Pi], return_inverse=True, return_counts=True)
@@ -359,6 +369,9 @@ class World(DialsMixin):
             self.page[Pi] += 4
             dead = Pi[(self.pe[Pi] <= 0) | (self.page[Pi] > self.plife[Pi]) | (fert < 0.02)]
             self.p_alive[dead] = False
+            if len(dead):
+                self.litter_add(self.px[dead], self.py[dead], 1.5 + 2.5 * self.P[dead, P_SIZE])   # a fallen flower becomes litter
+                self.plant_deaths = getattr(self, "plant_deaths", 0) + len(dead)
             # setting seed: pollinated flowers seed nearby; unpollinated plants sometimes spread by runners
             for i in Pi[(self.pe[Pi] > 5 * self.P[Pi, P_SIZE])]:
                 if not self.p_alive[i]:
@@ -383,6 +396,7 @@ class World(DialsMixin):
         # plankton: grows in the sea with light and warmth, richest in the shallows
         if t % 4 == 0:
             self._grow_plankton(light)
+            self._fungi_step(light)                                       # the underworld: decay and return
 
         if not len(F):
             self._after_tick()
@@ -566,7 +580,8 @@ class World(DialsMixin):
         if t % 4 == 0:
             if not hasattr(self, "carrion"):
                 self.carrion = np.zeros_like(self.plank)
-            self.carrion *= 0.985                                        # rot
+            if not hasattr(self, "litter"):
+                self.carrion *= 0.985                                    # rot (the underworld turns it into litter)
             sc = np.flatnonzero(meat > 0.02)
             if len(sc):
                 cx = np.clip((x[sc] / W * (GX // 3)).astype(int), 0, GX // 3 - 1)
@@ -607,6 +622,7 @@ class World(DialsMixin):
         al = self.f_alive[F]
         die = F[al & ((self.fe[F] <= 0) | (self.fage[F] > self.flife[F]))]
         self.f_alive[die] = False
+        self.animal_deaths = getattr(self, "animal_deaths", 0) + len(die)
         if len(die) and hasattr(self, "carrion"):                         # the body stays where it fell
             cx = np.clip((self.fx[die] / W * (GX // 3)).astype(int), 0, GX // 3 - 1)
             cy = np.clip((self.fy[die] / H * (GY // 3)).astype(int), 0, GY // 3 - 1)
@@ -698,6 +714,18 @@ class World(DialsMixin):
                     firsts.add("coat"); self._event("milestone", f"The first fur and feathers: {name} keeps its warmth in a coat")
                 if e > 0.5 and ins > 0.5 and "both" not in firsts and "warm" in firsts:
                     firsts.add("both"); self._event("milestone", f"Warm blood and a warm coat together: {name} can live through the winter")
+        if hasattr(self, "m_alive"):
+            Mi = np.flatnonzero(self.m_alive)
+            if len(Mi):
+                sp, inv, cnt = np.unique(self.msp[Mi], return_inverse=True, return_counts=True)
+                for k in np.flatnonzero(cnt >= 5):
+                    m = Mi[inv == k]; name = self.species[int(sp[k])]["name"]
+                    if float(self.M[m, M_GLOW].mean()) > 0.5 and "foxfire" not in firsts:
+                        firsts.add("foxfire"); self._event("milestone", f"Foxfire: {name} glows in the dark to draw its spore-carriers")
+                    if float(self.M[m, M_TOX].mean()) > 0.5 and "poison" not in firsts:
+                        firsts.add("poison"); self._event("milestone", f"The first poisonous mushrooms: {name}")
+                    if float(self.M[m, M_COLD].mean()) > 0.6 and "snowcap" not in firsts:
+                        firsts.add("snowcap"); self._event("milestone", f"Mushrooms that fruit in the snow: {name}")
         if len(Pi):
             sp, inv, cnt = np.unique(self.psp[Pi], return_inverse=True, return_counts=True)
             for k in np.flatnonzero(cnt >= 12):
@@ -767,6 +795,8 @@ class World(DialsMixin):
 
     def _prune(self):
         live = set(np.unique(self.fsp[self.f_alive]).tolist()) | set(np.unique(self.psp[self.p_alive]).tolist())
+        if hasattr(self, "m_alive"):
+            live |= set(np.unique(self.msp[self.m_alive]).tolist())
         for sid, s in list(self.species.items()):
             if sid in live:
                 continue
@@ -778,15 +808,18 @@ class World(DialsMixin):
             if sid not in live and s.get("gone") is None:
                 s["gone"] = int(self.tick)
                 self._fossil(sid)
-        for kind, arr, alive, X, Y, Gm in (("animal", self.fsp, self.f_alive, self.fx, self.fy, self.G),
-                                           ("plant", self.psp, self.p_alive, self.px, self.py, self.P)):
+        kinds = [("animal", self.fsp, self.f_alive, self.fx, self.fy, self.G),
+                 ("plant", self.psp, self.p_alive, self.px, self.py, self.P)]
+        if hasattr(self, "m_alive"):
+            kinds.append(("fungus", self.msp, self.m_alive, self.mx, self.my, self.M))
+        for kind, arr, alive, X, Y, Gm in kinds:
             idx = np.flatnonzero(alive)
             if not len(idx):
                 continue
             sp, inv, cnt = np.unique(arr[idx], return_inverse=True, return_counts=True)
             for k, (sid, c) in enumerate(zip(sp.tolist(), cnt.tolist())):
                 s = self.species[sid]
-                if s.get("peak", 0) < 8 <= c:
+                if s.get("peak", 0) < (5 if kind == "fungus" else 8) <= c:
                     self._event("new species", f"{s['name']} ({s['kind']}) is established")
                 if s.get("gone") is not None:           # back from refugia
                     s["gone"] = None
@@ -813,7 +846,7 @@ class World(DialsMixin):
                        "parent": int(s["parent"]) if s.get("parent") is not None else None,
                        "born": int(s["born"]), "gone": s.get("gone"), "peak": int(s.get("peak", 0)),
                        "peak_tick": s.get("peak_tick"), "gen": int(s.get("gen", 0)),
-                       "look": _look(g) if s["kind"] == "animal" else _plook(g), "zone": s.get("zone")}
+                       "look": _look(g) if s["kind"] == "animal" else _mlook(g) if s["kind"] == "fungus" else _plook(g), "zone": s.get("zone")}
 
     def take_fossils(self):
         return list((self.__dict__.get("fossil_q") or {}).values())
@@ -910,6 +943,11 @@ class World(DialsMixin):
                         "petals_mean": round(float(self.P[Pi, P_PETALS].mean()), 2),
                         "nectar_mean": round(float(self.P[Pi, P_NECTAR].mean()), 3),
                         "hardy": round(float((self.P[Pi, P_COLD] > 0.5).mean()), 3)})
+        if hasattr(self, "m_alive"):
+            born = self.births + getattr(self, "plant_births", 0) + self.lysis["born"]
+            died = getattr(self, "animal_deaths", 0) + getattr(self, "plant_deaths", 0) + self.lysis["died"]
+            self.update_gsl(len(F) + len(Pi) / 4 + int(self.m_alive.sum()), born, died, STATS_EVERY)
+            out.update(self.fungi_stats())
         out.update({"season": round(self.season(), 3), "season_name": self.season_name(), "year": int(self.tick // YEAR) + 1,
                     "air": round(self.air(), 1), "water_temp": round(self.water_temp(), 1),
                     "plankton": round(float(self.plank.mean()), 3) if hasattr(self, "plank") else 0})
@@ -927,12 +965,14 @@ class World(DialsMixin):
                    round(min(1.0, float(self.pnec[i]) / max(0.05, 2 * float(self.P[i, P_NECTAR]))), 2),
                    int(self.psp[i])]
                   for i in Pi]
+        fungi, under = self.fungi_frame()
         names = {}
-        for sid in set(int(s) for s in self.fsp[F]) | set(int(s) for s in self.psp[Pi]):
+        for sid in set(int(s) for s in self.fsp[F]) | set(int(s) for s in self.psp[Pi]) | set(int(r[4]) for r in fungi):
             names[sid] = self.species[sid]["name"]
         return {"tick": int(self.tick), "day": self.day(), "light": round(self.daylight(), 3), "sea": round(self.sea, 3),
                 "season": round(self.season(), 3), "air": round(self.air(), 1), "water_temp": round(self.water_temp(), 1), "lapse": LAPSE,
-                "animals": animals, "plants": plants, "names": names, "dials": self.dials_payload()}
+                "animals": animals, "plants": plants, "names": names, "dials": self.dials_payload(),
+                "fungi": fungi, "under": under, "gsl": list(getattr(self, "gsl", [0, 0, 0]))}
 
     def terrain_payload(self):
         return {"w": W, "h": H, "gx": GX, "gy": GY, "h_": [round(float(v), 3) for v in self.terrain.ravel()],
@@ -993,6 +1033,8 @@ _ROOT_P = ["Flor", "Anth", "Petal", "Calyc", "Corol", "Stell"]
 def species_name(sid, kind, g):
     h = (sid * 2654435761) % 2 ** 32
     ep = _SYL[h % 18] + _SYL[(h >> 5) % 18] + ("us" if h & 1 else "a")
+    if kind == "fungus":
+        return fungus_name(h, g, ep)
     if kind == "plant":
         root = _ROOT_P[(h >> 9) % len(_ROOT_P)]
         return f"{root}{'ia' if g[P_PETALS] < 5 else 'ella'} {ep}"
@@ -1042,6 +1084,10 @@ def from_bytes(b: bytes) -> World:
                         sp[k] = np.concatenate([sp[k], np.float32([0.05])])
     if not hasattr(w, "carrion"):
         w.carrion = np.zeros((GY // 3, GX // 3), np.float32)
+    if not hasattr(w, "m_alive"):
+        w._fungi_init(seed_colonies=True)
+        w.litter += w.carrion * 0.5
+        w._event("lysis", "The underworld wakes: from now on the dead become soil, and fungi carry them back to life")
     if not hasattr(w, "plank"):
         w.plank = np.zeros((GY // 3, GX // 3), np.float32)
         w.firsts = set()

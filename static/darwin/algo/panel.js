@@ -11,7 +11,8 @@
   const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22', RIM = '#b9560c';
-  let W = 1200, H = 800, terrain = null, terrCanvas = null, terrSea = null, terrSnow = null, pins = [];
+  let W = 1200, H = 800, terrain = null, terrCanvas = null, terrDark = null, terrSea = null, terrSnow = null, pins = [];
+  const fungi = new Map();
   let L = {};                                   // layout, in canvas pixels
   let live = null;
   const animals = new Map(), plants = new Map();
@@ -38,7 +39,8 @@
     keys.style.left = 'auto'; keys.style.right = ((L.cw - (t.x + t.w) + L.u * 0.03) / d) + 'px';
     // fit the knobs and keys beside the fossil window: shrink them on narrow screens rather than overlap
     keys.style.transform = 'translateY(-50%)'; keys.style.transformOrigin = 'right center';
-    const gsz = t.h * 0.56, leftLimit = t.x + L.u * 0.06 + gsz + L.u * 0.04 + t.w * 0.2 + L.u * 0.04 + L.u * 0.14;
+    const gsz = t.h * 0.56, gaugeW = window.AlgoLysis ? t.h * 0.64 * 1.35 + L.u * 0.02 : 0;
+    const leftLimit = t.x + L.u * 0.06 + gsz + L.u * 0.04 + t.w * 0.2 + L.u * 0.04 + L.u * 0.14 + gaugeW;
     const allowed = (t.x + t.w - L.u * 0.03) - leftLimit, natural = keys.offsetWidth * d;
     const k = natural > 0 ? Math.min(1, allowed / natural) : 1;
     keys.style.transform = `translateY(-50%) scale(${Math.max(0.45, k).toFixed(3)})`;
@@ -90,6 +92,16 @@
       Object.assign(o, { hue, petals: Math.round(petals), size, height, sat, hue2, nectar, sp, dead: 0 });
     }
     for (const [id, o] of plants) if (!pseen.has(id) && !o.dead) o.dead = now;
+    const mseen = new Set();
+    for (const m of d.fungi || []) {
+      const [id, x, y, reach, sp, fruit, ...look] = m;
+      mseen.add(id);
+      let o = fungi.get(id);
+      if (!o) { o = { id, x, y, born: now, f0: fruit, ft: now }; fungi.set(id, o); }
+      else { o.f0 = o.fruit == null ? fruit : o.fruit; o.ft = now; }
+      Object.assign(o, { reach, sp, fruitTo: fruit, look, dead: 0 });
+    }
+    for (const [id, o] of fungi) if (!mseen.has(id) && !o.dead) o.dead = now;
     veil.classList.add('gone');
     if (openCard && openCard !== 'dial') renderCard(openCard, true);
   }
@@ -128,6 +140,9 @@
     const c = document.createElement('canvas'); c.width = tw; c.height = th;
     const g = c.getContext('2d'), img = g.createImageData(tw, th), D = img.data;
     const ow = Math.max(1, Math.round(1.6 * ts));         // outline weight
+    const cD = document.createElement('canvas'); cD.width = tw; cD.height = th;
+    const gD = cD.getContext('2d'), imgD = gD.createImageData(tw, th), DD = imgD.data;
+    const DARKZ = [[12, 9, 26], [18, 16, 44], [26, 25, 58], [44, 32, 40], [40, 27, 34], [50, 33, 40], [58, 38, 46]];
     for (let py = 0; py < th; py++) {
       for (let px = 0; px < tw; px++) {
         const z = zone[py * tw + px];
@@ -144,10 +159,15 @@
         const k4 = (py * tw + px) * 4;
         if (edge) { D[k4] = 42; D[k4 + 1] = 29; D[k4 + 2] = 20; } else { D[k4] = col[0]; D[k4 + 1] = col[1]; D[k4 + 2] = col[2]; }
         D[k4 + 3] = 255;
+        // the underside: the same land in aubergine and ink, its edges drawn in faint bone
+        let dc = DARKZ[z];
+        if (snowy[py * tw + px]) dc = [70, 64, 84];
+        if (edge) { DD[k4] = 120; DD[k4 + 1] = 104; DD[k4 + 2] = 112; } else { DD[k4] = dc[0]; DD[k4 + 1] = dc[1]; DD[k4 + 2] = dc[2]; }
+        DD[k4 + 3] = 255;
       }
     }
-    g.putImageData(img, 0, 0);
-    terrCanvas = c; terrSea = sea; terrSnow = snow;
+    g.putImageData(img, 0, 0); gD.putImageData(imgD, 0, 0);
+    terrCanvas = c; terrDark = cD; terrSea = sea; terrSnow = snow;
     // brass pins along the coast and the hill lines, as on a pachinko board
     pins = [];
     const grid = 26;
@@ -182,6 +202,55 @@
     g.beginPath(); g.arc(0, 0, R * 0.26, 0, Math.PI * 2); g.fill(); g.stroke();
     flowerCache.set(key, s);
     return s;
+  }
+  // ── mushrooms: where a colony fruits, a little cluster comes up through the litter ──
+  function fruitOf(o, now) { const k = Math.min(1, (now - o.ft) / LAG); return (o.f0 == null ? o.fruitTo : o.f0 + (o.fruitTo - o.f0) * k); }
+  function drawMushrooms(now, t, isDark) {
+    if (!window.AlgoLysis) return;
+    for (const o of [...fungi.values()].sort((a, b) => a.y - b.y)) {
+      if (o.dead) { if (now - o.dead > 2000) fungi.delete(o.id); continue; }
+      const f = fruitOf(o, now); o.fruit = f;
+      if (f < 0.04) continue;
+      const n = 1 + Math.round(o.look[2] * 2), base = (6 + 5 * o.look[2]) * L.s;
+      for (let k = 0; k < n; k++) {
+        const a = (o.id * 2.4 + k * 2.1) % 6.283, d = k ? (5 + 4 * k) * L.s : 0;
+        const sx = L.ox + o.x * L.s + Math.cos(a) * d, sy = L.oy + o.y * L.s + Math.sin(a) * d * 0.6;
+        AlgoLysis.mushroom(ctx, sx, sy, base * (k ? 0.72 : 1), o.look, f, isDark, t);
+      }
+    }
+  }
+  // ── the underside: the same moment seen from below ───────────────────
+  function drawUnder(now, t, night) {
+    const pf = L.pf, LY = window.AlgoLysis, U = live && live.under;
+    ctx.fillStyle = '#140c18'; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+    if (terrDark) ctx.drawImage(terrDark, L.ox, L.oy, W * L.s, H * L.s);
+    if (U && LY) {
+      ctx.imageSmoothingEnabled = true;
+      const litter = LY.grid(U, 'litter', [128, 78, 44], 1.1), soil = LY.grid(U, 'soil', [231, 162, 59], 0.9), car = LY.grid(U, 'carrion', [232, 220, 196], 1.2);
+      if (litter) { ctx.globalAlpha = 0.85; ctx.drawImage(litter, L.ox, L.oy, W * L.s, H * L.s); }
+      ctx.globalCompositeOperation = 'lighter';
+      if (soil) { ctx.globalAlpha = 0.45 + 0.1 * Math.sin(t * 0.4); ctx.drawImage(soil, L.ox, L.oy, W * L.s, H * L.s); }
+      if (car) { ctx.globalAlpha = 0.7; ctx.drawImage(car, L.ox, L.oy, W * L.s, H * L.s); }
+      ctx.globalAlpha = 1;
+      for (const o of fungi.values()) if (!o.dead) LY.mycelium(ctx, o.id, L.ox + o.x * L.s, L.oy + o.y * L.s, o.reach, L.s, t, o.look[3]);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    // the living, seen from beneath: roots as dim violet points, animals as pale ghosts
+    ctx.fillStyle = 'rgba(180,140,255,0.28)';
+    for (const p of plants.values()) { if (p.dead) continue; ctx.beginPath(); ctx.arc(L.ox + p.x * L.s, L.oy + p.y * L.s, Math.max(1, 2.2 * L.s * p.size), 0, Math.PI * 2); ctx.fill(); }
+    ctx.lineWidth = Math.max(1, 1.2 * L.s);
+    for (const o of animals.values()) {
+      const p = pos(o, now), fade = o.dead ? Math.max(0, 1 - (now - o.dead) / 4000) : 1;
+      if (fade <= 0) continue;
+      const r = (3 + 2.2 * (o.look[7] || 1)) * L.s * (o.grown || 1);
+      ctx.strokeStyle = o.dead ? `rgba(232,220,196,${0.9 * fade})` : 'rgba(232,220,196,0.22)';
+      ctx.beginPath(); ctx.arc(L.ox + p.x * L.s, L.oy + p.y * L.s, r * (o.dead ? 1 + (1 - fade) * 1.5 : 1), 0, Math.PI * 2); ctx.stroke();
+    }
+    drawMushrooms(now, t, true);
+    // a vignette, like looking up through soil
+    const vg = ctx.createRadialGradient(pf.x + pf.w / 2, pf.y + pf.h / 2, pf.h * 0.3, pf.x + pf.w / 2, pf.y + pf.h / 2, pf.w * 0.65);
+    vg.addColorStop(0, 'rgba(10,6,14,0)'); vg.addColorStop(1, 'rgba(10,6,14,0.6)');
+    ctx.fillStyle = vg; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
   }
   function drawPlants(now, t, light) {
     const open = light > 0.25, list = [...plants.values()].sort((a, b) => a.y - b.y);
@@ -442,12 +511,15 @@
     rrect(nx + u * 0.005, ny + u * 0.005, nw - u * 0.01, nh - u * 0.01, nh / 2); ctx.lineWidth = u * 0.0015; ctx.stroke();
     ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     let fs = nh * 0.5; ctx.font = `${fs}px Righteous, sans-serif`;
+    const plate = window.AlgoLysis && AlgoLysis.isDark() ? 'ALGOLYSIS' : 'ALGOGENESIS';
     while (ctx.measureText('ALGOGENESIS').width > nw * 0.84 && fs > 6) { fs -= 1; ctx.font = `${fs}px Righteous, sans-serif`; }
-    ctx.fillText('ALGOGENESIS', nx + nw / 2, ny + nh / 2 + fs * 0.05);
+    ctx.fillText(plate, nx + nw / 2, ny + nh / 2 + fs * 0.05);
     ctx.textBaseline = 'alphabetic';
     // the fossil window: one column per epoch, the newest on the right
     const kl = keys.getBoundingClientRect().left * L.dpr;
-    const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.64) - wx), wy = T.y + T.h * 0.18, wh = T.h * 0.64;
+    const wy = T.y + T.h * 0.18, wh = T.h * 0.64, gw = window.AlgoLysis ? wh * 1.35 : 0;
+    const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.64) - wx - (gw ? gw + u * 0.02 : 0));
+    if (gw) { L.gauge = { x: wx + ww + u * 0.02, y: wy, w: gw, h: wh }; AlgoLysis.drawGauge(ctx, wx + ww + u * 0.02, wy, gw, wh, live && live.gsl, u); }
     L.fossilWin = { x: wx, y: wy, w: ww, h: wh };
     rrect(wx, wy, ww, wh, u * 0.01); ctx.fillStyle = '#1b130d'; ctx.fill(); ctx.lineWidth = u * 0.006; ctx.strokeStyle = chrome(wx, wy, wx + ww, wy + wh); ctx.stroke();
     ctx.save(); rrect(wx, wy, ww, wh, u * 0.01); ctx.clip();
@@ -502,8 +574,23 @@
         <tr><td>Frost-hardy flowers</td><td>${Math.round((s.hardy || 0) * 100)}%</td></tr>
         <tr><td>Hunters · scavengers · pollinators</td><td>${Math.round((s.predators || 0) * 100)}% · ${Math.round((s.scavengers || 0) * 100)}% · ${Math.round((s.pollinators || 0) * 100)}%</td></tr>
         <tr><td>On land · in the sea</td><td>${Math.round((s.on_land || 0) * 100)}% · ${fmt(s.in_sea)}</td></tr>
+        <tr><td>Fungi · kinds · fruiting now</td><td>${fmt(s.fungi)} · ${fmt(s.fungus_species)} · ${fmt(s.fruiting)}</td></tr>
         <tr><td>Pollinations so far</td><td>${fmt(s.pollinations)}</td></tr></table>
         <p class="note" style="margin-top:1.6vmin">${(d.events || []).slice(-4).reverse().map(e => `Day ${fmt(Math.floor(e.day))}: ${esc(e.text)}`).join('<br>')}</p>`;
+    } else if (kind === 'cycle') {
+      title = 'Genesis · stasis · lysis';
+      const g = d.gsl || [0, 0, 0], pc = v => Math.round((v || 0) * 100) + '%';
+      html = `<p class="note">The gauge in the tray has three needles. <b style="color:#7a9a2a">G</b>enesis is how fast new life is made, <b style="color:#b8860b">S</b>tasis how much of the living simply persists, <b style="color:#7b5cc4">L</b>ysis how fast life dies and is broken down. The three are one cycle: the dead become litter, fungi digest the litter, and what they digest returns as rich soil in which new flowers grow best.</p>
+        <table><tr><td>Genesis · stasis · lysis</td><td>${pc(g[0])} · ${pc(g[1])} · ${pc(g[2])}</td></tr>
+        <tr><td>Fungal colonies · kinds</td><td>${fmt(s.fungi)} · ${fmt(s.fungus_species)}</td></tr>
+        <tr><td>Fruiting now</td><td>${fmt(s.fruiting)}</td></tr>
+        <tr><td>Litter in the soil · rich soil</td><td>${fmt(Math.round(s.litter || 0))} · ${fmt(Math.round(s.soil || 0))}</td></tr>
+        <tr><td>Carcasses not yet eaten</td><td>${fmt(Math.round(s.carrion_left || 0))}</td></tr>
+        <tr><td>Decomposed so far</td><td>${fmt(Math.round(s.decomposed || 0))}</td></tr>
+        <tr><td>Spores shed</td><td>${fmt(s.spores)}</td></tr>
+        <tr><td>Mushrooms eaten · poisonings</td><td>${fmt(s.mushrooms_eaten)} · ${fmt(s.poisoned)}</td></tr>
+        <tr><td>Foxfire · poisonous kinds</td><td>${Math.round((s.foxfire || 0) * 100)}% · ${Math.round((s.toxic || 0) * 100)}%</td></tr></table>
+        <p class="note" style="margin-top:1.4vmin">Turn the panel over with the moon key to see the underside: the litter in umber, the rich soil glowing amber, the dead in bone, and the mycelium in phosphor green.</p>`;
     } else if (kind === 'journal') {
       title = 'The journal';
       if (!refresh || !body.dataset.loaded) {
@@ -540,7 +627,14 @@
     if (kind === 'about' && window.AlgoSound) html += '<h3 style="font:400 2.2vmin Righteous,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#b9560c;margin:2.4vmin 0 1vmin">What you hear</h3>' + AlgoSound.legend();
     if (html) { body.innerHTML = html; if (kind !== 'journal') delete body.dataset.loaded; }
   }
+  function turnOver() {
+    if (!window.AlgoLysis) return;
+    const d = AlgoLysis.toggle();
+    document.querySelectorAll('.key[data-card="dark"]').forEach(k => k.classList.toggle('on', d));
+    if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(d);
+  }
   function toggleCard(kind) {
+    if (kind === 'dark') return turnOver();
     if (kind === 'fossils' && window.AlgoFossils) {   // the fossil record is a cabinet of its own
       closeCard();
       if (AlgoFossils.isOpen()) AlgoFossils.close(); else AlgoFossils.open();
@@ -566,6 +660,8 @@
       return;
     }
     if (f && x > f.x && x < f.x + f.w && y > f.y && y < f.y + f.h) return toggleCard('fossils');
+    const gg = L.gauge;
+    if (gg && x > gg.x && x < gg.x + gg.w && y > gg.y && y < gg.y + gg.h) return toggleCard('cycle');
     if (openCard) closeCard();
     if (window.AlgoFossils && AlgoFossils.isOpen()) AlgoFossils.close();
   });
@@ -583,18 +679,25 @@
     if (!terrCanvas || Math.abs(terrSea - sea) > 0.004 || terrSnow !== snowLine()) buildTerrain(sea);
     smoothLight += ((live ? live.light : 1) - smoothLight) * 0.02;
     const night = Math.max(0, 1 - smoothLight);
-    const pf = L.pf;
+    const pf = L.pf, fl = window.AlgoLysis ? AlgoLysis.flip(now) : { sx: 1, dark: false };
     ctx.save(); rrect(pf.x, pf.y, pf.w, pf.h, L.u * 0.018); ctx.clip();
-    ctx.fillStyle = CREAM; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
-    ctx.drawImage(terrCanvas, L.ox, L.oy, W * L.s, H * L.s);
-    drawPins(night, t);
-    drawPlants(now, t, smoothLight);
-    const glowLayer = [];
-    for (const o of [...animals.values()]) drawAnimal(o, now, t, smoothLight, glowLayer);
-    drawFamilies(now);
-    drawRailAndDecals(t, night);
-    if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
-    drawGlow(glowLayer, smoothLight);
+    ctx.fillStyle = fl.dark ? '#0a060c' : CREAM; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+    if (fl.sx < 0.999) { const cx = pf.x + pf.w / 2; ctx.translate(cx, 0); ctx.scale(Math.max(0.02, fl.sx), 1); ctx.translate(-cx, 0); }
+    if (fl.dark) {
+      drawUnder(now, t, night);
+      drawRailAndDecals(t, 1);
+    } else {
+      ctx.drawImage(terrCanvas, L.ox, L.oy, W * L.s, H * L.s);
+      drawPins(night, t);
+      drawPlants(now, t, smoothLight);
+      drawMushrooms(now, t, false);
+      const glowLayer = [];
+      for (const o of [...animals.values()]) drawAnimal(o, now, t, smoothLight, glowLayer);
+      drawFamilies(now);
+      drawRailAndDecals(t, night);
+      if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
+      drawGlow(glowLayer, smoothLight);
+    }
     ctx.restore();
     drawBezel();
     drawTray(live && live.strata, t);
@@ -614,6 +717,10 @@
     openCard = 'dial'; card.querySelector('h2').textContent = title; card.querySelector('.body').innerHTML = html;
     card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
     clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 60000);
+  }
+  if (window.AlgoLysis && AlgoLysis.isDark()) {          // the panel remembers which side was showing
+    document.querySelectorAll('.key[data-card="dark"]').forEach(k => k.classList.add('on'));
+    if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(true);
   }
   if (window.AlgoFossils) {
     AlgoFossils.mount({ api: API,

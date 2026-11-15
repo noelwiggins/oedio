@@ -117,6 +117,8 @@
     rhodes:   { kind: 'add', a: 0.015, d: 4.5, trem: [2.2, 0.15], parts: [[1, 1, 1], [2, 0.22, 0.5], [3, 0.06, 0.3], [14, 0.025, 0.04]] },
     flute:    { kind: 'sub', wave: 'triangle', cut: 4, a: 0.7, d: 3.5, sus: 0.7, hold: 1.8, vib: [5, 9], breath: 0.25 },
     cello:    { kind: 'sub', wave: 'sawtooth', cut: 3.2, a: 1.4, d: 4.5, sus: 0.75, hold: 2.6, vib: [5.4, 12] },
+    rev:      { kind: 'add', a: 3.2, d: 0.6, rev: true, parts: [[1, 1, 1], [2, 0.28, 1], [3, 0.1, 1], [0.5, 0.35, 1]] },   // a note that seems to play backwards
+    crumble:  { kind: 'fm', ratio: 3.1, idx: 0.4, a: 0.01, d: 0.45 },
     choir:    { kind: 'sub', wave: 'sawtooth', cut: 9, a: 2.4, d: 6, sus: 0.8, hold: 3.2, vib: [4.6, 10], formants: [700, 1150, 2500], detune: 7 },
   };
 
@@ -124,7 +126,7 @@
   const MIX_DEFAULT = { volume: 0.5, pace: 0, tone: 0, space: 0, rain: 0, drone: 0 };
   let MIX = Object.assign({}, MIX_DEFAULT);
   try { Object.assign(MIX, JSON.parse(localStorage.getItem('algo-sound-mix') || '{}')); } catch (e) {}
-  let sleepEnd = 0, sleepMin = 0, sleepT = null;
+  let sleepEnd = 0, sleepMin = 0, sleepT = null, darkSide = false;
   const volGain = () => 3.2 * MIX.volume * MIX.volume * sleepFade() * (pal.gain || 1);   // panels levelled to one loudness
   const droneMul = () => MIX.drone <= -0.95 ? 0 : Math.pow(2, MIX.drone * 2);
   const voicesAudible = () => Math.round(clamp(10 + 4 * MIX.pace, 4, 14));
@@ -138,7 +140,7 @@
     if (!A) return;
     const t = A.currentTime;
     if (on) out.gain.setTargetAtTime(volGain(), t, 0.4);
-    warm.frequency.setTargetAtTime(2800 * Math.pow(2, MIX.tone * 1.6), t, 0.3);
+    warm.frequency.setTargetAtTime(2800 * Math.pow(2, MIX.tone * 1.6) * (darkSide ? 0.45 : 1), t, 1.2);
     wet.gain.setTargetAtTime(0.85 * Math.pow(2, MIX.space * 1.3), t, 0.4);
     dry.gain.setTargetAtTime(0.55 * Math.pow(2, -MIX.space * 0.7), t, 0.4);
     echo.gain.setTargetAtTime(Math.pow(2, MIX.space * 1.2), t, 0.4);
@@ -212,7 +214,7 @@
     startBed();
     retune(0);
   }
-  function root() { return pal.root + keyShift; }
+  function root() { return pal.root + keyShift - (darkSide ? 5 : 0); }   // the underside sits a fourth lower
   const lift = m => { while (m < 43) m += 12; return m; };        // nothing below G2 (98 Hz)
   function retune(glide) {
     if (!drone) return;
@@ -226,6 +228,10 @@
   // FM voice: one carrier, one modulator; richness opens the modulation index (more overtones)
   function envelope(env, t, gain, T, opt) {
     env.gain.setValueAtTime(0.0001, t);
+    if (T.rev) {                                    // swell up slowly, fall away quickly: the shape of a sound reversed
+      env.gain.exponentialRampToValueAtTime(gain, t + T.a); env.gain.linearRampToValueAtTime(0, t + T.a + T.d);
+      return t + T.a + T.d + 0.05;
+    }
     env.gain.exponentialRampToValueAtTime(gain, t + T.a);
     if (T.sus) {
       const h = (T.hold || 1) * (opt.hold || 1);
@@ -495,6 +501,18 @@
         }
       }
     }
+    // lysis: the breaking-down of things. Its voice swells backwards from below, more often the faster things decay,
+    // and far more when the panel is turned over; a small crumble of falling notes follows each wave of deaths
+    const lys = (d.gsl && d.gsl[2]) || 0, dens_l = lys * (darkSide ? 0.55 : 0.16);
+    if (!firstFrame && Math.random() < dens_l) {
+      const v = [...voices.values()].filter(v => v.rank < voicesAudible());
+      const deg = v.length ? v[Math.floor(Math.random() * v.length)].deg : 0;
+      note(t + 0.2 + Math.random() * 2, pitch(deg - 2, -1), (darkSide ? 0.04 : 0.022), 'rev', { wet: 1.4, echo: 0.5, pan: (Math.random() - 0.5) * 1.2, rich: 0.2 });
+    }
+    if (!firstFrame && prevStats && lys > 0.5 && Math.random() < (darkSide ? 0.25 : 0.06)) {
+      const start = Math.floor(Math.random() * 6) + 6;
+      for (let i = 0; i < 4; i++) note(t + 0.3 + i * (0.16 + Math.random() * 0.08), pitch(start - i, 0), (darkSide ? 0.012 : 0.007), 'crumble', { wet: 1.2, pan: (Math.random() - 0.5) * 1.4 });
+    }
     // the events: milestones change key, establishments swell, extinctions mourn
     const ev = d.events || [];
     for (const e of ev) {
@@ -723,11 +741,17 @@
       <tr><td>Rain of small notes</td><td>${esc((p.rain || []).map(r => r[2]).join(', '))}</td></tr>
       <tr><td>Overtones and the high halo</td><td>progress: ${esc(p.progress[0].replace(/_/g, ' '))}, now ${Math.round(rich * 100)}% of the way</td></tr>
       <tr><td>A ringing chord, then a new key</td><td>a milestone</td></tr>
+      <tr><td>Low swells that seem to play backwards</td><td>lysis: things dying and being broken down; louder when the panel is turned over</td></tr>
+      <tr><td>A small crumble of falling notes</td><td>a wave of deaths</td></tr>
       <tr><td>The drone and the ${esc(p.bed === 'pulse' ? 'heartbeat' : p.bed)} beneath</td><td>the whole population; both darken and thin out at night</td></tr></table>
       <p class="note" style="margin-top:1.4vmin">Tap the speaker grille for the sound knobs (or press S to turn it on and off). Loops now: ${Math.min(14, voices.size)} sounding, ${voices.size} kinds alive.</p>`;
   }
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+  function setDark(d) {
+    darkSide = !!d;
+    if (A) { applyMix(); retune(4); }
+  }
   // tap(): the final output node, for recording a sample of the soundscape
-  window.AlgoSound = { init, feed, start, stop, toggle, isOn: () => on, level, drawGrille, legend, mixerHTML, mountMixer, syncMixer, tap: () => A && { ctx: A, node: analyser } };
+  window.AlgoSound = { init, feed, start, stop, toggle, isOn: () => on, level, drawGrille, legend, mixerHTML, mountMixer, syncMixer, setDark, tap: () => A && { ctx: A, node: analyser } };
 })();

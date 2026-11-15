@@ -120,9 +120,17 @@
     g.beginPath(); g.arc(0, 0, R * 0.26, 0, 7); g.fill(); g.stroke();
     g.restore();
   }
+  // fungus look = [hue, cap, size, glow, rate, cold, spore, tox, spots, hue2]
+  function fungus(g, look, cx, cy, box) {
+    if (window.AlgoLysis) {
+      const r = box * 0.26;
+      AlgoLysis.mushroom(g, cx - r * 0.95, cy + box * 0.22, r * 0.7, look, 1, false, 0);
+      AlgoLysis.mushroom(g, cx + r * 0.35, cy + box * 0.28, r, look, 1, false, 0);
+    }
+  }
   function specimen(g, f, cx, cy, box, opt) {
     if (!f.look) return;
-    if (f.kind === 'animal') animal(g, f.look, cx, cy, box, opt); else flower(g, f.look, cx, cy, box);
+    if (f.kind === 'animal') animal(g, f.look, cx, cy, box, opt); else if (f.kind === 'fungus') fungus(g, f.look, cx, cy, box); else flower(g, f.look, cx, cy, box);
   }
   function portrait(f, px, dpr, opt) {
     const c = document.createElement('canvas'); c.width = c.height = Math.round(px * dpr);
@@ -154,6 +162,18 @@
               ['Blood', L[12] == null ? 'cold (before the seasons)' : L[12] > 0.5 ? 'warm: active in any weather' : L[12] > 0.25 ? 'partly warm' : 'cold: slows down in the cold'],
               ['Coat', L[13] == null ? '—' : L[13] > 0.5 ? 'thick fur or feathers' : L[13] > 0.25 ? 'a light coat' : 'bare'],
               ['Size', size < 0.4 ? 'small' : size < 0.8 ? 'middling' : 'large']];
+    }
+    if (f.kind === 'fungus') {
+      const [, cap, size, glow, rate, cold, spore, tox, spots] = L;
+      return [['Way of life', 'decomposer: digests the dead and returns them as rich soil'],
+              ['Cap', cap < 0.35 ? 'flat and wide' : cap < 0.7 ? 'domed' : 'tall and conical'],
+              ['Size', size < 0.8 ? 'small' : size < 1.2 ? 'middling' : 'large'],
+              ['Digestion', rate < 0.4 ? 'slow and thrifty' : rate < 0.7 ? 'steady' : 'fast and hungry'],
+              ['Foxfire', glow > 0.5 ? 'glows in the dark' : glow > 0.25 ? 'a faint glow' : 'none'],
+              ['Poison', tox > 0.6 ? 'deadly' : tox > 0.35 ? 'makes grazers ill' : 'edible'],
+              ['Markings', spots > 0.45 ? 'spotted' : 'plain'],
+              ['Cold', cold > 0.6 ? 'fruits in the snow' : cold > 0.3 ? 'half-hardy' : 'only in warmth'],
+              ['Spores', spore > 0.6 ? 'clouds of them, cast far' : spore > 0.3 ? 'a steady scatter' : 'few']];
     }
     const [, petals, size, height, , , nectar] = L;
     return [['Petals', Math.round(petals)], ['Bloom', size < 1 ? 'small' : size < 1.6 ? 'middling' : 'large'],
@@ -228,7 +248,7 @@
     root = document.createElement('div'); root.id = 'fossils'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'The fossil record');
     root.innerHTML = `<button class="back" type="button" aria-label="Back to all specimens">‹</button><button class="x" type="button" aria-label="Close">×</button>
       <header><h2>The fossil record</h2><div class="sum">Opening the archive…</div><div class="bar">
-        <button class="chip" data-k="kind" data-v="all">All</button><button class="chip" data-k="kind" data-v="animal">Animals</button><button class="chip" data-k="kind" data-v="plant">Flowers</button>
+        <button class="chip" data-k="kind" data-v="all">All</button><button class="chip" data-k="kind" data-v="animal">Animals</button><button class="chip" data-k="kind" data-v="plant">Flowers</button><button class="chip" data-k="kind" data-v="fungus">Fungi</button>
         <span class="sep"></span><button class="chip" data-k="status" data-v="all">Ever</button><button class="chip" data-k="status" data-v="living">Living</button><button class="chip" data-k="status" data-v="gone">Gone</button>
         <span class="sep"></span><button class="chip" data-k="sort" data-v="peak">Most numerous</button><button class="chip" data-k="sort" data-v="oldest">Oldest</button><button class="chip" data-k="sort" data-v="newest">Newest</button><button class="chip" data-k="sort" data-v="lost">Lately lost</button>
         <span class="sep"></span><button class="chip" data-k="notable" data-v="1">Established only</button>
@@ -269,7 +289,7 @@
   }
   function summary(c) {
     if (!c) return '';
-    return `${c.all.toLocaleString()} kinds have lived on this coast — ${c.animal.toLocaleString()} animals and ${c.plant.toLocaleString()} flowers. ` +
+    return `${c.all.toLocaleString()} kinds have lived on this coast — ${c.animal.toLocaleString()} animals, ${c.plant.toLocaleString()} flowers and ${(c.fungus || 0).toLocaleString()} fungi. ` +
            `${c.living.toLocaleString()} are alive now; ${c.gone.toLocaleString()} are gone. ${c.notable.toLocaleString()} ever grew past eight at once.`;
   }
   function more(first) {
@@ -315,7 +335,7 @@
                     ['Home', f.zone ? f.zone : '—'], ...bodyRows(f)];
       const wrap = document.createElement('div');
       wrap.innerHTML = `<div class="d-top${gone ? ' gone' : ''}"><div class="pic"></div><div><h3>${esc(f.name)}</h3>
-        <div class="kind">${f.kind === 'animal' ? 'Animal' : 'Flower'} · specimen no. ${f.sid.toLocaleString()}${gone ? ' · extinct' : ''}</div>
+        <div class="kind">${f.kind === 'animal' ? 'Animal' : f.kind === 'fungus' ? 'Fungus' : 'Flower'} · specimen no. ${f.sid.toLocaleString()}${gone ? ' · extinct' : ''}</div>
         <table>${rows.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</table></div></div>`;
       wrap.querySelector('.pic').appendChild(portrait(f, 34 * vmin(), DPR()));
       // lineage: oldest ancestor on the left, this kind, then the kinds it gave rise to
