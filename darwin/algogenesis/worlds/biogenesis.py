@@ -46,6 +46,11 @@ class Biogenesis(World):
                "How fast nutrients seep into the dish. Rich water crowds the dish with cells; starvation thins it to the efficient few."),
              D("warmth", "Warmth", "flame", "#e5602a", "Cold", "Warm",
                "Warmth speeds every cell's life, and its copying slips more often: faster change, more new lineages, more losses.")]
+    LYSIS_NAME = "Biophthora"
+    LYSIS_ABOUT = [
+        "Biophthora: the ceasing of living organisation. Every cell that dies here stays as detritus where it fell, and bacteria break it down, slowly returning its substance to the water as the three nutrients the living feed on. Death in the dish is food for the dish.",
+        "Viruses come too. When one lineage crowds the dish, a phage that preys on it may appear; it bursts the cells it infects, and spreads to their neighbours of the same lineage. A dish of many lineages resists; a dish of one is swept. On the underside the detritus lies in bone, the returning nutrients glow, and the infected burn red.",
+    ]
     JOURNAL_HINT = ("These are single cells dividing in a dish. Speak of cells, divisions, lineages, nutrients, branching "
                     "and extinction, and of descent: every cell from a cell.")
 
@@ -66,12 +71,35 @@ class Biogenesis(World):
         self.extinct = 0
         self.extinct_recent = 0
         self.stock = []
+        self._lysis_init()
         for _ in range(6):
             a = rng.random(3).astype(np.float32)
             a /= a.sum()
             sid = self._new_sp(None, a, rng.random())
             for _ in range(5):
                 self._spawn(rng.uniform(300, 900), rng.uniform(DISH_TOP + 120, H - 120), a, 6.0, rng.uniform(10, 14), sid, 0)
+
+    def _lysis_init(self):
+        if not hasattr(self, "det"):
+            self.det = np.zeros((0, 3), np.float32)        # detritus: x, y, mass
+            self.inf = np.zeros(CAP, np.int16)             # phage infection: ticks until the cell bursts (0 = healthy)
+            self.l_deaths = 0
+            self.l_ret = 0.0
+            self.phages = self.bursts = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.divisions), int(self.l_deaths), int(self.l_ret), int(self.alive.sum()) + 20)
+
+    def _die(self, idx):
+        """Cells die where they are; their bodies stay as detritus."""
+        if not len(idx):
+            return
+        self.alive[idx] = False
+        self.inf[idx] = 0
+        add = np.stack([self.x[idx], self.y[idx], np.maximum(self.m[idx], 0.5)], 1).astype(np.float32)
+        self.det = np.vstack([self.det, add])[-700:]
+        self.l_deaths += len(idx)
 
     def _new_sp(self, parent, aff, hue):
         sid = self.next_sid
@@ -111,6 +139,17 @@ class Biogenesis(World):
                 N[k, 0, :] = N[k, 1, :]
             np.minimum(N, 4.0, out=N)
             N *= 0.999
+        self._lysis_init()
+        # decay: bacteria break the dead down and give their substance back to the water
+        if len(self.det) and self.tick % 2 == 0:
+            rot = self.det[:, 2] * 0.012
+            self.det[:, 2] -= rot
+            cgx = np.clip((self.det[:, 0] / W * GX).astype(int), 0, GX - 1)
+            cgy = np.clip(((self.det[:, 1] - DISH_TOP) / (H - DISH_TOP) * GY).astype(int), 0, GY - 1)
+            for k in range(3):
+                np.add.at(self.N[k], (cgy, cgx), rot * 0.25)
+            self.l_ret += float(rot.sum())
+            self.det = self.det[self.det[:, 2] > 0.15]
         A = np.flatnonzero(self.alive)
         if len(A) == 0:
             self._reinoculate()
@@ -143,7 +182,29 @@ class Biogenesis(World):
         self.y[A] = np.clip(self.y[A], DISH_TOP + 8, H - 8)
         # deaths
         dead = A[(self.m[A] < 1.0) | (rng.random(len(A)) < 0.00025 * warm)]
-        self.alive[dead] = False
+        self._die(dead)
+        # phages: a virus of one lineage appears when that lineage crowds the dish, and spreads among its own
+        if self.tick % 4 == 0:
+            A = np.flatnonzero(self.alive)
+            if len(A) > 40 and rng.random() < 0.01:
+                s_, n_ = np.unique(self.sp[A], return_counts=True)
+                k = int(np.argmax(n_))
+                if n_[k] / len(A) > 0.4:
+                    host = A[self.sp[A] == s_[k]]
+                    self.inf[int(rng.choice(host))] = 40
+                    self.phages += 1
+                    self.milestone("phage", "A virus has appeared that preys on the most crowded lineage, bursting the cells it infects.")
+            sick = A[self.inf[A] > 0]
+            if len(sick):
+                for i in sick:
+                    near = A[(self.sp[A] == self.sp[i]) & (self.inf[A] == 0) & (np.hypot(self.x[A] - self.x[i], self.y[A] - self.y[i]) < 22)]
+                    if len(near) and rng.random() < 0.35:
+                        self.inf[int(rng.choice(near))] = 40
+                self.inf[sick] -= 4
+                burst = sick[self.inf[sick] <= 0]
+                if len(burst):
+                    self.bursts += len(burst)
+                    self._die(burst)
         # divisions
         for i in A[self.m[A] >= self.div[A]][:12]:
             if not self.alive[i]:
@@ -208,6 +269,8 @@ class Biogenesis(World):
         if len(A):
             out.update({"lineages": int(len(np.unique(self.sp[A]))), "specialists": int(round(100 * float((self.aff[A].max(1) > 0.7).mean()))),
                         "depth": int(self.depth[A].max())})
+        out.update({"detritus": int(len(getattr(self, "det", []))), "infected": int((getattr(self, "inf", np.zeros(1)) > 0).sum()),
+                    "phages": int(getattr(self, "phages", 0)), "burst": int(getattr(self, "bursts", 0))})
         return out
 
     def stratum(self):
@@ -227,5 +290,6 @@ class Biogenesis(World):
                  int(sid in live)] for sid, t in self.tree.items() if (t["died"] or self.tick) >= tmin]
         return {"w": W, "h": H, "top": DISH_TOP, "tick": int(self.tick), "tmin": int(tmin),
                 "cells": [[round(float(self.x[i]), 1), round(float(self.y[i]), 1), round(float(self.m[i]), 1), round(float(self.hue[i]), 3),
-                           round(float(self.aff[i].max()), 2)] for i in A],
+                           round(float(self.aff[i].max()), 2), int(getattr(self, "inf", np.zeros(CAP))[i] > 0)] for i in A],
+                "detritus": np.round(getattr(self, "det", np.zeros((0, 3))), 1).ravel().tolist(),
                 "field": np.round(np.clip(self.N, 0, 4) * 2.4).astype(int).ravel().tolist(), "gx": GX, "gy": GY, "tree": tree[-400:]}

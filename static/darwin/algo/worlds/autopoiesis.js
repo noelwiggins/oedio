@@ -73,5 +73,37 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
   }
-  return { size: f => [f.w || 1200, f.h || 800], ingest, draw, drawGlow };
+  // the dark side, Autolysis: links digesting themselves glow violet, spilled contents ring outward in amber,
+  // the remains of broken links fade in bone; the free substrate drifts as faint gold dust
+  function drawDark(ctx, V, now, t) {
+    ctx.fillStyle = '#110a12'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!d) return;
+    ctx.fillStyle = 'rgba(231,162,59,0.35)';
+    const sr = Math.max(1, 1.2 * V.s), S = d.substrate;
+    for (let i = 0; i < S.length; i += 2) ctx.fillRect(V.ox + S[i] * V.s - sr / 2, V.oy + S[i + 1] * V.s - sr / 2, sr, sr);
+    const G = d.ghosts || [];
+    for (let i = 0; i < G.length; i += 3) {
+      const a = Math.max(0, 1 - G[i + 2] / 200);
+      ctx.strokeStyle = `rgba(232,220,196,${0.55 * a})`; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(V.ox + G[i] * V.s, V.oy + G[i + 1] * V.s, (2 + 6 * (1 - a)) * V.s, 0, Math.PI * 2); ctx.stroke();
+    }
+    for (const [x, y, age] of d.spills || []) {
+      const p = age / 400, X0 = V.ox + x * V.s, Y0 = V.oy + y * V.s;
+      ctx.strokeStyle = `rgba(231,162,59,${0.7 * (1 - p)})`; ctx.lineWidth = Math.max(1, 2 * V.s * (1 - p));
+      ctx.beginPath(); ctx.arc(X0, Y0, (6 + 50 * p) * V.s, 0, Math.PI * 2); ctx.stroke();
+    }
+    const Lk = d.links, X = i => V.ox + Lk[2 * i] * V.s, Y = i => V.oy + Lk[2 * i + 1] * V.s, B = d.bonds, lys = new Set(d.lysing || []);
+    ctx.strokeStyle = 'rgba(232,220,196,0.25)'; ctx.lineWidth = Math.max(1, 1.2 * V.s);
+    ctx.beginPath(); for (let i = 0; i < B.length; i += 2) { ctx.moveTo(X(B[i]), Y(B[i])); ctx.lineTo(X(B[i + 1]), Y(B[i + 1])); } ctx.stroke();
+    const r = Math.max(1.5, 2.4 * V.s);
+    for (let i = 0; i < Lk.length / 2; i++) {
+      if (lys.has(i)) { ctx.fillStyle = `rgba(180,140,255,${0.6 + 0.4 * Math.sin(t * 6 + i) ** 2})`; ctx.beginPath(); ctx.arc(X(i), Y(i), r * 1.4, 0, Math.PI * 2); ctx.fill(); }
+      else { ctx.strokeStyle = 'rgba(232,220,196,0.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(i), Y(i), r, 0, Math.PI * 2); ctx.stroke(); }
+    }
+    for (const o of kpos.values()) {
+      const p = kp(o, now), cx = V.ox + p.x * V.s, cy = V.oy + p.y * V.s;
+      ctx.strokeStyle = `hsla(${o.hue * 360},60%,70%,0.6)`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, 6 * V.s, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  return { size: f => [f.w || 1200, f.h || 800], ingest, draw, drawGlow, drawDark };
 })();

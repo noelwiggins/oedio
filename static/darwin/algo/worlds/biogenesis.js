@@ -59,5 +59,46 @@ window.ALGO_WORLD = (function () {
       ctx.fillStyle = 'rgba(42,29,20,0.6)'; ctx.beginPath(); ctx.arc(X0 + r * 0.15, Y0 + r * 0.1, r * 0.32, 0, Math.PI * 2); ctx.fill();
     }
   }
-  return { size: f => [f.w || 1200, f.h || 640], ingest, draw };
+  // the dark side, Biophthora: the dish from beneath. The dead lie as bone-coloured detritus, haloed in amber while
+  // bacteria give their substance back; cells infected by a phage burn red; the tree of life shows its ended lines.
+  function drawDark(ctx, V, now, t) {
+    ctx.fillStyle = '#100a14'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!d) return;
+    const top = d.top;
+    ctx.fillStyle = '#1c1220'; ctx.fillRect(V.ox, V.oy, W * V.s, top * V.s);
+    ctx.strokeStyle = 'rgba(232,220,196,0.3)'; ctx.lineWidth = Math.max(1, 1.5 * V.s);
+    ctx.beginPath(); ctx.moveTo(V.ox, V.oy + top * V.s); ctx.lineTo(V.ox + W * V.s, V.oy + top * V.s); ctx.stroke();
+    const t0 = d.tmin, t1 = Math.max(d.tick, t0 + 1), X = tk => V.ox + (60 + (tk - t0) / (t1 - t0) * (W - 120)) * V.s;
+    const Y = lane => V.oy + (14 + lane * (top - 28)) * V.s, by = new Map(d.tree.map(r => [r[0], r]));
+    ctx.lineCap = 'round';
+    for (const [sid, parent, born, died, hue, lane, alive] of d.tree) {
+      const end = died > 0 ? died : d.tick, x0 = X(born), x1 = X(end), y = Y(lane);
+      ctx.strokeStyle = alive ? 'rgba(180,140,255,0.55)' : 'rgba(232,220,196,0.5)'; ctx.lineWidth = (alive ? 2 : 1.2) * V.s;
+      ctx.beginPath(); const p = by.get(parent);
+      if (p) ctx.moveTo(x0, Y(p[5])), ctx.lineTo(x0, y); else ctx.moveTo(x0, y);
+      ctx.lineTo(x1, y); ctx.stroke();
+      if (!alive && died > 0) { ctx.fillStyle = 'rgba(232,220,196,0.8)'; ctx.fillRect(x1 - 1.5 * V.s, y - 3 * V.s, 3 * V.s, 6 * V.s); }   // where a line ended
+    }
+    const D = d.detritus || [];
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < D.length; i += 3) {
+      const X0 = V.ox + D[i] * V.s, Y0 = V.oy + D[i + 1] * V.s, r = 2.2 * Math.sqrt(Math.max(D[i + 2], 0.3)) * V.s;
+      const g = ctx.createRadialGradient(X0, Y0, 0, X0, Y0, r * 3);
+      g.addColorStop(0, 'rgba(231,162,59,0.35)'); g.addColorStop(1, 'rgba(231,162,59,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X0, Y0, r * 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    for (let i = 0; i < D.length; i += 3) {
+      const X0 = V.ox + D[i] * V.s, Y0 = V.oy + D[i + 1] * V.s, r = 2.2 * Math.sqrt(Math.max(D[i + 2], 0.3)) * V.s;
+      ctx.fillStyle = 'rgba(232,220,196,0.7)';
+      for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(X0 + Math.cos(i + k * 2.1) * r * 0.5, Y0 + Math.sin(i * 1.3 + k * 2.1) * r * 0.5, Math.max(0.6, r * 0.28), 0, Math.PI * 2); ctx.fill(); }
+    }
+    for (const [x, y, m, hue, spec, sick] of d.cells) {
+      const X0 = V.ox + x * V.s, Y0 = V.oy + y * V.s, r = 2.2 * Math.sqrt(Math.max(m, 0.5)) * V.s;
+      ctx.strokeStyle = sick ? `rgba(229,64,42,${0.6 + 0.4 * Math.sin(t * 8 + x) ** 2})` : 'rgba(180,140,255,0.3)';
+      ctx.lineWidth = sick ? Math.max(1.5, 1.6 * V.s) : Math.max(0.8, 0.8 * V.s);
+      ctx.beginPath(); ctx.arc(X0, Y0, r, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  return { size: f => [f.w || 1200, f.h || 640], ingest, draw, drawDark };
 })();

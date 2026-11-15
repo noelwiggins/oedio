@@ -5,7 +5,7 @@ window.ALGO_WORLD = (function () {
   const INK = '#2a1d14';
   const COL = { A: '#e5602a', B: '#f2b33d', C: '#3f97b5', D: '#a8c94a' };
   const COLI = ['#e5602a', '#f2b33d', '#3f97b5', '#a8c94a'];
-  let W = 1200, H = 800, mon = [], monPrev = [], monAt = 0, vents = [];
+  let W = 1200, H = 800, mon = [], monPrev = [], monAt = 0, vents = [], breaks = [];
   const chains = new Map();
   const LAG = 900;
   const sprites = {};
@@ -25,7 +25,7 @@ window.ALGO_WORLD = (function () {
 
   function ingest(d, now) {
     W = d.w; H = d.h; vents = d.vents || [];
-    monPrev = mon; mon = d.monomers; monAt = now;
+    monPrev = mon; mon = d.monomers; monAt = now; breaks = d.breaks || [];
     const seen = new Set();
     for (const c of d.chains) {
       const [id, x, y, a, seq, fam, act, fold, gen] = c;
@@ -122,5 +122,39 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
   }
-  return { size: d => [d.w || 1200, d.h || 800], ingest, draw, drawGlow };
+  // the dark side, Protophthora: chains as faint strings, every break flaring in bone, freed blocks glowing amber,
+  // and the sunlit surface glowing violet where its light cuts
+  function drawDark(ctx, V, now, t, light) {
+    ctx.fillStyle = '#0d0a16'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    const uv = ctx.createLinearGradient(0, V.oy, 0, V.oy + 140 * V.s);
+    uv.addColorStop(0, `rgba(180,140,255,${0.35 * light})`); uv.addColorStop(1, 'rgba(180,140,255,0)');
+    ctx.fillStyle = uv; ctx.fillRect(V.ox, V.oy, W * V.s, 140 * V.s);
+    for (const vx of vents) {                                 // the vents, a warm refuge in the deep
+      const g = ctx.createRadialGradient(V.ox + vx * V.s, V.oy + H * V.s, 0, V.ox + vx * V.s, V.oy + H * V.s, 120 * V.s);
+      g.addColorStop(0, 'rgba(229,96,42,0.3)'); g.addColorStop(1, 'rgba(229,96,42,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(V.ox + vx * V.s, V.oy + H * V.s, 120 * V.s, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = 'rgba(231,162,59,0.28)';
+    const r = Math.max(1, 1.6 * V.s);
+    for (let i = 0; i < mon.length; i += 3) ctx.fillRect(V.ox + mon[i] * V.s - r / 2, V.oy + mon[i + 1] * V.s - r / 2, r, r);
+    for (let i = 0; i < breaks.length; i += 3) {
+      const p = breaks[i + 2] / 240, X = V.ox + breaks[i] * V.s, Y = V.oy + breaks[i + 1] * V.s;
+      ctx.strokeStyle = `rgba(232,220,196,${0.8 * (1 - p)})`; ctx.lineWidth = Math.max(1, 1.6 * V.s);
+      for (let k = 0; k < 4; k++) {                           // a small star of fracture
+        const a = k * Math.PI / 2 + breaks[i], L = (4 + 14 * p) * V.s;
+        ctx.beginPath(); ctx.moveTo(X + Math.cos(a) * L * 0.3, Y + Math.sin(a) * L * 0.3); ctx.lineTo(X + Math.cos(a) * L, Y + Math.sin(a) * L); ctx.stroke();
+      }
+    }
+    ctx.restore();
+    const R = Math.max(2, 3.2 * V.s), gap = R * 2.3;
+    ctx.strokeStyle = 'rgba(232,220,196,0.35)'; ctx.lineWidth = 1;
+    for (const o of chains.values()) {
+      if (o.dead) continue;
+      const p = cpos(o, now), X = V.ox + p.x * V.s, Y = V.oy + p.y * V.s, n = o.seq.length, L = gap * n / 2;
+      ctx.beginPath(); ctx.moveTo(X - Math.cos(p.a) * L, Y - Math.sin(p.a) * L); ctx.lineTo(X + Math.cos(p.a) * L, Y + Math.sin(p.a) * L); ctx.stroke();
+      for (let i = 0; i < n; i++) { const al = (i - n / 2) * gap; ctx.beginPath(); ctx.arc(X + Math.cos(p.a) * al, Y + Math.sin(p.a) * al, R * 0.6, 0, Math.PI * 2); ctx.stroke(); }
+    }
+  }
+  return { size: d => [d.w || 1200, d.h || 800], ingest, draw, drawGlow, drawDark };
 })();

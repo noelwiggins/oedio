@@ -59,6 +59,13 @@ class Protogenesis(World):
     JOURNAL_HINT = ("This is a prebiotic pond, before life. Speak of building blocks, chains, templates, copies, "
                     "folding, catalysts and parasites, never of organisms or creatures.")
 
+    LYSIS_NAME = "Protophthora"
+    LYSIS_ABOUT = [
+        "Protophthora: the dissolving of the first structures. Every chain here is always coming apart: water cuts it at any bond, long chains break more easily than short ones, and only a chain folded back on itself into a hairpin is sheltered.",
+        "Sunlight cuts both ways. The light that makes fresh blocks at the surface also tears chains apart there, so by day the shallows are a place of making and breaking, and the deep vents a refuge.",
+        "Nothing is lost: every break returns blocks to the pond, the raw material of the next chain and the next copy. On the underside each break flares in bone, the freed blocks glow amber, and the sunlit surface glows violet where it cuts.",
+    ]
+
     def __init__(self, seed=1, name=""):
         super().__init__(seed, name)
         rng = self.rng
@@ -228,8 +235,10 @@ class Protogenesis(World):
                         self.milestone("long_chain", "A chain eight blocks long has formed.")
                     if L + 1 >= 16:
                         self.milestone("very_long", "A chain sixteen blocks long has formed.")
-                # breaking: hairpins protect, long chains are fragile
-                if rng.random() < (0.0015 + 0.0006 * L) * (1 - 0.85 * fold[a]):
+                # breaking: hairpins protect, long chains are fragile; sunlight near the surface cuts too
+                uv = 1 + 3.0 * self.light() * max(0.0, 1 - float(self.cy[i]) / 120)
+                if rng.random() < (0.0015 + 0.0006 * L) * (1 - 0.85 * fold[a]) * uv:
+                    self._lysis_note(float(self.cx[i]), float(self.cy[i]), L)
                     cut = int(rng.integers(1, L)) if L > 1 else 1
                     tail = self.seq[i, cut:L].copy()
                     self.clen[i] = cut
@@ -261,6 +270,18 @@ class Protogenesis(World):
         if self.tick % 30 == 0:
             for i in np.flatnonzero(self.c_alive & (self.clen < 2)):
                 self.c_alive[i] = False
+
+    def _lysis_note(self, x, y, n):
+        if not hasattr(self, "breaks"):
+            self.breaks, self.n_breaks, self.n_freed = [], 0, 0
+        self.breaks.append([round(x, 1), round(y, 1), int(self.tick)])
+        self.breaks = [b for b in self.breaks if self.tick - b[2] < 240][-200:]
+        self.n_breaks += 1
+        self.n_freed += max(1, n // 2)
+
+    def lysis_counts(self):
+        return (int(self.copies) * 4 + int(getattr(self, "n_freed", 0)) // 3, int(getattr(self, "n_breaks", 0)),
+                int(getattr(self, "n_freed", 0)), int(self.c_alive.sum()) + 20)
 
     def _copy(self, i, parasite):
         rng = self.rng
@@ -299,7 +320,8 @@ class Protogenesis(World):
     # ── measurement ──────────────────────────────────────────────────────
     def stats(self):
         C = np.flatnonzero(self.c_alive)
-        out = {"monomers": int(self.m_alive.sum()), "chains": int(len(C)), "copies": int(self.copies)}
+        out = {"monomers": int(self.m_alive.sum()), "chains": int(len(C)), "copies": int(self.copies),
+               "breaks": int(getattr(self, "n_breaks", 0))}
         if len(C):
             act = np.array([self._activity(i) for i in C])
             fold = np.array([self._fold(i) for i in C])
@@ -335,4 +357,5 @@ class Protogenesis(World):
             chains.append([int(self.cid[i]), round(float(self.cx[i]), 1), round(float(self.cy[i]), 1), round(float(self.ca[i]), 2),
                            "".join("ABCD"[v] for v in self.seq[i, :L]), int(self.cfam[i]),
                            round(self._activity(i), 2), round(self._fold(i), 2), int(self.cgen[i])])
-        return {"w": W, "h": H, "monomers": mon.ravel().tolist(), "chains": chains, "vents": [round(v) for v in self.vents]}
+        return {"w": W, "h": H, "monomers": mon.ravel().tolist(), "chains": chains, "vents": [round(v) for v in self.vents],
+                "breaks": [v for b in getattr(self, "breaks", []) for v in (b[0], b[1], int(self.tick - b[2]))]}

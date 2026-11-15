@@ -54,6 +54,11 @@ class Autopoiesis(World):
                "How much substrate drifts through the dish. Rich water lets catalysts build fast; thin water starves membranes of repairs."),
              D("decay", "Decay", "clock", "#e5602a", "Gentle", "Harsh",
                "How fast links fall apart. Harsh decay tests whether a cell can repair itself quickly enough to stay whole.")]
+    LYSIS_NAME = "Autolysis"
+    LYSIS_ABOUT = [
+        "Autolysis: self-digestion. A cell lives only while its catalyst lives. When the catalyst wears out, nothing repairs the membrane any more; the cell turns on itself, its ring coming apart link by link far faster than ordinary decay, and what it held spills out into the water.",
+        "What spills is substrate, the raw stuff of links, and it drifts to the cells nearby, which build their membranes from it. On the underside the decaying links glow violet, the spilled contents ring outward in amber, and the remains of broken links lie in bone.",
+    ]
     JOURNAL_HINT = ("This is a chemistry of membranes and catalysts, not organisms. Speak of rings, cells, catalysts, "
                     "links, gaps, repairs, divisions and how long cells hold themselves together.")
 
@@ -78,6 +83,7 @@ class Autopoiesis(World):
         self.rings = []               # list of lists of link indices
         self.ring_of = np.full(CAP_L, -1, np.int32)
         self.repairs = self.divisions = 0
+        self._lysis_init()
         self.best_age = 0
         for _ in range(16):
             g = LO + (HI - LO) * rng.random(K_GENES).astype(np.float32)
@@ -100,10 +106,24 @@ class Autopoiesis(World):
         self.kshel[i] = False
         return i
 
+    def _lysis_init(self):
+        if not hasattr(self, "lyse"):
+            self.lyse = np.zeros(CAP_L, np.int16)         # ticks of self-digestion left on a dead cell's links
+            self.spills = []                              # [x, y, tick] where a dead cell spilled its contents
+            self.ghosts = []                              # [x, y, tick] where links fell apart lately
+            self.made = self.broken = self.k_deaths = 0
+            self.returned = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.made), int(self.broken + 10 * self.k_deaths), int(self.returned), int(self.l_alive.sum()) + 30)
+
     def _new_l(self, x, y):
         free = np.flatnonzero(~self.l_alive)
         if not len(free):
             return None
+        self._lysis_init()
+        self.made += 1
         i = int(free[0])
         self.l_alive[i] = True
         self.lx[i], self.ly[i] = np.clip(x, 2, W - 2), np.clip(y, 2, H - 2)
@@ -269,18 +289,27 @@ class Autopoiesis(World):
         if len(Lk):
             bonded = (self.nb[Lk] >= 0).sum(1)
             p = np.where(bonded == 2, 0.0005, np.where(bonded == 1, 0.0012, 0.002)) * mult(self.dial("decay"), 2.2)
+            self._lysis_init()
+            p = np.where(self.lyse[Lk] > 0, 0.02, p)                     # a dead cell digests its own membrane
+            self.lyse[Lk] = np.maximum(0, self.lyse[Lk] - 1)
             die = Lk[rng.random(len(Lk)) < p]
             for i in die:
                 self._unbond(int(i))
                 self.l_alive[i] = False
+                self.lyse[i] = 0
                 free = np.flatnonzero(~self.s_alive)[:2]
                 self.s_alive[free] = True
                 self.sx[free], self.sy[free] = self.lx[i], self.ly[i]
+                self.broken += 1
+                self.returned += len(free)
+                self.ghosts.append([round(float(self.lx[i]), 1), round(float(self.ly[i]), 1), int(self.tick)])
+            self.ghosts = [g for g in self.ghosts if self.tick - g[2] < 200][-300:]
         # catalysts wear out, fast when exposed
         if len(K):
             p = np.where(self.kshel[K], 0.00003, 0.00015)
             for i in K[rng.random(len(K)) < p]:
                 self.k_alive[i] = False
+                self._autolyse(int(i))
         if self.k_alive.sum() < 14 and rng.random() < 0.01:     # now and then a catalyst drifts in from outside
             g = LO + (HI - LO) * rng.random(K_GENES).astype(np.float32)
             self._new_k(rng.uniform(100, W - 100), rng.uniform(100, H - 100), g, None)
@@ -289,6 +318,25 @@ class Autopoiesis(World):
                 g = LO + (HI - LO) * rng.random(K_GENES).astype(np.float32)
                 self._new_k(rng.uniform(100, W - 100), rng.uniform(100, H - 100), g, None)
             self.event("reseed", "The last catalysts were nearly gone; new ones drift in.")
+
+    def _autolyse(self, k):
+        """The catalyst has died: its cell digests itself, and its contents spill as substrate for its neighbours."""
+        rng = self.rng
+        self.k_deaths += 1
+        x, y = float(self.kx[k]), float(self.ky[k])
+        if 0 <= self.kin[k] < len(self.rings):
+            for li in self.rings[self.kin[k]]:
+                if self.l_alive[li]:
+                    self.lyse[li] = 300
+            self.milestone("autolysis", "A cell has lost its catalyst and digested itself; what it held spills out to feed its neighbours.")
+        free = np.flatnonzero(~self.s_alive)[:24]
+        if len(free):
+            a, r = rng.uniform(0, 2 * math.pi, len(free)), rng.uniform(2, 26, len(free))
+            self.s_alive[free] = True
+            self.sx[free] = np.clip(x + np.cos(a) * r, 2, W - 2); self.sy[free] = np.clip(y + np.sin(a) * r, 2, H - 2)
+            self.returned += len(free)
+        self.spills.append([round(x, 1), round(y, 1), int(self.tick)])
+        self.spills = self.spills[-30:]
 
     # ── rings and cells ──────────────────────────────────────────────────
     def _find_cells(self):
@@ -406,7 +454,8 @@ class Autopoiesis(World):
                "cells": len(self.cells), "catalysts": int(len(K)),
                "sheltered": int(round(100 * self.kshel[K].mean())) if len(K) else 0,
                "oldest_cell": int(max(ages)) if ages else 0, "mean_cell_age": int(np.mean(ages)) if ages else 0,
-               "best_cell_age": int(self.best_age), "repairs": int(self.repairs), "divisions": int(self.divisions)}
+               "best_cell_age": int(self.best_age), "repairs": int(self.repairs), "divisions": int(self.divisions),
+               "autolysed": int(getattr(self, "k_deaths", 0)), "links_broken": int(getattr(self, "broken", 0))}
         if len(K):
             out.update({"produce_mean": round(float(self.KG[K, 0].mean()), 3), "throw_mean": round(float(self.KG[K, 1].mean()), 2),
                         "stick_mean": round(float(self.KG[K, 2].mean()), 3), "families": int(len(np.unique(self.kfam[K])))})
@@ -445,7 +494,11 @@ class Autopoiesis(World):
                 "bonds": bonds,
                 "catalysts": [[int(self.kid[k]), round(float(self.kx[k]), 1), round(float(self.ky[k]), 1),
                                round(float(self.KG[k, 3]), 3), int(self.kin[k] >= 0)] for k in K],
-                "rings": cells}
+                "rings": cells,
+                # the dark side: links digesting themselves, recent spills, and where links lately fell apart
+                "lysing": [int(remap[i]) for i in Lk if getattr(self, "lyse", np.zeros(CAP_L))[i] > 0],
+                "spills": [[x, y, int(self.tick - t)] for x, y, t in getattr(self, "spills", []) if self.tick - t < 400],
+                "ghosts": [v for g in getattr(self, "ghosts", [])[-200:] for v in (g[0], g[1], int(self.tick - g[2]))]}
 
 
 def _inside(x, y, px, py):
