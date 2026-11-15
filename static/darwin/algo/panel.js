@@ -729,6 +729,14 @@
     card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
     clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 60000);
   }
+  // keep the underside ready while the top is showing, so the first frames of a turn don't stall building it
+  setInterval(() => {
+    if (!window.AlgoLysis || AlgoLysis.isTurning() || !L || !L.s || !live) return;
+    const U = live.under;
+    if (U) { AlgoLysis.grid(U, 'litter', [128, 78, 44], 1.1); AlgoLysis.grid(U, 'soil', [231, 162, 59], 0.9); AlgoLysis.grid(U, 'carrion', [232, 220, 196], 1.2); }
+    let n = 0;
+    for (const o of fungi.values()) { if (!o.dead) { AlgoLysis.warmMycelium(o.id, o.reach, L.s, o.look[3]); if (++n > 400) break; } }
+  }, 1500);
   if (window.AlgoLysis && AlgoLysis.attachSwipe)       // swipe the window left or right to turn the panel over
     AlgoLysis.attachSwipe(cv, () => L && L.pf ? { x: L.pf.x / L.dpr, y: L.pf.y / L.dpr, w: L.pf.w / L.dpr, h: L.pf.h / L.dpr } : null,
       d => { if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(d); });

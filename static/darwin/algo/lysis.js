@@ -22,7 +22,7 @@
     if (want === dark) return dark;
     dark = want;
     try { localStorage.setItem('algo-dark', dark ? '1' : '0'); } catch (e) {}
-    listeners.forEach(f => { try { f(dark); } catch (e) {} });
+    const d = dark; setTimeout(() => listeners.forEach(f => { try { f(d); } catch (e) {} }), 420);
     return dark;
   }
   function animate(to, dur, dir) {
@@ -45,7 +45,24 @@
   function settle(k) {                       // ends at 1 with a soft overshoot of about 3%
     const c = 1.25; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2);
   }
+  // a damped spring for everything a hand sets going: once the board passes edge-on it is caught and carried over,
+  // keeping the speed the finger gave it, accelerating into its seat and settling with one soft bounce
+  const SPRING_W = 0.0115, SPRING_Z = 0.62;            // natural frequency (per ms) and damping ratio
+  function spring(to, v0) {
+    if (!turn) return;
+    turn.mode = 'spring'; turn.to = to; turn.v = v0 || 0; turn.last = performance.now();
+  }
+  function stepSpring(now) {
+    let dt = Math.min(64, now - turn.last); turn.last = now;
+    while (dt > 0) {                                 // small fixed substeps keep it smooth whatever the frame rate
+      const h = Math.min(4, dt); dt -= h;
+      const a = SPRING_W * SPRING_W * (turn.to - turn.p) - 2 * SPRING_Z * SPRING_W * turn.v;
+      turn.v += a * h; turn.p += turn.v * h;
+    }
+    if (Math.abs(turn.to - turn.p) < 0.002 && Math.abs(turn.v) < 0.00008) turn = null;
+  }
   function step(now) {
+    if (turn && turn.mode === 'spring') return stepSpring(now);
     if (!turn || turn.mode !== 'anim') return;
     const k = Math.min(1, (now - turn.t0) / turn.dur);
     if (turn.a0 === 0 && turn.a1 === 1) {
@@ -73,7 +90,7 @@
   // swells and the far edge shrinks as the board swings; it is shaded as it turns from the light, shows its thickness
   // when edge-on, and lifts off its seat a little in the middle of the turn.
   function project(g, src, r, f, opts) {
-    const o = opts || {}, N = o.strips || Math.round(36 + 110 * Math.abs(Math.sin(f.angle))), cx = r.x + r.w / 2, cy = r.y + r.h / 2, hw = r.w / 2;
+    const o = opts || {}, N = o.strips || Math.round(36 + 220 * Math.abs(Math.sin(f.angle) * Math.cos(f.angle))), cx = r.x + r.w / 2, cy = r.y + r.h / 2, hw = r.w / 2;
     const th = f.angle, c = Math.cos(th), sn = Math.sin(th), D = r.w * 2.2;
     const lift = 1 - 0.07 * Math.sin(Math.PI * Math.min(1, Math.max(0, f.p)));
     g.save();
@@ -119,14 +136,14 @@
     let st = null, dragged = false;
     el.style.touchAction = 'none';
     el.addEventListener('pointerdown', e => {
-      const r = getRect(); if (!r || (turn && turn.mode === 'anim')) return;
+      const r = getRect(); if (!r || (turn && turn.mode !== 'drag')) return;
       const x = e.clientX, y = e.clientY;
       if (x < r.x || x > r.x + r.w || y < r.y || y > r.y + r.h) return;
       st = { x0: x, y0: y, id: e.pointerId, live: false, hist: [[x, performance.now()]], w: r.w };
       dragged = false;
     });
     el.addEventListener('pointermove', e => {
-      if (!st || e.pointerId !== st.id) return;
+      if (!st || e.pointerId !== st.id || st.caught) return;
       const dx = e.clientX - st.x0, dy = e.clientY - st.y0;
       if (!st.live) {
         if (Math.abs(dx) < 14 || Math.abs(dx) < 1.4 * Math.abs(dy)) { if (Math.abs(dy) > 30) st = null; return; }
@@ -137,17 +154,25 @@
       // half the window's width of travel swings the board edge-on; the dead zone is taken out so it starts smoothly
       turn.p = Math.max(0, Math.min(1, (Math.abs(dx) - 14) / (st.w * 0.6))) * (Math.sign(dx) === turn.dir ? 1 : 0);
       st.hist.push([e.clientX, performance.now()]); if (st.hist.length > 6) st.hist.shift();
+      if (turn.p >= 0.5) {                           // past edge-on: the spring takes it from the finger
+        st.caught = true;
+        spring(1, Math.max(0.0018, pv(st)));
+        commit(!turn.from); if (onTurn) { const d = dark; setTimeout(() => onTurn(d), 420); }
+      }
     });
+    const pv = s0 => {                               // the finger's speed, in turns per ms, in the turning direction
+      const h = s0.hist; if (h.length < 2) return 0;
+      const v = (h[h.length - 1][0] - h[0][0]) / Math.max(1, h[h.length - 1][1] - h[0][1]);
+      return turn ? v * turn.dir / (s0.w * 0.6) : 0;
+    };
     const end = e => {
       if (!st || e.pointerId !== st.id) return;
       const s0 = st; st = null;
-      if (!s0.live || !turn) return;
-      const h = s0.hist, v = h.length > 1 ? (h[h.length - 1][0] - h[0][0]) / Math.max(1, h[h.length - 1][1] - h[0][1]) : 0;
-      const fling = Math.sign(v) === turn.dir && Math.abs(v) > 0.45;            // px per ms
-      const go = turn.p > 0.42 || fling;
-      const rest = go ? 1 - turn.p : turn.p;
-      animate(go ? 1 : 0, Math.max(380, TURN_MS * 0.85 * rest + 260));
-      if (go) { commit(!turn.from); if (onTurn) onTurn(dark); }
+      if (!s0.live || !turn || s0.caught) return;
+      const v = pv(s0), fling = v * s0.w * 0.6 > 0.35;   // a flick faster than 0.35 px/ms carries it over
+      const go = turn.p > 0.3 || fling;
+      spring(go ? 1 : 0, go ? Math.max(0.0015, v) : Math.min(0, v));
+      if (go) { commit(!turn.from); if (onTurn) { const d = dark; setTimeout(() => onTurn(d), 420); } }
     };
     el.addEventListener('pointerup', end);
     el.addEventListener('pointercancel', end);
@@ -243,18 +268,44 @@
     mycCache.set(key, segs);
     return segs;
   }
-  function mycelium(g, id, x, y, r, s, t, glow) {
-    const rb = Math.round(r / 6) * 6, segs = threads(id, rb);
-    const pulse = 0.75 + 0.25 * Math.sin(t * 0.8 + id);
-    g.save(); g.translate(x, y); g.scale(s, s); g.lineCap = 'round';
+  // each colony's threads are drawn once into a sprite (they only change when the colony's reach does), and each
+  // frame the sprite is placed with its slow pulse as opacity: thousands of strokes become one image
+  const mycSprites = new Map();
+  function mycSprite(id, rb, s, glow) {
+    const sk = Math.round(s * 20) / 20, key = id + ':' + rb + ':' + sk + ':' + Math.round(glow * 10);
+    let c = mycSprites.get(key);
+    if (c) return c;
+    const segs = threads(id, rb);
+    let ext = 4;
+    for (const q of segs) ext = Math.max(ext, Math.abs(q[0]), Math.abs(q[1]), Math.abs(q[2]), Math.abs(q[3]));
+    const pad = 4, half = Math.ceil(ext * sk + pad);
+    c = document.createElement('canvas'); c.width = c.height = half * 2; c._half = half;
+    const g = c.getContext('2d');
+    g.translate(half, half); g.scale(sk, sk); g.lineCap = 'round';
     for (const pass of [0, 1]) {
-      g.strokeStyle = pass ? `rgba(200,255,220,${0.55 * pulse})` : `rgba(125,255,176,${0.16 * pulse * (0.6 + glow)})`;
-      for (const [x0, y0, x1, y1, d] of segs) {
-        g.lineWidth = (pass ? 0.55 : 2.4) * (1.6 - d * 0.35) / Math.max(0.5, s * 0.6);
-        g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+      g.strokeStyle = pass ? 'rgba(200,255,220,0.55)' : `rgba(125,255,176,${0.16 * (0.6 + glow)})`;
+      for (let d = 0; d <= 3; d++) {                       // one path per thread depth: a handful of strokes
+        g.lineWidth = (pass ? 0.55 : 2.4) * (1.6 - d * 0.35) / Math.max(0.5, sk * 0.6);
+        g.beginPath();
+        for (const [x0, y0, x1, y1, dd] of segs) if (dd === d) { g.moveTo(x0, y0); g.lineTo(x1, y1); }
+        g.stroke();
       }
     }
-    g.restore();
+    if (mycSprites.size > 500) mycSprites.clear();
+    mycSprites.set(key, c);
+    return c;
+  }
+  const warmCv = document.createElement('canvas'); warmCv.width = warmCv.height = 4;
+  function warmMycelium(id, r, s, glow) {           // build ahead of time, and draw once so the browser has it ready
+    const before = mycSprites.size, c = mycSprite(id, Math.round(r / 6) * 6, s, glow);
+    if (mycSprites.size !== before) warmCv.getContext('2d').drawImage(c, 0, 0, 4, 4);
+  }
+  function mycelium(g, id, x, y, r, s, t, glow) {
+    const rb = Math.round(r / 6) * 6, c = mycSprite(id, rb, s, glow);
+    const pulse = 0.75 + 0.25 * Math.sin(t * 0.8 + id), a0 = g.globalAlpha;
+    g.globalAlpha = a0 * pulse;
+    g.drawImage(c, x - c._half, y - c._half);
+    g.globalAlpha = a0;
   }
 
   // ── a mushroom, in the decal style of the board ──────────────────────
@@ -294,5 +345,6 @@
   try { if (localStorage.getItem('algo-dark') === '1' && new URLSearchParams(location.search).get('dark') !== '0') { dark = true; } } catch (e) {}
   if (new URLSearchParams(location.search).get('dark') === '1') dark = true;
 
-  window.AlgoLysis = { toggle, isDark: () => dark, flip, project, attachSwipe, isTurning: () => !!turn, drawGauge, grid, mycelium, mushroom, onChange, PAL };
+  window.AlgoLysis = { toggle, isDark: () => dark, flip, project, attachSwipe, isTurning: () => !!turn, drawGauge, grid, mycelium,
+    warmMycelium, mushroom, onChange, PAL };
 })();

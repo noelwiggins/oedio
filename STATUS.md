@@ -16,7 +16,7 @@ inside their cards. Studio on phones (<=640px): single column, source filter + s
 
 ## ALGOLYSIS — the dark side of every panel (2026-11-14)
 Every panel turns over (swipe left/right across the window, or ←/→ keys; `?dark=1`; remembered in localStorage `algo-dark`) to its underside: death, decay
-and return. Shared: `static/darwin/algo/lysis.js` (3D turn: face drawn offscreen, projected in perspective strips with shading, brass edge and seat shadow; drag follows the finger, commits past 40% or on a fling, settles with a small overshoot; G/S/L gauge with self-calibrating needles, helpers),
+and return. Shared: `static/darwin/algo/lysis.js` (3D turn: face drawn offscreen, projected in perspective strips with shading, brass edge and seat shadow; drag follows the finger; at edge-on a damped spring (ω 0.0115/ms, ζ 0.62) catches it and carries it over with the finger's speed, ~190 ms to land, ~4% bounce; released early it springs on past 30% or a fling, else back; sound switches as it lands; Coast mycelium is cached per colony as sprites and pre-built in the background (dark side went 2→11 fps headless); G/S/L gauge with self-calibrating needles, helpers),
 reverse-named nameplate (`meta.lysis_name`), 'cycle' info card, sound `setDark` (root −5, darker filter, `rev`/`crumble`
 voices, lysis voice driven by `gsl[2]`). Base: `LYSIS_NAME/ABOUT`, `lysis_counts() -> (born, died, returned, n)`,
 `_update_gsl`, `gsl` in stats/live. Plugins add `drawDark(ctx,V,now,t,light)`; cabinet falls back to a darkened draw.
