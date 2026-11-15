@@ -10,7 +10,8 @@
   const API = document.body.dataset.api;
   const WORLD = window.ALGO_WORLD;
   if (new URLSearchParams(location.search).get('quiet') === '1') document.body.classList.add('quiet');
-  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const cv = document.getElementById('cv'), ctx0 = cv.getContext('2d');
+  let ctx = ctx0, turnCv = null;          // while the panel turns, each face is drawn here first, then projected
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22';
   let L = {}, live = null, meta = null, size = [1200, 800];
@@ -225,7 +226,7 @@
       h2.textContent = (m.lysis_name || 'Lysis') + ': the dark side';
       body.innerHTML = `<p class="note">The gauge in the tray has three needles: <b style="color:#7a9a2a">G</b>enesis, how fast new things are made; <b style="color:#b8860b">S</b>tasis, how much simply persists; <b style="color:#7b5cc4">L</b>ysis, how fast things fall apart and are broken down. Here they are ${pc(g[0])}, ${pc(g[1])} and ${pc(g[2])}.</p>` +
         (m.lysis_about || []).map(p => `<p class="note">${esc(p)}</p>`).join('') +
-        `<p class="note">Turn the panel over with the moon key to see this world from its dark side.</p>`;
+        `<p class="note">Swipe across the window, left or right, to turn the panel over and see this world from its dark side.</p>`;
     } else {
       h2.textContent = m.title || 'Algogenesis';
       body.innerHTML = `<p class="def">${esc(m.definition || '')}</p>` + (m.about || []).map(p => `<p class="note">${esc(p)}</p>`).join('') +
@@ -267,6 +268,7 @@
   // ── frame loop ───────────────────────────────────────────────────────
   let smooth = 1;
   function frame() {
+    ctx = ctx0;
     requestAnimationFrame(frame);
     if (!L.cw) return;
     const now = performance.now(), t = now / 1000;
@@ -275,9 +277,12 @@
     smooth += ((live ? live.light : 1) - smooth) * 0.02;
     const night = Math.max(0, 1 - smooth), pf = L.pf;
     const fl = window.AlgoLysis ? AlgoLysis.flip(now) : { sx: 1, dark: false };
+    if (fl.turning) {
+      if (!turnCv || turnCv.width !== cv.width || turnCv.height !== cv.height) { turnCv = document.createElement('canvas'); turnCv.width = cv.width; turnCv.height = cv.height; }
+      ctx = turnCv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
     ctx.save(); rrect(pf.x, pf.y, pf.w, pf.h, L.u * 0.018); ctx.clip();
     ctx.fillStyle = fl.dark ? '#140c18' : CREAM; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
-    if (fl.sx < 0.999) { const cx = pf.x + pf.w / 2; ctx.translate(cx, 0); ctx.scale(Math.max(0.02, fl.sx), 1); ctx.translate(-cx, 0); }
     if (fl.dark) {
       if (live) {
         if (WORLD.drawDark) WORLD.drawDark(ctx, L.V, now, t, smooth);
@@ -298,6 +303,12 @@
       if (live && WORLD.drawGlow) WORLD.drawGlow(ctx, L.V, now, t, smooth);
     }
     ctx.restore();
+    if (fl.turning) {
+      ctx = ctx0;
+      ctx.save(); rrect(pf.x, pf.y, pf.w, pf.h, L.u * 0.018); ctx.clip();
+      AlgoLysis.project(ctx, turnCv, pf, fl, { cavity: '#140c18' });
+      ctx.restore();
+    }
     drawBezel();
     drawTray();
     if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.12 * night})`; ctx.fillRect(0, 0, L.cw, L.ch); }
@@ -307,6 +318,9 @@
   addEventListener('pointermove', () => { document.body.classList.add('awake'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.remove('awake'), 2500); });
   addEventListener('dblclick', () => { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
+  if (window.AlgoLysis && AlgoLysis.attachSwipe)       // swipe the window left or right to turn the panel over
+    AlgoLysis.attachSwipe(cv, () => L && L.pf ? { x: L.pf.x / L.dpr, y: L.pf.y / L.dpr, w: L.pf.w / L.dpr, h: L.pf.h / L.dpr } : null,
+      d => { if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(d); });
   if (window.AlgoLysis && AlgoLysis.isDark()) {          // the panel remembers which side was showing
     document.querySelectorAll('.key[data-card="dark"]').forEach(k => k.classList.add('on'));
     if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(true);

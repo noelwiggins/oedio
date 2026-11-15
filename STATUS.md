@@ -15,8 +15,8 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
 ## ALGOLYSIS — the dark side of every panel (2026-11-14)
-Every panel turns over (moon key, `?dark=1`, remembered in localStorage `algo-dark`) to its underside: death, decay
-and return. Shared: `static/darwin/algo/lysis.js` (900 ms card flip, G/S/L gauge with self-calibrating needles, helpers),
+Every panel turns over (swipe left/right across the window, or ←/→ keys; `?dark=1`; remembered in localStorage `algo-dark`) to its underside: death, decay
+and return. Shared: `static/darwin/algo/lysis.js` (3D turn: face drawn offscreen, projected in perspective strips with shading, brass edge and seat shadow; drag follows the finger, commits past 40% or on a fling, settles with a small overshoot; G/S/L gauge with self-calibrating needles, helpers),
 reverse-named nameplate (`meta.lysis_name`), 'cycle' info card, sound `setDark` (root −5, darker filter, `rev`/`crumble`
 voices, lysis voice driven by `gsl[2]`). Base: `LYSIS_NAME/ABOUT`, `lysis_counts() -> (born, died, returned, n)`,
 `_update_gsl`, `gsl` in stats/live. Plugins add `drawDark(ctx,V,now,t,light)`; cabinet falls back to a darkened draw.

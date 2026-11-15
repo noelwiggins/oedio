@@ -8,7 +8,8 @@
   const API = (document.body.dataset.api && document.body.dataset.api.indexOf('__') !== 0) ? document.body.dataset.api : '/api';
   const Q = new URLSearchParams(location.search);
   if (Q.get('quiet') === '1') document.body.classList.add('quiet');
-  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const cv = document.getElementById('cv'), ctx0 = cv.getContext('2d');
+  let ctx = ctx0, turnCv = null;          // while the panel turns, each face is drawn here first, then projected
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22', RIM = '#b9560c';
   let W = 1200, H = 800, terrain = null, terrCanvas = null, terrDark = null, terrSea = null, terrSnow = null, pins = [];
@@ -590,7 +591,7 @@
         <tr><td>Spores shed</td><td>${fmt(s.spores)}</td></tr>
         <tr><td>Mushrooms eaten · poisonings</td><td>${fmt(s.mushrooms_eaten)} · ${fmt(s.poisoned)}</td></tr>
         <tr><td>Foxfire · poisonous kinds</td><td>${Math.round((s.foxfire || 0) * 100)}% · ${Math.round((s.toxic || 0) * 100)}%</td></tr></table>
-        <p class="note" style="margin-top:1.4vmin">Turn the panel over with the moon key to see the underside: the litter in umber, the rich soil glowing amber, the dead in bone, and the mycelium in phosphor green.</p>`;
+        <p class="note" style="margin-top:1.4vmin">Swipe across the window, left or right, to turn the panel over and see the underside: the litter in umber, the rich soil glowing amber, the dead in bone, and the mycelium in phosphor green.</p>`;
     } else if (kind === 'journal') {
       title = 'The journal';
       if (!refresh || !body.dataset.loaded) {
@@ -669,6 +670,7 @@
   // ── the frame loop ───────────────────────────────────────────────────
   let smoothLight = 1;
   function frame() {
+    ctx = ctx0;
     requestAnimationFrame(frame);
     if (!L.cw) return;
     const now = performance.now(), t = now / 1000;
@@ -680,9 +682,12 @@
     smoothLight += ((live ? live.light : 1) - smoothLight) * 0.02;
     const night = Math.max(0, 1 - smoothLight);
     const pf = L.pf, fl = window.AlgoLysis ? AlgoLysis.flip(now) : { sx: 1, dark: false };
+    if (fl.turning) {
+      if (!turnCv || turnCv.width !== cv.width || turnCv.height !== cv.height) { turnCv = document.createElement('canvas'); turnCv.width = cv.width; turnCv.height = cv.height; }
+      ctx = turnCv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
     ctx.save(); rrect(pf.x, pf.y, pf.w, pf.h, L.u * 0.018); ctx.clip();
     ctx.fillStyle = fl.dark ? '#0a060c' : CREAM; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
-    if (fl.sx < 0.999) { const cx = pf.x + pf.w / 2; ctx.translate(cx, 0); ctx.scale(Math.max(0.02, fl.sx), 1); ctx.translate(-cx, 0); }
     if (fl.dark) {
       drawUnder(now, t, night);
       drawRailAndDecals(t, 1);
@@ -699,6 +704,12 @@
       drawGlow(glowLayer, smoothLight);
     }
     ctx.restore();
+    if (fl.turning) {
+      ctx = ctx0;
+      ctx.save(); rrect(pf.x, pf.y, pf.w, pf.h, L.u * 0.018); ctx.clip();
+      AlgoLysis.project(ctx, turnCv, pf, fl, { cavity: '#0a060c' });
+      ctx.restore();
+    }
     drawBezel();
     drawTray(live && live.strata, t);
     if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.12 * night})`; ctx.fillRect(0, 0, L.cw, L.ch); }
@@ -718,6 +729,9 @@
     card.classList.add('open'); document.querySelectorAll('.key').forEach(k => k.classList.remove('on'));
     clearTimeout(cardTimer); cardTimer = setTimeout(closeCard, 60000);
   }
+  if (window.AlgoLysis && AlgoLysis.attachSwipe)       // swipe the window left or right to turn the panel over
+    AlgoLysis.attachSwipe(cv, () => L && L.pf ? { x: L.pf.x / L.dpr, y: L.pf.y / L.dpr, w: L.pf.w / L.dpr, h: L.pf.h / L.dpr } : null,
+      d => { if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(d); });
   if (window.AlgoLysis && AlgoLysis.isDark()) {          // the panel remembers which side was showing
     document.querySelectorAll('.key[data-card="dark"]').forEach(k => k.classList.add('on'));
     if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(true);

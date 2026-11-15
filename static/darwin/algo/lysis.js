@@ -1,8 +1,8 @@
 /* ALGOLYSIS — the dark side of every panel.
    Each world runs one simulation in which decay feeds new growth; the dark side is a way of seeing it. Turn the panel
-   over (the moon key) and the same moment is drawn from below: the dead, the decomposers and the flows of returned
+   over (a swipe left or right) and the same moment is drawn from below: the dead, the decomposers and the flows of returned
    material, in a night palette of aubergine, bone and phosphor green.
-   AlgoLysis.toggle() · .isDark() · .flip(now) -> { sx, dark }  (sx: horizontal squash for the turning animation)
+   AlgoLysis.toggle() · .isDark() · .flip(now) -> { dark, angle, turning } · .project(g, src, rect, flip) · .attachSwipe(el, rect, cb)
    AlgoLysis.drawGauge(ctx, x, y, w, h, gsl, u)   three needles: genesis, stasis, lysis
    AlgoLysis.grid(under, key, rgb, scale)         a soft canvas from a hex-encoded coarse grid
    AlgoLysis.mycelium(ctx, id, x, y, r, s, t, glow)
@@ -11,23 +11,153 @@
   'use strict';
   const INK = '#2a1d14';
   const PAL = { night: '#140c18', soil: '#2a1a22', bone: '#e8dcc4', phos: '#7dffb0', amber: '#e7a23b', violet: '#b48cff', ash: '#6b5a6e' };
-  let dark = false, flipAt = -1e9, listeners = [];
-  const FLIP_MS = 900;
+  let dark = false, listeners = [];
+  // the turn: p runs 0 → 1 as the panel rotates half a revolution about its vertical axis, dir is ±1 (which way it
+  // spins). At p = 0.5 the panel is edge-on and the other face comes round. A drag sets p directly; on release the
+  // panel either completes the turn or falls back, and settles with a small overshoot like a heavy board on a pivot.
+  let turn = null;                 // { dir, p, from, mode: 'drag'|'anim', a0, a1, t0, dur, commit }
+  const TURN_MS = 1250;
 
-  function toggle(force) {
-    const want = force == null ? !dark : !!force;
+  function commit(want) {
     if (want === dark) return dark;
-    dark = want; flipAt = performance.now();
+    dark = want;
     try { localStorage.setItem('algo-dark', dark ? '1' : '0'); } catch (e) {}
     listeners.forEach(f => { try { f(dark); } catch (e) {} });
     return dark;
   }
-  // the panel turns over like a card: the old face narrows to an edge, the new face widens from it
+  function animate(to, dur, dir) {
+    const now = performance.now();
+    if (!turn) turn = { dir: dir || 1, p: 0, from: dark };
+    turn.mode = 'anim'; turn.a0 = turn.p; turn.a1 = to; turn.t0 = now; turn.dur = dur;
+  }
+  // a programmatic turn (keyboard, toggle()): a full, unhurried half revolution
+  function toggle(force, dir) {
+    const want = force == null ? !dark : !!force;
+    if (want === dark && !turn) return dark;
+    if (turn) return dark;
+    turn = { dir: dir || 1, p: 0, from: dark };
+    animate(1, TURN_MS, dir);
+    commit(want);
+    return dark;
+  }
+  // easing: slow to start (the board's weight), fast through the edge, then a gentle settle past and back
+  const easeInOut = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  function settle(k) {                       // ends at 1 with a soft overshoot of about 3%
+    const c = 1.25; return 1 + (c + 1) * Math.pow(k - 1, 3) + c * Math.pow(k - 1, 2);
+  }
+  function step(now) {
+    if (!turn || turn.mode !== 'anim') return;
+    const k = Math.min(1, (now - turn.t0) / turn.dur);
+    if (turn.a0 === 0 && turn.a1 === 1) {
+      // a full turn from rest: ease in (the board's weight), sweep through the edge, then rock once past and back
+      if (k < 0.86) turn.p = easeInOut(k / 0.86);
+      else { const q = (k - 0.86) / 0.14; turn.p = 1 + 0.022 * Math.sin(q * Math.PI) * (1 - q); }
+    } else {
+      turn.p = turn.a0 + (turn.a1 - turn.a0) * settle(k);   // finishing or falling back after a drag
+    }
+    if (k >= 1) turn = null;
+  }
+  // what to draw now: which face, and the panel's rotation (radians, within ±90°) for the projection
   function flip(now) {
-    const k = (now - flipAt) / FLIP_MS;
-    if (k >= 1) return { sx: 1, dark };
-    if (k < 0.5) return { sx: Math.cos(k * Math.PI), dark: !dark };
-    return { sx: -Math.cos(k * Math.PI), dark };
+    step(now);
+    if (!turn) return { dark, angle: 0, turning: false, sx: 1 };
+    const p = turn.p, th = turn.dir * Math.PI * p;
+    const back = p > 0.5;                               // the second face has come round
+    const face = back ? !turn.from : turn.from;
+    const angle = back ? th - turn.dir * Math.PI : th;
+    return { dark: face, angle, p, turning: true, sx: Math.cos(angle) };
+  }
+
+  // draw the turning panel: src holds the face (same pixel coordinates as the destination), r is the window.
+  // The face is cut into vertical strips and each strip is placed and scaled by true perspective, so the near edge
+  // swells and the far edge shrinks as the board swings; it is shaded as it turns from the light, shows its thickness
+  // when edge-on, and lifts off its seat a little in the middle of the turn.
+  function project(g, src, r, f, opts) {
+    const o = opts || {}, N = o.strips || Math.round(36 + 110 * Math.abs(Math.sin(f.angle))), cx = r.x + r.w / 2, cy = r.y + r.h / 2, hw = r.w / 2;
+    const th = f.angle, c = Math.cos(th), sn = Math.sin(th), D = r.w * 2.2;
+    const lift = 1 - 0.07 * Math.sin(Math.PI * Math.min(1, Math.max(0, f.p)));
+    g.save();
+    g.fillStyle = o.cavity || '#07040a'; g.fillRect(r.x, r.y, r.w, r.h);       // the empty seat behind the board
+    const sh = g.createRadialGradient(cx, cy, 0, cx, cy, r.w * 0.6);
+    sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.6)'); g.fillStyle = sh; g.fillRect(r.x, r.y, r.w, r.h);
+    const P = u => { const x = u * hw, z = x * sn, k = D / (D + z) * lift; return { x: cx + x * c * k, h: r.h * k }; };
+    const L0 = P(-1), R0 = P(1);
+    // the shadow it casts on the seat: two offset layers make a soft edge without a costly blur
+    for (const [o, al] of [[0.035, 0.22], [0.02, 0.3]]) {
+      const d = r.w * o;
+      g.fillStyle = `rgba(0,0,0,${al})`;
+      g.beginPath(); g.moveTo(L0.x + d, cy - L0.h / 2 + d); g.lineTo(R0.x + d, cy - R0.h / 2 + d);
+      g.lineTo(R0.x + d, cy + R0.h / 2 + d); g.lineTo(L0.x + d, cy + L0.h / 2 + d); g.closePath(); g.fill();
+    }
+    let prev = P(-1);
+    const sw = r.w / N;
+    for (let i = 0; i < N; i++) {
+      const nx = P(-1 + 2 * (i + 1) / N), x0 = Math.min(prev.x, nx.x), w = Math.abs(nx.x - prev.x) + 0.8, h = (prev.h + nx.h) / 2;
+      if (w > 0.3) g.drawImage(src, r.x + i * sw, r.y, sw, r.h, x0, cy - h / 2, w, h);
+      prev = nx;
+    }
+    // light: the face darkens as it turns away, with a highlight sliding across toward the near edge
+    const near = sn > 0 ? L0 : R0, far = sn > 0 ? R0 : L0, a = Math.abs(sn);
+    const quad = () => { g.beginPath(); g.moveTo(L0.x, cy - L0.h / 2); g.lineTo(R0.x, cy - R0.h / 2); g.lineTo(R0.x, cy + R0.h / 2); g.lineTo(L0.x, cy + L0.h / 2); g.closePath(); };
+    const gr = g.createLinearGradient(near.x, 0, far.x, 0);
+    gr.addColorStop(0, `rgba(255,248,230,${0.16 * a})`); gr.addColorStop(0.25, 'rgba(0,0,0,0)');
+    gr.addColorStop(1, `rgba(0,0,0,${0.7 * a})`);
+    quad(); g.fillStyle = gr; g.fill();
+    // the board's thickness, seen as it comes edge-on
+    const t = r.w * 0.022 * a, ex = near.x, dirx = sn > 0 ? -1 : 1;
+    if (t > 0.5) {
+      const eg = g.createLinearGradient(ex, 0, ex + dirx * t, 0);
+      eg.addColorStop(0, '#f6e3a5'); eg.addColorStop(0.5, '#b8902e'); eg.addColorStop(1, '#6a4c12');
+      g.fillStyle = eg; g.fillRect(Math.min(ex, ex + dirx * t), cy - near.h / 2, t, near.h);
+    }
+    g.restore();
+  }
+
+  // swipe left or right across the window to turn the panel; the board follows the finger
+  // getRect() returns the window in CSS pixels (the coordinates of pointer events)
+  function attachSwipe(el, getRect, onTurn) {
+    let st = null, dragged = false;
+    el.style.touchAction = 'none';
+    el.addEventListener('pointerdown', e => {
+      const r = getRect(); if (!r || (turn && turn.mode === 'anim')) return;
+      const x = e.clientX, y = e.clientY;
+      if (x < r.x || x > r.x + r.w || y < r.y || y > r.y + r.h) return;
+      st = { x0: x, y0: y, id: e.pointerId, live: false, hist: [[x, performance.now()]], w: r.w };
+      dragged = false;
+    });
+    el.addEventListener('pointermove', e => {
+      if (!st || e.pointerId !== st.id) return;
+      const dx = e.clientX - st.x0, dy = e.clientY - st.y0;
+      if (!st.live) {
+        if (Math.abs(dx) < 14 || Math.abs(dx) < 1.4 * Math.abs(dy)) { if (Math.abs(dy) > 30) st = null; return; }
+        st.live = true; dragged = true;
+        try { el.setPointerCapture(e.pointerId); } catch (er) {}
+        turn = { dir: dx > 0 ? 1 : -1, p: 0, from: dark, mode: 'drag' };
+      }
+      // half the window's width of travel swings the board edge-on; the dead zone is taken out so it starts smoothly
+      turn.p = Math.max(0, Math.min(1, (Math.abs(dx) - 14) / (st.w * 0.6))) * (Math.sign(dx) === turn.dir ? 1 : 0);
+      st.hist.push([e.clientX, performance.now()]); if (st.hist.length > 6) st.hist.shift();
+    });
+    const end = e => {
+      if (!st || e.pointerId !== st.id) return;
+      const s0 = st; st = null;
+      if (!s0.live || !turn) return;
+      const h = s0.hist, v = h.length > 1 ? (h[h.length - 1][0] - h[0][0]) / Math.max(1, h[h.length - 1][1] - h[0][1]) : 0;
+      const fling = Math.sign(v) === turn.dir && Math.abs(v) > 0.45;            // px per ms
+      const go = turn.p > 0.42 || fling;
+      const rest = go ? 1 - turn.p : turn.p;
+      animate(go ? 1 : 0, Math.max(380, TURN_MS * 0.85 * rest + 260));
+      if (go) { commit(!turn.from); if (onTurn) onTurn(dark); }
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+    // a drag must not also count as a tap on whatever it started over
+    el.addEventListener('click', e => { if (dragged) { dragged = false; e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+    addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (turn) return;
+      toggle(null, e.key === 'ArrowRight' ? 1 : -1); if (onTurn) onTurn(dark);
+    });
   }
 
   // ── the gauge: genesis · stasis · lysis ──────────────────────────────
@@ -164,5 +294,5 @@
   try { if (localStorage.getItem('algo-dark') === '1' && new URLSearchParams(location.search).get('dark') !== '0') { dark = true; } } catch (e) {}
   if (new URLSearchParams(location.search).get('dark') === '1') dark = true;
 
-  window.AlgoLysis = { toggle, isDark: () => dark, flip, drawGauge, grid, mycelium, mushroom, onChange, PAL };
+  window.AlgoLysis = { toggle, isDark: () => dark, flip, project, attachSwipe, isTurning: () => !!turn, drawGauge, grid, mycelium, mushroom, onChange, PAL };
 })();
