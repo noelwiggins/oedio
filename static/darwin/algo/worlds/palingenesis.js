@@ -3,7 +3,7 @@
 window.ALGO_WORLD = (function () {
   'use strict';
   const INK = '#2a1d14';
-  let gw = 180, gh = 96, cells = null, pal = [];
+  let gw = 180, gh = 96, cells = null, pal = [], under = null;
   const CELL = 6.6667;
   let sprites = {}, spriteC = 0;
   function sprite(v, c) {
@@ -25,6 +25,7 @@ window.ALGO_WORLD = (function () {
     const bin = atob(f.cells), n = bin.length, a = new Uint8Array(n);
     for (let i = 0; i < n; i++) a[i] = bin.charCodeAt(i);
     cells = a;
+    if (f.under) { const u = atob(f.under), b = new Uint8Array(u.length); for (let i = 0; i < u.length; i++) b[i] = u.charCodeAt(i); under = b; }
   }
 
   function draw(ctx, V, now, t) {
@@ -67,5 +68,42 @@ window.ALGO_WORLD = (function () {
     }
     ctx.restore();
   }
-  return { size: f => [(f.gw || 180) * CELL, (f.gh || 96) * CELL], ingest, draw, drawGlow };
+  // the dark side, Palinphthora: the forest floor seen in the dark. Humus glows amber where rot has made it; fallen
+  // wood lies in bone; beetles move through a stand of one kind in red; the living are faint rings, fire is embers.
+  function drawDark(ctx, V, now, t) {
+    const W = gw * CELL, H = gh * CELL, c = CELL * V.s, n = gw * gh;
+    ctx.fillStyle = '#120b10'; ctx.fillRect(V.ox, V.oy, W * V.s, H * V.s);
+    if (!cells) return;
+    if (under) {
+      const hw = gw / 2, hh = gh / 2, c2 = c * 2;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (let j = 0; j < hw * hh; j++) {
+        const hum = under[j * 3 + 1];
+        if (hum < 6) continue;
+        ctx.fillStyle = `rgba(231,162,59,${Math.min(0.5, hum / 400)})`;
+        ctx.fillRect(V.ox + (j % hw) * c2, V.oy + ((j / hw) | 0) * c2, c2 + 0.5, c2 + 0.5);
+      }
+      ctx.restore();
+      ctx.lineCap = 'round';
+      for (let j = 0; j < hw * hh; j++) {
+        const dw = under[j * 3], bt = under[j * 3 + 2], X = V.ox + ((j % hw) + 0.5) * c2, Y = V.oy + (((j / hw) | 0) + 0.5) * c2;
+        if (dw > 20) {                                    // a fallen log, lying its own way
+          const a = (j * 2.399) % Math.PI, L = c * (0.8 + Math.min(1.4, dw / 120));
+          ctx.strokeStyle = `rgba(232,220,196,${Math.min(0.85, 0.25 + dw / 300)})`; ctx.lineWidth = Math.max(1, c * 0.35);
+          ctx.beginPath(); ctx.moveTo(X - Math.cos(a) * L, Y - Math.sin(a) * L); ctx.lineTo(X + Math.cos(a) * L, Y + Math.sin(a) * L); ctx.stroke();
+        }
+        if (bt > 30) {                                    // beetles at work
+          ctx.fillStyle = `rgba(229,64,42,${0.4 + 0.4 * Math.sin(t * 5 + j) ** 2})`;
+          for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(X + Math.cos(j + k * 2.1 + t) * c * 0.6, Y + Math.sin(j * 1.3 + k * 2.1 + t) * c * 0.6, Math.max(0.8, c * 0.16), 0, Math.PI * 2); ctx.fill(); }
+        }
+      }
+    }
+    for (let i = 0; i < n; i++) {
+      const v = cells[i], x = i % gw, y = (i / gw) | 0, X = V.ox + (x + 0.5) * c, Y = V.oy + (y + 0.5) * c;
+      if (v >= 4 && (i % 2 === 0)) { ctx.strokeStyle = 'rgba(140,190,120,0.22)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(X, Y, c * 0.55, 0, Math.PI * 2); ctx.stroke(); }
+      else if (v === 2) { ctx.fillStyle = `rgba(229,96,42,${0.6 + 0.4 * Math.sin(t * 9 + i)})`; ctx.fillRect(X - c * 0.3, Y - c * 0.3, c * 0.6, c * 0.6); }
+      else if (v === 3) { ctx.fillStyle = 'rgba(180,140,255,0.55)'; ctx.fillRect(X - c * 0.12, Y - c * 0.12, c * 0.24, c * 0.24); }   // seed waiting
+    }
+  }
+  return { size: f => [(f.gw || 180) * CELL, (f.gh || 96) * CELL], ingest, draw, drawGlow, drawDark };
 })();

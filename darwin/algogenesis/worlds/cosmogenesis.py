@@ -48,6 +48,13 @@ class Cosmogenesis(World):
                "How hard matter pulls on matter. Strong gravity gathers gas fast into crowded clusters; weak gravity leaves it drifting."),
              D("cooling", "Cooling", "snow", "#8fd3c8", "Hot", "Cold",
                "How fast the gas sheds its heat. Cold gas collapses readily into stars; hot gas resists.")]
+    LYSIS_NAME = "Cosmophthora"
+    GSL_SCALE = (12.0, 3.0)
+    LYSIS_ABOUT = [
+        "Cosmophthora: the passing of cosmic structure. Every star dies. A small one sheds its outer layers gently and leaves a white dwarf; a massive one explodes and leaves a neutron star; the most massive collapse into black holes.",
+        "Black holes swallow a little of the gas that strays near them and fling most of it back out in hot jets. The underside shows the dead and what they gave back: gas glows by the heavy elements dead stars put into it, and the newest-returned gas glows violet.",
+        "Nothing is wasted. Almost everything in a planet was made inside a star that died before it.",
+    ]
     JOURNAL_HINT = ("This is cosmology, not biology: gas, gravity, filaments, stars, supernovae, heavy elements, stellar "
                     "generations, clusters and planets. No life.")
 
@@ -76,6 +83,9 @@ class Cosmogenesis(World):
         self.next_id = 1
         self.rx, self.ry = np.zeros(CAP_R, np.float32), np.zeros(CAP_R, np.float32)
         self.r_n = 0
+        self.rt, self.rm = np.zeros(CAP_R, np.int8), np.zeros(CAP_R, np.float32)   # remnant kind (0 dwarf, 1 neutron, 2 hole), mass
+        self.gret = np.full(CAP_G, -10**9, np.int64)    # when this gas was last given back by a dying star or a jet
+        self.deaths = self.returned = self.swallowed = 0
         self.supernovae = self.planets_total = self.max_gen = 0
         self.flashes = []                               # recent explosions, for the panel
         kx = 2 * np.pi * np.fft.fftfreq(NX, d=CELL)
@@ -84,6 +94,16 @@ class Cosmogenesis(World):
         k2[0, 0] = 1.0
         self.inv_k2 = (1.0 / k2).astype(np.float32)
         self.inv_k2[0, 0] = 0.0
+
+    def _lysis_init(self):
+        if not hasattr(self, "rt"):
+            self.rt, self.rm = np.zeros(CAP_R, np.int8), np.zeros(CAP_R, np.float32)
+            self.gret = np.full(CAP_G, -10**9, np.int64)
+            self.deaths = self.returned = self.swallowed = 0
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.next_id - 1), int(self.deaths), int(self.returned) // 25, int(self.s_alive.sum()) + 20)
 
     # ── gravity on a mesh ────────────────────────────────────────────────
     def _accel(self):
@@ -124,7 +144,9 @@ class Cosmogenesis(World):
             self.gz[free] = 0
             self.ggen[free] = 0
         if self.tick % 3 == 0:
+            self._lysis_init()
             self._stars(G, ig)
+            self._holes()
         self.flashes = [f for f in self.flashes if self.tick - f[2] < 120]
 
     def _stars(self, G, ig):
@@ -182,14 +204,55 @@ class Cosmogenesis(World):
             self.gvx[free], self.gvy[free] = np.cos(ang) * v + self.svx[k], np.sin(ang) * v + self.svy[k]
             self.gz[free] = self.sz[k] + (0.012 if big else 0.004)
             self.ggen[free] = self.sgen[k]
+            self.gret[free] = self.tick
             self.s_alive[k] = False
+            self.deaths += 1
+            self.returned += len(free)
             r = self.r_n % CAP_R
             self.rx[r], self.ry[r] = self.sx[k], self.sy[k]
+            hole = m >= 85 and int((self.rt[:min(self.r_n, CAP_R)] == 2).sum()) < 4     # a few black holes at most
+            self.rt[r] = 2 if hole else 1 if big else 0
+            self.rm[r] = m * (0.35 if hole else 0.1)
             self.r_n += 1
+            if hole:
+                self.milestone("black_hole", "A star so massive has died that it collapsed into a black hole.")
             if big:
                 self.supernovae += 1
                 self.flashes.append([round(float(self.sx[k]), 1), round(float(self.sy[k]), 1), int(self.tick)])
                 self.milestone("supernova", "A massive star has exploded, seeding the gas with heavier elements.")
+
+    def _holes(self):
+        """Black holes swallow a little of the gas that strays near them and fling most of it back out in hot jets."""
+        rng = self.rng
+        nR = min(self.r_n, CAP_R)
+        holes = np.flatnonzero(self.rt[:nR] == 2)
+        if not len(holes):
+            return
+        G = np.flatnonzero(self.g_alive)
+        for r in holes:
+            if rng.random() > 0.15:                                   # a hole feeds now and then, not always
+                continue
+            dx = (self.gx[G] - self.rx[r] + W / 2) % W - W / 2
+            dy = (self.gy[G] - self.ry[r] + H / 2) % H - H / 2
+            d2 = dx * dx + dy * dy
+            reach = 3 + 0.3 * math.sqrt(float(self.rm[r]))
+            near = G[d2 < reach * reach]
+            if not len(near):
+                continue
+            jet = near[rng.random(len(near)) < 0.88]          # most of what falls toward a hole is flung back out
+            eaten = np.setdiff1d(near, jet)
+            self.g_alive[eaten] = False
+            self.rm[r] += 0.05 * len(eaten)
+            self.swallowed += len(eaten)
+            if len(jet):
+                sgn = np.where(rng.random(len(jet)) < 0.5, -1.0, 1.0)
+                ang = (self.r_n * 0.7 + r) % (2 * math.pi)            # each hole has its own axis
+                self.gvx[jet] = np.cos(ang) * 3.6 * sgn; self.gvy[jet] = np.sin(ang) * 3.6 * sgn
+                self.gx[jet] = (self.rx[r] + np.cos(ang) * sgn * (reach + 30)) % W     # flung well clear
+                self.gy[jet] = (self.ry[r] + np.sin(ang) * sgn * (reach + 30)) % H
+                self.gret[jet] = self.tick
+                self.returned += len(jet)
+                self.milestone("jets", "A black hole is feeding: what it cannot swallow is thrown back out in jets.")
 
     def _clusters(self):
         S = np.flatnonzero(self.s_alive)
@@ -221,7 +284,10 @@ class Cosmogenesis(World):
         c = self._clusters()
         return {"stars": int(len(S)), "gas": int(len(G)), "generation": int(self.max_gen), "supernovae": int(self.supernovae),
                 "metals": round(1000 * float(self.gz[G].mean()), 2) if len(G) else 0, "planets": int(self.splan[S].sum()),
-                "planets_total": int(self.planets_total), "clusters": c, "remnants": int(min(self.r_n, CAP_R))}
+                "planets_total": int(self.planets_total), "clusters": c, "remnants": int(min(self.r_n, CAP_R)),
+                "black_holes": int((self.rt[:min(self.r_n, CAP_R)] == 2).sum()) if hasattr(self, "rt") else 0,
+                "star_deaths": int(getattr(self, "deaths", 0)), "gas_returned": int(getattr(self, "returned", 0)),
+                "swallowed": int(getattr(self, "swallowed", 0))}
 
     def stratum(self):
         S = np.flatnonzero(self.s_alive)
@@ -241,4 +307,8 @@ class Cosmogenesis(World):
                 "stars": [[int(self.sid[k]), round(float(self.sx[k]), 1), round(float(self.sy[k]), 1), round(float(self.sm[k]), 1),
                            int(self.splan[k]), round(float(self.sage[k] / max(1, self.slife[k])), 2), int(self.sgen[k])] for k in S],
                 "remnants": np.round(np.stack([self.rx[:min(self.r_n, CAP_R)], self.ry[:min(self.r_n, CAP_R)]], 1)).astype(int).ravel().tolist(),
-                "flashes": [[f[0], f[1], int(self.tick - f[2])] for f in self.flashes]}
+                "flashes": [[f[0], f[1], int(self.tick - f[2])] for f in self.flashes],
+                # the dark side: what kind each remnant is and how heavy, and which gas was given back lately
+                "rkind": self.rt[:min(self.r_n, CAP_R)].astype(int).tolist() if hasattr(self, "rt") else [],
+                "rmass": np.round(self.rm[:min(self.r_n, CAP_R)]).astype(int).tolist() if hasattr(self, "rm") else [],
+                "fresh": (np.clip((self.tick - self.gret[G]) // 60, 0, 9).astype(int).tolist() if hasattr(self, "gret") else [])}

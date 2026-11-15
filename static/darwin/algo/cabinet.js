@@ -38,7 +38,8 @@
     keys.style.top = ((t.y + t.h / 2) / d) + 'px';
     // fit the knobs and keys beside the fossil window: shrink them on narrow screens rather than overlap
     keys.style.transform = 'translateY(-50%)'; keys.style.transformOrigin = 'right center';
-    const gsz = t.h * 0.56, leftLimit = t.x + L.u * 0.06 + gsz + L.u * 0.04 + t.w * 0.2 + L.u * 0.04 + L.u * 0.14;
+    const gsz = t.h * 0.56, gaugeW = window.AlgoLysis ? t.h * 0.64 * 1.35 + L.u * 0.02 : 0;
+    const leftLimit = t.x + L.u * 0.06 + gsz + L.u * 0.04 + t.w * 0.2 + L.u * 0.04 + L.u * 0.14 + gaugeW;
     const allowed = (t.x + t.w - L.u * 0.03) - leftLimit, natural = keys.offsetWidth * d;
     const k = natural > 0 ? Math.min(1, allowed / natural) : 1;
     keys.style.transform = `translateY(-50%) scale(${Math.max(0.45, k).toFixed(3)})`;
@@ -155,7 +156,8 @@
       for (let i = 1; i < 7; i++) for (let j = 1; j < 7; j++) { ctx.beginPath(); ctx.arc(gx + gs * i / 7, gy + gs * j / 7, u * 0.003, 0, Math.PI * 2); ctx.fill(); }
     }
     // nameplate: the concept's name
-    const title = ((meta && meta.title) || 'ALGOGENESIS').toUpperCase();
+    const isDark = window.AlgoLysis && AlgoLysis.isDark();
+    const title = ((isDark && meta && meta.lysis_name) || (meta && meta.title) || 'ALGOGENESIS').toUpperCase();
     const nx = gx + gs + u * 0.035, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
     L.nameplate = { x: nx, y: ny, w: nw, h: nh };
     rrect(nx, ny, nw, nh, nh / 2); ctx.fillStyle = CREAM; ctx.fill(); ctx.lineWidth = u * 0.004; ctx.strokeStyle = INK; ctx.stroke();
@@ -167,7 +169,9 @@
     ctx.textBaseline = 'alphabetic';
     // the fossil window
     const kl = keys.getBoundingClientRect().left * L.dpr;
-    const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.68) - wx), wy = T.y + T.h * 0.18, wh = T.h * 0.64;
+    const wy = T.y + T.h * 0.18, wh = T.h * 0.64, gw = window.AlgoLysis ? wh * 1.35 : 0;
+    const wx = nx + nw + u * 0.04, ww = Math.max(u * 0.08, (kl > 0 ? kl - u * 0.03 : T.x + T.w * 0.68) - wx - (gw ? gw + u * 0.02 : 0));
+    if (gw) { L.gauge = { x: wx + ww + u * 0.02, y: wy, w: gw, h: wh }; AlgoLysis.drawGauge(ctx, wx + ww + u * 0.02, wy, gw, wh, live && live.gsl, u); }
     L.fossilWin = { x: wx, y: wy, w: ww, h: wh };
     rrect(wx, wy, ww, wh, u * 0.01); ctx.fillStyle = '#1b130d'; ctx.fill(); ctx.lineWidth = u * 0.006; ctx.strokeStyle = chrome(wx, wy, wx + ww, wy + wh); ctx.stroke();
     const strata = live && live.strata;
@@ -216,13 +220,26 @@
       body.innerHTML = `<p class="note">The window in the tray lays down one column per epoch, newest on the right. Each colour is one of the leading lineages of that epoch, its height its share.</p>` +
         (last ? '<table>' + last.cols.map(c => `<tr><td><span class="sw" style="background:hsl(${c[0] * 360},${20 + 70 * c[1]}%,${45 + 15 * c[1]}%)"></span>lineage</td><td>${fmt(c[2])}</td></tr>`).join('') + '</table>'
           : '<p class="note">The first layer is laid down at the end of the first epoch.</p>');
+    } else if (kind === 'cycle') {
+      const g = d.gsl || [], pc = v => v == null ? '—' : Math.round(v * 100) + '%';
+      h2.textContent = (m.lysis_name || 'Lysis') + ': the dark side';
+      body.innerHTML = `<p class="note">The gauge in the tray has three needles: <b style="color:#7a9a2a">G</b>enesis, how fast new things are made; <b style="color:#b8860b">S</b>tasis, how much simply persists; <b style="color:#7b5cc4">L</b>ysis, how fast things fall apart and are broken down. Here they are ${pc(g[0])}, ${pc(g[1])} and ${pc(g[2])}.</p>` +
+        (m.lysis_about || []).map(p => `<p class="note">${esc(p)}</p>`).join('') +
+        `<p class="note">Turn the panel over with the moon key to see this world from its dark side.</p>`;
     } else {
       h2.textContent = m.title || 'Algogenesis';
       body.innerHTML = `<p class="def">${esc(m.definition || '')}</p>` + (m.about || []).map(p => `<p class="note">${esc(p)}</p>`).join('') +
         (window.AlgoSound ? '<h3 style="font:400 2.2vmin Righteous,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#b9560c;margin:2.4vmin 0 1vmin">What you hear</h3>' + AlgoSound.legend() : '');
     }
   }
+  function turnOver() {
+    if (!window.AlgoLysis) return;
+    const dk = AlgoLysis.toggle();
+    document.querySelectorAll('.key[data-card="dark"]').forEach(k => k.classList.toggle('on', dk));
+    if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(dk);
+  }
   function toggleCard(kind) {
+    if (kind === 'dark') return turnOver();
     document.querySelectorAll('.key').forEach(k => k.classList.toggle('on', k.dataset.card === kind && openCard !== kind));
     if (openCard === kind) { closeCard(); return; }
     openCard = kind; renderCard(kind); card.classList.add('open');
@@ -242,6 +259,8 @@
       return;
     }
     if (f && x > f.x && x < f.x + f.w && y > f.y && y < f.y + f.h) return toggleCard('fossils');
+    const gg = L.gauge;
+    if (gg && x > gg.x && x < gg.x + gg.w && y > gg.y && y < gg.y + gg.h) return toggleCard('cycle');
     if (openCard) closeCard();
   });
 
@@ -255,12 +274,29 @@
     drawCase();
     smooth += ((live ? live.light : 1) - smooth) * 0.02;
     const night = Math.max(0, 1 - smooth), pf = L.pf;
+    const fl = window.AlgoLysis ? AlgoLysis.flip(now) : { sx: 1, dark: false };
     ctx.save(); rrect(pf.x, pf.y, pf.w, pf.h, L.u * 0.018); ctx.clip();
-    ctx.fillStyle = CREAM; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
-    if (live) WORLD.draw(ctx, L.V, now, t, smooth);
-    drawRail(t, night);
-    if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
-    if (live && WORLD.drawGlow) WORLD.drawGlow(ctx, L.V, now, t, smooth);
+    ctx.fillStyle = fl.dark ? '#140c18' : CREAM; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+    if (fl.sx < 0.999) { const cx = pf.x + pf.w / 2; ctx.translate(cx, 0); ctx.scale(Math.max(0.02, fl.sx), 1); ctx.translate(-cx, 0); }
+    if (fl.dark) {
+      if (live) {
+        if (WORLD.drawDark) WORLD.drawDark(ctx, L.V, now, t, smooth);
+        else {                        // a world without its own underside: itself, darkened and drained
+          WORLD.draw(ctx, L.V, now, t, smooth);
+          ctx.globalCompositeOperation = 'color'; ctx.fillStyle = '#3a2340'; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+          ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#5a4a66'; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+      drawRail(t, 1);
+      const vg = ctx.createRadialGradient(pf.x + pf.w / 2, pf.y + pf.h / 2, pf.h * 0.3, pf.x + pf.w / 2, pf.y + pf.h / 2, pf.w * 0.65);
+      vg.addColorStop(0, 'rgba(10,6,14,0)'); vg.addColorStop(1, 'rgba(10,6,14,0.55)'); ctx.fillStyle = vg; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+    } else {
+      if (live) WORLD.draw(ctx, L.V, now, t, smooth);
+      drawRail(t, night);
+      if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
+      if (live && WORLD.drawGlow) WORLD.drawGlow(ctx, L.V, now, t, smooth);
+    }
     ctx.restore();
     drawBezel();
     drawTray();
@@ -271,5 +307,9 @@
   addEventListener('pointermove', () => { document.body.classList.add('awake'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.remove('awake'), 2500); });
   addEventListener('dblclick', () => { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
+  if (window.AlgoLysis && AlgoLysis.isDark()) {          // the panel remembers which side was showing
+    document.querySelectorAll('.key[data-card="dark"]').forEach(k => k.classList.add('on'));
+    if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(true);
+  }
   resize(); loadMeta(); poll(); requestAnimationFrame(frame);
 })();

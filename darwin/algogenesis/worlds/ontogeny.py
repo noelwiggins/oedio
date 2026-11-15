@@ -24,12 +24,14 @@ from .base import World
 W, H = 1200.0, 640.0
 NEMB = 6
 UNDIFF, SKIN, MUSCLE, GUT, NERVE, FIN = range(6)
-STAGES = ["zygote", "cleavage", "blastula", "gastrula", "organogenesis", "larva", "adult"]
+STAGES = ["zygote", "cleavage", "blastula", "gastrula", "organogenesis", "larva", "adult", "chrysalis", "old age"]
 # genes: signal reach, nerve threshold, gut threshold, axis bias, division pace, adult size, commitment (cells),
-#        fin propensity, fin position, adhesion, hue
-GLO = np.array([20, 0.3, 0.05, 0.0, 0.5, 120, 16, 0.0, 0.2, 0.0, 0.0], np.float32)
-GHI = np.array([140, 0.95, 0.5, 1.0, 2.0, 420, 160, 1.0, 0.8, 1.0, 1.0], np.float32)
-GSTEP = np.array([6, 0.03, 0.03, 0.05, 0.08, 15, 8, 0.06, 0.04, 0.05, 0.03], np.float32)
+#        fin propensity, fin position, adhesion, hue, metamorphosis
+GLO = np.array([20, 0.3, 0.05, 0.0, 0.5, 120, 16, 0.0, 0.2, 0.0, 0.0, 0.0], np.float32)
+GHI = np.array([140, 0.95, 0.5, 1.0, 2.0, 420, 160, 1.0, 0.8, 1.0, 1.0, 1.0], np.float32)
+GSTEP = np.array([6, 0.03, 0.03, 0.05, 0.08, 15, 8, 0.06, 0.04, 0.05, 0.03, 0.06], np.float32)
+CHRYS = 260                     # ticks in the chrysalis
+META = 11
 R_CELL = 5.0
 ADULT_LIFE = 900
 
@@ -45,6 +47,9 @@ class Embryo:
         self.score = None
         self.parts = None
         self.axis = rng.uniform(-0.3, 0.3)
+        self.yolk = 0.0            # nourishment from the dissolved bodies of the last generation
+        self.chrys = 0             # ticks left in the chrysalis
+        self.metamorphosed = False
 
     @property
     def n(self):
@@ -75,6 +80,11 @@ class Ontogeny(World):
                "Warm water speeds every division; cool water slows development so each stage lingers on the panel."),
              D("mutation", "Variation", "spark", "#c9b6ff", "Faithful", "Varied",
                "How much each sibling's egg differs from its parent's. Varied eggs try bolder programs; most do worse.")]
+    LYSIS_NAME = "Ontolysis"
+    LYSIS_ABOUT = [
+        "Ontolysis: the dissolving of a developed body. Every adult here grows old: past its prime its cells die one by one and the body loosens. When a generation is over, its bodies dissolve, and what they were made of drifts as yolk to the eggs of the next generation and feeds their first divisions. On the underside you see the dying cells in violet and the yolk in amber, flowing from the old to the new.",
+        "Metamorphosis is the other dissolving, and it can evolve here. A larva carrying the gene for it shuts itself in a chrysalis, lets its tissues fall back to unformed cells, and builds itself again: longer, and better made to swim. It costs time; it spreads only if the body it builds is worth the wait.",
+    ]
     JOURNAL_HINT = ("This is one organism developing, generation after generation: speak of cells, divisions, the blastula, "
                     "gastrulation, tissues (skin, muscle, gut, nerve, fins), the body axis, and how the developmental "
                     "program is changing across generations.")
@@ -82,15 +92,30 @@ class Ontogeny(World):
     def __init__(self, seed=1, name=""):
         super().__init__(seed, name)
         rng = self.rng
-        g = GLO + (GHI - GLO) * np.array([0.12, 0.55, 0.5, 0.6, 0.5, 0.3, 0.25, 0.35, 0.5, 0.5, rng.random()], np.float32)
+        g = GLO + (GHI - GLO) * np.array([0.12, 0.55, 0.5, 0.6, 0.5, 0.3, 0.25, 0.35, 0.5, 0.5, rng.random(), 0.15], np.float32)
         self.parent = g
         self.generation = 0
         self.best = 0.0
         self.last_score = 0.0
         self.last_parts = {}
+        self._lysis_init()
         self.emb = [self._egg(i) for i in range(NEMB)]
 
+    def _lysis_init(self):
+        if not hasattr(self, "yolk_bits"):
+            self.yolk_bits = [np.zeros((0, 2), np.float32) for _ in range(NEMB)]   # dissolved cells drifting to each egg
+            self.l_born = self.l_died = 0
+            self.l_ret = 0
+            self.metamorphoses = 0
+        if len(self.parent) < len(GLO):
+            self.parent = np.concatenate([self.parent, np.float32([0.15])])
+
+    def lysis_counts(self):
+        self._lysis_init()
+        return (int(self.l_born), int(self.l_died), int(self.l_ret), sum(e.n for e in self.emb) + 50)
+
     def _egg(self, i):
+        self._lysis_init()
         g = self.parent.copy()
         if i:
             mm = mult(self.dial("mutation"), 2.5)
@@ -107,8 +132,12 @@ class Ontogeny(World):
         e.age += 1
         n = e.n
         target = int(g[5])
+        if getattr(e, "chrys", 0) > 0:                       # in the chrysalis: dissolve, then rebuild
+            self._chrysalis(e)
+            self._physics(e)
+            return
         if n < target and e.adult_at is None:
-            e.phase += rng.random(n).astype(np.float32) * 0.01 * g[4] * mult(self.dial("warmth"), 1.8)
+            e.phase += rng.random(n).astype(np.float32) * 0.01 * g[4] * mult(self.dial("warmth"), 1.8) * (1 + min(1.0, getattr(e, "yolk", 0) / 120))
             ready = np.flatnonzero(e.phase >= 1.0)[: max(1, target - n)]
             if len(ready):
                 ax = np.array([math.cos(e.axis), math.sin(e.axis)], np.float32)
@@ -123,12 +152,47 @@ class Ontogeny(World):
                 e.typ = np.concatenate([e.typ, e.typ[ready]])
                 e.phase[ready] = 0
                 e.phase = np.concatenate([e.phase, np.zeros(k, np.float32)])
+                self.l_born += k
         elif e.adult_at is None:
             e.adult_at = e.age
+            if len(g) > META and not getattr(e, "metamorphosed", False) and rng.random() < 0.6 * g[META]:
+                e.chrys = CHRYS                                   # the larva shuts itself away
+                e.adult_at = None
+                self.metamorphoses += 1
+                self.milestone("metamorphosis", "A larva has shut itself in a chrysalis to dissolve and build itself again.")
+        # old age: past its prime an adult loses cells one by one
+        if e.adult_at is not None and e.age - e.adult_at > ADULT_LIFE * 0.5 and e.n > 0.3 * g[5]:
+            die = np.flatnonzero(rng.random(e.n) < 0.0025)
+            if len(die):
+                self._lose(e, die)
         # fates: once enough cells, each cell reads where it is
-        if e.n >= g[6] and e.age % 4 == 0:
+        if e.n >= g[6] and e.age % 4 == 0 and getattr(e, "chrys", 0) <= 0:
             self._fates(e)
         self._physics(e)
+
+    def _lose(self, e, idx):
+        slot = self.emb.index(e) if e in self.emb else 0
+        keep = np.ones(e.n, bool); keep[idx] = False
+        self.yolk_bits[slot] = np.vstack([self.yolk_bits[slot], e.pos[idx] - e.pos.mean(0)])[-400:]
+        e.pos, e.typ, e.phase = e.pos[keep], e.typ[keep], e.phase[keep]
+        self.l_died += len(idx)
+
+    def _chrysalis(self, e):
+        e.chrys -= 1
+        half = CHRYS // 2
+        if e.chrys > half:                                        # dissolving: tissues fall back to unformed cells
+            e.typ[self.rng.random(e.n) < 0.03] = UNDIFF
+            c = e.pos.mean(0); e.pos += (c - e.pos) * 0.01
+        elif e.chrys == half:                                     # rebuilding: the body is laid out again, longer
+            ax = np.array([math.cos(e.axis), math.sin(e.axis)], np.float32)
+            c = e.pos.mean(0); rel = e.pos - c
+            along, side = rel @ ax, rel @ np.array([-ax[1], ax[0]], np.float32)
+            e.pos = c + np.outer(along * 1.6, ax) + np.outer(side * 0.8, np.array([-ax[1], ax[0]], np.float32))
+            e.typ[:] = UNDIFF
+        if e.chrys <= 0:
+            e.metamorphosed = True
+            self._fates(e)
+            e.adult_at = e.age
 
     def _fates(self, e):
         g = e.g
@@ -194,6 +258,15 @@ class Ontogeny(World):
         return score
 
     def _step(self):
+        self._lysis_init()
+        for i, e in enumerate(self.emb):
+            yb = self.yolk_bits[i]
+            if len(yb):                                           # the yolk drifts to the egg and is taken in
+                yb *= 0.985
+                taken = np.linalg.norm(yb, axis=1) < 6
+                e.yolk = getattr(e, "yolk", 0.0) + float(taken.sum())
+                self.l_ret += int(taken.sum())
+                self.yolk_bits[i] = yb[~taken]
         for e in self.emb:
             self._develop(e)
         # when all are grown and have lived a while as adults, the best lays the next eggs
@@ -219,10 +292,18 @@ class Ontogeny(World):
                     self.milestone("long", "A larva has grown long along its axis: a body built to swim.")
                 if kinds >= 5:
                     self.milestone("five", "A larva has grown all five tissues: skin, muscle, gut, nerve and fin.")
+                # the old generation dissolves: what it was made of drifts to the eggs as yolk
+                for i, e in enumerate(self.emb):
+                    self.yolk_bits[i] = np.vstack([self.yolk_bits[i], e.pos - e.pos.mean(0)])[-400:]
+                    self.l_died += e.n
                 self.emb = [self._egg(i) for i in range(NEMB)]
 
     def stage(self, e):
         n = e.n
+        if getattr(e, "chrys", 0) > 0:
+            return 7
+        if e.adult_at is not None and e.age - e.adult_at > ADULT_LIFE * 0.5:
+            return 8
         if n == 1:
             return 0
         if n < 16:
@@ -240,7 +321,9 @@ class Ontogeny(World):
                 "mean_score": round(getattr(self, "mean_score", 0.0), 3),
                 "tissues": ", ".join(f"{k} {int(v * 100)}%" for k, v in self.last_parts.items() if isinstance(v, float) and k != "elongation" and v > 0.01) or "—",
                 "elongation": self.last_parts.get("elongation", 0), "fins": round(10 * self.last_parts.get("fin", 0), 2),
-                "adult_size": int(self.parent[5]), "commit": int(self.parent[6])}
+                "adult_size": int(self.parent[5]), "commit": int(self.parent[6]),
+                "metamorphosis": round(float(self.parent[META]), 2) if len(self.parent) > META else 0,
+                "metamorphoses": int(getattr(self, "metamorphoses", 0)), "yolk_now": int(sum(len(y) for y in getattr(self, "yolk_bits", [])))}
 
     def stratum(self):
         cols = []
@@ -253,6 +336,8 @@ class Ontogeny(World):
     def frame(self):
         out = []
         for i, e in enumerate(self.emb):
+            yb = self.yolk_bits[i] if hasattr(self, "yolk_bits") else np.zeros((0, 2))
             out.append({"cells": np.round(e.pos, 1).ravel().tolist(), "types": e.typ.astype(int).tolist(), "stage": self.stage(e),
-                        "axis": round(float(e.axis), 3), "score": e.score, "hue": round(float(e.g[10]), 3)})
+                        "axis": round(float(e.axis), 3), "score": e.score, "hue": round(float(e.g[10]), 3),
+                        "yolk": np.round(yb, 1).ravel().tolist(), "old": bool(e.adult_at is not None and e.age - e.adult_at > ADULT_LIFE * 0.5)})
         return {"w": W, "h": H, "embryos": out, "stages": STAGES, "generation": int(self.generation)}

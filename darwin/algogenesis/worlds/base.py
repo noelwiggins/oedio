@@ -26,6 +26,10 @@ class World(DialsMixin):
     STAT_LABELS: list[tuple[str, str]] = []      # (key, label) for the "now" card and the page metrics
     SERIES: list[list[tuple[str, str, str]]] = []  # charts: [(key, label, colour), ...] per chart
     JOURNAL_HINT = ""          # what the naturalist should watch for in this world
+    # the dark side (Algolysis): every world's own dissolution, and what it returns to genesis
+    LYSIS_NAME = ""            # its reverse, from "Genesis and its reversals": Cosmophthora, Epilysis, ...
+    LYSIS_ABOUT: list[str] = []  # paragraphs for the dark side's card
+    GSL_SCALE = (1.0, 1.0)     # how sensitive the genesis and lysis needles are, per world
 
     def __init__(self, seed: int = 1, name: str = ""):
         self.seed, self.name = seed, name or self.TITLE
@@ -50,6 +54,9 @@ class World(DialsMixin):
         out = None
         if self.tick % self.STATS_EVERY == 0:
             self.last_stats = self.stats()
+            self._update_gsl()
+            if getattr(self, "gsl", None) is not None:
+                self.last_stats["gsl"] = list(self.gsl)
             self.last_stats["tick"] = int(self.tick)
             self.history.append(self.last_stats)
             self.history = self.history[-2000:]
@@ -63,6 +70,34 @@ class World(DialsMixin):
 
     def _step(self):
         raise NotImplementedError
+
+    # ── genesis · stasis · lysis ─────────────────────────────────────────
+    def lysis_counts(self):
+        """(made so far, broken down so far, material returned so far, how many are alive now) — or None."""
+        return None
+
+    def _update_gsl(self):
+        import math
+        c = self.lysis_counts()
+        if c is None:
+            return
+        born, died, ret, n = c
+        prev = getattr(self, "_gsl_prev", None)
+        self._gsl_prev = (born, died, ret, self.tick)
+        if prev is None or self.tick <= prev[3]:
+            return
+        span = (self.tick - prev[3]) / max(1, self.EPOCH / 10)          # per tenth of an epoch
+        n = max(1.0, float(n))
+        b, d, r = (born - prev[0]) / n / span, (died - prev[1]) / n / span, (ret - prev[2]) / n / span
+        # each needle reads against this world's own usual pace: half-way is "as usual"
+        typ = getattr(self, "_gsl_typ", None) or [max(b, 1e-6), max(d + r, 1e-6)]
+        typ = [0.97 * typ[0] + 0.03 * max(b, 1e-9), 0.97 * typ[1] + 0.03 * max(d + r, 1e-9)]
+        self._gsl_typ = typ
+        gb, ld = b / max(typ[0], 1e-9), (d + r) / max(typ[1], 1e-9)
+        g, l = 1 - math.exp(-0.69 * gb), 1 - math.exp(-0.69 * ld)
+        st = math.exp(-0.35 * (gb + ld))
+        old = getattr(self, "gsl", None) or [g, st, l]
+        self.gsl = [round(0.7 * o + 0.3 * v, 4) for o, v in zip(old, (g, st, l))]
 
     # ── record keeping ───────────────────────────────────────────────────
     def event(self, kind, text):
@@ -94,14 +129,16 @@ class World(DialsMixin):
         d = self.frame()
         d.update({"slug": self.SLUG, "tick": int(self.tick), "epoch": int(self.epoch_no()), "light": round(self.light(), 3),
                   "stats": self.last_stats or self.stats(), "events": self.events[-12:], "strata": self.strata[-240:],
-                  "milestones": self.milestones, "name": self.name, "tps": self.TPS, "dials": self.dials_payload()})
+                  "milestones": self.milestones, "name": self.name, "tps": self.TPS, "dials": self.dials_payload(),
+                  "gsl": list(getattr(self, "gsl", None) or [])})
         return d
 
     @classmethod
     def meta(cls) -> dict:
         return {"slug": cls.SLUG, "title": cls.TITLE, "definition": cls.DEFINITION, "tagline": cls.TAGLINE,
                 "about": cls.ABOUT, "stat_labels": cls.STAT_LABELS, "series": cls.SERIES, "tps": cls.TPS,
-                "epoch": cls.EPOCH, "light_cycle": cls.LIGHT_CYCLE, "dials": cls.DIALS}
+                "epoch": cls.EPOCH, "light_cycle": cls.LIGHT_CYCLE, "dials": cls.DIALS,
+                "lysis_name": cls.LYSIS_NAME, "lysis_about": cls.LYSIS_ABOUT}
 
     def facts(self, prev: dict | None, since_tick: int) -> dict:
         s = self.stats()
