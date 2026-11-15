@@ -14,6 +14,29 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 (<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
+## ALGOLYSIS — the dark side of every panel (2026-11-14)
+Every panel turns over (moon key, `?dark=1`, remembered in localStorage `algo-dark`) to its underside: death, decay
+and return. Shared: `static/darwin/algo/lysis.js` (900 ms card flip, G/S/L gauge with self-calibrating needles, helpers),
+reverse-named nameplate (`meta.lysis_name`), 'cycle' info card, sound `setDark` (root −5, darker filter, `rev`/`crumble`
+voices, lysis voice driven by `gsl[2]`). Base: `LYSIS_NAME/ABOUT`, `lysis_counts() -> (born, died, returned, n)`,
+`_update_gsl`, `gsl` in stats/live. Plugins add `drawDark(ctx,V,now,t,light)`; cabinet falls back to a darkened draw.
+- Coast v1.3: fungi (fungi.py FungiMixin), litter/soil/carrion grids, mushrooms, soil boosts plant gain.
+- Cosmophthora: remnants, black holes (cap 4, m≥85, jets fling gas back), metal-rich gas.
+- Protophthora: UV breaking near the surface, break flares.
+- Biophthora: detritus → nutrients, phages on dominant lineages.
+- Autopoiesis/Autolysis: dying membranes self-digest, spill substrate.
+- Morpholysis: dead forms sink as marine snow, sediment feeds roots, fragments regrow (25%).
+- Epilysis: heritable programmed cell death (apop), finished embryos dissolve into yolk.
+- Ontolysis: metamorphosis (gene META), chrysalis, senescence, yolk drift.
+- Palinphthora: deadwood/humus/beetle outbreaks.
+- Noolysis: old brains leak memory (fade after 3000 ticks); husks seep into nearest bloom (direct-eat husks eroded brains — rejected).
+- Psycholysis: lessons fade to instinct; poison deaths leave marks of fear that teach passers-by (and go stale on rule change).
+- Anthropophthora: dead bands leave ruins (ice preserves), rediscovery restores tools/fire/lang; gauge counts people, not bands (bands sit at cap).
+- Anaphthora: mutational load (binomial inheritance + Poisson 0.12), burden scales with Pressure dial, bones, rescue flashes.
+Verified: each world vs. old code with work/cmp.py (time-averaged stats comparable), crash test fresh + migrated
+old pickles (work/crash_all.py), screenshots of every underside. Deployed dc142f0 → cab7bf1.
+Open: tune underside visuals on the 4'×6' panels in person; Protogenesis chains sit at the floor so its underside reads sparse.
+
 ## ALGOGENESIS — all twelve concept panels + dials (2026-11-12)
 
 **2026-11-14 phone navigation:** phones (≤760px) now keep the top tab strip as a second, sideways-scrolling row (active tab centred); bottom bar is World · Tidal pool · Algogenesis · More (Barricelli moved into the More sheet). Full-screen panels (panel.html, cabinet.html) show a '‹ Darwin' button back to their page when opened top-level; hidden inside the page iframe and with ?kiosk=1 (use that on installation screens).
