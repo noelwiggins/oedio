@@ -63,5 +63,27 @@
 <script src="/static/darwin/algo/fossils.js?v=3"></script>
 <script src="/static/darwin/algo/sound.js?v=5"></script>
 <script src="/static/darwin/algo/panel.js?v=9"></script>
+<!-- a way back to the website when the panel is opened on its own (hidden in the page's frame and on kiosks: ?kiosk=1) -->
+<a id="ag-home" href="/darwin/algogenesis" aria-label="Back to Algogenesis" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Darwin</span>
+</a>
+<style>
+  #ag-home { position: fixed; z-index: 40; top: calc(env(safe-area-inset-top) + 1.6vmin); left: calc(env(safe-area-inset-left) + 1.6vmin);
+    display: flex; align-items: center; gap: .6vmin; padding: 1vmin 2vmin 1vmin 1.2vmin; border-radius: 4vmin;
+    background: #fbf3dc; color: #2a1d14; border: .3vmin solid #2a1d14; box-shadow: 0 .5vmin 0 #2a1d14;
+    font: 400 max(13px, 2.2vmin) "Righteous", sans-serif; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+  #ag-home[hidden] { display: none; }
+  #ag-home svg { width: max(16px, 2.6vmin); height: max(16px, 2.6vmin); }
+  #ag-home:active { transform: translateY(.4vmin); box-shadow: 0 .1vmin 0 #2a1d14; }
+</style>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search), a = document.getElementById('ag-home');
+  if (window.top !== window.self || q.get('kiosk') === '1') return;
+  var w = document.body.dataset.world;
+  a.href = w ? '/darwin/algogenesis/' + w : '/darwin/algogenesis/coast';
+  a.hidden = false;
+})();
+</script>
 </body>
 </html>
