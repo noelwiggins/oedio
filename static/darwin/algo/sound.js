@@ -245,8 +245,14 @@
     let out_ = node;
     if (A.createStereoPanner) { const pan = A.createStereoPanner(); pan.pan.value = opt.pan || 0; node.connect(pan); out_ = pan; }
     out_.connect(dry); const s = A.createGain(); s.gain.value = opt.wet != null ? opt.wet : 0.7; out_.connect(s); s.connect(verb);
-    if (opt.echo) { const e = A.createGain(); e.gain.value = opt.echo; out_.connect(e); e.connect(echo); }
-    live++; srcs[0].onended = () => { live--; try { out_.disconnect(); node.disconnect(); } catch (e) {} };
+    let e = null;
+    if (opt.echo) { e = A.createGain(); e.gain.value = opt.echo; out_.connect(e); e.connect(echo); }
+    // when the note ends, unplug everything it added, including its sends into the shared reverb and echo:
+    // a send left plugged in stays on that bus's input for good, and thousands of them made the audio stutter
+    live++; srcs[0].onended = () => {
+      live--;
+      for (const n of [out_, node, s, e]) if (n) { try { n.disconnect(); } catch (er) {} }
+    };
     for (const o of srcs) { o.start(srcs.t0); o.stop(end); }
   }
   function note(t, freq, gain, timbre, opt = {}) {
@@ -394,7 +400,7 @@
     const s = A.createBufferSource(); s.buffer = noiseBuf; const f = A.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
     const g = A.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + 0.04); g.gain.setTargetAtTime(0, t + 0.06, dur / 4);
     s.connect(f); f.connect(g); g.connect(dry); const w = A.createGain(); w.gain.value = 0.9; g.connect(w); w.connect(verb);
-    live++; s.onended = () => { live--; try { g.disconnect(); } catch (e) {} };
+    live++; s.onended = () => { live--; for (const n of [s, f, g, w]) { try { n.disconnect(); } catch (e) {} } };
     s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.3);
   }
   function boom(t, gain) {

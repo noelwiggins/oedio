@@ -26,6 +26,12 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## SOUND stutter over time — fixed 2026-11-15
+Each note's sends into the shared reverb and echo buses (route(): wet gain s, echo gain e; noise(): w) were never
+disconnected, so those buses' inputs grew ~2 connections/s (234 + 148 after 3 min; tens of thousands overnight) until
+the audio thread stuttered. Now every node a note adds is disconnected in onended. Measured with work/soundleak.js
+(wraps AudioNode.connect/disconnect, counts inbound connections per node): flat on Coast, Palingenesis, Anthropogenesis.
+
 ## ZOOM on every Algogenesis panel (2026-11-15)
 static/darwin/algo/zoom.js (AlgoZoom): pinch, wheel / trackpad pinch, double-tap (3× at the spot / back out), keys + − 0;
 one-finger drag pans when zoomed; z from "whole world uncropped" (~0.8–0.97) to 14×; time-based glide; remembered per
