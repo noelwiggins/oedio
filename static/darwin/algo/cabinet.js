@@ -162,6 +162,7 @@
     const title = ((isDark && meta && meta.lysis_name) || (meta && meta.title) || 'ALGOGENESIS').toUpperCase();
     const nx = gx + gs + u * 0.035, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
     L.nameplate = { x: nx, y: ny, w: nw, h: nh };
+    cv.dataset.plate = [nx, ny, nw, nh].map(v => Math.round(v / L.dpr)).join(',');
     rrect(nx, ny, nw, nh, nh / 2); ctx.fillStyle = CREAM; ctx.fill(); ctx.lineWidth = u * 0.004; ctx.strokeStyle = INK; ctx.stroke();
     rrect(nx + u * 0.005, ny + u * 0.005, nw - u * 0.01, nh - u * 0.01, nh / 2); ctx.lineWidth = u * 0.0015; ctx.stroke();
     ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -252,7 +253,10 @@
   card.querySelector('.x').onclick = closeCard;
   cv.addEventListener('click', e => {
     const x = e.clientX * L.dpr, y = e.clientY * L.dpr, n = L.nameplate, f = L.fossilWin;
-    if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) return toggleCard('about');
+    if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) {     // the pill: every panel, to switch between them
+      if (!window.AlgoSwitch) return toggleCard('about');
+      return AlgoSwitch.toggle({ anchor: { x: n.x / L.dpr, y: n.y / L.dpr, w: n.w / L.dpr, h: n.h / L.dpr }, current: API.split('/').pop(), onAbout: () => toggleCard('about') });
+    }
     const sg = L.grille;
     if (sg && window.AlgoSound && x > sg.x && x < sg.x + sg.w && y > sg.y && y < sg.y + sg.h) {
       if (!AlgoSound.isOn()) { AlgoSound.start(); feedSound(live); }

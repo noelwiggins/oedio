@@ -134,12 +134,16 @@
     return Math.round(meanAir / lapse * 50) / 50;          // height above the sea, in steps of 0.02
   }
   // paint the land and its underside for the world rectangle (x0, y0)–(x1, y1) at ts pixels per world unit
-  function paintTerrain(x0, y0, x1, y1, ts, sea, snow) {
+  // a step-by-step painter: it yields every few rows, so a big repaint can be spread over frames
+  function* terrainSteps(x0, y0, x1, y1, ts, sea, snow) {
     const tw = Math.max(1, Math.round((x1 - x0) * ts)), th = Math.max(1, Math.round((y1 - y0) * ts)), step = 1 / ts;
     const zone = new Uint8Array(tw * th), snowy = new Uint8Array(tw * th);
-    for (let py = 0; py < th; py++) for (let px = 0; px < tw; px++) {
-      const d = hAt(x0 + px * step, y0 + py * step) - sea; zone[py * tw + px] = zoneOf(d);
-      if (d > snow && d > 0.045) snowy[py * tw + px] = 1;
+    for (let py = 0; py < th; py++) {
+      for (let px = 0; px < tw; px++) {
+        const d = hAt(x0 + px * step, y0 + py * step) - sea; zone[py * tw + px] = zoneOf(d);
+        if (d > snow && d > 0.045) snowy[py * tw + px] = 1;
+      }
+      if ((py & 7) === 7) yield;
     }
     const c = document.createElement('canvas'); c.width = tw; c.height = th;
     const g = c.getContext('2d'), img = g.createImageData(tw, th), D = img.data;
@@ -169,9 +173,31 @@
         if (edge) { DD[k4] = 120; DD[k4 + 1] = 104; DD[k4 + 2] = 112; } else { DD[k4] = dc[0]; DD[k4 + 1] = dc[1]; DD[k4 + 2] = dc[2]; }
         DD[k4 + 3] = 255;
       }
+      if ((py & 7) === 7) yield;
     }
     g.putImageData(img, 0, 0); gD.putImageData(imgD, 0, 0);
     return [c, cD];
+  }
+  function paintTerrain(x0, y0, x1, y1, ts, sea, snow) {          // all at once
+    const it = terrainSteps(x0, y0, x1, y1, ts, sea, snow);
+    for (;;) { const r = it.next(); if (r.done) return r.value; }
+  }
+  // in slices of ~6 ms per frame; the newest request wins, and done() gets the canvases when it finishes
+  let paintJob = null;
+  function paintLater(args, done) {
+    const job = { it: terrainSteps(...args), done };
+    paintJob = job;
+    const run = () => {
+      if (paintJob !== job) return;                              // superseded
+      const t0 = performance.now();
+      for (;;) {
+        const r = job.it.next();
+        if (r.done) { paintJob = null; job.done(r.value); return; }
+        if (performance.now() - t0 > 6) break;
+      }
+      requestAnimationFrame(run);
+    };
+    requestAnimationFrame(run);
   }
   // once a zoom settles, repaint just the visible stretch at screen resolution, so the land stays crisp up close
   function buildRegion() {
@@ -180,20 +206,40 @@
     const x1 = Math.min(W, (pf.x + pf.w - L.ox) / L.s), y1 = Math.min(H, (pf.y + pf.h - L.oy) / L.s);
     const padX = (x1 - x0) * 0.15, padY = (y1 - y0) * 0.15;
     const r = [Math.max(0, x0 - padX), Math.max(0, y0 - padY), Math.min(W, x1 + padX), Math.min(H, y1 + padY)];
-    const ts = Math.min(L.s, Math.sqrt(3.2e6 / ((r[2] - r[0]) * (r[3] - r[1]))));
-    const [c, cD] = paintTerrain(r[0], r[1], r[2], r[3], ts, terrSea, terrSnow);
-    terrReg = { c, cD, r, sea: terrSea, snow: terrSnow };
+    const ts = Math.min(L.s, Math.sqrt(2.4e6 / ((r[2] - r[0]) * (r[3] - r[1])))), sea = terrSea, snow = terrSnow;
+    paintLater([r[0], r[1], r[2], r[3], ts, sea, snow], ([c, cD]) => { terrReg = { c, cD, r, sea, snow }; });
   }
   function drawRegion(dark) {
     const R = terrReg;
-    if (!R || R.sea !== terrSea || R.snow !== terrSnow || AlgoZoom.level() < 1.3) return;
+    if (!R || Math.abs(R.sea - terrSea) > 0.03 || R.snow !== terrSnow || AlgoZoom.level() < 1.3) return;
     const [x0, y0, x1, y1] = R.r;
-    ctx.drawImage(dark ? R.cD : R.c, L.ox + x0 * L.s, L.oy + y0 * L.s, (x1 - x0) * L.s, (y1 - y0) * L.s);
+    drawWorld(dark ? R.cD : R.c, x0, y0, x1, y1);
   }
+  let terrPending = null;
   function buildTerrain(sea) {
-    const snow = snowLine();
-    [terrCanvas, terrDark] = paintTerrain(0, 0, W, H, Math.min(L.s0 || L.s, 1600 / W), sea, snow);
+    const snow = snowLine(), ts = Math.min(L.s0 || L.s, 1600 / W);
+    if (terrCanvas && !terrPending) {                // already showing land: repaint it in the background
+      terrPending = { sea, snow };
+      const T = terrainSteps(0, 0, W, H, ts, sea, snow);
+      const job = () => {
+        const t0 = performance.now();
+        for (;;) {
+          const r = T.next();
+          if (r.done) { [terrCanvas, terrDark] = r.value; terrSea = sea; terrSnow = snow; terrPending = null; pinsFor(sea);
+            if (window.AlgoZoom && AlgoZoom.level() >= 1.3) buildRegion(); return; }
+          if (performance.now() - t0 > 6) break;
+        }
+        requestAnimationFrame(job);
+      };
+      requestAnimationFrame(job);
+      return;
+    }
+    if (terrPending) return;
+    [terrCanvas, terrDark] = paintTerrain(0, 0, W, H, ts, sea, snow);
     terrSea = sea; terrSnow = snow; terrReg = null;
+    pinsFor(sea);
+  }
+  function pinsFor(sea) {
     // brass pins along the coast and the hill lines, as on a pachinko board
     pins = [];
     const grid = 26;
@@ -239,7 +285,7 @@
     for (const o of [...fungi.values()].sort((a, b) => a.y - b.y)) {
       if (o.dead) { if (now - o.dead > 2000) fungi.delete(o.id); continue; }
       const f = fruitOf(o, now); o.fruit = f;
-      if (f < 0.04) continue;
+      if (f < 0.04 || !inView(o.x, o.y, 40)) continue;
       const n = 1 + Math.round(o.look[2] * 2), base = (6 + 5 * o.look[2]) * L.s;
       for (let k = 0; k < n; k++) {
         const a = (o.id * 2.4 + k * 2.1) % 6.283, d = k ? (5 + 4 * k) * L.s : 0;
@@ -248,30 +294,50 @@
       }
     }
   }
+  // draw an image that covers the world rectangle (wx0, wy0)–(wx1, wy1), but only the part inside the window:
+  // scaling a whole-world image up 10× and letting the clip discard most of it was the main cost of zooming in
+  function drawWorld(img, wx0, wy0, wx1, wy1) {
+    if (!img) return;
+    const pf = L.pf;
+    const vx0 = Math.max(wx0, (pf.x - L.ox) / L.s), vy0 = Math.max(wy0, (pf.y - L.oy) / L.s);
+    const vx1 = Math.min(wx1, (pf.x + pf.w - L.ox) / L.s), vy1 = Math.min(wy1, (pf.y + pf.h - L.oy) / L.s);
+    if (vx1 <= vx0 || vy1 <= vy0) return;
+    const kx = img.width / (wx1 - wx0), ky = img.height / (wy1 - wy0);
+    // one source pixel of margin, so smoothing at the edges matches the whole-image draw
+    const sx = Math.max(0, (vx0 - wx0) * kx - 1), sy = Math.max(0, (vy0 - wy0) * ky - 1);
+    const sw = Math.min(img.width - sx, (vx1 - vx0) * kx + 2), sh = Math.min(img.height - sy, (vy1 - vy0) * ky + 2);
+    const dx = L.ox + (wx0 + sx / kx) * L.s, dy = L.oy + (wy0 + sy / ky) * L.s;
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, sw / kx * L.s, sh / ky * L.s);
+  }
+  // is a world point (with a radius in world units) inside the window? zoomed in, almost nothing is
+  function inView(x, y, r) {
+    const X = L.ox + x * L.s, Y = L.oy + y * L.s, R = r * L.s + 4, pf = L.pf;
+    return X + R > pf.x && X - R < pf.x + pf.w && Y + R > pf.y && Y - R < pf.y + pf.h;
+  }
   // ── the underside: the same moment seen from below ───────────────────
   function drawUnder(now, t, night) {
     const pf = L.pf, LY = window.AlgoLysis, U = live && live.under;
     ctx.fillStyle = '#140c18'; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
-    if (terrDark) ctx.drawImage(terrDark, L.ox, L.oy, W * L.s, H * L.s);
+    drawWorld(terrDark, 0, 0, W, H);
     drawRegion(true);
     if (U && LY) {
       ctx.imageSmoothingEnabled = true;
       const litter = LY.grid(U, 'litter', [128, 78, 44], 1.1), soil = LY.grid(U, 'soil', [231, 162, 59], 0.9), car = LY.grid(U, 'carrion', [232, 220, 196], 1.2);
-      if (litter) { ctx.globalAlpha = 0.85; ctx.drawImage(litter, L.ox, L.oy, W * L.s, H * L.s); }
+      if (litter) { ctx.globalAlpha = 0.85; drawWorld(litter, 0, 0, W, H); }
       ctx.globalCompositeOperation = 'lighter';
-      if (soil) { ctx.globalAlpha = 0.45 + 0.1 * Math.sin(t * 0.4); ctx.drawImage(soil, L.ox, L.oy, W * L.s, H * L.s); }
-      if (car) { ctx.globalAlpha = 0.7; ctx.drawImage(car, L.ox, L.oy, W * L.s, H * L.s); }
+      if (soil) { ctx.globalAlpha = 0.45 + 0.1 * Math.sin(t * 0.4); drawWorld(soil, 0, 0, W, H); }
+      if (car) { ctx.globalAlpha = 0.7; drawWorld(car, 0, 0, W, H); }
       ctx.globalAlpha = 1;
-      for (const o of fungi.values()) if (!o.dead) LY.mycelium(ctx, o.id, L.ox + o.x * L.s, L.oy + o.y * L.s, o.reach, L.s, t, o.look[3]);
+      for (const o of fungi.values()) if (!o.dead && inView(o.x, o.y, o.reach * 1.6)) LY.mycelium(ctx, o.id, L.ox + o.x * L.s, L.oy + o.y * L.s, o.reach, L.s, t, o.look[3]);
       ctx.globalCompositeOperation = 'source-over';
     }
     // the living, seen from beneath: roots as dim violet points, animals as pale ghosts
     ctx.fillStyle = 'rgba(180,140,255,0.28)';
-    for (const p of plants.values()) { if (p.dead) continue; ctx.beginPath(); ctx.arc(L.ox + p.x * L.s, L.oy + p.y * L.s, Math.max(1, 2.2 * L.s * p.size), 0, Math.PI * 2); ctx.fill(); }
+    for (const p of plants.values()) { if (p.dead || !inView(p.x, p.y, 4)) continue; ctx.beginPath(); ctx.arc(L.ox + p.x * L.s, L.oy + p.y * L.s, Math.max(1, 2.2 * L.s * p.size), 0, Math.PI * 2); ctx.fill(); }
     ctx.lineWidth = Math.max(1, 1.2 * L.s);
     for (const o of animals.values()) {
       const p = pos(o, now), fade = o.dead ? Math.max(0, 1 - (now - o.dead) / 4000) : 1;
-      if (fade <= 0) continue;
+      if (fade <= 0 || !inView(p.x, p.y, 30)) continue;
       const r = (3 + 2.2 * (o.look[7] || 1)) * L.s * (o.grown || 1);
       ctx.strokeStyle = o.dead ? `rgba(232,220,196,${0.9 * fade})` : 'rgba(232,220,196,0.22)';
       ctx.beginPath(); ctx.arc(L.ox + p.x * L.s, L.oy + p.y * L.s, r * (o.dead ? 1 + (1 - fade) * 1.5 : 1), 0, Math.PI * 2); ctx.stroke();
@@ -287,6 +353,7 @@
     for (const p of list) {
       let a = Math.min(1, (now - p.born) / 1500);
       if (p.dead) { a = Math.max(0, 1 - (now - p.dead) / 1500); if (a <= 0) { plants.delete(p.id); continue; } }
+      if (!inView(p.x, p.y, 20)) continue;
       const X = L.ox + p.x * L.s, Y = L.oy + p.y * L.s;
       const spr = flowerSprite(p, open), k = (0.42 + 0.38 * p.size) * (0.75 + 0.25 * p.nectar) * Math.min(1, a + 0.3) / 1.7;
       const w = spr.width * k * L.s / (spr._sb || L.s), rot = Math.sin(t * 0.5 + p.x * 0.03) * 0.15;
@@ -315,6 +382,10 @@
   function drawAnimal(o, now, t, light, glowLayer) {
     let alpha = Math.min(1, (now - o.born) / 900);
     if (o.dead) { alpha = Math.max(0, 1 - (now - o.dead) / 1200); if (alpha <= 0) { animals.delete(o.id); return; } }
+    if (L.s > L.s0 * 1.2) {                                  // zoomed in: skip animals well outside the window
+      const q = pos(o, now);
+      if (!inView(q.x, q.y, 40)) { o._head = [L.ox + q.x * L.s, L.oy + q.y * L.s]; return; }
+    }
     const { p, pts, r0, ph } = animalGeometry(o, now, t);
     o._head = pts[0];
     const [hue, sat, hue2, pattern, glow, segs, limbs, size, tail, crest, fin, diet] = o.look;
@@ -537,6 +608,7 @@
     // nameplate (it is also a key: touch it to read about the machine)
     const nx = gx + gs + u * 0.04, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
     L.nameplate = { x: nx, y: ny, w: nw, h: nh };
+    cv.dataset.plate = [nx, ny, nw, nh].map(v => Math.round(v / L.dpr)).join(',');
     rrect(nx, ny, nw, nh, nh / 2); ctx.fillStyle = CREAM; ctx.fill(); ctx.lineWidth = u * 0.004; ctx.strokeStyle = INK; ctx.stroke();
     rrect(nx + u * 0.005, ny + u * 0.005, nw - u * 0.01, nh - u * 0.01, nh / 2); ctx.lineWidth = u * 0.0015; ctx.stroke();
     ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -681,7 +753,10 @@
   card.querySelector('.x').onclick = closeCard;
   cv.addEventListener('click', e => {
     const x = e.clientX * L.dpr, y = e.clientY * L.dpr, n = L.nameplate, f = L.fossilWin;
-    if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) return toggleCard('about');
+    if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) {     // the pill: every panel, to switch between them
+      if (!window.AlgoSwitch) return toggleCard('about');
+      return AlgoSwitch.toggle({ anchor: { x: n.x / L.dpr, y: n.y / L.dpr, w: n.w / L.dpr, h: n.h / L.dpr }, current: 'coast', onAbout: () => toggleCard('about') });
+    }
     const sg = L.grille;
     if (sg && window.AlgoSound && x > sg.x && x < sg.x + sg.w && y > sg.y && y < sg.y + sg.h) {
       if (!AlgoSound.isOn()) { AlgoSound.start(); feedSound(live); }
@@ -710,7 +785,6 @@
     const sea = live ? live.sea : 0;
     if (!terrCanvas || Math.abs(terrSea - sea) > 0.004 || terrSnow !== snowLine()) {
       buildTerrain(sea);
-      if (window.AlgoZoom && AlgoZoom.level() >= 1.3) setTimeout(() => { try { buildRegion(); } catch (e) {} }, 0);
     }
     smoothLight += ((live ? live.light : 1) - smoothLight) * 0.02;
     const night = Math.max(0, 1 - smoothLight);
@@ -725,7 +799,7 @@
       drawUnder(now, t, night);
       drawRailAndDecals(t, 1);
     } else {
-      ctx.drawImage(terrCanvas, L.ox, L.oy, W * L.s, H * L.s);
+      drawWorld(terrCanvas, 0, 0, W, H);
       drawRegion(false);
       drawPins(night, t);
       drawPlants(now, t, smoothLight);
@@ -769,7 +843,7 @@
     const U = live.under;
     if (U) { AlgoLysis.grid(U, 'litter', [128, 78, 44], 1.1); AlgoLysis.grid(U, 'soil', [231, 162, 59], 0.9); AlgoLysis.grid(U, 'carrion', [232, 220, 196], 1.2); }
     let n = 0;
-    for (const o of fungi.values()) { if (!o.dead) { AlgoLysis.warmMycelium(o.id, o.reach, L.s, o.look[3]); if (++n > 400) break; } }
+    for (const o of fungi.values()) { if (!o.dead && inView(o.x, o.y, o.reach * 1.6)) { AlgoLysis.warmMycelium(o.id, o.reach, L.s, o.look[3]); if (++n > 400) break; } }
   }, 1500);
   if (window.AlgoZoom) {                                 // pinch, wheel or double-tap to zoom; drag to look around
     AlgoZoom.attach(cv, { key: 'coast', rect: () => L && L.pf ? { x: L.pf.x, y: L.pf.y, w: L.pf.w, h: L.pf.h, dpr: L.dpr } : null });

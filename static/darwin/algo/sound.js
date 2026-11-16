@@ -257,6 +257,8 @@
   }
   function note(t, freq, gain, timbre, opt = {}) {
     if (!A || gain <= 0.0005 || live >= 32) return;          // a polyphony ceiling keeps the audio thread relaxed
+    // a note asked for in the past (the page was busy) starts a little later, spread out, never all at once
+    if (t < A.currentTime + 0.01) t = A.currentTime + 0.02 + Math.random() * 0.3;
     const T = INST[timbre] || INST.pluck, r = opt.rich != null ? opt.rich : rich, bright = Math.pow(2, MIX.tone);
     if (T.oct) freq *= Math.pow(2, T.oct);
     while (freq > 2400) freq /= 2;                             // keep everything soft: nothing shrill
@@ -565,7 +567,7 @@
     for (const [, o] of voices) {
       if (o.rank >= audible) { while (o.next < t + 0.4) o.next += o.period; continue; }
       while (o.next < t + 0.4) {
-        if (o.next > t - 0.5) {
+        if (o.next > t - 0.12) {                 // a loop that came round while the page was busy is skipped, not piled up
           const g = clamp(0.018 + 0.07 * Math.sqrt(o.share || 0), 0.015, 0.08);
           note(Math.max(o.next, t + 0.02), pitch(o.deg, (o.oct || 0) + (o.oct2 || 0)), g, o.timbre, { pan: o.pan, dark: o.dark, echo: 0.25 + 0.2 * (1 - light), wet: 0.6 + 0.4 * (1 - light) });
           if (o.glow > 0.3) note(o.next + 0.08, pitch(o.deg, (o.oct || 0) + 1), g * 0.2 * o.glow, pal.chime, { pan: o.pan, wet: 1.2 });

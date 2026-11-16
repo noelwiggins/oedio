@@ -26,6 +26,18 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## PANEL SWITCHER + Coast dark-side zoom crash (2026-11-16)
+Name pill (both page types) opens static/darwin/algo/switcher.js (AlgoSwitch): all 13 panels, cosmos→humanity arc,
+Coast first, current marked, reverse names on the dark side, "About this panel" last; ↑↓/Enter/Esc; fades to the
+next panel; side and per-panel zoom persist. cv.dataset.plate exposes the pill rect (CSS px) for tests.
+Crash when zooming the Coast underside: mycelium sprites were built at zoomed scale (hundreds of px each, ~150 of them)
+and the background warm-up kept refilling the cache. Now: sprites ≤ ~512 px (drawn enlarged past that), 24 MP cache
+cap, warm-up only for colonies in view; everything off-window is culled (roots, ghosts, colonies, mushrooms, flowers,
+animals); whole-world images (terrain, litter/soil/carrion grids, sharp region) drawn from just their visible source
+rectangle (drawWorld) — that scaled blit was 63% of frame time; terrain repaints (tide, zoom region) run in 6 ms
+slices across frames (terrainSteps generator). Sound: loops that came round during a stall are skipped (>0.12 s late),
+late notes are spread over 0–0.3 s instead of piling up. Tests: work/darkzoom.js, regtime.js, prof.js, peaks.js, switch.js.
+
 ## SOUND stutter over time — fixed 2026-11-15
 Each note's sends into the shared reverb and echo buses (route(): wet gain s, echo gain e; noise(): w) were never
 disconnected, so those buses' inputs grew ~2 connections/s (234 + 148 after 3 min; tens of thousands overnight) until

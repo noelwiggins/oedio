@@ -276,14 +276,17 @@
   }
   // each colony's threads are drawn once into a sprite (they only change when the colony's reach does), and each
   // frame the sprite is placed with its slow pulse as opacity: thousands of strokes become one image
-  const mycSprites = new Map();
+  const mycSprites = new Map(); let mycPixels = 0;
   function mycSprite(id, rb, s, glow) {
-    const sk = Math.pow(1.25, Math.round(Math.log(Math.min(s, 12)) / Math.log(1.25))), key = id + ':' + rb + ':' + sk.toFixed(3) + ':' + Math.round(glow * 10);
+    const segs = threads(id, rb);
+    let ext = segs._ext;
+    if (!ext) { ext = 4; for (const q of segs) ext = Math.max(ext, Math.abs(q[0]), Math.abs(q[1]), Math.abs(q[2]), Math.abs(q[3])); segs._ext = ext; }
+    // scale bands, and never larger than 512 px across: zoomed in further, the sprite is drawn enlarged (soft
+    // glowing threads hold up), so deep zoom can't fill memory with hundreds of huge images
+    const sk = Math.min(Math.pow(1.25, Math.round(Math.log(Math.min(s, 12)) / Math.log(1.25))), 250 / ext);
+    const key = id + ':' + rb + ':' + sk.toFixed(3) + ':' + Math.round(glow * 10);
     let c = mycSprites.get(key);
     if (c) return c;
-    const segs = threads(id, rb);
-    let ext = 4;
-    for (const q of segs) ext = Math.max(ext, Math.abs(q[0]), Math.abs(q[1]), Math.abs(q[2]), Math.abs(q[3]));
     const pad = 4, half = Math.ceil(ext * sk + pad);
     c = document.createElement('canvas'); c.width = c.height = half * 2; c._half = half; c._sk = sk;
     const g = c.getContext('2d');
@@ -297,7 +300,8 @@
         g.stroke();
       }
     }
-    if (mycSprites.size > 500) mycSprites.clear();
+    mycPixels += c.width * c.height;
+    if (mycSprites.size > 500 || mycPixels > 24e6) { mycSprites.clear(); mycPixels = c.width * c.height; }
     mycSprites.set(key, c);
     return c;
   }
