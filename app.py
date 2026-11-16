@@ -77,7 +77,17 @@ def add_cache_headers(response):
     untouched here and keep normal caching, since those don't carry the
     same staleness risk and genuinely benefit from it."""
     if response.content_type and response.content_type.startswith("text/html"):
-        response.headers["Cache-Control"] = "no-cache"
+        # the one exception: the two pages behind the revolving bookcase, reached only by its turn, may be kept for
+        # half a minute, so a page fetched ahead while the book tips is really used when the turn arrives
+        if (request.path == "/darwin/" and request.args.get("via") == "portal") or \
+           (request.path == "/" and request.args.get("from") == "darwin"):
+            response.headers["Cache-Control"] = "private, max-age=30"
+        else:
+            response.headers["Cache-Control"] = "no-cache"
+    elif request.path.startswith("/static/") and request.args.get("v") and response.status_code == 200:
+        # a versioned asset (?v=N, bumped whenever the file changes) can be kept for good: no round trip to a
+        # distant server to re-check it on every page
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
 
 

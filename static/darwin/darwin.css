@@ -229,14 +229,28 @@ pre.json { font: 12px var(--dw-mono); background: var(--md-sys-color-surface-con
 details > summary { cursor: pointer; font-weight: 500; }
 
 /* ── portal arrival / departure ──────────────────────── */
-html.portal-in { perspective: 1600px; background: #050908; overflow: hidden; }
-html.portal-in body { transform-origin: 50% 50vh; animation: swingIn 1s cubic-bezier(.2,.7,.2,1) both; }
-@keyframes swingIn { from { transform: rotateY(-88deg) translateZ(-120px); filter: brightness(.25); } to { transform: none; filter: none; } }
-html.portal-out { perspective: 1600px; background: #050908; overflow: hidden; }
-html.portal-out body { transform-origin: 50% 50vh; animation: swingOut .75s cubic-bezier(.55,0,.8,.3) both; }
-@keyframes swingOut { to { transform: rotateY(88deg) translateZ(-120px); filter: brightness(.2); } }
+/* The bookcase turn, continued: this page arrives edge-on with the speed the library left at, and is caught by a
+   spring (as the Algogenesis panels are), a few degrees past flat and back. Leaving swings on the same way. */
+html.portal-in, html.portal-out { perspective: 1600px; background: #050908; overflow: hidden; }
+html.portal-in body { transform-origin: 50% 50vh; will-change: transform;
+  animation: swingIn 644ms cubic-bezier(.15,.8,.3,1.06) both; }
+@supports (animation-timing-function: linear(0, 1)) { html.portal-in body { animation-timing-function: linear(0.0000 0.0%, 0.0660 2.5%, 0.1653 5.6%, 0.2520 8.1%, 0.3628 11.2%, 0.4497 13.7%, 0.5527 16.8%, 0.6286 19.3%, 0.7140 22.4%, 0.7742 24.8%, 0.8391 28.0%, 0.8829 30.4%, 0.9283 33.5%, 0.9575 36.0%, 0.9863 39.1%, 1.0039 41.6%, 1.0199 44.7%, 1.0288 47.2%, 1.0358 50.3%, 1.0387 52.8%, 1.0399 55.9%, 1.0392 58.4%, 1.0370 61.5%, 1.0345 64.0%, 1.0307 67.1%, 1.0275 69.6%, 1.0233 72.7%, 1.0201 75.2%, 1.0163 78.3%, 1.0135 80.7%, 1.0103 83.9%, 1.0081 86.3%, 1.0058 89.4%, 1.0042 91.9%, 1.0025 95.0%, 1.0015 97.5%, 1.0000 100.0%); } }
+html.portal-hold body, html.portal-hold::after { animation-play-state: paused; }
+@keyframes swingIn { from { transform: rotateY(-90deg); } to { transform: none; } }
+html.portal-in::after, html.portal-out::after { content: ''; position: fixed; inset: 0; z-index: 2147483647;
+  pointer-events: none; background: #050908; }
+html.portal-in::after { animation: portalUnshade 644ms cubic-bezier(.15,.8,.3,1) both; }
+@keyframes portalUnshade { 0% { opacity: .85; } 45%, 100% { opacity: 0; } }
+html.portal-out body { transform-origin: 50% 50vh; will-change: transform; animation: swingOut .76s both; }
+@keyframes swingOut {
+  0%   { transform: rotateY(0deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  26%  { transform: rotateY(-3deg); animation-timing-function: cubic-bezier(.333,0,.667,.333); }
+  100% { transform: rotateY(90deg); } }
+html.portal-out::after { animation: portalShade .76s both; }
+@keyframes portalShade { 0%, 26% { opacity: 0; animation-timing-function: cubic-bezier(.333,0,.667,.333); } 100% { opacity: .85; } }
 @media (prefers-reduced-motion: reduce) {
   html.portal-in body, html.portal-out body { animation: fade .4s both; }
+  html.portal-in::after, html.portal-out::after { animation: none; opacity: 0; }
   @keyframes fade { from { opacity: 0; } }
 }
 

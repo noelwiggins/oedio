@@ -101,11 +101,37 @@
     return `rgba(${c[0]},${c[1]},${c[2]},${alpha == null ? 1 : alpha})`;
   };
 
-  /* Leaving Darwin: the bookcase swings back to the library. */
+  /* Leaving Darwin: the bookcase swings on round to the library, which is loaded before the turn reaches it. */
+  const warmed = new Set();
+  function warmPage(url) {
+    if (warmed.has(url)) return; warmed.add(url);
+    try {
+      if (HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules')) {
+        const sr = document.createElement('script'); sr.type = 'speculationrules';
+        sr.textContent = JSON.stringify({ prerender: [{ source: 'list', urls: [url] }] });
+        document.head.appendChild(sr);
+      }
+    } catch (e) {}
+    // every browser: fetch the page, then the versioned files it uses, into the cache
+    fetch(url, { credentials: 'same-origin' }).then(r => r.text()).then(h => {
+      for (const m of h.matchAll(/(?:href|src)="(\/static\/[^"]+\?v=[^"]+)"/g)) fetch(m[1].replace(/&amp;/g, '&')).catch(() => {});
+      for (const m of h.matchAll(/"(https:\/\/cdn\.jsdelivr\.net\/[^"]+\.js)"/g)) fetch(m[1], { mode: 'cors', credentials: 'omit' }).catch(() => {});
+    }).catch(() => {});
+  }
+  D.warmLibrary = () => warmPage('/?from=darwin');
+  ['pointerover', 'pointerdown', 'focusin'].forEach(ev => document.addEventListener(ev, e => {
+    if (e.target.closest && e.target.closest('a[onclick*="exitToLibrary"]')) D.warmLibrary();
+  }));
   D.exitToLibrary = function (e) {
     if (e) e.preventDefault();
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.documentElement.classList.add('portal-out');
-    setTimeout(() => { location.href = '/?from=darwin'; }, reduce ? 200 : 700);
+    D.warmLibrary();
+    const html = document.documentElement, body = document.body;
+    body.style.transformOrigin = `50% ${window.scrollY + window.innerHeight / 2}px`;
+    html.classList.add('portal-out');
+    let gone = false;
+    const go = () => { if (!gone) { gone = true; location.href = '/?from=darwin'; } };
+    body.addEventListener('animationend', ev => { if (ev.animationName === 'swingOut') go(); });
+    setTimeout(go, reduce ? 200 : 1600);             // only a fallback; the animation's end is the cue
   };
 })();

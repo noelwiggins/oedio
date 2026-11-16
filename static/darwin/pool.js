@@ -282,6 +282,10 @@
     }
 
     function draw(ts) {
+      // while the page is turning (the bookcase), hold the first frame: the turn gets the whole frame budget
+      const turning = document.documentElement.classList;
+      if (drewOnce && (turning.contains('portal-in') || turning.contains('portal-out'))) { requestAnimationFrame(draw); return; }
+      drewOnce = true;
       resize();
       const W = canvas.clientWidth, H = canvas.clientHeight;
       if (cam.ts != null) {        // glide toward a preset
@@ -419,6 +423,7 @@
       }
       requestAnimationFrame(draw);
     }
+    let drewOnce = false;
     poll(); requestAnimationFrame(draw);
     return { goto, select };
   };

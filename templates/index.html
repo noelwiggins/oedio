@@ -2,6 +2,22 @@
 {% block title %}Library — oedio.com{% endblock %}
 
 {% block extra_head %}
+<script>
+/* The bookcase turn, arriving: the page waits edge-on (and unseen) until its content is in and has painted twice,
+   then swings round. Checked from the head, so the swing doesn't wait for scripts and web fonts still loading. */
+(function () {
+  if (!(/[?&]from=darwin\b/.test(location.search)) || matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.remove('bookcase-hold'); return; }
+  const html = document.documentElement;
+  html.classList.add('bookcase-return', 'bookcase-hold');
+  const start = () => {
+    let done = false;
+    const go = () => { if (done) return; done = true; requestAnimationFrame(() => requestAnimationFrame(() => html.classList.remove('bookcase-hold'))); };
+    const poll = () => { if (done) return; if (document.querySelector('footer') && document.querySelector('.r-spine')) go(); else requestAnimationFrame(poll); };
+    requestAnimationFrame(poll); setTimeout(go, 900);
+  };
+  if (document.prerendering) document.addEventListener('prerenderingchange', start, { once: true }); else start();
+})();
+</script>
 <style>
   .shelf-intro { max-width:760px; margin:0 auto; padding:24px 24px 4px; text-align:center; }
   .shelf-intro h1 { font-family:Georgia,serif; font-size:25px; font-weight:600;
@@ -183,17 +199,32 @@
   .r-spine.r-secret .rs-title { font-size:10px; letter-spacing:.12em; max-height:132px; opacity:.86; }
   .r-spine.r-secret:hover { box-shadow:0 0 0 1px rgba(125,216,181,.25), 2px 2px 14px rgba(0,0,0,.6), inset 0 0 22px rgba(0,0,0,.5); }
   .r-spine.r-secret.levering { transition:transform .45s cubic-bezier(.3,.7,.2,1); }
-  html.bookcase-turn { perspective:1600px; background:#050908;
+  /* The turn, felt as one motion across two pages: the library rocks back a hair as the latch catches, then
+     swings with growing speed until it is edge-on; the next page picks up that speed and is caught by a spring
+     (the same one that turns the Algogenesis panels), overshooting a few degrees and settling. A shade over the
+     screen, not a filter on the page, darkens the face as it turns away, so nothing is repainted mid-turn. */
+  html.bookcase-turn, html.bookcase-return { perspective:1600px; background:#050908;
     background-image:radial-gradient(60% 50% at 50% 50%, rgba(125,216,181,.10), transparent 70%); overflow:hidden; }
-  html.bookcase-turn body { animation:bookcaseTurn .78s cubic-bezier(.55,0,.8,.3) both; }
-  @keyframes bookcaseTurn { to { transform:rotateY(88deg) translateZ(-120px); filter:brightness(.25); } }
-  html.bookcase-click body { animation:bookcaseClick .26s steps(6) both; }
-  @keyframes bookcaseClick { 0%,100% { transform:none; } 25% { transform:translate(1.5px,-1px); } 50% { transform:translate(-1.5px,1px); } 75% { transform:translate(1px,1px); } }
-  html.bookcase-return { perspective:1600px; background:#050908; overflow:hidden; }
-  html.bookcase-return body { animation:bookcaseReturn .95s cubic-bezier(.2,.7,.2,1) both; }
-  @keyframes bookcaseReturn { from { transform:rotateY(88deg) translateZ(-120px); filter:brightness(.25); } to { transform:none; filter:none; } }
+  html.bookcase-prep body { will-change:transform; }
+  html.bookcase-turn body { will-change:transform; animation:bookcaseTurn .76s both; }
+  @keyframes bookcaseTurn {
+    0%   { transform:rotateY(0deg); animation-timing-function:cubic-bezier(.45,0,.55,1); }
+    26%  { transform:rotateY(-3deg); animation-timing-function:cubic-bezier(.333,0,.667,.333); }
+    100% { transform:rotateY(90deg); } }
+  html.bookcase-turn::after, html.bookcase-return::after { content:''; position:fixed; inset:0; z-index:2147483647;
+    pointer-events:none; background:#050908; }
+  html.bookcase-turn::after { animation:bookcaseShade .76s both; }
+  @keyframes bookcaseShade { 0%, 26% { opacity:0; animation-timing-function:cubic-bezier(.333,0,.667,.333); } 100% { opacity:.85; } }
+  html.bookcase-return.bookcase-hold body, html.bookcase-return.bookcase-hold::after { animation-play-state:paused; }
+  html.bookcase-return body { transform-origin:50% 50vh; will-change:transform; animation:bookcaseReturn 644ms cubic-bezier(.15,.8,.3,1.06) both; }
+  html.bookcase-return::after { animation:bookcaseUnshade 644ms cubic-bezier(.15,.8,.3,1) both; }
+  @supports (animation-timing-function: linear(0, 1)) {
+    html.bookcase-return body { animation-timing-function:linear(0.0000 0.0%, 0.0660 2.5%, 0.1653 5.6%, 0.2520 8.1%, 0.3628 11.2%, 0.4497 13.7%, 0.5527 16.8%, 0.6286 19.3%, 0.7140 22.4%, 0.7742 24.8%, 0.8391 28.0%, 0.8829 30.4%, 0.9283 33.5%, 0.9575 36.0%, 0.9863 39.1%, 1.0039 41.6%, 1.0199 44.7%, 1.0288 47.2%, 1.0358 50.3%, 1.0387 52.8%, 1.0399 55.9%, 1.0392 58.4%, 1.0370 61.5%, 1.0345 64.0%, 1.0307 67.1%, 1.0275 69.6%, 1.0233 72.7%, 1.0201 75.2%, 1.0163 78.3%, 1.0135 80.7%, 1.0103 83.9%, 1.0081 86.3%, 1.0058 89.4%, 1.0042 91.9%, 1.0025 95.0%, 1.0015 97.5%, 1.0000 100.0%); }
+  }
+  @keyframes bookcaseReturn { from { transform:rotateY(-90deg); } to { transform:none; } }
+  @keyframes bookcaseUnshade { 0% { opacity:.85; } 45%, 100% { opacity:0; } }
   @media (prefers-reduced-motion: reduce) {
-    html.bookcase-turn body, html.bookcase-return body, html.bookcase-click body { animation:none; }
+    html.bookcase-turn body, html.bookcase-return body, html.bookcase-turn::after, html.bookcase-return::after { animation:none; }
     html.bookcase-turn body { opacity:0; transition:opacity .25s; }
   }
 
@@ -477,41 +508,60 @@
     el.dataset.secret = '1';
     el.innerHTML = '<span class="rs-band-b"></span><span class="rs-title">ORIGIN OF SPECIES</span>';
     el.addEventListener('click', e => { e.preventDefault(); openPortal(el); });
+    ['pointerenter', 'pointerdown', 'focus'].forEach(ev => el.addEventListener(ev, () => warmPage('/darwin/?via=portal'), { once: true }));
     rotunda.appendChild(el);
   })();
+
+  // Load the page on the other side of the bookcase before the turn reaches it, so there is no pause at edge-on:
+  // a prerender where the browser offers one, otherwise a prefetch.
+  const warmed = new Set();
+  function warmPage(url) {
+    if (warmed.has(url)) return; warmed.add(url);
+    try {
+      if (HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules')) {
+        const sr = document.createElement('script'); sr.type = 'speculationrules';
+        sr.textContent = JSON.stringify({ prerender: [{ source: 'list', urls: [url] }] });
+        document.head.appendChild(sr);
+      }
+    } catch (e) {}
+    // every browser: fetch the page, then the versioned files it uses, into the cache
+    fetch(url, { credentials: 'same-origin' }).then(r => r.text()).then(h => {
+      for (const m of h.matchAll(/(?:href|src)="(\/static\/[^"]+\?v=[^"]+)"/g)) fetch(m[1].replace(/&amp;/g, '&')).catch(() => {});
+      for (const m of h.matchAll(/"(https:\/\/cdn\.jsdelivr\.net\/[^"]+\.js)"/g)) fetch(m[1], { mode: 'cors', credentials: 'omit' }).catch(() => {});
+    }).catch(() => {});
+  }
 
   function openPortal(spine) {
     if (spine.classList.contains('levering')) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const angle = parseFloat(spine.dataset.angle);
+    const url = '/darwin/?via=portal';
+    warmPage(url);
     spine.classList.add('levering');
-    // 1. the book tips forward on its bottom edge, like a lever
-    spine.style.transform = `rotateY(${angle}deg) translateZ(${radius + 14}px) rotateX(22deg)`;
     const html = document.documentElement, body = document.body;
     const bar = document.querySelector('.top-app-bar');
+    // 1. the book tips forward on its bottom edge, like a lever; meanwhile the page is readied to turn as one piece
+    spine.style.transform = `rotateY(${angle}deg) translateZ(${radius + 14}px) rotateX(22deg)`;
+    body.style.transformOrigin = `50% ${window.scrollY + window.innerHeight / 2}px`;
+    html.classList.add('bookcase-prep');
     setTimeout(() => {
-      // 2. the mechanism catches
-      if (!reduce) html.classList.add('bookcase-click');
-      setTimeout(() => {
-        html.classList.remove('bookcase-click');
-        // 3. the whole library turns on its pivot
-        body.style.transformOrigin = `50% ${window.scrollY + window.innerHeight / 2}px`;
-        if (bar) { bar.style.position = 'absolute'; bar.style.top = window.scrollY + 'px'; }
-        html.classList.add('bookcase-turn');
-        setTimeout(() => { location.href = '/darwin/?via=portal'; }, reduce ? 250 : 720);
-      }, reduce ? 0 : 280);
-    }, reduce ? 0 : 430);
+      // 2. the latch catches and the whole library swings on its pivot, gathering speed to edge-on
+      if (bar) { bar.style.position = 'absolute'; bar.style.top = window.scrollY + 'px'; }
+      html.classList.add('bookcase-turn');
+      let gone = false;
+      const go = () => { if (!gone) { gone = true; location.href = url; } };
+      body.addEventListener('animationend', e => { if (e.animationName === 'bookcaseTurn') go(); });
+      setTimeout(go, reduce ? 250 : 1600);            // only a fallback; the animation's end is the cue
+    }, reduce ? 0 : 400);
   }
 
-  // Returning from Darwin: the bookcase swings back around.
+  // Returning from Darwin: the swing itself is started from the head (see extra_head); here the marker leaves the URL
+  // once the page is shown, and the turn's classes are cleared when it has settled.
   if (new URLSearchParams(location.search).get('from') === 'darwin') {
     const html = document.documentElement;
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.body.style.transformOrigin = `50% ${window.innerHeight / 2}px`;
-      html.classList.add('bookcase-return');
-      setTimeout(() => { html.classList.remove('bookcase-return'); document.body.style.transformOrigin = ''; }, 1000);
-    }
-    history.replaceState(null, '', location.pathname);
+    const shown = () => history.replaceState(null, '', location.pathname);
+    if (document.prerendering) document.addEventListener('prerenderingchange', shown, { once: true }); else shown();
+    document.body.addEventListener('animationend', e => { if (e.animationName === 'bookcaseReturn') html.classList.remove('bookcase-return'); });
   }
 
   let currentAngle = -angleStep * 0.5;

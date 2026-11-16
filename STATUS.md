@@ -14,6 +14,18 @@ science books (opens /darwin/), and every book page has "Make a printed book" (/
 (<=760px): bottom nav World / Tidal pool / Barricelli / More (sheet with every other page), stacked forms, tables scroll
 inside their cards. Studio on phones (<=640px): single column, source filter + scrolling source list, sticky Build bar.
 
+## REVOLVING BOOKCASE (library ↔ Darwin), 2026-11-15
+One continuous turn across two pages, the same physics as the Algogenesis panels. Leaving (index.html bookcaseTurn /
+darwin.css swingOut): book tips 400 ms, page rocks back 3° as the latch catches, then t² ease-in to 90° (navigates on
+animationend, not a timer). Arriving: the page is held edge-on (bookcase-hold / portal-hold, set from <head>) until its
+content is parsed and painted twice, then swings from −90° on a spring `linear()` curve (ω 0.0115/ms, ζ 0.72, start speed
+= exit speed; 644 ms, 3.6° overshoot). Always turns the same way round. Shade is an html::after overlay, not a filter.
+Touching the book (or the exit link) prerenders the other page (Chrome speculation rules) and fetch-warms it plus its
+versioned assets and three.js in every browser; /darwin/?via=portal and /?from=darwin are cacheable for 30 s; all
+/static/*?v= assets are now immutable for a year. Pool view holds its first frame while the page turns.
+Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
+(plain navigation measures the same).
+
 ## ALGOLYSIS — the dark side of every panel (2026-11-14)
 Every panel turns over (swipe left/right across the window, or ←/→ keys; `?dark=1`; remembered in localStorage `algo-dark`) to its underside: death, decay
 and return. Shared: `static/darwin/algo/lysis.js` (3D turn: face drawn offscreen, projected in perspective strips with shading, brass edge and seat shadow; drag follows the finger; at edge-on a damped spring (ω 0.0115/ms, ζ 0.62) catches it and carries it over with the finger's speed, ~190 ms to land, ~4% bounce; released early it springs on past 30% or a fling, else back; sound switches as it lands; Coast mycelium is cached per colony as sprites and pre-built in the background (dark side went 2→11 fps headless); G/S/L gauge with self-calibrating needles, helpers),
