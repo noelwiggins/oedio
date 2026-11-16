@@ -23,6 +23,13 @@
     ['anthropogenesis', 'Anthropogenesis', 'Anthropophthora', 'The origin and development of humanity'],
   ];
   const href = slug => slug === 'coast' ? '/darwin/algogenesis/panel' : `/darwin/algogenesis/${slug}/panel`;
+  // the page each panel sits in (its title, description and stats around the panel's frame)
+  const pageHref = slug => slug === 'coast' ? '/darwin/algogenesis/coast' : `/darwin/algogenesis/${slug}`;
+  // shown inside one of those pages? then the whole page changes, not just the frame
+  function hostPage() {
+    try { if (window.top !== window && window.top.location.origin === location.origin) return window.top; } catch (e) {}
+    return null;
+  }
 
   const css = `
   #algo-switch { position: fixed; z-index: 60; background: var(--cream, #fbf3dc); color: var(--ink, #2a1d14);
@@ -76,7 +83,11 @@
       e.preventDefault();
       if (a.dataset.slug === opts.current) { close(); return; }
       document.body.classList.add('algo-leaving');                  // a short fade, then the next panel
-      setTimeout(() => { location.href = a.getAttribute('href'); }, 200);
+      const host = hostPage();
+      setTimeout(() => {
+        if (host) host.location.href = pageHref(a.dataset.slug);    // the page around it moves too: title, story, stats
+        else location.href = a.getAttribute('href');
+      }, 200);
     }));
     el.querySelector('.about button').addEventListener('click', () => { close(); if (opts.onAbout) opts.onAbout(); });
   }
