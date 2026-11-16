@@ -26,6 +26,21 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## ANTHROPOGENESIS: farming, settlements, division of labour (2026-11-16)
+Bands with tools ≥10, language ≥0.45 on land with prod >0.65 learn to farm (p 0.0004/step × bounty; shared between
+friendly bands). Farming bands join a settlement within 40 (if coop >0.35) or found one (no other within 90, CAP_S 40).
+Every 10 ticks (_civ): surplus R = prod·2.4·tools·toolmakers → share free for trades ≤ 1−1/R (≤0.55); trades unlock by
+population (toolmakers 60, builders 90, potters 150, traders 220 + a neighbour, priests 320 + art, smiths 500 + tools 40,
+scribes 800 + language 0.8), 7% each. Builders accumulate `built` (decay 0.9998); tiers hamlet / village (40) / walled
+village (200 + potters) / town (800 + traders + priests) / city (3000 + smiths + scribes), with a 20% margin before
+dropping. K = 120·prod·(1+0.5·ln(1+tools/10))·(1+0.12·trades)·housing·roads. Traders keep roads to their 2 nearest
+neighbours (knowledge flows 30%/update). Crowded settlements send out farming bands; walls repel raiders; collapse
+leaves a ruin with its tier. Seed 2: farming t9.5k, village +4 min, walled +15 min, town +40 min, city ≈ t70k.
+Frame: towns [id,x,y,pop,tier,built,roles[7],tools,hue,age], roads, band farm flag (idx 9), ruin tier (idx 6).
+Plugin draws each tier (huts → gabled houses, fields, granary → palisade, kilns → stone wall + towers, market, temple →
+citadel, forge, monument), figures walking home↔work coloured by trade, lit windows at night, scaled ×1.35 (TS).
+Test with a saved frame: work/towns.js routes /live to /tmp/anthro_live.json.
+
 ## PANEL SWITCHER + Coast dark-side zoom crash (2026-11-16)
 Name pill (both page types) opens static/darwin/algo/switcher.js (AlgoSwitch): all 13 panels, cosmos→humanity arc,
 Coast first, current marked, reverse names on the dark side, "About this panel" last; ↑↓/Enter/Esc; fades to the
