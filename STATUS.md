@@ -16,15 +16,25 @@ inside their cards. Studio on phones (<=640px): single column, source filter + s
 
 ## REVOLVING BOOKCASE (library ↔ Darwin), 2026-11-15
 One continuous turn across two pages, the same physics as the Algogenesis panels. Leaving (index.html bookcaseTurn /
-darwin.css swingOut): book tips 400 ms, page rocks back 3° as the latch catches, then t² ease-in to 90° (navigates on
-animationend, not a timer). Arriving: the page is held edge-on (bookcase-hold / portal-hold, set from <head>) until its
-content is parsed and painted twice, then swings from −90° on a spring `linear()` curve (ω 0.0115/ms, ζ 0.72, start speed
-= exit speed; 644 ms, 3.6° overshoot). Always turns the same way round. Shade is an html::after overlay, not a filter.
+darwin.css swingOut, 1.3 s): book tips 650 ms (.7 s transition), page rocks back 3° as the latch catches, then t² ease-in
+to 90° (navigates on animationend, not a timer). Arriving: the page is held edge-on (bookcase-hold / portal-hold, set from <head>) until its
+content is parsed and painted twice, then swings from −90° on a spring `linear()` curve (ω 0.0068/ms, ζ 0.68, start speed
+= exit speed; 1080 ms, 5° overshoot; slowed 2026-11-15 for drama). Always turns the same way round. Shade is an html::after overlay, not a filter.
 Touching the book (or the exit link) prerenders the other page (Chrome speculation rules) and fetch-warms it plus its
 versioned assets and three.js in every browser; /darwin/?via=portal and /?from=darwin are cacheable for 30 s; all
 /static/*?v= assets are now immutable for a year. Pool view holds its first frame while the page turns.
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
+
+## ZOOM on every Algogenesis panel (2026-11-15)
+static/darwin/algo/zoom.js (AlgoZoom): pinch, wheel / trackpad pinch, double-tap (3× at the spot / back out), keys + − 0;
+one-finger drag pans when zoomed; z from "whole world uncropped" (~0.8–0.97) to 14×; time-based glide; remembered per
+panel in localStorage `algo-zoom:<api or coast>`. Pages keep the fitted mapping (L.s0/ox0/oy0, L.V0) and take the
+zoomed one from AlgoZoom.view() each frame. Swipe-to-turn only at z≈1 (lysis.js checks isZoomed/pointers). Coast: sharp
+terrain for the visible region repainted at screen resolution when a zoom settles (paintTerrain/buildRegion, ≤3.2 MP);
+flower, mycelium, Palingenesis canopy and Protogenesis ball sprites cached in scale bands and drawn scaled.
+Open: a 10× "wide" world for zoom-out needs a size-aware engine (W/H/populations are baked into terrain and food code);
+Coast now costs 2.6 ms/tick at 20 TPS.
 
 ## ALGOLYSIS — the dark side of every panel (2026-11-14)
 Every panel turns over (swipe left/right across the window, or ←/→ keys; `?dark=1`; remembered in localStorage `algo-dark`) to its underside: death, decay

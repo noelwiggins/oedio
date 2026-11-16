@@ -13,6 +13,7 @@
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22', RIM = '#b9560c';
   let W = 1200, H = 800, terrain = null, terrCanvas = null, terrDark = null, terrSea = null, terrSnow = null, pins = [];
+  let terrReg = null;                            // when zoomed in: the visible stretch of land, painted sharp
   const fungi = new Map();
   let L = {};                                   // layout, in canvas pixels
   let live = null;
@@ -27,11 +28,12 @@
     const m = u * 0.035, trayH = ch * 0.15;
     const pf = { x: m, y: m, w: cw - 2 * m, h: ch - trayH - m * 1.6 };          // playfield window
     const s = Math.max(pf.w / W, pf.h / H);         // the world fills the window; the rail and bezel crop its edges
-    L = { dpr, cw, ch, u, m, trayH, pf, s, ox: pf.x + (pf.w - W * s) / 2, oy: pf.y + (pf.h - H * s) / 2,
+    L = { dpr, cw, ch, u, m, trayH, pf, s, ox: pf.x + (pf.w - W * s) / 2, oy: pf.y + (pf.h - H * s) / 2, s0: s,
           tray: { x: m, y: ch - trayH - m * 0.4, w: cw - 2 * m, h: trayH } };
     // the guide rail: a great circle through the playfield, as on a pachinko board
     L.rail = { cx: pf.x + pf.w / 2, cy: pf.y + pf.h * 0.58, r: Math.min(pf.w * 0.485, pf.h * 0.86) };
-    terrCanvas = null; flowerCache.clear(); placeKeys();
+    L.ox0 = L.ox; L.oy0 = L.oy;
+    terrCanvas = null; terrReg = null; flowerCache.clear(); placeKeys();
   }
   addEventListener('resize', resize);
 
@@ -131,11 +133,12 @@
     const meanAir = 15 + 10 * live.season, lapse = live.lapse || 26;
     return Math.round(meanAir / lapse * 50) / 50;          // height above the sea, in steps of 0.02
   }
-  function buildTerrain(sea) {
-    const ts = Math.min(L.s, 1600 / W), tw = Math.round(W * ts), th = Math.round(H * ts), step = 1 / ts;
-    const zone = new Uint8Array(tw * th), snow = snowLine(), snowy = new Uint8Array(tw * th);
+  // paint the land and its underside for the world rectangle (x0, y0)–(x1, y1) at ts pixels per world unit
+  function paintTerrain(x0, y0, x1, y1, ts, sea, snow) {
+    const tw = Math.max(1, Math.round((x1 - x0) * ts)), th = Math.max(1, Math.round((y1 - y0) * ts)), step = 1 / ts;
+    const zone = new Uint8Array(tw * th), snowy = new Uint8Array(tw * th);
     for (let py = 0; py < th; py++) for (let px = 0; px < tw; px++) {
-      const d = hAt(px * step, py * step) - sea; zone[py * tw + px] = zoneOf(d);
+      const d = hAt(x0 + px * step, y0 + py * step) - sea; zone[py * tw + px] = zoneOf(d);
       if (d > snow && d > 0.045) snowy[py * tw + px] = 1;
     }
     const c = document.createElement('canvas'); c.width = tw; c.height = th;
@@ -168,7 +171,29 @@
       }
     }
     g.putImageData(img, 0, 0); gD.putImageData(imgD, 0, 0);
-    terrCanvas = c; terrDark = cD; terrSea = sea; terrSnow = snow;
+    return [c, cD];
+  }
+  // once a zoom settles, repaint just the visible stretch at screen resolution, so the land stays crisp up close
+  function buildRegion() {
+    if (!terrCanvas || !window.AlgoZoom || AlgoZoom.level() < 1.3) { terrReg = null; return; }
+    const pf = L.pf, x0 = Math.max(0, (pf.x - L.ox) / L.s), y0 = Math.max(0, (pf.y - L.oy) / L.s);
+    const x1 = Math.min(W, (pf.x + pf.w - L.ox) / L.s), y1 = Math.min(H, (pf.y + pf.h - L.oy) / L.s);
+    const padX = (x1 - x0) * 0.15, padY = (y1 - y0) * 0.15;
+    const r = [Math.max(0, x0 - padX), Math.max(0, y0 - padY), Math.min(W, x1 + padX), Math.min(H, y1 + padY)];
+    const ts = Math.min(L.s, Math.sqrt(3.2e6 / ((r[2] - r[0]) * (r[3] - r[1]))));
+    const [c, cD] = paintTerrain(r[0], r[1], r[2], r[3], ts, terrSea, terrSnow);
+    terrReg = { c, cD, r, sea: terrSea, snow: terrSnow };
+  }
+  function drawRegion(dark) {
+    const R = terrReg;
+    if (!R || R.sea !== terrSea || R.snow !== terrSnow || AlgoZoom.level() < 1.3) return;
+    const [x0, y0, x1, y1] = R.r;
+    ctx.drawImage(dark ? R.cD : R.c, L.ox + x0 * L.s, L.oy + y0 * L.s, (x1 - x0) * L.s, (y1 - y0) * L.s);
+  }
+  function buildTerrain(sea) {
+    const snow = snowLine();
+    [terrCanvas, terrDark] = paintTerrain(0, 0, W, H, Math.min(L.s0 || L.s, 1600 / W), sea, snow);
+    terrSea = sea; terrSnow = snow; terrReg = null;
     // brass pins along the coast and the hill lines, as on a pachinko board
     pins = [];
     const grid = 26;
@@ -185,10 +210,12 @@
   // ── flowers: flat symbols, no stems ──────────────────────────────────
   const flowerCache = new Map();
   function flowerSprite(p, open) {
-    const key = `${Math.round(p.hue * 36)}|${p.petals}|${Math.round(p.sat * 3)}|${Math.round(p.hue2 * 8)}|${open ? 1 : 0}`;
+    const sb = Math.pow(1.3, Math.round(Math.log(Math.min(L.s, 14)) / Math.log(1.3)));
+    const key = `${Math.round(p.hue * 36)}|${p.petals}|${Math.round(p.sat * 3)}|${Math.round(p.hue2 * 8)}|${open ? 1 : 0}|${sb.toFixed(3)}`;
     let s = flowerCache.get(key);
     if (s) return s;
-    const R = Math.max(8, Math.round(11 * L.s));
+    if (flowerCache.size > 900) flowerCache.clear();
+    const R = Math.max(8, Math.round(11 * sb));
     s = document.createElement('canvas'); s.width = s.height = R * 2 + 6;
     const g = s.getContext('2d'); g.translate(R + 3, R + 3);
     const hue = p.hue * 360, Lt = 56 + 8 * (1 - p.sat), S = 45 + 50 * p.sat;
@@ -201,6 +228,7 @@
     }
     g.fillStyle = `hsl(${p.hue2 * 360},75%,58%)`;
     g.beginPath(); g.arc(0, 0, R * 0.26, 0, Math.PI * 2); g.fill(); g.stroke();
+    s._sb = sb;
     flowerCache.set(key, s);
     return s;
   }
@@ -225,6 +253,7 @@
     const pf = L.pf, LY = window.AlgoLysis, U = live && live.under;
     ctx.fillStyle = '#140c18'; ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
     if (terrDark) ctx.drawImage(terrDark, L.ox, L.oy, W * L.s, H * L.s);
+    drawRegion(true);
     if (U && LY) {
       ctx.imageSmoothingEnabled = true;
       const litter = LY.grid(U, 'litter', [128, 78, 44], 1.1), soil = LY.grid(U, 'soil', [231, 162, 59], 0.9), car = LY.grid(U, 'carrion', [232, 220, 196], 1.2);
@@ -260,7 +289,7 @@
       if (p.dead) { a = Math.max(0, 1 - (now - p.dead) / 1500); if (a <= 0) { plants.delete(p.id); continue; } }
       const X = L.ox + p.x * L.s, Y = L.oy + p.y * L.s;
       const spr = flowerSprite(p, open), k = (0.42 + 0.38 * p.size) * (0.75 + 0.25 * p.nectar) * Math.min(1, a + 0.3) / 1.7;
-      const w = spr.width * k, rot = Math.sin(t * 0.5 + p.x * 0.03) * 0.15;
+      const w = spr.width * k * L.s / (spr._sb || L.s), rot = Math.sin(t * 0.5 + p.x * 0.03) * 0.15;
       ctx.globalAlpha = a;
       ctx.save(); ctx.translate(X, Y); ctx.rotate(rot); ctx.drawImage(spr, -w / 2, -w / 2, w, w); ctx.restore();
     }
@@ -673,12 +702,16 @@
     ctx = ctx0;
     requestAnimationFrame(frame);
     if (!L.cw) return;
+    if (window.AlgoZoom) { const v = AlgoZoom.view({ s: L.s0, ox: L.ox0, oy: L.oy0, pf: L.pf, w: W, h: H }); L.s = v.s; L.ox = v.ox; L.oy = v.oy; }
     const now = performance.now(), t = now / 1000;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     drawCabinet();
     if (!terrain) { drawTray(null, t); return; }
     const sea = live ? live.sea : 0;
-    if (!terrCanvas || Math.abs(terrSea - sea) > 0.004 || terrSnow !== snowLine()) buildTerrain(sea);
+    if (!terrCanvas || Math.abs(terrSea - sea) > 0.004 || terrSnow !== snowLine()) {
+      buildTerrain(sea);
+      if (window.AlgoZoom && AlgoZoom.level() >= 1.3) setTimeout(() => { try { buildRegion(); } catch (e) {} }, 0);
+    }
     smoothLight += ((live ? live.light : 1) - smoothLight) * 0.02;
     const night = Math.max(0, 1 - smoothLight);
     const pf = L.pf, fl = window.AlgoLysis ? AlgoLysis.flip(now) : { sx: 1, dark: false };
@@ -693,6 +726,7 @@
       drawRailAndDecals(t, 1);
     } else {
       ctx.drawImage(terrCanvas, L.ox, L.oy, W * L.s, H * L.s);
+      drawRegion(false);
       drawPins(night, t);
       drawPlants(now, t, smoothLight);
       drawMushrooms(now, t, false);
@@ -737,6 +771,10 @@
     let n = 0;
     for (const o of fungi.values()) { if (!o.dead) { AlgoLysis.warmMycelium(o.id, o.reach, L.s, o.look[3]); if (++n > 400) break; } }
   }, 1500);
+  if (window.AlgoZoom) {                                 // pinch, wheel or double-tap to zoom; drag to look around
+    AlgoZoom.attach(cv, { key: 'coast', rect: () => L && L.pf ? { x: L.pf.x, y: L.pf.y, w: L.pf.w, h: L.pf.h, dpr: L.dpr } : null });
+    AlgoZoom.onSettle(() => { try { buildRegion(); } catch (e) { terrReg = null; } });
+  }
   if (window.AlgoLysis && AlgoLysis.attachSwipe)       // swipe the window left or right to turn the panel over
     AlgoLysis.attachSwipe(cv, () => L && L.pf ? { x: L.pf.x / L.dpr, y: L.pf.y / L.dpr, w: L.pf.w / L.dpr, h: L.pf.h / L.dpr } : null,
       d => { if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(d); });

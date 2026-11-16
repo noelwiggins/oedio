@@ -10,8 +10,9 @@ window.ALGO_WORLD = (function () {
   const LAG = 900;
   const sprites = {};
 
-  function ball(color, r) {
-    const key = color + r;
+  function ball(color, r0) {
+    const r = Math.pow(1.15, Math.round(Math.log(Math.max(0.5, r0)) / Math.log(1.15)));   // size bands: zooming reuses them
+    const key = color + r.toFixed(2);
     if (sprites[key]) return sprites[key];
     const c = document.createElement('canvas'), R = Math.ceil(r + 2);
     c.width = c.height = R * 2;
@@ -19,8 +20,14 @@ window.ALGO_WORLD = (function () {
     g.fillStyle = INK; g.beginPath(); g.arc(R, R, r + 1, 0, Math.PI * 2); g.fill();
     g.fillStyle = color; g.beginPath(); g.arc(R, R, r, 0, Math.PI * 2); g.fill();
     g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.arc(R - r * 0.35, R - r * 0.35, r * 0.32, 0, Math.PI * 2); g.fill();
+    c._r = r;
     sprites[key] = c;
     return c;
+  }
+  // stamp a ball of radius r0 centred on (x, y), from the sprite of its size band
+  function stamp(ctx, color, r0, x, y) {
+    const spr = ball(color, r0), w = spr.width * (r0 + 2) / (spr._r + 2);
+    ctx.drawImage(spr, x - w / 2, y - w / 2, w, w);
   }
 
   function ingest(d, now) {
@@ -74,8 +81,7 @@ window.ALGO_WORLD = (function () {
     for (let i = 0; i < mon.length; i += 3) {
       let x = mon[i], y = mon[i + 1];
       if (same) { const px = monPrev[i], py = monPrev[i + 1]; if (Math.abs(px - x) < 25 && Math.abs(py - y) < 25) { x = px + (x - px) * f; y = py + (y - py) * f; } }
-      const spr = ball(COLI[mon[i + 2]], r);
-      ctx.drawImage(spr, V.ox + x * V.s - spr.width / 2, V.oy + y * V.s - spr.height / 2);
+      stamp(ctx, COLI[mon[i + 2]], r, V.ox + x * V.s, V.oy + y * V.s);
     }
     // chains: strings of balls; folded chains bend back on themselves as a hairpin
     const R = Math.max(2.8, 4.2 * V.s), gap = R * 1.85;
@@ -96,7 +102,7 @@ window.ALGO_WORLD = (function () {
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, R * 0.5);
       ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
-      for (let i = 0; i < n; i++) { const spr = ball(COL[o.seq[i]], R); ctx.drawImage(spr, pts[i][0] - spr.width / 2, pts[i][1] - spr.height / 2); }
+      for (let i = 0; i < n; i++) stamp(ctx, COL[o.seq[i]], R, pts[i][0], pts[i][1]);
       if (o.act > 0.5) {
         let cx = 0, cy = 0; pts.forEach(([x, y]) => { cx += x; cy += y; }); cx /= n; cy /= n;
         const rr = gap * (folded ? half : n) * 0.55 + R * 2;

@@ -31,6 +31,7 @@
   function fit() {
     const pf = L.pf, [w, h] = size, s = Math.max(pf.w / w, pf.h / h);
     L.V = { s, ox: pf.x + (pf.w - w * s) / 2, oy: pf.y + (pf.h - h * s) / 2, u: L.u, dpr: L.dpr, pf };
+    L.V0 = { s: L.V.s, ox: L.V.ox, oy: L.V.oy };
   }
   addEventListener('resize', resize);
   function placeKeys() {
@@ -271,6 +272,10 @@
     ctx = ctx0;
     requestAnimationFrame(frame);
     if (!L.cw) return;
+    if (window.AlgoZoom && L.V0) {
+      const v = AlgoZoom.view({ s: L.V0.s, ox: L.V0.ox, oy: L.V0.oy, pf: L.pf, w: size[0], h: size[1] });
+      L.V.s = v.s; L.V.ox = v.ox; L.V.oy = v.oy; L.V.z = v.z;
+    }
     const now = performance.now(), t = now / 1000;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     drawCase();
@@ -318,6 +323,8 @@
   addEventListener('pointermove', () => { document.body.classList.add('awake'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.remove('awake'), 2500); });
   addEventListener('dblclick', () => { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); });
   if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {});
+  if (window.AlgoZoom)                                   // pinch, wheel or double-tap to zoom; drag to look around
+    AlgoZoom.attach(cv, { key: API, rect: () => L && L.pf ? { x: L.pf.x, y: L.pf.y, w: L.pf.w, h: L.pf.h, dpr: L.dpr } : null });
   if (window.AlgoLysis && AlgoLysis.attachSwipe)       // swipe the window left or right to turn the panel over
     AlgoLysis.attachSwipe(cv, () => L && L.pf ? { x: L.pf.x / L.dpr, y: L.pf.y / L.dpr, w: L.pf.w / L.dpr, h: L.pf.h / L.dpr } : null,
       d => { if (window.AlgoSound && AlgoSound.setDark) AlgoSound.setDark(d); });

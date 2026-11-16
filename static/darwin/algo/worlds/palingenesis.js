@@ -41,12 +41,13 @@ window.ALGO_WORLD = (function () {
       ctx.fillStyle = '#b9bdb6'; ctx.fillRect(V.ox + x * c, V.oy + y * c, c + 0.5, c + 0.5);
       if (v === 3) { ctx.fillStyle = '#6b4a2b'; ctx.fillRect(V.ox + (x + 0.4) * c, V.oy + (y + 0.4) * c, c * 0.25, c * 0.25); }
     }
-    // canopies, stamped from one drawing per kind of tree
+    // canopies, stamped from one drawing per kind of tree (drawn in size bands, so zooming doesn't redraw them all)
+    const cq = Math.pow(1.15, Math.round(Math.log(Math.max(1, c)) / Math.log(1.15)));
     for (let i = 0; i < n; i++) {
       const v = cells[i];
       if (v < 4) continue;
-      const spr = sprite(v, c), x = i % gw, y = (i / gw) | 0;
-      ctx.drawImage(spr, V.ox + (x + 0.5) * c - spr.width / 2, V.oy + (y + 0.5) * c - spr.height / 2);
+      const spr = sprite(v, cq), x = i % gw, y = (i / gw) | 0, sw = spr.width * c / cq;
+      ctx.drawImage(spr, V.ox + (x + 0.5) * c - sw / 2, V.oy + (y + 0.5) * c - sw / 2, sw, sw);
     }
     // fire
     for (let i = 0; i < n; i++) {

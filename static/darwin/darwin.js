@@ -132,6 +132,6 @@
     let gone = false;
     const go = () => { if (!gone) { gone = true; location.href = '/?from=darwin'; } };
     body.addEventListener('animationend', ev => { if (ev.animationName === 'swingOut') go(); });
-    setTimeout(go, reduce ? 200 : 1600);             // only a fallback; the animation's end is the cue
+    setTimeout(go, reduce ? 200 : 2400);             // only a fallback; the animation's end is the cue
   };
 })();

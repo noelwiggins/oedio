@@ -137,6 +137,8 @@
     el.style.touchAction = 'none';
     el.addEventListener('pointerdown', e => {
       const r = getRect(); if (!r || (turn && turn.mode !== 'drag')) return;
+      // zoomed in, one finger moves the view instead; a second finger means a pinch, not a turn
+      if (window.AlgoZoom && (AlgoZoom.isZoomed() || AlgoZoom.pointers() > 1)) return;
       const x = e.clientX, y = e.clientY;
       if (x < r.x || x > r.x + r.w || y < r.y || y > r.y + r.h) return;
       st = { x0: x, y0: y, id: e.pointerId, live: false, hist: [[x, performance.now()]], w: r.w };
@@ -144,6 +146,10 @@
     });
     el.addEventListener('pointermove', e => {
       if (!st || e.pointerId !== st.id || st.caught) return;
+      if (window.AlgoZoom && AlgoZoom.pointers() > 1) {          // a pinch began: let the board fall back
+        if (st.live && turn) spring(0, 0);
+        st = null; return;
+      }
       const dx = e.clientX - st.x0, dy = e.clientY - st.y0;
       if (!st.live) {
         if (Math.abs(dx) < 14 || Math.abs(dx) < 1.4 * Math.abs(dy)) { if (Math.abs(dy) > 30) st = null; return; }
@@ -272,14 +278,14 @@
   // frame the sprite is placed with its slow pulse as opacity: thousands of strokes become one image
   const mycSprites = new Map();
   function mycSprite(id, rb, s, glow) {
-    const sk = Math.round(s * 20) / 20, key = id + ':' + rb + ':' + sk + ':' + Math.round(glow * 10);
+    const sk = Math.pow(1.25, Math.round(Math.log(Math.min(s, 12)) / Math.log(1.25))), key = id + ':' + rb + ':' + sk.toFixed(3) + ':' + Math.round(glow * 10);
     let c = mycSprites.get(key);
     if (c) return c;
     const segs = threads(id, rb);
     let ext = 4;
     for (const q of segs) ext = Math.max(ext, Math.abs(q[0]), Math.abs(q[1]), Math.abs(q[2]), Math.abs(q[3]));
     const pad = 4, half = Math.ceil(ext * sk + pad);
-    c = document.createElement('canvas'); c.width = c.height = half * 2; c._half = half;
+    c = document.createElement('canvas'); c.width = c.height = half * 2; c._half = half; c._sk = sk;
     const g = c.getContext('2d');
     g.translate(half, half); g.scale(sk, sk); g.lineCap = 'round';
     for (const pass of [0, 1]) {
@@ -304,7 +310,8 @@
     const rb = Math.round(r / 6) * 6, c = mycSprite(id, rb, s, glow);
     const pulse = 0.75 + 0.25 * Math.sin(t * 0.8 + id), a0 = g.globalAlpha;
     g.globalAlpha = a0 * pulse;
-    g.drawImage(c, x - c._half, y - c._half);
+    const k = s / c._sk, hw = c._half * k;
+    g.drawImage(c, x - hw, y - hw, hw * 2, hw * 2);
     g.globalAlpha = a0;
   }
 
