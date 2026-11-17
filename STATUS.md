@@ -26,6 +26,17 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## DEVOTIONAL COAST — the same world as a devotional print (2026-11-17)
+/darwin/algogenesis/devotional (page) and /devotional/panel: the Coast panel.html served with
+static/darwin/algo/skins/devotional.js inserted before panel.js (+ Yatra One font + DEVOTIONAL_CSS for keys/cards).
+panel.js now has skin hooks (window.ALGO_SKIN): terrainPixel (ink outline + light rim + colour/texture per pixel),
+flower, animalColors, pattern, eye, halo, rim, frame (replaces rail/fans), cabinet, bezel, metal (replaces chrome), pin,
+tray, nameplate, surface (grain/varnish over the window). No skin → unchanged cabinet. Frame and cabinet are cached
+canvases keyed by size (+ dark side). Own zoom key 'coast-devotional'; in the switcher after the Coast.
+Style: 1860–1930 studio-press devotional prints (chromolithograph/woodblock) + Noel's two block-print photos: jewel inks,
+gold, cusped arch, curtains, valance, lotus dais, stippled colour, cream curls on water, ink squiggles on the shore,
+lotus flowers, almond eyes, gold nimbus on glowing animals. Ornament only; no deities, no copies of specific prints.
+
 ## ANTHROPOGENESIS: farming, settlements, division of labour (2026-11-16)
 Bands with tools ≥10, language ≥0.45 on land with prod >0.65 learn to farm (p 0.0004/step × bounty; shared between
 friendly bands). Farming bands join a settlement within 40 (if coop >0.35) or found one (no other within 90, CAP_S 40).

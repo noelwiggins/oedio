@@ -12,6 +12,9 @@
   let ctx = ctx0, turnCv = null;          // while the panel turns, each face is drawn here first, then projected
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22', RIM = '#b9560c';
+  // an optional art style (a "skin", e.g. skins/devotional.js) may redraw the cabinet, land, flowers and animals;
+  // the world, its data and every behaviour stay the same. Without one, the panel is the pachinko cabinet.
+  const SK = window.ALGO_SKIN || null;
   let W = 1200, H = 800, terrain = null, terrCanvas = null, terrDark = null, terrSea = null, terrSnow = null, pins = [];
   let terrReg = null;                            // when zoomed in: the visible stretch of land, painted sharp
   const fungi = new Map();
@@ -151,6 +154,30 @@
     const cD = document.createElement('canvas'); cD.width = tw; cD.height = th;
     const gD = cD.getContext('2d'), imgD = gD.createImageData(tw, th), DD = imgD.data;
     const DARKZ = [[12, 9, 26], [18, 16, 44], [26, 25, 58], [44, 32, 40], [40, 27, 34], [50, 33, 40], [58, 38, 46]];
+    if (SK && SK.terrainPixel) {
+      // the skin's land: ink outline, then a light rim inside it, then the skin's colour and texture
+      const ow2 = ow * 2;
+      for (let py = 0; py < th; py++) {
+        for (let px = 0; px < tw; px++) {
+          const i = py * tw + px, z = zone[i], sn = snowy[i];
+          let lev = 0;
+          for (let k = 1; k <= ow2 && !lev; k++) {
+            const hit = (px + k < tw && (zone[i + k] !== z || snowy[i + k] !== sn)) || (py + k < th && (zone[i + k * tw] !== z || snowy[i + k * tw] !== sn)) ||
+                        (px - k >= 0 && (zone[i - k] !== z || snowy[i - k] !== sn)) || (py - k >= 0 && (zone[i - k * tw] !== z || snowy[i - k * tw] !== sn));
+            if (hit) lev = k <= ow * 0.6 ? 1 : 2;
+          }
+          const col = SK.terrainPixel(z, lev, sn, x0 + px * step, y0 + py * step, ZONES[z][1]);
+          const k4 = i * 4;
+          D[k4] = col[0]; D[k4 + 1] = col[1]; D[k4 + 2] = col[2]; D[k4 + 3] = 255;
+          let dc = DARKZ[z]; if (sn) dc = [70, 64, 84];
+          if (lev === 1) { DD[k4] = 120; DD[k4 + 1] = 104; DD[k4 + 2] = 112; } else { DD[k4] = dc[0]; DD[k4 + 1] = dc[1]; DD[k4 + 2] = dc[2]; }
+          DD[k4 + 3] = 255;
+        }
+        if ((py & 7) === 7) yield;
+      }
+      g.putImageData(img, 0, 0); gD.putImageData(imgD, 0, 0);
+      return [c, cD];
+    }
     for (let py = 0; py < th; py++) {
       for (let px = 0; px < tw; px++) {
         const z = zone[py * tw + px];
@@ -262,8 +289,10 @@
     if (s) return s;
     if (flowerCache.size > 900) flowerCache.clear();
     const R = Math.max(8, Math.round(11 * sb));
-    s = document.createElement('canvas'); s.width = s.height = R * 2 + 6;
+    s = document.createElement('canvas'); s.width = s.height = R * 2 + 6 + (SK && SK.flowerPad ? Math.round(R * SK.flowerPad) * 2 : 0);
+    if (SK && SK.flowerPad) { const pad = Math.round(R * SK.flowerPad); s.getContext('2d').translate(pad, pad); }
     const g = s.getContext('2d'); g.translate(R + 3, R + 3);
+    if (SK && SK.flower) { SK.flower(g, R, p, open); s._sb = sb; flowerCache.set(key, s); return s; }
     const hue = p.hue * 360, Lt = 56 + 8 * (1 - p.sat), S = 45 + 50 * p.sat;
     const n = p.petals, pr = open ? R : R * 0.62;
     g.lineWidth = Math.max(1, R * 0.11); g.strokeStyle = INK; g.fillStyle = `hsl(${hue},${S}%,${Lt}%)`;
@@ -390,7 +419,8 @@
     o._head = pts[0];
     const [hue, sat, hue2, pattern, glow, segs, limbs, size, tail, crest, fin, diet] = o.look;
     const Lt = 48 + 14 * (1 - sat), S = 25 + 70 * sat;
-    const base = `hsl(${hue * 360},${S}%,${Lt}%)`, alt = `hsl(${hue2 * 360},${Math.max(45, S)}%,${Math.min(70, Lt + 8)}%)`;
+    let base = `hsl(${hue * 360},${S}%,${Lt}%)`, alt = `hsl(${hue2 * 360},${Math.max(45, S)}%,${Math.min(70, Lt + 8)}%)`;
+    if (SK && SK.animalColors) [base, alt] = SK.animalColors(hue, sat, hue2);
     const ow = Math.max(1, r0 * 0.22);
     ctx.globalAlpha = alpha; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // legs
@@ -449,12 +479,15 @@
       }
     }
     // body: an ink silhouette, then the colours
+    if (SK && SK.halo) SK.halo(ctx, pts, o.look, t + o.phase, alpha);
+    if (SK && SK.rim) { ctx.fillStyle = SK.rim; for (const [px, py, r] of pts) { ctx.beginPath(); ctx.arc(px, py, r + ow * 2.4, 0, Math.PI * 2); ctx.fill(); } }
     ctx.fillStyle = INK;
     for (const [px, py, r] of pts) { ctx.beginPath(); ctx.arc(px, py, r + ow, 0, Math.PI * 2); ctx.fill(); }
     for (let i = pts.length - 1; i >= 0; i--) {
       const [px, py, r] = pts[i];
       ctx.fillStyle = (pattern > 0.33 && pattern <= 0.66 && i % 2 === 1) ? alt : base;
       ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2); ctx.fill();
+      if (SK && SK.pattern) { SK.pattern(ctx, px, py, r, i, pattern, base, alt, pts[i][3]); continue; }
       if (pattern > 0.66 && r > 2) {
         ctx.fillStyle = alt; ctx.beginPath();
         ctx.arc(px + r * 0.35, py - r * 0.25, r * 0.3, 0, Math.PI * 2); ctx.arc(px - r * 0.3, py + r * 0.3, r * 0.24, 0, Math.PI * 2); ctx.fill();
@@ -462,12 +495,13 @@
     }
     // eye
     const [hx, hy, hr] = pts[0];
-    ctx.fillStyle = CREAM; ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.45, hy + Math.sin(p.h) * hr * 0.45, Math.max(0.9, hr * 0.3), 0, Math.PI * 2); ctx.fill();
+    if (SK && SK.eye) SK.eye(ctx, hx, hy, hr, p.h, diet);
+    else { ctx.fillStyle = CREAM; ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.45, hy + Math.sin(p.h) * hr * 0.45, Math.max(0.9, hr * 0.3), 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.55, hy + Math.sin(p.h) * hr * 0.55, Math.max(0.6, hr * 0.15), 0, Math.PI * 2); ctx.fill();
     if (diet > 0.6) {
       ctx.strokeStyle = CREAM; ctx.lineWidth = Math.max(0.8, hr * 0.18);
       ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.75, hy + Math.sin(p.h) * hr * 0.75, hr * 0.35, p.h - 1.0, p.h + 1.0); ctx.stroke();
-    }
+    } }
     // breath: a warm-blooded animal's breath clouds in cold air
     if (endo > 0.5 && live && live.air != null) {
       const d = hAt(p.x, p.y) - (live.sea || 0);
@@ -515,11 +549,13 @@
   // ── the cabinet ──────────────────────────────────────────────────────
   function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
   function chrome(x0, y0, x1, y1) {
+    if (SK && SK.metal) return SK.metal(ctx, x0, y0, x1, y1);
     const g = ctx.createLinearGradient(x0, y0, x1, y1);
     g.addColorStop(0, '#f4f6f7'); g.addColorStop(0.25, '#9aa3aa'); g.addColorStop(0.5, '#eef1f3'); g.addColorStop(0.75, '#7d868e'); g.addColorStop(1, '#dfe4e7');
     return g;
   }
   function drawCabinet() {
+    if (SK && SK.cabinet) return SK.cabinet(ctx, L);
     const { cw, ch, u } = L;
     const g = ctx.createLinearGradient(0, 0, 0, ch);
     g.addColorStop(0, '#f6913a'); g.addColorStop(0.5, ORANGE); g.addColorStop(1, '#d9661a');
@@ -527,12 +563,14 @@
     ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = u * 0.004; rrect(u * 0.01, u * 0.01, cw - u * 0.02, ch - u * 0.02, u * 0.03); ctx.stroke();
   }
   function drawBezel() {
+    if (SK && SK.bezel) return SK.bezel(ctx, L);
     const { pf, u } = L, b = u * 0.012;
     ctx.lineWidth = b; ctx.strokeStyle = chrome(pf.x, pf.y, pf.x + pf.w, pf.y + pf.h);
     rrect(pf.x - b / 2, pf.y - b / 2, pf.w + b, pf.h + b, u * 0.018); ctx.stroke();
     ctx.lineWidth = u * 0.002; ctx.strokeStyle = INK; rrect(pf.x - b, pf.y - b, pf.w + 2 * b, pf.h + 2 * b, u * 0.022); ctx.stroke();
   }
   function drawRailAndDecals(t, night) {
+    if (SK && SK.frame) return SK.frame(ctx, L, t, night, !!(window.AlgoLysis && AlgoLysis.isDark()));
     const { pf, rail, u } = L;
     // the board outside the rail: a cream printed surface with corner fans
     ctx.save();
@@ -570,6 +608,7 @@
     ctx.restore();
   }
   function drawPins(night, t) {
+    if (SK && SK.pin) { for (const [x, y, onRail] of pins) if (!onRail) SK.pin(ctx, L.ox + x * L.s, L.oy + y * L.s, Math.max(2, 2.3 * L.s), night, t, x * 13 + y * 7); return; }
     const r = Math.max(2, 2.3 * L.s), R = L.rail;
     for (const [x, y, onRail] of pins) {
       const X = onRail ? R.cx + Math.cos(x) * R.r * y : L.ox + x * L.s, Y = onRail ? R.cy + Math.sin(x) * R.r * y : L.oy + y * L.s;
@@ -583,6 +622,7 @@
   function drawTray(strata, t) {
     const T = L.tray, u = L.u;
     // ribbed gold plate
+    if (SK && SK.tray) SK.tray(ctx, T, u); else {
     rrect(T.x, T.y, T.w, T.h, u * 0.02);
     const g = ctx.createLinearGradient(0, T.y, 0, T.y + T.h);
     g.addColorStop(0, '#ecd27a'); g.addColorStop(0.5, '#d8b447'); g.addColorStop(1, '#b8902c');
@@ -595,7 +635,7 @@
     for (const [sx, sy] of [[T.x + u * 0.02, T.y + u * 0.02], [T.x + T.w - u * 0.02, T.y + u * 0.02], [T.x + u * 0.02, T.y + T.h - u * 0.02], [T.x + T.w - u * 0.02, T.y + T.h - u * 0.02]]) {
       ctx.fillStyle = chrome(sx - 5, sy - 5, sx + 5, sy + 5); ctx.beginPath(); ctx.arc(sx, sy, u * 0.008, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = INK; ctx.lineWidth = u * 0.0015; ctx.stroke(); ctx.beginPath(); ctx.moveTo(sx - u * 0.005, sy); ctx.lineTo(sx + u * 0.005, sy); ctx.stroke();
-    }
+    } }
     // speaker grille
     const gx = T.x + u * 0.06, gy = T.y + T.h * 0.22, gs = T.h * 0.56;
     L.grille = { x: gx, y: gy, w: gs, h: gs };           // the speaker: touch it for sound
@@ -609,14 +649,15 @@
     const nx = gx + gs + u * 0.04, nw = T.w * 0.2, nh = T.h * 0.38, ny = T.y + T.h * 0.31;
     L.nameplate = { x: nx, y: ny, w: nw, h: nh };
     cv.dataset.plate = [nx, ny, nw, nh].map(v => Math.round(v / L.dpr)).join(',');
+    const plate = window.AlgoLysis && AlgoLysis.isDark() ? 'ALGOLYSIS' : 'ALGOGENESIS';
+    if (SK && SK.nameplate) SK.nameplate(ctx, nx, ny, nw, nh, plate, u); else {
     rrect(nx, ny, nw, nh, nh / 2); ctx.fillStyle = CREAM; ctx.fill(); ctx.lineWidth = u * 0.004; ctx.strokeStyle = INK; ctx.stroke();
     rrect(nx + u * 0.005, ny + u * 0.005, nw - u * 0.01, nh - u * 0.01, nh / 2); ctx.lineWidth = u * 0.0015; ctx.stroke();
     ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     let fs = nh * 0.5; ctx.font = `${fs}px Righteous, sans-serif`;
-    const plate = window.AlgoLysis && AlgoLysis.isDark() ? 'ALGOLYSIS' : 'ALGOGENESIS';
     while (ctx.measureText('ALGOGENESIS').width > nw * 0.84 && fs > 6) { fs -= 1; ctx.font = `${fs}px Righteous, sans-serif`; }
     ctx.fillText(plate, nx + nw / 2, ny + nh / 2 + fs * 0.05);
-    ctx.textBaseline = 'alphabetic';
+    ctx.textBaseline = 'alphabetic'; }
     // the fossil window: one column per epoch, the newest on the right
     const kl = keys.getBoundingClientRect().left * L.dpr;
     const wy = T.y + T.h * 0.18, wh = T.h * 0.64, gw = window.AlgoLysis ? wh * 1.35 : 0;
@@ -755,7 +796,7 @@
     const x = e.clientX * L.dpr, y = e.clientY * L.dpr, n = L.nameplate, f = L.fossilWin;
     if (n && x > n.x && x < n.x + n.w && y > n.y && y < n.y + n.h) {     // the pill: every panel, to switch between them
       if (!window.AlgoSwitch) return toggleCard('about');
-      return AlgoSwitch.toggle({ anchor: { x: n.x / L.dpr, y: n.y / L.dpr, w: n.w / L.dpr, h: n.h / L.dpr }, current: 'coast', onAbout: () => toggleCard('about') });
+      return AlgoSwitch.toggle({ anchor: { x: n.x / L.dpr, y: n.y / L.dpr, w: n.w / L.dpr, h: n.h / L.dpr }, current: SK ? SK.slug : 'coast', onAbout: () => toggleCard('about') });
     }
     const sg = L.grille;
     if (sg && window.AlgoSound && x > sg.x && x < sg.x + sg.w && y > sg.y && y < sg.y + sg.h) {
@@ -807,6 +848,7 @@
       const glowLayer = [];
       for (const o of [...animals.values()]) drawAnimal(o, now, t, smoothLight, glowLayer);
       drawFamilies(now);
+      if (SK && SK.surface) SK.surface(ctx, pf, t);
       drawRailAndDecals(t, night);
       if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
       drawGlow(glowLayer, smoothLight);
@@ -846,7 +888,7 @@
     for (const o of fungi.values()) { if (!o.dead && inView(o.x, o.y, o.reach * 1.6)) { AlgoLysis.warmMycelium(o.id, o.reach, L.s, o.look[3]); if (++n > 400) break; } }
   }, 1500);
   if (window.AlgoZoom) {                                 // pinch, wheel or double-tap to zoom; drag to look around
-    AlgoZoom.attach(cv, { key: 'coast', rect: () => L && L.pf ? { x: L.pf.x, y: L.pf.y, w: L.pf.w, h: L.pf.h, dpr: L.dpr } : null });
+    AlgoZoom.attach(cv, { key: SK ? 'coast-' + SK.id : 'coast', rect: () => L && L.pf ? { x: L.pf.x, y: L.pf.y, w: L.pf.w, h: L.pf.h, dpr: L.dpr } : null });
     AlgoZoom.onSettle(() => { try { buildRegion(); } catch (e) { terrReg = null; } });
   }
   if (window.AlgoLysis && AlgoLysis.attachSwipe)       // swipe the window left or right to turn the panel over

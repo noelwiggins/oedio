@@ -1,5 +1,5 @@
 {% extends "darwin/base.html" %}
-{% block title %}Algogenesis — DARWIN{% endblock %}
+{% block title %}{{ page_title or 'Algogenesis' }} — DARWIN{% endblock %}
 {% block head %}
 <style>
   .ag-frame { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 18px; overflow: hidden; background: #020407;
@@ -17,17 +17,28 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap">
 {% endblock %}
 {% block content %}
+{% if style == 'devotional' %}
+<p class="eyebrow">Algogenesis · Panel I · Devotional print</p>
+<h1 style="margin:0 0 6px">The Coast, as a devotional print</h1>
+<p class="lede">The same living coast, at the same moment, with the same creatures: drawn in the manner of the devotional prints
+made in India's studio presses between 1860 and 1930, the chromolithographs, hand-coloured lithographs and woodblocks of Calcutta,
+Poona, Bombay and Nathdwara. Jewel colours under varnish, gold, a cusped arch with its curtains drawn aside, lotus borders, and the
+stippled, outlined colour of a block print. Every animal and flower is still drawn from its own genes.</p>
+{% else %}
 <p class="eyebrow">Algogenesis · Panel I</p>
 <h1 style="margin:0 0 6px">A living world for a wall</h1>
 <p class="lede">A coast where flowers and animals evolve without a script: bodies, colours, patterns and light are all grown from genes,
 and they change only when evolution pays for the change. This is the first panel of an installation, running in the cloud
 for now; the same program is built to run on a computer behind a 4' × 6' screen.</p>
+{% endif %}
 
-<div class="ag-frame"><iframe id="panel" src="/darwin/algogenesis/panel" title="Algogenesis live panel" allow="fullscreen; screen-wake-lock"></iframe></div>
+<div class="ag-frame"><iframe id="panel" src="{{ panel_src or '/darwin/algogenesis/panel' }}" title="Algogenesis live panel" allow="fullscreen; screen-wake-lock"></iframe></div>
 <div class="ag-actions">
   <button class="btn" type="button" id="fsbtn">Full screen</button>
-  <a class="btn tonal" href="/darwin/algogenesis/panel" target="_blank" rel="noopener">Open the panel on its own</a>
-  <a class="btn tonal" href="/darwin/algogenesis/panel?quiet=1" target="_blank" rel="noopener">Without the keys</a>
+  <a class="btn tonal" href="{{ panel_src or '/darwin/algogenesis/panel' }}" target="_blank" rel="noopener">Open the panel on its own</a>
+  <a class="btn tonal" href="{{ panel_src or '/darwin/algogenesis/panel' }}?quiet=1" target="_blank" rel="noopener">Without the keys</a>
+  {% if style == 'devotional' %}<a class="btn tonal" href="/darwin/algogenesis/coast">The cabinet version</a>
+  {% else %}<a class="btn tonal" href="/darwin/algogenesis/devotional">As a devotional print</a>{% endif %}
 </div>
 
 <div class="ag-metrics">

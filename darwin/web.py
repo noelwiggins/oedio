@@ -340,6 +340,41 @@ def algo_page():
     return render_template("darwin/algogenesis.html")
 
 
+@bp.route("/algogenesis/devotional")
+def algo_page_devotional():
+    """The Coast again, the same world at the same moment, drawn as a devotional print."""
+    ensure_algo()
+    return render_template("darwin/algogenesis.html", style="devotional", panel_src="/darwin/algogenesis/devotional/panel",
+                           page_title="Algogenesis · Devotional")
+
+
+@bp.route("/algogenesis/devotional/panel")
+def algo_panel_devotional():
+    """The Coast panel with the devotional-print skin: the same panel file, with the skin and its font put in."""
+    ensure_algo()
+    html = open(ALGO_PANEL, encoding="utf-8").read().replace("__ALGO_API__", "/darwin/api/algo")
+    html = html.replace("<title>Algogenesis</title>", "<title>Algogenesis · Devotional</title>")
+    html = html.replace("family=Righteous&", "family=Righteous&family=Yatra+One&")
+    html = html.replace("</style>", DEVOTIONAL_CSS + "\n</style>", 1)
+    i = html.index('<script src="/static/darwin/algo/panel.js')
+    html = html[:i] + '<script src="/static/darwin/algo/skins/devotional.js?v=1"></script>\n' + html[i:]
+    r = make_response(html)
+    r.headers["Content-Type"] = "text/html; charset=utf-8"
+    return r
+
+
+# the keys and cards in gold and vermilion, lettered like the nameplate
+DEVOTIONAL_CSS = """
+  :root { --orange: #c8402a; --rim: #6e221d; --cream: #f4ead2; --ink: #231a1c; --gold: #d4a537; }
+  html, body { background: #3a110e; }
+  .key { background: radial-gradient(circle at 35% 30%, #fff3c4 0, #f3d27a 20%, #b8862a 55%, #f1d58a 72%, #8a5f16 100%); }
+  #card { border-color: #c8402a; box-shadow: 0 0 0 .35vmin #d4a537, 0 2vmin 5vmin rgba(0,0,0,.55); }
+  #card h2 { font-family: "Yatra One", serif; color: #6e221d; letter-spacing: .03em; }
+  #card .x { background: #d4a537; }
+  .veil { font-family: "Yatra One", serif; text-shadow: 0 2px 0 #6e221d; }
+"""
+
+
 @bp.route("/algogenesis/<slug>")
 def algo_world_page(slug):
     from .algogenesis.worlds import concept, world_class
