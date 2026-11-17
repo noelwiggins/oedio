@@ -319,35 +319,87 @@
     g.globalAlpha = a0;
   }
 
-  // ── a mushroom, in the decal style of the board ──────────────────────
-  // look = [hue, cap, size, glow, rate, cold, spore, tox, spots, hue2]
-  function mushroom(g, x, y, r, look, fruit, isDark, t) {
-    const [hue, capS, , glow, , , , tox, spots, hue2] = look;
+  // ── a mushroom, seen the way the board sees everything ─────────────────
+  // Light side: from above, like the flowers and animals: a round cap in a heavy ink line, a scalloped gill rim
+  // peeping out under it, a highlight, warning spots on the toxic ones. Dark side: from below, as if looking up
+  // through the soil: a dark disc of radiating gills lit in bone and phosphor, the stem a pale dot at the centre.
+  // look = [hue, cap, size, glow, rate, cold, spore, tox, spots, hue2]; st (optional) recolours it for a skin
+  function hsh(a, b) { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); }
+  function mushroom(g, x, y, r, look, fruit, isDark, t, st) {
+    const [hue, capS, , glow, , , spore, tox, spots, hue2] = look;
     const k = Math.max(0, Math.min(1, fruit)), R = r * (0.4 + 0.6 * k);
     if (R < 0.6) return;
-    const S = 30 + 55 * Math.min(1, 0.3 + tox * 0.8), Lt = 52 + 10 * (1 - capS);
-    const capCol = isDark ? `hsla(${hue * 360},60%,${30 + 40 * glow}%,1)` : `hsl(${hue * 360},${S}%,${Lt}%)`;
-    g.save(); g.translate(x, y);
-    if (glow > 0.3) {                                      // foxfire
-      const gr = g.createRadialGradient(0, -R * 0.4, 0, 0, -R * 0.4, R * (2 + 2 * glow));
-      gr.addColorStop(0, `rgba(125,255,176,${(isDark ? 0.55 : 0.25) * glow})`); gr.addColorStop(1, 'rgba(125,255,176,0)');
-      g.fillStyle = gr; g.beginPath(); g.arc(0, -R * 0.4, R * (2 + 2 * glow), 0, 7); g.fill();
-    }
-    g.lineWidth = Math.max(0.8, R * 0.13); g.strokeStyle = isDark ? '#0b0710' : INK; g.lineJoin = 'round';
-    // stem
-    g.fillStyle = isDark ? '#cfc2a8' : '#f4ead2';
-    g.beginPath(); g.roundRect ? g.roundRect(-R * 0.18, -R * 0.35, R * 0.36, R * 0.95, R * 0.12) : g.rect(-R * 0.18, -R * 0.35, R * 0.36, R * 0.95);
-    g.fill(); g.stroke();
-    // cap: flat and wide (0) to tall and conical (1)
-    const cw = R * (1.05 - 0.35 * capS), chh = R * (0.45 + 0.75 * capS);
-    g.fillStyle = capCol;
-    g.beginPath(); g.moveTo(-cw, -R * 0.3);
-    g.quadraticCurveTo(-cw * (0.9 - 0.5 * capS), -R * 0.3 - chh * 1.25, 0, -R * 0.3 - chh);
-    g.quadraticCurveTo(cw * (0.9 - 0.5 * capS), -R * 0.3 - chh * 1.25, cw, -R * 0.3);
-    g.closePath(); g.fill(); g.stroke();
-    if (spots > 0.45) {                                   // spots, the warning of the toxic ones
-      g.fillStyle = isDark ? 'rgba(232,220,196,0.8)' : `hsl(${hue2 * 360},40%,92%)`;
-      for (let i = 0; i < 4; i++) { g.beginPath(); g.arc((i - 1.5) * cw * 0.42, -R * 0.3 - chh * (0.35 + 0.25 * (i % 2)), R * 0.11, 0, 7); g.fill(); }
+    st = st || {};
+    const seed = hue * 97 + hue2 * 13, small = R < 3;
+    g.save(); g.translate(x, y); g.lineJoin = 'round'; g.lineCap = 'round';
+    if (!isDark) {
+      // earthy unless it is poisonous: the toxic ones wear bright warning colours
+      const S = 16 + 64 * Math.min(1, tox * 1.1), Lt = 50 + 14 * (1 - capS) - 8 * tox;
+      const cap = st.cap ? st.cap(hue, S, Lt) : `hsl(${hue * 360},${S}%,${Lt}%)`;
+      const gill = st.gill || `hsl(${hue2 * 360},${18 + 20 * tox}%,${82 - 6 * capS}%)`;
+      const ink = st.ink || INK, lw = Math.max(0.9, R * 0.17);
+      g.fillStyle = 'rgba(42,29,20,0.18)';                        // a soft shadow on the litter
+      g.beginPath(); g.ellipse(R * 0.16, R * 0.22, R * 1.02, R * 0.9, 0, 0, 7); g.fill();
+      if (glow > 0.3) {                                           // foxfire, faint by day
+        const gr = g.createRadialGradient(0, 0, R * 0.6, 0, 0, R * (1.8 + 1.4 * glow));
+        gr.addColorStop(0, `rgba(125,255,176,${0.22 * glow})`); gr.addColorStop(1, 'rgba(125,255,176,0)');
+        g.fillStyle = gr; g.beginPath(); g.arc(0, 0, R * (1.8 + 1.4 * glow), 0, 7); g.fill();
+      }
+      // the gill rim: a scalloped skirt just outside the cap
+      const nS = small ? 8 : 12;
+      g.fillStyle = gill; g.strokeStyle = ink; g.lineWidth = lw;
+      g.beginPath();
+      for (let q = 0; q < nS; q++) { const a = q / nS * 6.283; g.moveTo(Math.cos(a) * R * 1.02 + R * 0.2, Math.sin(a) * R * 1.02); g.arc(Math.cos(a) * R * 1.02, Math.sin(a) * R * 1.02, R * 0.2, 0, 7); }
+      g.stroke(); g.fill();
+      // the cap
+      g.fillStyle = cap; g.beginPath(); g.arc(0, 0, R, 0, 7); g.fill(); g.stroke();
+      if (st.ring) { g.strokeStyle = st.ring; g.lineWidth = lw * 0.6; g.beginPath(); g.arc(0, 0, R * 0.82, 0, 7); g.stroke(); }
+      // a domed or pointed cap shows its peak (umbo) as a darker eye at the centre; a flat one, gill lines through it
+      if (capS > 0.5) {
+        g.fillStyle = st.umbo || `hsl(${hue * 360},${S + 8}%,${Math.max(18, Lt - 22)}%)`;
+        g.beginPath(); g.arc(-R * 0.06, -R * 0.06, R * (0.22 + 0.2 * capS), 0, 7); g.fill();
+      } else if (!small) {
+        g.strokeStyle = st.lines || `hsla(${hue * 360},${S}%,${Lt - 20}%,0.5)`; g.lineWidth = Math.max(0.5, R * 0.06);
+        g.beginPath(); for (let q = 0; q < 10; q++) { const a = q / 10 * 6.283; g.moveTo(Math.cos(a) * R * 0.3, Math.sin(a) * R * 0.3); g.lineTo(Math.cos(a) * R * 0.86, Math.sin(a) * R * 0.86); } g.stroke();
+      }
+      // a cream highlight, the same one the animals wear
+      g.strokeStyle = st.shine || 'rgba(251,243,220,0.75)'; g.lineWidth = Math.max(0.7, R * 0.14);
+      g.beginPath(); g.arc(0, 0, R * 0.68, 3.5, 4.5); g.stroke();
+      if (spots > 0.45) {                                         // warts: the warning of the toxic ones
+        g.fillStyle = st.spot || '#fbf3dc'; g.strokeStyle = ink; g.lineWidth = Math.max(0.5, R * 0.05);
+        const ns = 4 + Math.round(spots * 4);
+        for (let q = 0; q < ns; q++) {
+          const a = hsh(seed, q) * 6.283, d = R * (0.3 + 0.45 * hsh(q, seed)), rr = R * (0.08 + 0.07 * hsh(q + 3, seed));
+          g.beginPath(); g.arc(Math.cos(a) * d, Math.sin(a) * d, rr, 0, 7); g.fill(); if (!small) g.stroke();
+        }
+      }
+    } else {
+      // from below: gills radiating from the stem, lit by the colony's own glow; spores drift off the edge
+      const pulse = 0.75 + 0.25 * Math.sin(t * 1.3 + seed), lit = 0.35 + 0.65 * Math.max(glow, 0.25);
+      const halo = g.createRadialGradient(0, 0, R * 0.5, 0, 0, R * 1.9);
+      halo.addColorStop(0, `rgba(125,255,176,${0.4 * lit * pulse})`); halo.addColorStop(1, 'rgba(125,255,176,0)');
+      g.fillStyle = halo; g.beginPath(); g.arc(0, 0, R * 1.9, 0, 7); g.fill();
+      // a translucent veil of gill tissue, tinted by the colony, so the threads behind show through
+      const veil = g.createRadialGradient(0, 0, R * 0.15, 0, 0, R);
+      veil.addColorStop(0, `hsla(${hue * 360},45%,${42 + 14 * glow}%,0.55)`); veil.addColorStop(1, `hsla(${hue * 360},40%,${24 + 10 * glow}%,0.35)`);
+      g.fillStyle = veil; g.beginPath(); g.arc(0, 0, R, 0, 7); g.fill();
+      const ng = small ? 12 : 22;
+      g.strokeStyle = `rgba(214,255,226,${0.45 + 0.45 * lit * pulse})`; g.lineWidth = Math.max(0.45, R * 0.05);
+      g.beginPath();
+      for (let q = 0; q < ng; q++) { const a = q / ng * 6.283, l = q % 2 ? 0.62 : 0.32; g.moveTo(Math.cos(a) * R * l, Math.sin(a) * R * l); g.lineTo(Math.cos(a) * R * 0.95, Math.sin(a) * R * 0.95); }
+      g.stroke();
+      g.strokeStyle = `rgba(232,220,196,${0.55 * lit * pulse + 0.3})`; g.lineWidth = Math.max(0.6, R * 0.08);
+      g.beginPath(); g.arc(0, 0, R, 0, 7); g.stroke();
+      g.fillStyle = PAL.bone; g.beginPath(); g.arc(0, 0, R * 0.2, 0, 7); g.fill();
+      g.fillStyle = `hsl(${hue2 * 360},40%,35%)`; g.beginPath(); g.arc(0, 0, R * 0.09, 0, 7); g.fill();
+      if (!small && spore > 0.2) {                                 // spores falling away from the rim
+        g.fillStyle = `rgba(232,220,196,${0.5 * pulse})`;
+        for (let q = 0; q < 6; q++) {
+          const a = hsh(seed, q) * 6.283, ph = ((t * 0.25 + hsh(q, seed)) % 1), d = R * (1.05 + 0.9 * ph);
+          g.globalAlpha = (1 - ph); g.beginPath(); g.arc(Math.cos(a) * d, Math.sin(a) * d, Math.max(0.5, R * 0.05), 0, 7); g.fill();
+        }
+        g.globalAlpha = 1;
+      }
     }
     g.restore();
   }

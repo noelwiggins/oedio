@@ -38,6 +38,14 @@ def describe_look(look):
         parts.append("luminous at night")
     if k["crest"] > 0.4:
         parts.append("crested")
+    if k.get("eyes", 0) > 0.5:
+        parts.append("sharp-eyed")
+    if k.get("shell", 0) > 0.4:
+        parts.append("armoured in plates")
+    if k.get("wings", 0) > 0.5:
+        parts.append("winged, gliding")
+    if k.get("regions", 0) > 0.5:
+        parts.append("body divided into head, thorax and abdomen")
     parts.append("swimmer" if k["fin"] > 0.6 else "walker" if k["fin"] < 0.4 else "amphibious")
     parts.append("drinks nectar" if k["diet"] < 0.35 else "hunts" if k["diet"] > 0.6 else "grazes and scavenges")
     return ", ".join(parts)
@@ -55,7 +63,7 @@ def facts_for_epoch(world: E.World, prev_stats: dict | None, since_tick: int) ->
     ev = [e for e in world.events if e["tick"] > since_tick]
     keys = ["animals", "plants", "animal_species", "plant_species", "complexity_mean", "complexity_max", "glow_mean",
             "colour_mean", "choosy_mean", "predators", "pollinators", "on_land", "mean_generation", "care_mean",
-            "families", "young"]
+            "families", "young", "eyes", "shelled", "winged", "regioned", "complexity_record"]
     change = {}
     if prev_stats:
         for k in keys:

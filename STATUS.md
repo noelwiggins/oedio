@@ -1,6 +1,6 @@
 # Oedio STATUS — Library of Alexandria
 
-Last updated: 2026-10-14
+Last updated: 2026-11-17
 
 ## Mobile app (2026-10-29)
 Phones get static/m/ (index.html, m.css, m.js) at "/" (UA check in app.py); "Full site" sets cookie oedio_view=full
@@ -25,6 +25,26 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 /static/*?v= assets are now immutable for a year. Pool view holds its first frame while the page turns.
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
+
+## EVOLUTION ENGINES — complexity that keeps (2026-11-17)
+Tidal Pool (darwin/pool.py): restarts had climbed to ~50/day; after each crash the 24 banked refugia lineages kept dying
+(often hunters with no photo cells) so one crash became 5–15 restarts, each wiping complexity. Now:
+- Resting eggs: 4% of dying adults leave a cyst (self.cysts, max 400, viable 400k ticks). While < HATCH_POP (90) alive,
+  cysts hatch where N ≥ 1.5 (1/tick, 3/tick under 45); under 4 alive 40 hatch at once ("near-extinction · N resting
+  eggs hatch", not counted as a restart). Old refugia path only if no cysts. Stats: cysts, hatched.
+- Disease transmission × min(1, n/260): epidemics fade when hosts are scarce.
+- Deep-water nutrient exchange 0.003 → 0.005; refugia reseed producers first (≥ 2/3 with photo cells).
+- Shock test (work/poolstress.py: kill 99.5%, N×0.25, cold spell): old → restart; new → 0 restarts, recovers via cysts.
+Coast (engine.py, algogenesis-1.4): NG 23 → 27, four organs appended: EYES (threat range, prey spotting in poor light),
+SHELL (bite defence ×(1+1.3s), speed ÷(1+0.45s)), WING (on land glide: +speed, escape ×(1+1.2), walkers cross water),
+SPEC (regions: jaws att ×(1+0.6r), gut +30%; needs ≥ 3 segments). SEGS max 9 → 12, LIMBS 4 → 6. Each costs upkeep.
+Old worlds migrate with 0.05 traces. _look gains 4 values (frame animal rows now 25 long; look[14..17]). Complexity
+counts organs (+2 eyes, +1 shell, +2 wings, +2 regions); complexity_record = best ever; stats eyes/shelled/winged/regioned.
+panel.js organsUnder/organsOver draw them (skins can recolour via SK.organs). Chronicle describes them.
+Mushrooms (lysis.js mushroom): light side seen from above like flowers (ink-lined cap, scalloped gill rim, umbo or gill
+lines, warning warts, earthy unless toxic); dark side seen from below (translucent veil of glowing gills, spores drifting).
+Troops drawn top-down in panel.js; SK.mushroom recolours for the devotional skin.
+Other 12 worlds (history checked): most have reached their ceilings — see the reply of 2026-11-17 for the upgrade plan.
 
 ## Switcher list inside pages (2026-11-17)
 When a panel is embedded (Coast page, concept pages), AlgoSwitch builds its list in the host page (same origin) with

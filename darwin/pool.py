@@ -109,6 +109,15 @@ JC_FREE = 0.15
 BANK_MAX = 48
 BANK_SEED = 24             # banked lineages that recolonise after a near-extinction
 NW = IN * H + H + H * OUT + OUT
+# Resting eggs (cysts): a few of the creatures that die leave a dormant cyst in the sediment, the way copepods,
+# rotifers and brine shrimp do. Cysts are recent lineages, so when the living population slumps they hatch where
+# the water has nutrient again and the pool picks up where it was, instead of recolonising from the old refugia.
+CYST_MAX = 400
+CYST_P = 0.04              # chance a dying creature leaves a cyst
+CYST_LIFE = 400_000        # ticks a cyst stays viable
+HATCH_POP = 90             # cysts hatch while fewer than this many creatures are alive
+HATCH_N = 1.5              # ...and only where the water has at least this much dissolved nutrient
+DISEASE_HOSTS = 260        # epidemics need hosts: below this population, transmission falls off
 
 
 # ── genomes and development ──────────────────────────────────────────────
@@ -301,6 +310,8 @@ class Pool:
         self.milestones = {}
         self.ms_streak = {}
         self.events = []        # catastrophes etc., kept in state for the timeline
+        self.cysts = []         # resting eggs: [genome, x, y, species, gen, tl, tick]
+        self.hatched = 0
         self.last_stats = None
         for _ in range(START):
             self._spawn(new_genome(self.rng), _water_x(self.rng), self.rng.uniform(0, ARENA), 0, None, 6.0)
@@ -414,12 +425,55 @@ class Pool:
         gy = (self.y[idx] / CELL).astype(int) % GRID
         np.add.at(self.D, (gy, gx), np.maximum(self.energy[idx], 0) + 2.0 * self.n[idx])
         np.add.at(self.N, (gy, gx), 0.8 * self.n[idx])
+        self._encyst(idx)
         self.alive[idx] = False
         for i in idx:
             self.genomes[int(i)] = None
         self.deaths += len(idx)
 
     # ── environment ───────────────────────────────────────────────────
+    def _encyst(self, idx):
+        cy = getattr(self, "cysts", None)
+        if cy is None:
+            cy = self.cysts = []
+        pick = idx[(self.rng.random(len(idx)) < CYST_P) & (self.age[idx] >= MIN_AGE)]
+        for i in pick.tolist():
+            g = self.genomes[i]
+            if g is not None:
+                cy.append([g, float(self.x[i]), float(self.y[i]), int(self.species[i]), int(self.gen[i]),
+                           float(self.tl[i]), int(self.tick)])
+        if len(cy) > CYST_MAX:
+            del cy[:len(cy) - CYST_MAX]
+
+    def _hatch(self, k, need_n=True):
+        """Wake up to k resting eggs, newest lineages first among those lying in water with nutrient."""
+        cy = getattr(self, "cysts", None) or []
+        t = self.tick
+        cy[:] = [c for c in cy if t - c[6] < CYST_LIFE]
+        if not cy or k <= 0:
+            return 0
+        order = list(range(len(cy) - 1, -1, -1))
+        if len(order) > 3 * k:                       # a random sample, weighted to the recent end
+            w = np.linspace(0.3, 1.0, len(cy))[::-1]
+            order = [int(j) for j in self.rng.choice(len(cy), size=3 * k, replace=False, p=w / w.sum())]
+        done, used = 0, []
+        for j in order:
+            if done >= k:
+                break
+            g, x, y, sid, gen, tl, _ = cy[j]
+            if need_n and self.N[int(y / CELL) % GRID, int(x / CELL) % GRID_X] < HATCH_N:
+                continue
+            i = self._spawn(g, x + self.rng.normal(0, 1), y + self.rng.normal(0, 1), gen, sid, 0.0, tl)
+            if i is None:
+                break
+            self.energy[i] = 0.6 * self.emax[i]
+            used.append(j)
+            done += 1
+        for j in sorted(used, reverse=True):
+            del cy[j]
+        self.hatched = getattr(self, "hatched", 0) + done
+        return done
+
     def tide(self, t=None):
         """0 = low water, 1 = high water."""
         t = self.tick if t is None else t
@@ -534,7 +588,7 @@ class Pool:
             decay = 0.01 * D
             self.D = D - decay
             self.N += decay * 0.8
-            self.N += 0.003 * (_N_TARGET - self.N)   # exchange with deep water: richer in the open sea
+            self.N += 0.005 * (_N_TARGET - self.N)   # exchange with deep water: richer in the open sea
             self.D = 0.8 * self.D + 0.05 * (np.roll(self.D, 1, 0) + np.roll(self.D, -1, 0) + np.roll(self.D, 1, 1) + np.roll(self.D, -1, 1))
             # marine snow: a little of the open sea's dead matter sinks down the slope into the deep
             s0, s1 = SEA * GRID_X // BASINS, SHALLOWS * GRID_X // BASINS
@@ -550,6 +604,14 @@ class Pool:
             self._climate()
         self._fields()
         a = np.flatnonzero(self.alive)
+        if len(a) < HATCH_POP and getattr(self, "cysts", None):
+            woke = self._hatch(40 if len(a) < 4 else (3 if len(a) < HATCH_POP // 2 else 1), need_n=len(a) >= 4)
+            if woke and len(a) < 4:
+                ev = {"tick": int(t), "kind": f"near-extinction · {woke} resting eggs hatch", "severity": 0.6,
+                      "killed": 0, "geo_ma": self.geo_ma()}
+                self.events.append(ev)
+                self.events = self.events[-200:]
+            a = np.flatnonzero(self.alive)
         if len(a) < 4:
             refuge = self._recolonise()
             for _ in range(30 - refuge if refuge < 20 else 10):
@@ -587,7 +649,7 @@ class Pool:
         sus = self.sus[a]
         load = np.zeros((GRID // 2, GRID_X // 2), np.float32)
         np.add.at(load, (sy, sx), sus)
-        sick = 1.0 + 0.5 * sus * np.minimum(np.maximum(load[sy, sx] - sus, 0.0) / 2.0, 1.5)   # infection needs other hosts nearby
+        sick = 1.0 + 0.5 * sus * np.minimum(np.maximum(load[sy, sx] - sus, 0.0) / 2.0, 1.5) * min(1.0, n / DISEASE_HOSTS)   # infection needs other hosts nearby
         _, sp_inv, sp_cnt = np.unique(self.species[a], return_inverse=True, return_counts=True)
         jc = 1.0 + JC * np.maximum(0.0, sp_cnt[sp_inv] / n - JC_FREE)   # specialist enemies of the commonest species
 
@@ -873,7 +935,11 @@ class Pool:
         if not bank:
             return 0
         rng = self.rng
-        pick = rng.permutation(len(bank))[:BANK_SEED]
+        # producers first: a food web has to be rebuilt from the bottom, or the hunters starve again
+        green = [k for k in range(len(bank)) if any(c[2] == PHOTO for c in bank[k]["g"]["body"])]
+        other = [k for k in range(len(bank)) if k not in set(green)]
+        rng.shuffle(green); rng.shuffle(other)
+        pick = (green[:max(BANK_SEED * 2 // 3, BANK_SEED - len(other))] + other)[:BANK_SEED]
         n = 0
         for k in pick:
             g = mutate(bank[int(k)]["g"], rng)
@@ -926,7 +992,7 @@ class Pool:
         glen = np.array([len(self.genomes[i]["body"]) for i in a])
         out.update({
             "mean_generation": round(float(self.gen[a].mean()), 2), "max_generation": int(self.gen[a].max()),
-            "geo_ma": self.geo_ma(), "clock_generations": round(self.clock_gen, 1), "restarts": self.restarts,
+            "geo_ma": self.geo_ma(), "clock_generations": round(self.clock_gen, 1), "restarts": self.restarts, "cysts": len(getattr(self, "cysts", []) or []), "hatched": int(getattr(self, "hatched", 0)),
             "cells_mean": round(float(ncell.mean()), 3), "cells_max": int(ncell.max()),
             "cells_p90": float(np.percentile(ncell, 90)),
             "types_max": int(types.max()), "types_mean": round(float(types.mean()), 3),
@@ -1118,6 +1184,8 @@ def from_blob(b: bytes) -> Pool:
     if not hasattr(p, "seedbank"):             # Nov 10: Janzen-Connell enemies and refugia
         p.seedbank = []
         p._bank()
+    if not hasattr(p, "cysts"):                # Nov 17: resting eggs
+        p.cysts, p.hatched = [], 0
     if not hasattr(p, "bank"):
         p.bank, p.seg_peak = _clock_from_history(p.era)
         p.clock_gen = p.bank + p.seg_peak

@@ -36,7 +36,7 @@ import numpy as np
 from .dials import D, DialsMixin, mult
 from .fungi import FungiMixin, _mlook, fungus_name, M_HUE, M_CAP, M_TOX, M_GLOW, M_COLD, M_RATE, M_SIZE, MLOOK_KEYS
 
-VERSION = "algogenesis-1.3"
+VERSION = "algogenesis-1.4"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
 DAY = 2400                        # ticks per day (about two minutes at 20 ticks/s)
@@ -51,13 +51,21 @@ MATURE = 700                      # ticks until an animal is grown: before that 
 
 # animal genes
 (HUE, SAT, HUE2, PATTERN, GLOW, SEGS, LIMBS, SIZE, TAIL, CREST, FIN, DIET,
- PREF_FLOWER, PREF_MATE, CHOOSY, W_FOOD, W_FLEE, W_MATE, WANDER, REPRO, CARE, ENDO, INSUL) = range(23)
-NG = 23
+ PREF_FLOWER, PREF_MATE, CHOOSY, W_FOOD, W_FLEE, W_MATE, WANDER, REPRO, CARE, ENDO, INSUL,
+ EYES, SHELL, WING, SPEC) = range(27)
+NG = 27
+# Nov 17, the open kit: four organs that can evolve from nothing, each with a job and a price.
+#   EYES  sharp eyes: hunters spot prey further off and in poor light; prey see hunters coming
+#   SHELL armour plates: hard to bite, heavy to carry
+#   WING  wings: on land, a glide that outruns hunters and lets walkers cross water
+#   SPEC  a body in regions (head, thorax, abdomen): jaws for the hunter, a better gut for the grazer;
+#         only works on bodies of three or more segments
+ORGANS = (EYES, SHELL, WING, SPEC)
 CIRC = {HUE, HUE2, PREF_FLOWER, PREF_MATE}
-LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45, 0, 0, 0], np.float32)
-HI = np.array([1, 1, 1, 1, 1, 9, 4, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1, 1, 1], np.float32)
+LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45, 0, 0, 0, 0, 0, 0, 0], np.float32)
+HI = np.array([1, 1, 1, 1, 1, 12, 6, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1, 1, 1, 1, 1, 1, 1], np.float32)
 STEP = np.array([.03, .04, .04, .06, .04, .35, .25, .08, .05, .05, .05, .04, .03, .03, .04, .15, .15, .15, .05, .02,
-                 .04, .04, .05], np.float32)
+                 .04, .04, .05, .05, .05, .05, .05], np.float32)
 # plant genes
 P_HUE, P_PETALS, P_SIZE, P_NECTAR, P_HEIGHT, P_SAT, P_HUE2, P_COLD = range(8)
 NPG = 8
@@ -426,6 +434,9 @@ class World(DialsMixin, FungiMixin):
         act = np.where(has_par & (pdist < 20), np.maximum(act, self.G[pidx, ENDO] * (0.4 + 0.6 * pcare)), act)
         herb = np.clip(1 - G[:, DIET] * 1.4, 0, 1)
         meat = np.clip((G[:, DIET] - 0.3) / 0.7, 0, 1)
+        eyes, shell, wing = G[:, EYES], G[:, SHELL], G[:, WING]
+        regions = G[:, SPEC] * np.clip((G[:, SEGS] - 2) / 3, 0, 1)       # regions need segments to divide
+        aloft = (~(self.height(x, y) - self.sea < 0)) * np.clip((wing - 0.35) / 0.4, 0, 1)   # gliding needs air under it
         emax = 18.0 * G[:, SIZE] * np.sqrt(G[:, SEGS])
         efrac = self.fe[F] / emax
         display = consp * vig * np.clip(efrac, 0.2, 1)     # only an animal in good condition can put on a show
@@ -438,9 +449,11 @@ class World(DialsMixin, FungiMixin):
         validF = iF < n
         iF = np.where(validF, iF, 0)
         # threats: anything that eats meat, is bigger, and is close; prey: smaller, and seen
-        threat = validF & (meat[iF] > 0.2) & (size[iF] > 0.8 * size[:, None])
+        # the blind notice a hunter only when it is close; sharp eyes see it coming across the whole sense range
+        threat = validF & (meat[iF] > 0.2) & (size[iF] > 0.8 * size[:, None]) & (dF < SENSE * (0.4 + 0.6 * eyes[:, None]))
+        seen = (0.35 + 0.65 * consp[iF]) * (0.55 + 0.45 * light + 0.45 * eyes[:, None] * (1 - 0.4 * light))
         prey = validF & (meat[:, None] > 0.2) & (size[iF] < 1.25 * size[:, None]) & \
-            (rng.random(dF.shape) < 0.35 + 0.65 * consp[iF]) & (self.fsp[F][iF] != self.fsp[F][:, None]) & \
+            (rng.random(dF.shape) < seen) & (self.fsp[F][iF] != self.fsp[F][:, None]) & \
             (_hd(G[iF, HUE], G[:, HUE][:, None]) > 0.07)          # kin, known by colour, are not hunted
 
         def nearest(mask):
@@ -494,7 +507,7 @@ class World(DialsMixin, FungiMixin):
               + G[:, WANDER] * np.sin(hd) + 2.5 * pcare * fy_par)
         # swimmers keep to the water, walkers to the land
         h_ahead = self.height(x + 12 * np.cos(hd), y + 12 * np.sin(hd)) - self.sea
-        wrong = np.where(G[:, FIN] > 0.5, h_ahead > 0.02, h_ahead < -0.02)
+        wrong = np.where(G[:, FIN] > 0.5, h_ahead > 0.02, (h_ahead < -0.02) & (wing < 0.6))   # gliders cross water
         vx -= 0.6 * wrong * np.cos(hd)
         vy -= 0.6 * wrong * np.sin(hd)
         want = np.arctan2(vy, vx)
@@ -502,8 +515,9 @@ class World(DialsMixin, FungiMixin):
         hd = (hd + np.clip(turn, -0.25, 0.25) + rng.normal(0, 0.06, n)) % (2 * math.pi)
         sp_water = (0.35 + 1.1 * G[:, FIN] * (0.5 + 0.5 * G[:, TAIL]))
         sp_land = (0.15 + 0.32 * G[:, LIMBS] * (1 - 0.7 * G[:, FIN]))
+        sp_land = sp_land + 0.9 * aloft                     # a glide outruns any walker
         speed = np.where(water, sp_water, sp_land) / np.sqrt(G[:, SIZE]) * (0.6 + 0.4 * grown) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
-        speed = speed * (0.3 + 0.7 * act)
+        speed = speed * (0.3 + 0.7 * act) / (1 + 0.45 * shell)    # plates are heavy
         nx, ny = x + speed * np.cos(hd), y + speed * np.sin(hd)
         bounce_x = (nx < 2) | (nx > W - 2)
         bounce_y = (ny < 2) | (ny > H - 2)
@@ -516,7 +530,8 @@ class World(DialsMixin, FungiMixin):
         jc = 1 + JC * np.maximum(0, cnt[inv] / n - JC_FREE)
         cost = (0.003 * G[:, SIZE] ** 0.75 * np.sqrt(G[:, SEGS]) + 0.009 * G[:, GLOW] * (1 - light)
                 + 0.0012 * G[:, SAT] + 0.0018 * G[:, CREST] + 0.0012 * G[:, LIMBS] + 0.0009 * G[:, CHOOSY]
-                + 0.0015 * speed * G[:, SIZE]) * grown
+                + 0.0015 * speed * G[:, SIZE]
+                + 0.0005 * eyes + 0.0007 * shell * G[:, SIZE] + 0.0008 * wing * G[:, SIZE] + 0.0002 * regions * G[:, SEGS]) * grown
         # the price of warmth: a warm body burns far more, and loses heat to cold air (water steals it twice as fast,
         # small bodies faster than big ones) unless it is insulated; a coat overheats in summer
         bulk = np.cbrt(G[:, SIZE] * np.sqrt(G[:, SEGS]))
@@ -524,7 +539,8 @@ class World(DialsMixin, FungiMixin):
         heat = 0.003 * Eg * np.maximum(0, 30 - Tamb) / 30 * (1 - 0.85 * Ig) * (1 + water) / bulk
         hot = 0.002 * Ig * np.maximum(0, Tamb - 21) / 10 + 0.0004 * Ig
         cost = (cost * metab + (heat + hot) * grown) * jc / vig / mult(self.dial("fauna"), 1.5) * \
-            (1 + 0.8 * np.where(water, 1 - G[:, FIN], G[:, FIN] * (G[:, LIMBS] < 1)))
+            (1 + 0.8 * np.where(water, (1 - G[:, FIN]) * (1 - 0.6 * np.clip((wing - 0.35) / 0.4, 0, 1)),   # a glider skims the water
+                                G[:, FIN] * (G[:, LIMBS] < 1)))
         self.fe[F] -= cost
         # the young of cold-blooded animals develop with the warmth (degree-days); warm young grow at their own pace
         young = self.fage[F] < MATURE
@@ -548,7 +564,7 @@ class World(DialsMixin, FungiMixin):
                     continue
                 take = min(float(self.pnec[pi]), 1.2 * float(herb[a]) * (1 + 0.6 * float(Eg[a])))   # warm bodies feed faster
                 self.pnec[pi] -= take
-                self.fe[i] = min(self.fe[i] + 4.0 * take * (0.25 + 0.75 * act[a]), emax[a])
+                self.fe[i] = min(self.fe[i] + 4.0 * take * (0.25 + 0.75 * act[a]) * (1 + 0.3 * regions[a]), emax[a])
                 if take < 0.05 and herb[a] > 0.5 and efrac[a] < 0.5:     # no nectar: graze the leaves
                     bite = min(max(float(self.pe[pi]) - 1.5, 0.0), 0.08 * float(G[a, SIZE]))
                     self.pe[pi] -= bite
@@ -574,7 +590,7 @@ class World(DialsMixin, FungiMixin):
                         continue
                     self.plank[cy[k], cx[k]] -= bite
                     i = int(F[a])
-                    self.fe[i] = min(self.fe[i] + 3.0 * bite * (0.25 + 0.75 * float(act[a])), emax[a])
+                    self.fe[i] = min(self.fe[i] + 3.0 * bite * (0.25 + 0.75 * float(act[a])) * (1 + 0.3 * float(regions[a])), emax[a])
 
         # scavengers: anything with a taste for meat eats the dead where it finds them
         if t % 4 == 0:
@@ -603,8 +619,8 @@ class World(DialsMixin, FungiMixin):
                 b = int(jp[a])
                 if b in taken or a in taken:
                     continue
-                att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a] * (0.4 + 0.6 * act[a])
-                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b])      # the cold and sluggish are easy to catch
+                att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a] * (0.4 + 0.6 * act[a]) * (1 + 0.6 * regions[a])   # jaws
+                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b]) * (1 + 1.3 * shell[b]) * (1 + 1.2 * aloft[b])
                 if has_par[b] and pdist[b] < 25:      # a parent stands over its young
                     dfn += 2.0 * float(pcare[b]) * float(self.G[pidx[b], SIZE] * np.sqrt(self.G[pidx[b], SEGS]))
                 if rng.random() < att / (att + dfn):
@@ -916,8 +932,11 @@ class World(DialsMixin, FungiMixin):
             sp, cnt = np.unique(self.fsp[F], return_counts=True)
             p = cnt / cnt.sum()
             # body complexity: distinct structures, a rough count of parts
+            reg = G[:, SPEC] * np.clip((G[:, SEGS] - 2) / 3, 0, 1)
             parts = G[:, SEGS] + 2 * G[:, LIMBS] + (G[:, TAIL] > 0.5) + (G[:, CREST] > 0.4) + (G[:, GLOW] > 0.3) + \
-                (G[:, SAT] > 0.5) + (G[:, PATTERN] > 0.33)
+                (G[:, SAT] > 0.5) + (G[:, PATTERN] > 0.33) + 2 * (G[:, EYES] > 0.5) + (G[:, SHELL] > 0.4) + \
+                2 * (G[:, WING] > 0.5) + 2 * (reg > 0.5)
+            self.cx_record = max(float(getattr(self, "cx_record", 0.0)), float(parts.max()))
             out.update({
                 "animal_species": int(len(sp)), "animal_species_eff": round(float(1 / (p * p).sum()), 2),
                 "complexity_mean": round(float(parts.mean()), 2), "complexity_max": round(float(parts.max()), 2),
@@ -933,6 +952,9 @@ class World(DialsMixin, FungiMixin):
                 "families": int(((self.fpar[F] >= 0) & (self.fage[F] < MATURE)).sum()),
                 "warm_blooded": round(float((G[:, ENDO] > 0.5).mean()), 3), "endo_mean": round(float(G[:, ENDO].mean()), 3),
                 "insul_mean": round(float(G[:, INSUL].mean()), 3),
+                "eyes": round(float((G[:, EYES] > 0.5).mean()), 3), "shelled": round(float((G[:, SHELL] > 0.4).mean()), 3),
+                "winged": round(float((G[:, WING] > 0.5).mean()), 3), "regioned": round(float((reg > 0.5).mean()), 3),
+                "complexity_record": round(self.cx_record, 2),
                 "in_sea": int((self.height(self.fx[F], self.fy[F]) - self.sea < 0).sum()),
                 "scavengers": round(float(((G[:, DIET] > 0.32) & (G[:, DIET] <= 0.6)).mean()), 3),
             })
@@ -988,6 +1010,7 @@ class World(DialsMixin, FungiMixin):
 
     def immigrate(self, packet):
         for g in packet.get("animals", [])[:4]:
+            g = list(g)[:NG] + [0.05] * max(0, NG - len(g))
             x, y = self._water_spot()
             self._spawn_animal(_clip(np.array(g, np.float32), LO, HI, CIRC), x, y, 0, None, 12.0)
         for g in packet.get("plants", [])[:4]:
@@ -1003,7 +1026,9 @@ def _look(g):
     return [round(float(g[HUE]), 3), round(float(g[SAT]), 2), round(float(g[HUE2]), 3), round(float(g[PATTERN]), 2),
             round(float(g[GLOW]), 2), int(round(float(g[SEGS]))), int(round(float(g[LIMBS]))), round(float(g[SIZE]), 2),
             round(float(g[TAIL]), 2), round(float(g[CREST]), 2), round(float(g[FIN]), 2), round(float(g[DIET]), 2),
-            round(float(g[ENDO]), 2), round(float(g[INSUL]), 2)]
+            round(float(g[ENDO]), 2), round(float(g[INSUL]), 2),
+            round(float(g[EYES]), 2), round(float(g[SHELL]), 2), round(float(g[WING]), 2),
+            round(float(g[SPEC]) * min(1.0, max(0.0, (float(g[SEGS]) - 2) / 3)), 2)]
 
 
 def _plook(g):
@@ -1023,7 +1048,8 @@ def zone_name(d):
     return ZONES[-1][1]
 
 
-LOOK_KEYS = ["hue", "sat", "hue2", "pattern", "glow", "segs", "limbs", "size", "tail", "crest", "fin", "diet", "endo", "insul"]
+LOOK_KEYS = ["hue", "sat", "hue2", "pattern", "glow", "segs", "limbs", "size", "tail", "crest", "fin", "diet", "endo", "insul",
+             "eyes", "shell", "wings", "regions"]
 
 _SYL = ["la", "mi", "or", "ve", "sa", "lu", "ten", "ca", "ri", "no", "phe", "ly", "ae", "zo", "qui", "ar", "el", "thy"]
 _ROOT_A = ["Lumin", "Chrom", "Vel", "Pisc", "Ambul", "Pteryg", "Lept", "Nect"]
@@ -1058,7 +1084,7 @@ def to_bytes(w: World) -> bytes:
 
 def from_bytes(b: bytes) -> World:
     w = pickle.loads(zlib.decompress(b))
-    if w.G.shape[1] < NG:                     # v1.0 worlds: add the care gene (a little care, so it can evolve)
+    if w.G.shape[1] < NG:                     # older worlds: new genes start as a trace, so they can evolve
         pad = np.full((w.G.shape[0], NG - w.G.shape[1]), 0.05, np.float32)
         w.G = np.concatenate([w.G, pad], 1)
         for e in w.bank:

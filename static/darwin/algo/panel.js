@@ -315,11 +315,12 @@
       if (o.dead) { if (now - o.dead > 2000) fungi.delete(o.id); continue; }
       const f = fruitOf(o, now); o.fruit = f;
       if (f < 0.04 || !inView(o.x, o.y, 40)) continue;
-      const n = 1 + Math.round(o.look[2] * 2), base = (6 + 5 * o.look[2]) * L.s;
-      for (let k = 0; k < n; k++) {
-        const a = (o.id * 2.4 + k * 2.1) % 6.283, d = k ? (5 + 4 * k) * L.s : 0;
-        const sx = L.ox + o.x * L.s + Math.cos(a) * d, sy = L.oy + o.y * L.s + Math.sin(a) * d * 0.6;
-        AlgoLysis.mushroom(ctx, sx, sy, base * (k ? 0.72 : 1), o.look, f, isDark, t);
+      // a little troop seen from above: the elder cap in the middle, younger ones around it, the small drawn first
+      const n = 1 + Math.round(o.look[2] * 3), base = (3.6 + 2.8 * o.look[2]) * L.s, st = SK && SK.mushroom;
+      for (let k = n - 1; k >= 0; k--) {
+        const a = (o.id * 2.4 + k * 2.3) % 6.283, d = k ? (3.2 + 2.6 * k) * L.s : 0;
+        const sx = L.ox + o.x * L.s + Math.cos(a) * d, sy = L.oy + o.y * L.s + Math.sin(a) * d;
+        AlgoLysis.mushroom(ctx, sx, sy, base * (k ? 0.62 - 0.06 * k : 1), o.look, f, isDark, t, st);
       }
     }
   }
@@ -408,6 +409,74 @@
     }
     return { p, pts, r0, ph, X, Y };
   }
+
+  // ── organs that evolve from nothing (Nov 17): wings under the body; plates, jaws and sharp eyes over it ──
+  // look[14] eyes, look[15] shell, look[16] wings, look[17] regions (head, thorax, abdomen)
+  const ORG = Object.assign({ ink: INK, eye: CREAM, wingA: 0.5 }, (SK && SK.organs) || {});
+  function organsUnder(o, A) {
+    const wings = o.look[16] || 0;
+    if (wings <= 0.5 || A.pts.length < 1) return;
+    const i = Math.min(1, A.pts.length - 1), [px, py, r, a] = A.pts[i];
+    const span = A.r0 * (1.6 + 2.4 * (wings - 0.5) * 2), flap = 0.35 + 0.3 * Math.sin(A.ph * 3.2);
+    ctx.save(); ctx.globalAlpha *= ORG.wingA;
+    for (const side of [-1, 1]) {
+      const wa = a + side * (Math.PI / 2 - 0.45) + side * flap * 0.4;
+      ctx.save(); ctx.translate(px, py); ctx.rotate(wa);
+      ctx.beginPath(); ctx.ellipse(span * 0.55, 0, span * 0.6, span * (0.2 + 0.08 * flap), 0, 0, Math.PI * 2);
+      ctx.fillStyle = ORG.wing || A.alt; ctx.fill();
+      ctx.globalAlpha /= ORG.wingA; ctx.strokeStyle = ORG.ink; ctx.lineWidth = Math.max(0.8, A.ow * 0.8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(span * 1.05, 0); ctx.moveTo(span * 0.2, 0); ctx.lineTo(span * 0.8, span * 0.15);
+      ctx.lineWidth = Math.max(0.5, A.ow * 0.45); ctx.stroke(); ctx.globalAlpha *= ORG.wingA;
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  function organsOver(o, A) {
+    const shell = o.look[15] || 0, regions = o.look[17] || 0, eyes = o.look[14] || 0, pts = A.pts, ph = A.p.h;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (shell > 0.4) {                                   // overlapping plates down the back
+      const plate = ORG.plate || A.alt;
+      const lone = pts.length === 1;                        // one segment: a single plate over the back, the face left clear
+      for (let i = pts.length - 1; i >= (lone ? 0 : 1); i--) {
+        let [px, py, r, a] = pts[i];
+        if (r < 1.6) continue;
+        if (lone) { px += Math.cos(a) * r * 0.35; py += Math.sin(a) * r * 0.35; r *= 0.7; }
+        ctx.save(); ctx.translate(px, py); ctx.rotate(a);
+        ctx.beginPath(); ctx.moveTo(-r * 0.55, -r * 0.62); ctx.quadraticCurveTo(r * 0.85, -r * 0.7, r * 0.85, 0);
+        ctx.quadraticCurveTo(r * 0.85, r * 0.7, -r * 0.55, r * 0.62); ctx.quadraticCurveTo(-r * 0.2, 0, -r * 0.55, -r * 0.62);
+        ctx.fillStyle = plate; ctx.fill(); ctx.strokeStyle = ORG.ink; ctx.lineWidth = Math.max(0.7, A.ow * 0.7); ctx.stroke();
+        if (shell > 0.7) { ctx.beginPath(); ctx.moveTo(-r * 0.2, 0); ctx.lineTo(r * 0.6, 0); ctx.stroke(); }
+        ctx.restore();
+      }
+    }
+    const [hx, hy, hr] = pts[0];
+    if (regions > 0.5 && pts.length >= 3) {                // a waist behind the head, and jaws
+      const [qx, qy, qr, qa] = pts[1];
+      ctx.strokeStyle = ORG.ink; ctx.lineWidth = Math.max(0.8, A.ow);
+      ctx.beginPath(); ctx.arc((hx + qx) / 2, (hy + qy) / 2, Math.min(hr, qr) * 0.55, qa + Math.PI / 2 - 0.9, qa + Math.PI / 2 + 0.9);
+      ctx.arc((hx + qx) / 2, (hy + qy) / 2, Math.min(hr, qr) * 0.55, qa - Math.PI / 2 - 0.9, qa - Math.PI / 2 + 0.9); ctx.stroke();
+      const open = 0.25 + 0.2 * Math.sin(A.ph * 2);
+      for (const side of [-1, 1]) {
+        const ba = ph + side * 0.55, bx = hx + Math.cos(ba) * hr * 0.9, by = hy + Math.sin(ba) * hr * 0.9;
+        const ta = ph - side * open, len = hr * 0.95;
+        ctx.beginPath(); ctx.moveTo(bx, by);
+        ctx.quadraticCurveTo(bx + Math.cos(ph + side * 0.4) * len, by + Math.sin(ph + side * 0.4) * len,
+          bx + Math.cos(ta) * len * 1.2, by + Math.sin(ta) * len * 1.2);
+        ctx.lineWidth = Math.max(1, hr * 0.28); ctx.strokeStyle = ORG.ink; ctx.stroke();
+        ctx.lineWidth = Math.max(0.6, hr * 0.12); ctx.strokeStyle = ORG.jaw || ORG.eye; ctx.stroke();
+      }
+    }
+    if (eyes > 0.5) {                                      // a pair of large eyes, on stalks when very sharp
+      const er = Math.max(0.9, hr * (0.26 + 0.18 * eyes)), stalk = eyes > 0.8 ? hr * 0.5 : 0;
+      for (const side of [-1, 1]) {
+        const ea = ph + side * 0.75, d = hr * 0.72 + stalk, ex = hx + Math.cos(ea) * d, ey = hy + Math.sin(ea) * d;
+        if (stalk) { ctx.strokeStyle = ORG.ink; ctx.lineWidth = Math.max(0.8, hr * 0.15); ctx.beginPath(); ctx.moveTo(hx + Math.cos(ea) * hr * 0.6, hy + Math.sin(ea) * hr * 0.6); ctx.lineTo(ex, ey); ctx.stroke(); }
+        ctx.fillStyle = ORG.ink; ctx.beginPath(); ctx.arc(ex, ey, er + Math.max(0.5, A.ow * 0.6), 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = ORG.eye; ctx.beginPath(); ctx.arc(ex, ey, er, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = ORG.ink; ctx.beginPath(); ctx.arc(ex + Math.cos(ph) * er * 0.35, ey + Math.sin(ph) * er * 0.35, er * 0.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
   function drawAnimal(o, now, t, light, glowLayer) {
     let alpha = Math.min(1, (now - o.born) / 900);
     if (o.dead) { alpha = Math.max(0, 1 - (now - o.dead) / 1200); if (alpha <= 0) { animals.delete(o.id); return; } }
@@ -424,6 +493,8 @@
     const ow = Math.max(1, r0 * 0.22);
     ctx.globalAlpha = alpha; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const endo = o.look[12] || 0;
+    const OA = { pts, r0, ph, p, base, alt, ow };
+    organsUnder(o, OA);
     if (SK && SK.animal) SK.animal(ctx, { pts, r0, ph, p, look: o.look, base, alt, ow, alpha, t: t + o.phase, id: o.id });
     else {
     // legs
@@ -506,6 +577,7 @@
       ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.75, hy + Math.sin(p.h) * hr * 0.75, hr * 0.35, p.h - 1.0, p.h + 1.0); ctx.stroke();
     } }
     }
+    organsOver(o, OA);
     const [hx, hy, hr] = pts[0];
     // breath: a warm-blooded animal's breath clouds in cold air
     if (endo > 0.5 && live && live.air != null) {

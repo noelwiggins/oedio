@@ -357,7 +357,7 @@ def algo_panel_devotional():
     html = html.replace("family=Righteous&", "family=Righteous&family=Yatra+One&")
     html = html.replace("</style>", DEVOTIONAL_CSS + "\n</style>", 1)
     i = html.index('<script src="/static/darwin/algo/panel.js')
-    html = html[:i] + '<script src="/static/darwin/algo/skins/devotional.js?v=2"></script>\n' + html[i:]
+    html = html[:i] + '<script src="/static/darwin/algo/skins/devotional.js?v=3"></script>\n' + html[i:]
     r = make_response(html)
     r.headers["Content-Type"] = "text/html; charset=utf-8"
     return r

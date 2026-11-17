@@ -429,6 +429,8 @@
 
   window.ALGO_SKIN = {
     id: 'devotional', slug: 'devotional',
+    mushroom: { ink: INK, cap: (h, S, L) => `hsl(${h * 360},${Math.min(70, S + 15)}%,${L - 4}%)`, gill: CREAM, ring: RED, umbo: SAFF, spot: CREAM, shine: 'rgba(244,234,210,0.6)', lines: BLUE },
+    organs: { ink: INK, eye: CREAM, plate: SAFF, wing: ROSE, jaw: GOLD, wingA: 0.7 },
     terrainPixel, animalColors, animal, flower, flowerPad: 0.25,
     frame, cabinet, bezel, metal, pin, tray, nameplate,          // (no surface layer: the land is already stippled)
   };
