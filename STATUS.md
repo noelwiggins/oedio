@@ -26,6 +26,16 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## ANTHROPOGENESIS SOUND — In C, Mali (2026-11-17)
+sound.js: palette flag `inC` replaces the Eno loops on Anthropogenesis with an ensemble after Terry Riley's In C as played in
+Mali (Africa Express). A balafon pulse on high C every 0.27 s (half speed on the dark side; Pace knob scales it); a book of
+37 short phrases written for the panel (INC, not Riley's); players = the people (kora) + one per trade unlocked
+(balafon, ngoni, calabash, high kora, voices, iron bell, flute). Each repeats a phrase 2–8 times, then moves on (70%) if
+within 3 of the slowest and below the frontier = civ progress (fire, language, farming, tier_max, trades) × 37. Collapse
+pulls players back; when all reach the end they restart at the city pages (26). Milestones move everyone on a page
+instead of changing key; off-grid chimes and lysis notes are off for this panel; dark side plays phrases reversed.
+Test: work/inctest.js (all onsets on the pulse grid, 8 players), work/rec.js recording (anthropogenesis_in_c.mp3).
+
 ## EVOLUTION ENGINES — complexity that keeps (2026-11-17)
 Tidal Pool (darwin/pool.py): restarts had climbed to ~50/day; after each crash the 24 banked refugia lineages kept dying
 (often hunters with no photo cells) so one crash became 5–15 restarts, each wiping complexity. Now:

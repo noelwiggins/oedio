@@ -64,11 +64,11 @@
                       rain: [['supernovae', 'boom', 'stars exploding'], ['planets_total', 'glass', 'planets formed']],
                       sound: 'singing bowls in a vast dark hall, with distant booms',
                       words: 'clusters of stars are singing bowls; supernovae are distant booms, new planets are glass' },
-    anthropogenesis:{ gain: 1.15, scale: [0, 2, 4, 5, 7, 9, 11], root: 48, voice: 'harp', voice2: 'flute', chime: 'harp', bed: 'hearth', drone: [0, 7, 12],
-                      room: [3, 2.6, 0.9, 0.3], progress: ['tools_mean', 0, 300],
-                      rain: [['people', 'pluck', 'people born', 0.01]],
-                      sound: 'harp and flute beside a hearth',
-                      words: 'each people is a harp string; the more tools they have, the richer the tone' },
+    anthropogenesis:{ gain: 1.6, scale: [0, 2, 4, 5, 7, 9, 11], root: 48, voice: 'kora', voice2: 'flute', chime: 'kora', bed: 'hearth', drone: [0, 7, 12],
+                      room: [2.6, 2.6, 0.81, 0.22], progress: ['tools_mean', 0, 300], inC: true,
+                      rain: [],
+                      sound: 'an ensemble in the manner of In C, played on kora, balafon and ngoni over a steady pulse',
+                      words: 'a balafon keeps a steady pulse on C. The people play the kora; every trade that appears joins the ensemble on its own instrument: toolmakers balafon, builders ngoni, potters calabash, traders a high kora, priests voices, smiths an iron bell, scribes a flute. Each player repeats a short phrase as long as it likes, then moves on to the next, so the phrases drift against one another. The further the civilisation gets, the further into the piece the players may go; a collapse sends them back. On the dark side the piece walks backwards at half speed' },
     psychogenesis:  { gain: 2.6, scale: [0, 1, 5, 7, 8], root: 50, voice: 'rhodes', chime: 'vibes', bed: 'tape', drone: [0, 5, 13],
                       room: [3.5, 2.5, 0.55, 0.45], progress: ['learning', 0, 1],
                       rain: [['changes', 'kalimba', 'minds changed'], ['poisoned', 'thump', 'creatures poisoned']],
@@ -117,6 +117,12 @@
     rhodes:   { kind: 'add', a: 0.015, d: 4.5, trem: [2.2, 0.15], parts: [[1, 1, 1], [2, 0.22, 0.5], [3, 0.06, 0.3], [14, 0.025, 0.04]] },
     flute:    { kind: 'sub', wave: 'triangle', cut: 4, a: 0.7, d: 3.5, sus: 0.7, hold: 1.8, vib: [5, 9], breath: 0.25 },
     cello:    { kind: 'sub', wave: 'sawtooth', cut: 3.2, a: 1.4, d: 4.5, sus: 0.75, hold: 2.6, vib: [5.4, 12] },
+    // the Malian ensemble for Anthropogenesis
+    kora:     { kind: 'add', a: 0.006, d: 1.4, parts: [[1, 1, 1], [2, 0.5, 0.45], [3, 0.3, 0.3], [4, 0.14, 0.2], [6, 0.06, 0.12]] },
+    balafon:  { kind: 'fm', ratio: 3.9, idx: 0.9, a: 0.008, d: 0.75 },
+    ngoni:    { kind: 'add', a: 0.006, d: 1.0, sag: 0.992, parts: [[1, 1, 1], [2, 0.55, 0.35], [3, 0.35, 0.22], [5, 0.12, 0.12]] },
+    calabash: { kind: 'fm', ratio: 0.5, idx: 0.5, a: 0.01, d: 0.5 },
+    iron:     { kind: 'fm', ratio: 1.41, idx: 1.4, a: 0.004, d: 1.1 },
     rev:      { kind: 'add', a: 3.2, d: 0.6, rev: true, parts: [[1, 1, 1], [2, 0.28, 1], [3, 0.1, 1], [0.5, 0.35, 1]] },   // a note that seems to play backwards
     crumble:  { kind: 'fm', ratio: 3.1, idx: 0.4, a: 0.01, d: 0.45 },
     choir:    { kind: 'sub', wave: 'sawtooth', cut: 9, a: 2.4, d: 6, sus: 0.8, hold: 3.2, vib: [4.6, 10], formants: [700, 1150, 2500], detune: 7 },
@@ -462,6 +468,7 @@
     const pr = pal.progress;
     if (pr && s[pr[0]] != null) rich = clamp((s[pr[0]] - pr[1]) / (pr[2] - pr[1]), 0, 1);
     const kinds = kindsOf(d);
+    if (pal.inC) ensembleFeed(s);
     if (!A || !on) { prime(d, kinds); return; }
     const t = A.currentTime;
     // the loops: new kinds arrive with a seed-chime, lost kinds leave with a falling note
@@ -473,7 +480,7 @@
         o = { period: 18 + h * 30, next: t + 3 + hash(k + 'p') * 16, pan: (hash(k + 'x') - 0.5) * 1.2 };
         voices.set(k, o);
         const back = heard.get(k);              // a kind that only flickered out for a moment is not new
-        if (!firstFrame && (!back || t - back > 90) && chimes-- > 0)
+        if (!pal.inC && !firstFrame && (!back || t - back > 90) && chimes-- > 0)
           note(t + Math.random() * 1.5, pitch(v.deg, (v.oct || 0) + 1), 0.022, pal.chime, { pan: o.pan, echo: 0.5, wet: 1.1 });
       }
       Object.assign(o, v, { miss: 0 });
@@ -483,7 +490,7 @@
       if (kinds.has(k)) continue;
       if (++o.miss < 4) continue;               // gone for several frames running: it has died out here
       voices.delete(k);
-      if (!firstFrame && o.rank < 20 && farewells-- > 0)
+      if (!pal.inC && !firstFrame && o.rank < 20 && farewells-- > 0)
         note(t + Math.random() * 2, pitch(o.deg, o.oct || 0), 0.03, o.timbre || pal.voice, { glide: 0.8, wet: 1.4, echo: 0.6, pan: o.pan, hold: 2 });
     }
     if (heard.size > 4000) heard.clear();
@@ -512,12 +519,12 @@
     // lysis: the breaking-down of things. Its voice swells backwards from below, more often the faster things decay,
     // and far more when the panel is turned over; a small crumble of falling notes follows each wave of deaths
     const lys = (d.gsl && d.gsl[2]) || 0, dens_l = lys * (darkSide ? 0.55 : 0.16);
-    if (!firstFrame && Math.random() < dens_l) {
+    if (!pal.inC && !firstFrame && Math.random() < dens_l) {
       const v = [...voices.values()].filter(v => v.rank < voicesAudible());
       const deg = v.length ? v[Math.floor(Math.random() * v.length)].deg : 0;
       note(t + 0.2 + Math.random() * 2, pitch(deg - 2, -1), (darkSide ? 0.04 : 0.022), 'rev', { wet: 1.4, echo: 0.5, pan: (Math.random() - 0.5) * 1.2, rich: 0.2 });
     }
-    if (!firstFrame && prevStats && lys > 0.5 && Math.random() < (darkSide ? 0.25 : 0.06)) {
+    if (!pal.inC && !firstFrame && prevStats && lys > 0.5 && Math.random() < (darkSide ? 0.25 : 0.06)) {
       const start = Math.floor(Math.random() * 6) + 6;
       for (let i = 0; i < 4; i++) note(t + 0.3 + i * (0.16 + Math.random() * 0.08), pitch(start - i, 0), (darkSide ? 0.012 : 0.007), 'crumble', { wet: 1.2, pan: (Math.random() - 0.5) * 1.4 });
     }
@@ -527,6 +534,10 @@
       if (e.tick == null || (lastEventTick != null && e.tick <= lastEventTick)) continue;
       if (lastEventTick == null) continue;
       const txt = (e.text || '').toLowerCase(), kind = (e.kind || '').toLowerCase();
+      if (pal.inC) {                            // In C does not change key: a milestone sends everyone on a page
+        if (kind.includes('milestone') || kind.includes('record')) for (const p of ens.players) if (p.m < ens.front) { p.m++; p.at = 0; }
+        continue;
+      }
       if (kind.includes('milestone') || kind.includes('record')) {
         keyShift = ((keyShift + 7) % 12 + 12) % 12; if (keyShift > 6) keyShift -= 12;
         retune(6);
@@ -559,9 +570,80 @@
     else if (lastEventTick == null) lastEventTick = -1;
   }
 
+  // ── In C, after Terry Riley, as the Africa Express musicians played it in Mali: an ensemble for Anthropogenesis ──
+  // A pulse on C, and a book of short phrases (written for this panel, not Riley's). Each player repeats a phrase as
+  // many times as it likes, then moves on, never straying far ahead of the slowest. How far into the book anyone may go
+  // is set by the civilisation: fire and language open the first pages, farming, trades and towns the later ones.
+  const INC = [   // [semitones above C, length in pulses]; null is a rest
+    [[7, 2], [4, 2]], [[4, 1], [7, 1], [4, 2], [null, 2]], [[2, 1], [4, 1], [7, 4]], [[7, 1], [9, 1], [7, 2], [4, 4]],
+    [[4, 3], [2, 1], [0, 4]], [[null, 2], [7, 1], [7, 1], [9, 2], [7, 2]], [[12, 6], [11, 2]],
+    [[4, 1], [5, 1], [7, 1], [5, 1], [4, 4]], [[5, 2], [4, 2], [2, 2], [null, 2]], [[7, 1], [5, 1], [4, 1], [2, 1], [4, 4]],
+    [[9, 2], [7, 1], [5, 1], [7, 4]], [[0, 1], [4, 1], [7, 1], [12, 1], [7, 2], [4, 2]], [[5, 4], [7, 4]],
+    [[null, 3], [4, 1], [5, 1], [7, 3]], [[11, 1], [12, 1], [14, 2], [12, 4]], [[7, 1], [11, 1], [14, 1], [11, 1], [7, 4]],
+    [[14, 2], [12, 1], [11, 1], [9, 2], [7, 2]], [[6, 2], [7, 2], [null, 4]], [[7, 1], [6, 1], [4, 1], [6, 1], [7, 4]],
+    [[2, 1], [6, 1], [9, 1], [6, 1], [2, 4]], [[9, 3], [11, 1], [12, 2], [11, 2]], [[6, 6], [4, 2]],
+    [[7, 1], [9, 1], [11, 1], [9, 1], [7, 1], [6, 1], [4, 2]], [[14, 4], [11, 2], [9, 2]], [[4, 1], [4, 1], [6, 1], [7, 1], [9, 4]],
+    [[null, 4], [11, 1], [9, 1], [7, 2]], [[10, 2], [9, 2], [7, 4]], [[5, 1], [7, 1], [10, 1], [7, 1], [5, 4]],
+    [[10, 1], [12, 1], [14, 1], [12, 1], [10, 2], [7, 2]], [[3, 2], [5, 2], [7, 4]], [[7, 1], [3, 1], [0, 1], [3, 1], [7, 4]],
+    [[12, 3], [10, 1], [7, 2], [5, 2]], [[5, 8]], [[0, 1], [7, 1], [12, 1], [7, 1], [0, 1], [7, 1], [12, 2]],
+    [[12, 1], [14, 1], [16, 1], [14, 1], [12, 4]], [[7, 2], [12, 2], [16, 4]], [[0, 8]]];
+  const CITY = 26;                                 // where a finished ensemble starts its next round: the city pages
+  // the players: the people, then one per trade as it appears [instrument, octave, pan, gain, stretch]
+  const PLAYERS = [['kora', 0, 0, 1, 1], ['balafon', 1, -0.5, 0.9, 1], ['ngoni', -1, 0.45, 1, 1], ['calabash', -1, -0.2, 1.1, 1],
+                   ['kora', 1, 0.7, 0.75, 1], ['choir', 0, -0.7, 0.7, 2], ['iron', 1, 0.25, 0.45, 1], ['flute', 1, -0.35, 0.8, 1]];
+  const ens = { players: [], beat: 0, t0: 0, front: 0, civ: 0, n: 0 };
+  const pulseLen = () => 0.27 * Math.pow(2, -MIX.pace * 0.5) * (darkSide ? 2 : 1);
+  function ensembleFeed(s) {
+    const civ = clamp(0.12 * (s.fire || 0) / 100 + 0.1 * clamp(s.language || 0, 0, 1) + 0.1 * (s.farming || 0) / 100 +
+                      0.4 * (s.tier_max || 0) / 5 + 0.28 * (s.trades || 0) / 7, 0, 1);
+    ens.civ = civ; ens.front = Math.max(0, Math.round(civ * (INC.length - 1)));
+    ens.n = (s.people || 0) > 0 ? 1 + clamp(s.trades || 0, 0, 7) : 0;
+    while (ens.players.length < ens.n) {          // a newcomer starts where the slowest player is
+      const i = ens.players.length, low = ens.players.length ? Math.min(...ens.players.map(p => p.m)) : 0;
+      ens.players.push({ i, m: Math.min(low, ens.front), left: 2 + Math.floor(Math.random() * 6), at: 0, wait: Math.floor(Math.random() * 8) });
+    }
+    ens.players.length = Math.min(ens.players.length, Math.max(ens.n, 0));
+    for (const p of ens.players) if (p.m > ens.front) { p.m = ens.front; p.at = 0; }   // a collapse sends them back
+  }
+  function ensembleNext(p) {                       // a phrase is done: play it again, or move on
+    if (--p.left > 0) return;
+    const low = Math.min(...ens.players.map(q => q.m)), all = ens.players.every(q => q.m >= INC.length - 1);
+    if (all && ens.front >= INC.length - 1) { for (const q of ens.players) { q.m = CITY; q.left = 3 + Math.floor(Math.random() * 6); } return; }
+    if (p.m < ens.front && p.m - low < 3 && Math.random() < 0.7) p.m++;
+    p.left = 2 + Math.floor(Math.random() * 7);
+  }
+  function ensemble(t) {
+    const L = pulseLen(), ahead = 1.2;
+    if (!ens.t0 || ens.t0 + ens.beat * L < t - 1) { ens.t0 = t + 0.1; ens.beat = 0; }   // (re)start the clock
+    const audible = voicesAudible();
+    while (ens.t0 + ens.beat * L < t + ahead) {
+      const at = ens.t0 + ens.beat * L, b = ens.beat++;
+      if (at < t - 0.05) continue;
+      if (ens.n && (!darkSide || b % 2 === 0))                                      // the pulse: two high Cs on the balafon
+        note(at, mtof(lift(root() + 24)), b % 8 === 0 ? 0.026 : 0.019, 'balafon', { pan: 0.1, wet: 0.5, rich: 0.4 });
+      for (const p of ens.players) {
+        if (p.i >= audible) continue;
+        if (p.wait > 0) { p.wait--; continue; }                                    // players come in one at a time
+        const [inst, oct, pan, gain, stretch] = PLAYERS[p.i % PLAYERS.length];
+        const ph = darkSide ? INC[p.m].slice().reverse() : INC[p.m];
+        const total = ph.reduce((a, c) => a + c[1], 0) * stretch;
+        // find the note that starts on this pulse
+        let acc = 0;
+        for (const [semi, len] of ph) {
+          if (acc === p.at && semi != null)
+            note(at, mtof(lift(root() + 12 + semi + 12 * oct)), 0.03 * gain * (0.75 + 0.25 * rich), inst,
+                 { pan, wet: 0.7, echo: 0.15, hold: clamp(len * stretch * L / 2.5, 0.25, 1.2), rich: 0.3 + 0.5 * ens.civ });
+          acc += len * stretch;
+        }
+        if (++p.at >= total) { p.at = 0; ensembleNext(p); }
+      }
+    }
+  }
+
   // the loops come round on their own clocks
   function scheduler() {
     if (!A || !on) return;
+    if (pal.inC) { bedEvents(A.currentTime); ensemble(A.currentTime); return; }
     const t = A.currentTime, dens = (0.8 + 0.5 * (1 - light)) * Math.pow(2, -MIX.pace), audible = voicesAudible();
     bedEvents(t);
     for (const [, o] of voices) {
@@ -688,7 +770,7 @@
   function stop() {
     on = false;
     if (A) { out.gain.cancelScheduledValues(A.currentTime); out.gain.setTargetAtTime(0, A.currentTime, 0.6); }
-    clearInterval(tickT); voices.clear();
+    clearInterval(tickT); voices.clear(); ens.t0 = 0;
     try { localStorage.setItem('algo-sound', '0'); } catch (e) {}
   }
   function toggle() { return on ? (stop(), false) : start(); }
@@ -761,5 +843,5 @@
     if (A) { applyMix(); retune(4); }
   }
   // tap(): the final output node, for recording a sample of the soundscape
-  window.AlgoSound = { init, feed, start, stop, toggle, isOn: () => on, level, drawGrille, legend, mixerHTML, mountMixer, syncMixer, setDark, tap: () => A && { ctx: A, node: analyser } };
+  window.AlgoSound = { _ens: ens, init, feed, start, stop, toggle, isOn: () => on, level, drawGrille, legend, mixerHTML, mountMixer, syncMixer, setDark, tap: () => A && { ctx: A, node: analyser } };
 })();
