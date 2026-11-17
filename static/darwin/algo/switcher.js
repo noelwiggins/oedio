@@ -33,9 +33,10 @@
   }
 
   const css = `
-  #algo-switch { position: fixed; z-index: 60; background: var(--cream, #fbf3dc); color: var(--ink, #2a1d14);
+  #algo-switch { position: fixed; z-index: 80; background: var(--cream, #fbf3dc); color: var(--ink, #2a1d14);
     border-radius: 2.4vmin; padding: 1.4vmin; box-shadow: 0 1.6vmin 5vmin rgba(0,0,0,.45), 0 0 0 .3vmin var(--ink, #2a1d14);
-    width: min(92vw, 118vmin); max-height: 72vh; overflow-y: auto; overscroll-behavior: contain;
+    width: min(92vw, 118vmin); max-height: 72vh; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
     transform-origin: 50% 100%; opacity: 0; transform: translateY(1.2vmin) scale(.96); pointer-events: none;
     transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.3,1.1); }
   #algo-switch.open { opacity: 1; transform: none; pointer-events: auto; }
@@ -55,54 +56,95 @@
   body.algo-leaving { transition: opacity .22s ease; opacity: 0; }
   @media (prefers-reduced-motion: reduce) { #algo-switch { transition: none; } body.algo-leaving { transition: none; } }`;
 
-  let el = null, opts = null, closedAt = 0;
-  function build() {
-    const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-    el = document.createElement('nav'); el.id = 'algo-switch'; el.setAttribute('aria-label', 'Panels');
-    document.body.appendChild(el);
-    // close on a touch anywhere else, or Esc; arrows move between panels
-    addEventListener('pointerdown', e => { if (isOpen() && !el.contains(e.target)) { close(); closedAt = performance.now(); } }, true);
-    addEventListener('keydown', e => {
+  // where the list lives: in the page around the panel when there is one (so it can use the whole screen, above the
+  // page's header and bars), otherwise in the panel itself
+  let el = null, opts = null, closedAt = 0, openedAt = 0, W = window;
+  function target() { return hostPage() || window; }
+  function build(Wn) {
+    W = Wn; const D = W.document;
+    const st = D.createElement('style'); st.textContent = css; D.head.appendChild(st);
+    if (W !== window && !D.querySelector('link[href*="family=Righteous"]')) {      // the panel's lettering, for the page too
+      const lk = D.createElement('link'); lk.rel = 'stylesheet'; lk.href = 'https://fonts.googleapis.com/css2?family=Righteous&display=swap'; D.head.appendChild(lk);
+    }
+    el = D.createElement('nav'); el.id = 'algo-switch'; el.setAttribute('aria-label', 'Panels');
+    D.body.appendChild(el);
+    // close on a touch anywhere else (in the page or in the panel), or Esc; arrows move between panels
+    const outside = e => { if (isOpen() && !el.contains(e.target)) { close(); closedAt = performance.now(); } };
+    W.addEventListener('pointerdown', outside, true);
+    if (W !== window) window.addEventListener('pointerdown', outside, true);
+    const keys = e => {
       if (!isOpen()) return;
       if (e.key === 'Escape') { e.preventDefault(); close(); return; }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault(); e.stopImmediatePropagation();
-        const items = [...el.querySelectorAll('a, button')], i = items.indexOf(document.activeElement);
+        const items = [...el.querySelectorAll('a, button')], i = items.indexOf(W.document.activeElement);
         items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
       }
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.stopImmediatePropagation();   // not a turn while choosing
-    }, true);
+    };
+    W.addEventListener('keydown', keys, true);
+    if (W !== window) window.addEventListener('keydown', keys, true);
+    W.addEventListener('scroll', () => { if (isOpen() && performance.now() - openedAt > 600) close(); }, { passive: true });   // the page scrolled away from it
   }
   function isOpen() { return !!el && el.classList.contains('open'); }
   function render() {
     const dark = window.AlgoLysis && AlgoLysis.isDark();
     el.innerHTML = '<div class="grid">' + PANELS.map(([slug, name, lname, desc]) =>
-      `<a href="${href(slug)}" data-slug="${slug}"${slug === opts.current ? ' class="here" aria-current="page"' : ''}>` +
+      `<a href="${W === window ? href(slug) : pageHref(slug)}" data-slug="${slug}"${slug === opts.current ? ' class="here" aria-current="page"' : ''}>` +
       `<span class="n">${dark ? lname : name}</span><span class="d">${dark ? name + ' · ' : ''}${desc}</span></a>`).join('') +
       '</div><div class="about"><button type="button">About this panel</button></div>';
     el.querySelectorAll('a').forEach(a => a.addEventListener('click', e => {
       e.preventDefault();
       if (a.dataset.slug === opts.current) { close(); return; }
-      document.body.classList.add('algo-leaving');                  // a short fade, then the next panel
-      const host = hostPage();
+      W.document.body.classList.add('algo-leaving');                // a short fade, then the next panel
       setTimeout(() => {
-        if (host) host.location.href = pageHref(a.dataset.slug);    // the page around it moves too: title, story, stats
+        if (W !== window) W.location.href = pageHref(a.dataset.slug);  // the page around it moves too: title, story, stats
         else location.href = a.getAttribute('href');
       }, 200);
     }));
     el.querySelector('.about button').addEventListener('click', () => { close(); if (opts.onAbout) opts.onAbout(); });
   }
+  // the screen space the list may use: inside a page, between its sticky header and any bottom bar
+  function visibleBand() {
+    const band = { top: 0, bottom: W.innerHeight };
+    try {
+      const d = W.document, bar = d.querySelector('.dw-bar'), bot = d.querySelector('.dw-bottom');
+      if (bar) band.top = Math.max(0, bar.getBoundingClientRect().bottom);
+      if (bot && W.getComputedStyle(bot).display !== 'none') band.bottom = Math.min(band.bottom, bot.getBoundingClientRect().top);
+    } catch (e) {}
+    return band;
+  }
+  // the pill's rectangle in the coordinates of the window the list lives in
+  function anchorRect() {
+    const a = opts.anchor;
+    if (W === window || !window.frameElement) return a;
+    const fr = window.frameElement.getBoundingClientRect();
+    return { x: fr.x + a.x, y: fr.y + a.y, w: a.w, h: a.h };
+  }
   function place() {
-    const a = opts.anchor, r = el.getBoundingClientRect(), m = 8;
-    let x = a.x + a.w / 2 - r.width / 2, y = a.y - r.height - 12;
-    if (y < m) y = Math.min(innerHeight - r.height - m, a.y + a.h + 12);   // no room above: open below the pill
-    x = Math.max(m, Math.min(innerWidth - r.width - m, x));
-    el.style.left = x + 'px'; el.style.top = Math.max(m, y) + 'px';
+    const m = 8;
+    let a = anchorRect(), band = visibleBand();
+    if (W !== window && (a.y < band.top || a.y + a.h > band.bottom)) {     // the pill itself is off screen: bring it in
+      try { window.frameElement.scrollIntoView({ block: 'end', behavior: 'instant' }); } catch (e) {}
+      a = anchorRect(); band = visibleBand();
+    }
+    el.style.maxHeight = '';
+    const full = el.scrollHeight + 4, roomAbove = a.y - 12 - (band.top + m), roomAll = band.bottom - band.top - 2 * m;
+    el.style.maxHeight = Math.max(160, Math.min(full, roomAbove >= Math.min(full, 320) ? roomAbove : roomAll)) + 'px';
+    const r = el.getBoundingClientRect();
+    // just above the pill, kept inside the band (over the pill if there is no room above it)
+    const y = Math.max(band.top + m, Math.min(band.bottom - r.height - m, a.y - r.height - 12));
+    const x = Math.max(m, Math.min(W.innerWidth - r.width - m, a.x + a.w / 2 - r.width / 2));
+    el.style.left = x + 'px'; el.style.top = y + 'px';
   }
   function open(o) {
-    opts = o; if (!el) build();
+    opts = o; if (!el) build(target());
     render(); el.style.left = '-9999px'; el.style.top = '0px';
-    requestAnimationFrame(() => { place(); el.classList.add('open'); const h = el.querySelector('a.here') || el.querySelector('a'); h && h.focus({ preventScroll: true }); h && h.scrollIntoView({ block: 'nearest' }); });
+    requestAnimationFrame(() => {
+      openedAt = performance.now(); place(); el.classList.add('open');
+      const h = el.querySelector('a.here') || el.querySelector('a');
+      if (h) { h.focus({ preventScroll: true }); el.scrollTop = Math.max(0, h.offsetTop - el.clientHeight / 2 + h.offsetHeight / 2); }   // only the list scrolls
+    });
   }
   function close() { if (el) el.classList.remove('open'); }
   function toggle(o) { if (isOpen()) close(); else if (performance.now() - closedAt > 350) open(o); }

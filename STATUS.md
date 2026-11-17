@@ -26,6 +26,12 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## Switcher list inside pages (2026-11-17)
+When a panel is embedded (Coast page, concept pages), AlgoSwitch builds its list in the host page (same origin) with
+the panel's CSS + Righteous font: positioned from frameElement rect + pill rect, fitted between .dw-bar bottom and
+.dw-bottom top (phone bar), scrolls internally (touch-action pan-y), brings the pill on screen first if needed, closes on
+taps in page or panel, Esc, or page scroll (>600 ms after opening). Links go to the page URLs. Test: work/swtab.js.
+
 ## DEVOTIONAL COAST — the same world as a devotional print (2026-11-17)
 /darwin/algogenesis/devotional (page) and /devotional/panel: the Coast panel.html served with
 static/darwin/algo/skins/devotional.js inserted before panel.js (+ Yatra One font + DEVOTIONAL_CSS for keys/cards).
