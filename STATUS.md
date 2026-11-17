@@ -36,8 +36,10 @@ Tidal Pool (darwin/pool.py): restarts had climbed to ~50/day; after each crash t
 - Deep-water nutrient exchange 0.003 → 0.005; refugia reseed producers first (≥ 2/3 with photo cells).
 - Shock test (work/poolstress.py: kill 99.5%, N×0.25, cold spell): old → restart; new → 0 restarts, recovers via cysts.
 Coast (engine.py, algogenesis-1.4): NG 23 → 27, four organs appended: EYES (threat range, prey spotting in poor light),
-SHELL (bite defence ×(1+1.3s), speed ÷(1+0.45s)), WING (on land glide: +speed, escape ×(1+1.2), walkers cross water),
-SPEC (regions: jaws att ×(1+0.6r), gut +30%; needs ≥ 3 segments). SEGS max 9 → 12, LIMBS 4 → 6. Each costs upkeep.
+SHELL (bite defence ×(1+1.3s), speed ÷(1+0.45s)), WING (on land glide: +0.65 speed, escape ×(1+0.9), walkers cross water),
+SPEC (regions: jaws att ×(1+0.6r), gut +30%; needs ≥ 3 segments). Eyes also shorten the distance to flowers.
+Calibration (work/coasttest.py, fresh seeds, 110k ticks): glide +0.9 swept wings to 100% and pushed out legs; +0.45 → nothing;
++0.65 → wings 68% in one seed, emerging in another, plates starting. Eyes/plates/regions need predator pressure (live world has it). SEGS max 9 → 12, LIMBS 4 → 6. Each costs upkeep.
 Old worlds migrate with 0.05 traces. _look gains 4 values (frame animal rows now 25 long; look[14..17]). Complexity
 counts organs (+2 eyes, +1 shell, +2 wings, +2 regions); complexity_record = best ever; stats eyes/shelled/winged/regioned.
 panel.js organsUnder/organsOver draw them (skins can recolour via SK.organs). Chronicle describes them.

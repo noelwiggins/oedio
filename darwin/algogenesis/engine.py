@@ -478,7 +478,7 @@ class World(DialsMixin, FungiMixin):
             # the colour of a flower is seen by day; its nectar is smelt at any hour
             full = np.clip(self.pnec[Pi][iP0] / np.maximum(0.05, 2 * self.P[Pi][iP0, P_NECTAR]), 0, 1)
             score = np.where(okP & (herb[:, None] > 0.1),
-                             (0.15 + like) * (0.4 + 0.6 * light) * (0.05 + full) / (dP + 4), -1)
+                             (0.15 + like) * (0.4 + 0.6 * light) * (0.05 + full) / (dP * (1.3 - 0.6 * eyes[:, None]) + 4), -1)
             j = score.argmax(1)
             hf = score[np.arange(n), j] > 0
             jf = iP0[np.arange(n), j]
@@ -515,7 +515,7 @@ class World(DialsMixin, FungiMixin):
         hd = (hd + np.clip(turn, -0.25, 0.25) + rng.normal(0, 0.06, n)) % (2 * math.pi)
         sp_water = (0.35 + 1.1 * G[:, FIN] * (0.5 + 0.5 * G[:, TAIL]))
         sp_land = (0.15 + 0.32 * G[:, LIMBS] * (1 - 0.7 * G[:, FIN]))
-        sp_land = sp_land + 0.9 * aloft                     # a glide outruns any walker
+        sp_land = sp_land + 0.65 * aloft                    # a glide outruns a walker
         speed = np.where(water, sp_water, sp_land) / np.sqrt(G[:, SIZE]) * (0.6 + 0.4 * grown) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
         speed = speed * (0.3 + 0.7 * act) / (1 + 0.45 * shell)    # plates are heavy
         nx, ny = x + speed * np.cos(hd), y + speed * np.sin(hd)
@@ -531,7 +531,7 @@ class World(DialsMixin, FungiMixin):
         cost = (0.003 * G[:, SIZE] ** 0.75 * np.sqrt(G[:, SEGS]) + 0.009 * G[:, GLOW] * (1 - light)
                 + 0.0012 * G[:, SAT] + 0.0018 * G[:, CREST] + 0.0012 * G[:, LIMBS] + 0.0009 * G[:, CHOOSY]
                 + 0.0015 * speed * G[:, SIZE]
-                + 0.0005 * eyes + 0.0007 * shell * G[:, SIZE] + 0.0008 * wing * G[:, SIZE] + 0.0002 * regions * G[:, SEGS]) * grown
+                + 0.0005 * eyes + 0.0007 * shell * G[:, SIZE] + 0.0010 * wing * G[:, SIZE] + 0.0002 * regions * G[:, SEGS]) * grown
         # the price of warmth: a warm body burns far more, and loses heat to cold air (water steals it twice as fast,
         # small bodies faster than big ones) unless it is insulated; a coat overheats in summer
         bulk = np.cbrt(G[:, SIZE] * np.sqrt(G[:, SEGS]))
@@ -539,7 +539,7 @@ class World(DialsMixin, FungiMixin):
         heat = 0.003 * Eg * np.maximum(0, 30 - Tamb) / 30 * (1 - 0.85 * Ig) * (1 + water) / bulk
         hot = 0.002 * Ig * np.maximum(0, Tamb - 21) / 10 + 0.0004 * Ig
         cost = (cost * metab + (heat + hot) * grown) * jc / vig / mult(self.dial("fauna"), 1.5) * \
-            (1 + 0.8 * np.where(water, (1 - G[:, FIN]) * (1 - 0.6 * np.clip((wing - 0.35) / 0.4, 0, 1)),   # a glider skims the water
+            (1 + 0.8 * np.where(water, (1 - G[:, FIN]) * (1 - 0.45 * np.clip((wing - 0.35) / 0.4, 0, 1)),   # a glider skims the water
                                 G[:, FIN] * (G[:, LIMBS] < 1)))
         self.fe[F] -= cost
         # the young of cold-blooded animals develop with the warmth (degree-days); warm young grow at their own pace
@@ -620,7 +620,7 @@ class World(DialsMixin, FungiMixin):
                 if b in taken or a in taken:
                     continue
                 att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a] * (0.4 + 0.6 * act[a]) * (1 + 0.6 * regions[a])   # jaws
-                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b]) * (1 + 1.3 * shell[b]) * (1 + 1.2 * aloft[b])
+                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b]) * (1 + 1.3 * shell[b]) * (1 + 0.9 * aloft[b])
                 if has_par[b] and pdist[b] < 25:      # a parent stands over its young
                     dfn += 2.0 * float(pcare[b]) * float(self.G[pidx[b], SIZE] * np.sqrt(self.G[pidx[b], SEGS]))
                 if rng.random() < att / (att + dfn):
