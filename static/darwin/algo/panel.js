@@ -423,6 +423,9 @@
     if (SK && SK.animalColors) [base, alt] = SK.animalColors(hue, sat, hue2);
     const ow = Math.max(1, r0 * 0.22);
     ctx.globalAlpha = alpha; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const endo = o.look[12] || 0;
+    if (SK && SK.animal) SK.animal(ctx, { pts, r0, ph, p, look: o.look, base, alt, ow, alpha, t: t + o.phase, id: o.id });
+    else {
     // legs
     if (limbs > 0) {
       for (const pass of [0, 1]) {
@@ -461,7 +464,7 @@
       }
     }
     // a coat: fur or feathers drawn as a soft scalloped fringe, the thicker the coat the deeper the fringe
-    const endo = o.look[12] || 0, insul = o.look[13] || 0;
+    const insul = o.look[13] || 0;
     if (insul > 0.3) {
       const fr = 0.18 + 0.32 * insul, nb = 7;
       for (const pass of [0, 1]) {
@@ -502,6 +505,8 @@
       ctx.strokeStyle = CREAM; ctx.lineWidth = Math.max(0.8, hr * 0.18);
       ctx.beginPath(); ctx.arc(hx + Math.cos(p.h) * hr * 0.75, hy + Math.sin(p.h) * hr * 0.75, hr * 0.35, p.h - 1.0, p.h + 1.0); ctx.stroke();
     } }
+    }
+    const [hx, hy, hr] = pts[0];
     // breath: a warm-blooded animal's breath clouds in cold air
     if (endo > 0.5 && live && live.air != null) {
       const d = hAt(p.x, p.y) - (live.sea || 0);

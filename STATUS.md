@@ -33,6 +33,13 @@ panel.js now has skin hooks (window.ALGO_SKIN): terrainPixel (ink outline + ligh
 flower, animalColors, pattern, eye, halo, rim, frame (replaces rail/fans), cabinet, bezel, metal (replaces chrome), pin,
 tray, nameplate, surface (grain/varnish over the window). No skin → unchanged cabinet. Frame and cabinet are cached
 canvases keyed by size (+ dark side). Own zoom key 'coast-devotional'; in the switcher after the Coast.
+2026-11-17 revision (Noel: creatures/flowers more like his block prints; no curtains, abstract like the dark side):
+frame() is now empty (print runs to the window edge); flowers are scalloped two-tone peony-lotuses with a stippled blue
+rim, pink inner ring, saffron cup or ringed seed head; animals drawn whole by SK.animal (new panel.js hook): body
+segments as paisley fronds (red stripes on cream via one rotated pattern fill / two-tone / solid with dotted spine),
+blue rim + red line, ink-curl legs, frond-fan tails, saffron crown crests, scalloped blue coat; sponge texture is a
+pattern placed per shape (one reused transform). Simplified below r0 5 px. Headless fps ≈ 60% of the cabinet's
+(raster-bound, "(program)" 83% in the profile).
 Style: 1860–1930 studio-press devotional prints (chromolithograph/woodblock) + Noel's two block-print photos: jewel inks,
 gold, cusped arch, curtains, valance, lotus dais, stippled colour, cream curls on water, ink squiggles on the shore,
 lotus flowers, almond eyes, gold nimbus on glowing animals. Ornament only; no deities, no copies of specific prints.

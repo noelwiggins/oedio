@@ -2,7 +2,7 @@
 
    The same living world, drawn in the visual language of the popular devotional prints made in India's studio presses
    between 1860 and 1930 (chromolithographs, hand-coloured lithographs and woodblock prints from Calcutta, Poona, Bombay,
-   Nathdwara): jewel colours under varnish, gold, cusped arches, curtains drawn aside, lotus borders. The surface is a
+   Nathdwara): jewel colours under varnish, gold and lotus ornament, the print running to the edge of the window. The surface is a
    block print's: stippled, sponged colour, every shape outlined in ink with a light rim inside, calligraphic curls on the
    water. Ornament and manner only: no figures of deities and no copies of particular prints.
 
@@ -119,6 +119,40 @@
     ctx.restore();
   }
 
+  // ── the print's sponge: a speckle of light and dark laid over every fill, so colour looks dabbed, not flat ──
+  let sponge = null;
+  function spongePattern(ctx) {
+    if (sponge) return sponge;
+    const c = document.createElement('canvas'); c.width = c.height = 96; const g = c.getContext('2d');
+    for (let k = 0; k < 900; k++) {
+      const x = hash(k, 1) * 96, y = hash(k, 2) * 96, s = 0.7 + hash(k, 3) * 1.6;
+      g.fillStyle = hash(k, 4) < 0.55 ? 'rgba(255,248,232,0.30)' : 'rgba(30,20,40,0.22)';
+      g.beginPath(); g.arc(x, y, s / 2, 0, Math.PI * 2); g.fill();
+    }
+    sponge = ctx.createPattern(c, 'repeat');
+    return sponge;
+  }
+  // fill the current path with a colour, then dab the sponge over it (anchored to the shape, so it moves with it)
+  function dab(ctx, col, x, y, small) {
+    ctx.fillStyle = col; ctx.fill();
+    if (small) return;
+    const pat = spongePattern(ctx);
+    if (pat.setTransform) { M.a = 1; M.b = 0; M.c = 0; M.d = 1; M.e = x; M.f = y; pat.setTransform(M); }
+    ctx.fillStyle = pat; ctx.fill();
+  }
+  const M = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };                // one transform, reused for every pattern placement
+  // red stripes on cream, as one pattern: turned and scaled to each frond, so a striped frond is a single fill
+  let stripes = null;
+  function stripePattern(ctx) {
+    if (stripes) return stripes;
+    const c = document.createElement('canvas'); c.width = 32; c.height = 8; const g = c.getContext('2d');
+    g.fillStyle = CREAM; g.fillRect(0, 0, 32, 8);
+    g.fillStyle = RED; g.fillRect(0, 0, 11, 8);
+    stripes = ctx.createPattern(c, 'repeat');
+    return stripes;
+  }
+  const RED = '#b23a2c', BLUE = '#5574c8', SAGE = '#9fb06a';
+
   // ── flowers: lotuses, two rings of pointed petals around a seed head ──
   function petal(g, len, wid) {
     g.beginPath(); g.moveTo(0, 0);
@@ -129,36 +163,152 @@
     g.fillStyle = col;
     for (let k = 0; k < 26; k++) { const a = hash(seed, k) * 6.283, r = Math.sqrt(hash(k, seed)) * R; g.fillRect(Math.cos(a) * r, Math.sin(a) * r, Math.max(0.7, R * 0.045), Math.max(0.7, R * 0.045)); }
   }
+  // a rounded petal with a scalloped tip, like the printed peony's
+  function scallop(g, len, wid) {
+    g.beginPath(); g.moveTo(0, 0);
+    g.bezierCurveTo(len * 0.15, -wid * 1.05, len * 0.62, -wid * 1.25, len * 0.82, -wid * 0.55);
+    g.quadraticCurveTo(len * 1.02, -wid * 0.35, len * 0.92, 0);
+    g.quadraticCurveTo(len * 1.02, wid * 0.35, len * 0.82, wid * 0.55);
+    g.bezierCurveTo(len * 0.62, wid * 1.25, len * 0.15, wid * 1.05, 0, 0); g.closePath();
+  }
+  // the flower: a stippled blue rim, scalloped outer petals in two tones, a pink inner ring, a saffron cup or a seed head
   function flower(g, R, p, open) {
-    const n = Math.max(5, Math.min(12, p.petals)), c1 = mix(jewel(p.hue * 360), CREAMC, 0.18 + 0.25 * (1 - p.sat)), c2 = mix(c1, CREAMC, 0.45);
-    const len = open ? R : R * 0.8, wid = open ? R * 0.34 * (6 / n) ** 0.5 : R * 0.2;
-    const ring = (L, Wd, off, fill) => {
-      for (let i = 0; i < n; i++) {
-        g.save(); g.rotate(off + i / n * Math.PI * 2 - Math.PI / 2);
-        if (!open) g.scale(1, 0.55);
-        petal(g, L, Wd);
-        g.lineJoin = 'round';
-        g.strokeStyle = CREAM; g.lineWidth = Math.max(1.6, R * 0.16); g.stroke();      // the light rim outside
-        g.fillStyle = css(fill); g.fill();
-        g.strokeStyle = MAROON; g.lineWidth = Math.max(0.8, R * 0.06); g.stroke();      // the ink line
-        // a vein down the middle, as the printer cut it
-        g.strokeStyle = 'rgba(110,34,29,0.45)'; g.lineWidth = Math.max(0.6, R * 0.035);
-        g.beginPath(); g.moveTo(L * 0.18, 0); g.lineTo(L * 0.82, 0); g.stroke();
-        g.restore();
+    const n = Math.max(5, Math.min(10, p.petals)), outer = mix(jewel(p.hue * 360), CREAMC, 0.22 + 0.25 * (1 - p.sat));
+    const tint = mix(outer, CREAMC, 0.5), inner = mix(jewel(p.hue2 * 360), rgb(ROSE), 0.55), cup = rgb(SAFF);
+    const len = open ? R * 0.98 : R * 0.7, wid = (open ? R * 0.42 : R * 0.26) * Math.sqrt(6 / n);
+    const each = (L, Wd, off, fn) => { for (let i = 0; i < n; i++) { g.save(); g.rotate(off + i / n * Math.PI * 2 - Math.PI / 2); if (!open) g.scale(1, 0.6); fn(L, Wd, i); g.restore(); } };
+    // the stippled blue rim around the whole bloom
+    each(len, wid, 0, (L, Wd) => { scallop(g, L, Wd); g.lineJoin = 'round'; g.strokeStyle = BLUE; g.lineWidth = Math.max(2, R * 0.2); g.stroke(); });
+    each(len, wid, 0, (L, Wd) => { scallop(g, L, Wd); g.strokeStyle = 'rgba(244,234,210,0.55)'; g.setLineDash([R * 0.04, R * 0.07]); g.lineWidth = Math.max(1.2, R * 0.12); g.stroke(); g.setLineDash([]); });
+    // outer petals: the colour, a lighter inner band, a red line
+    each(len, wid, 0, (L, Wd) => {
+      scallop(g, L, Wd); dab(g, css(outer), 0, 0);
+      g.save(); g.translate(L * 0.1, 0); scallop(g, L * 0.72, Wd * 0.62); dab(g, css(tint), 0, 0); g.restore();
+      scallop(g, L, Wd); g.strokeStyle = RED; g.lineWidth = Math.max(0.9, R * 0.06); g.stroke();
+    });
+    // inner ring: pink petals, offset half a step
+    each(len * 0.62, wid * 0.85, Math.PI / n, (L, Wd) => {
+      scallop(g, L, Wd); dab(g, css(inner), 0, 0); g.strokeStyle = RED; g.lineWidth = Math.max(0.8, R * 0.055); g.stroke();
+    });
+    if (p.petals % 2) {
+      // a saffron cup with red tips, like the crowned buds of the prints
+      g.beginPath();
+      const cr = R * 0.3;
+      for (let k = 0; k <= 10; k++) { const a = k / 10 * Math.PI * 2 - Math.PI / 2, rr = k % 2 ? cr * 0.6 : cr; g[k ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr); }
+      g.closePath(); dab(g, css(cup), 0, 0); g.strokeStyle = RED; g.lineWidth = Math.max(0.8, R * 0.05); g.stroke();
+      g.fillStyle = RED; g.beginPath(); g.arc(0, 0, cr * 0.32, 0, Math.PI * 2); g.fill();
+    } else {
+      // a seed head: rings of dark blue, each with a red heart
+      const sr = R * 0.3;
+      g.fillStyle = css(mix(cup, CREAMC, 0.2)); g.beginPath(); g.arc(0, 0, sr, 0, Math.PI * 2); g.fill();
+      for (let k = 0; k < 7; k++) {
+        const a = k / 7 * Math.PI * 2, x = k ? Math.cos(a) * sr * 0.55 : 0, y = k ? Math.sin(a) * sr * 0.55 : 0, rr = sr * 0.28;
+        g.fillStyle = '#2b4a6e'; g.beginPath(); g.arc(x, y, rr, 0, Math.PI * 2); g.fill();
+        g.fillStyle = css(rgb(ROSE)); g.beginPath(); g.arc(x, y, rr * 0.6, 0, Math.PI * 2); g.fill();
+        g.fillStyle = RED; g.beginPath(); g.arc(x, y, rr * 0.25, 0, Math.PI * 2); g.fill();
       }
-    };
-    ring(len, wid, 0, c1);
-    ring(len * 0.66, wid * 0.8, Math.PI / n, c2);
-    stipple(g, R * 0.9, Math.round(p.hue * 97) + n, 'rgba(110,34,29,0.25)');
-    // the seed head: a ring of seeds, each outlined
-    const sc = mix(jewel(p.hue2 * 360), rgb(SAFF), 0.4), sr = R * 0.24;
-    g.fillStyle = css(sc); g.strokeStyle = INK; g.lineWidth = Math.max(0.7, R * 0.05);
-    g.beginPath(); g.arc(0, 0, sr, 0, Math.PI * 2); g.fill(); g.stroke();
-    g.fillStyle = css(mix(sc, rgb(LEAF), 0.5));
-    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; g.beginPath(); g.arc(Math.cos(a) * sr * 0.55, Math.sin(a) * sr * 0.55, sr * 0.2, 0, Math.PI * 2); g.fill(); }
+    }
   }
 
-  // ── the frame: a cusped arch, curtains drawn aside, a valance, a lotus dais ──
+  // ── creatures, as the prints would cut them: bodies of paisley fronds, ink-curl legs, crowned crests ──
+  // a frond: a paisley drop, round at the front and tapering back along the body
+  function frond(ctx, x, y, r, a, k) {
+    const L = r * (1.55 + 0.25 * (k || 0)), cx = Math.cos(a), sx = Math.sin(a), nx = -sx, ny = cx;
+    ctx.beginPath();
+    ctx.moveTo(x - cx * r * 0.95, y - sx * r * 0.95);
+    ctx.bezierCurveTo(x - cx * r * 0.9 + nx * r * 1.05, y - sx * r * 0.9 + ny * r * 1.05, x + cx * L * 0.55 + nx * r * 0.85, y + sx * L * 0.55 + ny * r * 0.85, x + cx * L + nx * r * 0.18, y + sx * L + ny * r * 0.18);
+    ctx.bezierCurveTo(x + cx * L * 0.6 - nx * r * 0.55, y + sx * L * 0.6 - ny * r * 0.55, x - cx * r * 0.9 - nx * r * 1.05, y - sx * r * 0.9 - ny * r * 1.05, x - cx * r * 0.95, y - sx * r * 0.95);
+    ctx.closePath();
+  }
+  function frondPrint(ctx, x, y, r, a, i, pattern, base, alt, small) {
+    // rim of stippled blue, then the fill, then the print's line inside it
+    frond(ctx, x, y, r, a, i % 3);
+    ctx.lineJoin = 'round'; ctx.strokeStyle = BLUE; ctx.lineWidth = Math.max(1.2, r * 0.42); ctx.stroke();
+    if (pattern > 0.66 && !small) {                               // red stripes on cream, banded with the creature's colours
+      const pat = stripePattern(ctx), k = r * 0.32 / 32, ca = Math.cos(a), sa = Math.sin(a);
+      M.a = ca * k * 3.2; M.b = sa * k * 3.2; M.c = -sa * k * 3.2; M.d = ca * k * 3.2; M.e = x; M.f = y;
+      if (pat.setTransform) pat.setTransform(M);
+      ctx.fillStyle = pat; ctx.fill();
+      const ga = ctx.globalAlpha; ctx.globalAlpha = ga * 0.85; ctx.fillStyle = i % 2 ? alt : base;
+      ctx.beginPath(); ctx.ellipse(x + ca * r * 0.55, y + sa * r * 0.55, r * 0.9, r * 0.32, a, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = ga;
+    } else if (pattern > 0.33 && !small) {                        // two tones: an inner drop of the second colour
+      dab(ctx, base, x, y, small);
+      ctx.save(); frond(ctx, x + Math.cos(a) * r * 0.25, y + Math.sin(a) * r * 0.25, r * 0.55, a, 0); dab(ctx, alt, x, y, small); ctx.restore();
+    } else {                                                      // solid, with a dotted spine
+      dab(ctx, small && pattern > 0.66 ? CREAM : base, x, y, small);
+      if (small) { frond(ctx, x, y, r, a, i % 3); ctx.strokeStyle = RED; ctx.lineWidth = Math.max(0.7, r * 0.11); ctx.stroke(); return; }
+      ctx.fillStyle = CREAM;
+      for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * (0.1 + k * 0.45), y + Math.sin(a) * r * (0.1 + k * 0.45), Math.max(0.6, r * 0.12), 0, Math.PI * 2); ctx.fill(); }
+    }
+    frond(ctx, x, y, r, a, i % 3); ctx.strokeStyle = RED; ctx.lineWidth = Math.max(0.7, r * 0.11); ctx.stroke();
+  }
+  function animal(ctx, A) {
+    const { pts, r0, ph, p, look, base, alt, t } = A;
+    const [hue, sat, hue2, pattern, glow, segs, limbs, size, tail, crest, fin, diet] = look;
+    const small = r0 < 5, insul = look[13] || 0;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (glow >= 0.35) halo(ctx, pts, look, t, A.alpha);
+    // legs: calligraphic ink curls, swinging as it walks
+    if (limbs > 0) {
+      ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r0 * 0.22);
+      for (let k = 0; k < limbs; k++) {
+        const i = Math.min(pts.length - 1, Math.round((k + 0.5) * pts.length / limbs - 0.5));
+        const [px, py, r, a] = pts[i], step = Math.sin(ph * 1.6 + k * 1.7) * 0.45;
+        for (const side of [-1, 1]) {
+          const la = a + side * (Math.PI / 2 + step * side), len = r * 2.0, ex = px + Math.cos(la) * len, ey = py + Math.sin(la) * len;
+          ctx.beginPath(); ctx.moveTo(px + Math.cos(la) * r * 0.6, py + Math.sin(la) * r * 0.6);
+          ctx.quadraticCurveTo(px + Math.cos(la + 0.5 * side) * len * 0.8, py + Math.sin(la + 0.5 * side) * len * 0.8, ex, ey);
+          ctx.arc(ex - Math.cos(la - side) * r * 0.32, ey - Math.sin(la - side) * r * 0.32, r * 0.32, la - side, la - side + side * 4.2, side < 0);
+          ctx.stroke();
+        }
+      }
+    }
+    // tail: a fan of striped fronds
+    const last = pts[pts.length - 1];
+    if (tail > 0.15) {
+      const [tx, ty, r, a] = last, nf = 2 + Math.round(tail * 3), sp = 0.3 + 0.45 * fin;
+      for (let k = 0; k < nf; k++) {
+        const aa = a + (nf > 1 ? (k / (nf - 1) - 0.5) * 2 * sp : 0) + Math.sin(ph + k) * 0.08;
+        frondPrint(ctx, tx + Math.cos(aa) * r * 0.9, ty + Math.sin(aa) * r * 0.9, r0 * (0.55 + 0.6 * tail), aa, k, 0.8, base, alt, small);
+      }
+    }
+    // a coat: a scalloped, stippled blue fringe
+    if (insul > 0.3) {
+      const fr = 0.2 + 0.3 * insul;
+      ctx.fillStyle = BLUE;
+      for (const [px, py, r, a] of pts) {
+        if (r < 1.5) continue;
+        ctx.beginPath();
+        for (let k = 0; k < 8; k++) { const aa = a + k / 8 * Math.PI * 2; ctx.moveTo(px + Math.cos(aa) * r * (1 + fr), py + Math.sin(aa) * r * (1 + fr)); ctx.arc(px + Math.cos(aa) * r * (1 + fr * 0.5), py + Math.sin(aa) * r * (1 + fr * 0.5), r * fr * 0.9, 0, Math.PI * 2); }
+        dab(ctx, BLUE, px, py, small);
+      }
+    }
+    // the body: fronds from tail to head, each overlapping the one behind like scales of a printed leaf
+    for (let i = pts.length - 1; i >= 1; i--) { const [px, py, r, a] = pts[i]; frondPrint(ctx, px, py, r * 1.05, a, i, pattern, base, alt, small); }
+    // crest: a crown of saffron points along the back, outlined in red
+    if (crest > 0.25) {
+      for (let i = 0; i < Math.min(pts.length, 3); i++) {
+        const [px, py, r, a] = pts[i], nrm = a + Math.PI / 2, h = r * (0.7 + 1.5 * crest), w = r * 0.9;
+        const bx = px + Math.cos(nrm) * r * 0.8, by = py + Math.sin(nrm) * r * 0.8, ux = Math.cos(nrm), uy = Math.sin(nrm), vx = Math.cos(a), vy = Math.sin(a);
+        ctx.beginPath(); ctx.moveTo(bx - vx * w, by - vy * w);
+        for (let k = 0; k <= 4; k++) { const f = -1 + k / 2, up = k % 2 ? 0.45 : 1; ctx.lineTo(bx + vx * w * f * 0.9 + ux * h * up, by + vy * w * f * 0.9 + uy * h * up); }
+        ctx.lineTo(bx + vx * w, by + vy * w); ctx.closePath();
+        ctx.strokeStyle = BLUE; ctx.lineWidth = Math.max(1, r * 0.3); ctx.stroke();
+        dab(ctx, SAFF, bx, by, small); ctx.strokeStyle = RED; ctx.lineWidth = Math.max(0.7, r * 0.1); ctx.stroke();
+      }
+    }
+    // the head: round, rimmed and lined like everything else, with its almond eye
+    const [hx, hy, hr, ha] = pts[0];
+    ctx.beginPath(); ctx.arc(hx, hy, hr * 1.08, 0, Math.PI * 2);
+    ctx.strokeStyle = BLUE; ctx.lineWidth = Math.max(1.2, hr * 0.42); ctx.stroke();
+    dab(ctx, base, hx, hy, small);
+    ctx.beginPath(); ctx.arc(hx, hy, hr * 0.62, 0, Math.PI * 2); dab(ctx, alt, hx, hy, small);
+    ctx.beginPath(); ctx.arc(hx, hy, hr * 1.08, 0, Math.PI * 2); ctx.strokeStyle = RED; ctx.lineWidth = Math.max(0.8, hr * 0.12); ctx.stroke();
+    eye(ctx, hx, hy, hr, p.h, diet);
+  }
+
+  // ── shared drawing helpers ──
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
   function goldGrad(g, x0, y0, x1, y1) {
     const gr = g.createLinearGradient(x0, y0, x1, y1);
@@ -169,132 +319,7 @@
     g.fillStyle = col; const n = Math.round(w * h * dens), s = Math.max(1, Math.min(w, h) * 0.004);
     for (let k = 0; k < n; k++) g.fillRect(x + hash(seed, k) * w, y + hash(k, seed + 7) * h, s, s);
   }
-  // the opening of the arch: straight sides up to the springing, then a pointed arch of cusped lobes
-  function archPath(g, pf) {
-    const m = pf.w * 0.035, x0 = pf.x + m, x1 = pf.x + pf.w - m, cx = pf.x + pf.w / 2;
-    const spring = pf.y + pf.h * 0.36, apex = pf.y + pf.h * 0.075, bottom = pf.y + pf.h + 4, N = 6;
-    const P = s => [x0 + (cx - x0) * Math.pow(1 - Math.cos(s * Math.PI / 2), 0.8), spring - (spring - apex) * Math.pow(Math.sin(s * Math.PI / 2), 1.25)];
-    g.moveTo(x0, bottom); g.lineTo(x0, spring);
-    const lobes = (pts, out) => {
-      for (let i = 0; i < pts.length - 1; i++) {
-        const [ax, ay] = pts[i], [bx, by] = pts[i + 1], mx = (ax + bx) / 2, my = (ay + by) / 2, L = Math.hypot(bx - ax, by - ay);
-        let nx = -(by - ay) / L, ny = (bx - ax) / L;
-        if ((mx - cx) * nx + (my - spring) * ny < 0) { nx = -nx; ny = -ny; }            // bulge away from the centre
-        g.quadraticCurveTo(mx + nx * L * 0.5, my + ny * L * 0.5, bx, by);
-      }
-    };
-    const left = []; for (let i = 0; i <= N; i++) left.push(P(i / N));
-    lobes(left);
-    const right = left.slice().reverse().map(([x, y]) => [2 * cx - x, y]);
-    g.lineTo(cx, apex - pf.h * 0.025); g.lineTo(right[0][0], right[0][1]);                // the little point at the apex
-    lobes(right);
-    g.lineTo(x1, bottom); g.lineTo(x0, bottom);
-    return { spring, apex, x0, x1, cx, m };
-  }
-  function bigLotus(g, x, y, R, hue, rot) {
-    g.save(); g.translate(x, y); g.rotate(rot || 0);
-    flower(g, R, { petals: 8, hue, sat: 0.9, hue2: 0.13 }, true);
-    g.restore();
-  }
-  function leaf(g, x, y, L, a, col) {
-    g.save(); g.translate(x, y); g.rotate(a);
-    petal(g, L, L * 0.28);
-    g.strokeStyle = CREAM; g.lineWidth = L * 0.07; g.stroke(); g.fillStyle = col; g.fill();
-    g.strokeStyle = INK; g.lineWidth = L * 0.025; g.stroke();
-    g.strokeStyle = 'rgba(244,234,210,0.6)'; g.lineWidth = L * 0.02;
-    for (let k = 1; k < 5; k++) { g.beginPath(); g.moveTo(L * k / 5.5, 0); g.lineTo(L * (k / 5.5 + 0.12), -L * 0.12); g.moveTo(L * k / 5.5, 0); g.lineTo(L * (k / 5.5 + 0.12), L * 0.12); g.stroke(); }
-    g.restore();
-  }
-  function curtain(g, pf, side, spring) {
-    const s = side, X0 = s > 0 ? pf.x : pf.x + pf.w, w = pf.w * 0.115, tieY = spring + pf.h * 0.05, tieX = X0 + s * pf.w * 0.03;
-    g.save();
-    g.beginPath(); g.moveTo(X0, pf.y); g.lineTo(X0 + s * w, pf.y);
-    g.bezierCurveTo(X0 + s * w * 0.75, pf.y + pf.h * 0.18, tieX + s * pf.w * 0.03, tieY - pf.h * 0.1, tieX, tieY);
-    g.bezierCurveTo(tieX - s * pf.w * 0.006, tieY + pf.h * 0.08, X0 + s * pf.w * 0.02, tieY + pf.h * 0.18, X0, tieY + pf.h * 0.26);
-    g.closePath();
-    const gr = g.createLinearGradient(X0, 0, X0 + s * w, 0);
-    gr.addColorStop(0, '#7b1f1a'); gr.addColorStop(0.45, VERM); gr.addColorStop(1, '#8f2a20');
-    g.fillStyle = gr; g.fill();
-    g.save(); g.clip();
-    for (let k = 1; k < 6; k++) {                                                            // folds falling to the tie
-      g.strokeStyle = k % 2 ? 'rgba(60,12,10,0.35)' : 'rgba(255,200,170,0.18)'; g.lineWidth = pf.w * 0.006;
-      g.beginPath(); g.moveTo(X0 + s * w * k / 6, pf.y); g.quadraticCurveTo(X0 + s * w * k / 9, tieY - pf.h * 0.1, tieX - s * pf.w * 0.004 * k, tieY); g.stroke();
-    }
-    stippleRect(g, Math.min(X0, X0 + s * w), pf.y, w, tieY + pf.h * 0.3 - pf.y, 'rgba(40,8,6,0.25)', 0.0016, 31 + s);
-    g.restore();
-    g.strokeStyle = goldGrad(g, X0, pf.y, X0 + s * w, tieY); g.lineWidth = pf.w * 0.006; g.stroke();
-    g.strokeStyle = INK; g.lineWidth = Math.max(1, pf.w * 0.0015); g.stroke();
-    // the tie: a gold cord and a tassel
-    g.fillStyle = goldGrad(g, tieX - 10, tieY - 10, tieX + 10, tieY + 10);
-    g.beginPath(); g.ellipse(tieX, tieY, pf.w * 0.011, pf.h * 0.018, 0, 0, Math.PI * 2); g.fill(); g.strokeStyle = INK; g.lineWidth = Math.max(1, pf.w * 0.0015); g.stroke();
-    g.beginPath(); g.moveTo(tieX - pf.w * 0.006, tieY + pf.h * 0.015); g.lineTo(tieX + pf.w * 0.006, tieY + pf.h * 0.015); g.lineTo(tieX + pf.w * 0.009, tieY + pf.h * 0.075); g.lineTo(tieX - pf.w * 0.009, tieY + pf.h * 0.075); g.closePath();
-    g.fillStyle = SAFF; g.fill(); g.stroke();
-    g.restore();
-  }
-  function valance(g, pf) {
-    const n = 14, w = pf.w / n, h = pf.h * 0.05;
-    g.fillStyle = MAROON; g.fillRect(pf.x, pf.y, pf.w, h * 0.45);
-    for (let k = 0; k < n; k++) {
-      const x = pf.x + k * w;
-      g.beginPath(); g.moveTo(x, pf.y + h * 0.4); g.quadraticCurveTo(x + w / 2, pf.y + h * 1.25, x + w, pf.y + h * 0.4); g.closePath();
-      g.fillStyle = k % 2 ? VERM : '#8f2a20'; g.fill();
-      g.strokeStyle = goldGrad(g, x, pf.y, x + w, pf.y + h); g.lineWidth = pf.w * 0.004; g.stroke();
-      g.strokeStyle = INK; g.lineWidth = Math.max(1, pf.w * 0.0012); g.stroke();
-      // a tassel from each point
-      g.fillStyle = SAFF; g.beginPath(); g.moveTo(x - w * 0.06, pf.y + h * 0.42); g.lineTo(x + w * 0.06, pf.y + h * 0.42); g.lineTo(x, pf.y + h * 1.1); g.closePath(); g.fill(); g.stroke();
-    }
-    g.strokeStyle = goldGrad(g, pf.x, pf.y, pf.x + pf.w, pf.y); g.lineWidth = pf.h * 0.008; g.beginPath(); g.moveTo(pf.x, pf.y + h * 0.42); g.lineTo(pf.x + pf.w, pf.y + h * 0.42); g.stroke();
-  }
-  function dais(g, pf) {
-    const h = pf.h * 0.04, n = 36, w = pf.w / n, y = pf.y + pf.h - h;
-    g.fillStyle = MAROON; g.fillRect(pf.x, y + h * 0.55, pf.w, h * 0.45);
-    for (let k = 0; k <= n; k++) {
-      const x = pf.x + k * w;
-      g.save(); g.translate(x, y + h); g.rotate(-Math.PI / 2);
-      petal(g, h * 1.05, w * 0.5);
-      g.strokeStyle = CREAM; g.lineWidth = w * 0.12; g.stroke();
-      g.fillStyle = k % 2 ? ROSE : '#f0d9b5'; g.fill(); g.strokeStyle = MAROON; g.lineWidth = Math.max(1, w * 0.05); g.stroke();
-      g.restore();
-    }
-    g.strokeStyle = goldGrad(g, pf.x, y, pf.x + pf.w, y); g.lineWidth = pf.h * 0.006; g.beginPath(); g.moveTo(pf.x, y + h); g.lineTo(pf.x + pf.w, y + h); g.stroke();
-  }
-  let frameCache = null;
-  function buildFrame(L, dark) {
-    const { pf } = L, c = document.createElement('canvas'); c.width = L.cw; c.height = L.ch;
-    const g = c.getContext('2d');
-    g.save();
-    g.beginPath(); g.rect(pf.x, pf.y, pf.w, pf.h);
-    const A = archPath(g, pf);
-    g.clip('evenodd');
-    // spandrels: a printed panel of deep teal, with lotuses, leaves and curls
-    g.fillStyle = TEAL; g.fillRect(pf.x, pf.y, pf.w, pf.h);
-    stippleRect(g, pf.x, pf.y, pf.w, pf.h, 'rgba(12,30,38,0.35)', 0.0022, 5);
-    stippleRect(g, pf.x, pf.y, pf.w, pf.h, 'rgba(160,210,210,0.12)', 0.0012, 6);
-    for (const s of [1, -1]) {
-      const cx = s > 0 ? pf.x + pf.w * 0.15 : pf.x + pf.w * 0.85, cy = pf.y + pf.h * 0.12, R = pf.h * 0.07;
-      for (let k = 0; k < 5; k++) leaf(g, cx, cy, R * 1.9, (s > 0 ? 0 : Math.PI) + (k - 2) * 0.55 + (s > 0 ? 0.6 : -0.6), k % 2 ? LEAF : OLIVE);
-      bigLotus(g, cx, cy, R, s > 0 ? 0.97 : 0.62, s * 0.2);
-    }
-    g.restore();
-    // the arch's edge: gold, ink, and a light rim, like the outline of everything else
-    g.save(); g.beginPath(); archPath(g, pf);
-    g.lineJoin = 'round';
-    g.strokeStyle = CREAM; g.lineWidth = pf.w * 0.013; g.stroke();
-    g.strokeStyle = goldGrad(g, pf.x, pf.y, pf.x + pf.w, pf.y + pf.h * 0.4); g.lineWidth = pf.w * 0.008; g.stroke();
-    g.strokeStyle = INK; g.lineWidth = Math.max(1, pf.w * 0.0018); g.stroke();
-    g.restore();
-    g.save(); rr(g, pf.x, pf.y, pf.w, pf.h, L.u * 0.018); g.clip();
-    curtain(g, pf, 1, A.spring); curtain(g, pf, -1, A.spring);
-    valance(g, pf); dais(g, pf);
-    g.restore();
-    if (dark) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(12,6,16,0.72)'; g.fillRect(0, 0, c.width, c.height); }
-    return c;
-  }
-  function frame(ctx, L, t, night, dark) {
-    const key = [L.cw, L.ch, L.pf.x, L.pf.y, L.pf.w, L.pf.h, dark ? 1 : 0].join('|');
-    if (!frameCache || frameCache.key !== key) frameCache = { key, c: buildFrame(L, dark) };
-    ctx.drawImage(frameCache.c, 0, 0);
-  }
+  function frame() { /* the print runs to the edge of the window: no arch, no curtains, no valance */ }
 
   // ── the cabinet: a maroon ground with a gold vine border and lotus corners ──
   let cabCache = null;
@@ -404,7 +429,7 @@
 
   window.ALGO_SKIN = {
     id: 'devotional', slug: 'devotional',
-    terrainPixel, animalColors, pattern, eye, halo, flower, flowerPad: 0.2, rim: CREAM,
-    frame, cabinet, bezel, metal, pin, tray, nameplate, surface,
+    terrainPixel, animalColors, animal, flower, flowerPad: 0.25,
+    frame, cabinet, bezel, metal, pin, tray, nameplate,          // (no surface layer: the land is already stippled)
   };
 })();
