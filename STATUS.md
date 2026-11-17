@@ -16,10 +16,10 @@ inside their cards. Studio on phones (<=640px): single column, source filter + s
 
 ## REVOLVING BOOKCASE (library ↔ Darwin), 2026-11-15
 One continuous turn across two pages, the same physics as the Algogenesis panels. Leaving (index.html bookcaseTurn /
-darwin.css swingOut, 1.3 s): book tips 650 ms (.7 s transition), page rocks back 3° as the latch catches, then t² ease-in
-to 90° (navigates on animationend, not a timer). Arriving: the page is held edge-on (bookcase-hold / portal-hold, set from <head>) until its
-content is parsed and painted twice, then swings from −90° on a spring `linear()` curve (ω 0.0068/ms, ζ 0.68, start speed
-= exit speed; 1080 ms, 5° overshoot; slowed 2026-11-15 for drama). Always turns the same way round. Shade is an html::after overlay, not a filter.
+darwin.css swingOut, 740 ms): book tips 380 ms (.42 s transition), page rocks back 3° in 150 ms, then t² ease-in
+to 90° in 590 ms, leaving at the panels' finger speed (navigates on animationend, not a timer). Arriving: the page is held edge-on (bookcase-hold / portal-hold, set from <head>) until its
+content is parsed and painted twice, then swings from −90° on a spring `linear()` curve generated from the panels' own spring (ω 0.0115/ms, ζ 0.62,
+start speed 0.0017 turns/ms = a finger swipe; 570 ms, ~8° overshoot; matched to the panel swipe 2026-11-17). Always turns the same way round. Shade is an html::after overlay, not a filter.
 Touching the book (or the exit link) prerenders the other page (Chrome speculation rules) and fetch-warms it plus its
 versioned assets and three.js in every browser; /darwin/?via=portal and /?from=darwin are cacheable for 30 s; all
 /static/*?v= assets are now immutable for a year. Pool view holds its first frame while the page turns.

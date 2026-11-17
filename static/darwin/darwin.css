@@ -233,21 +233,21 @@ details > summary { cursor: pointer; font-weight: 500; }
    spring (as the Algogenesis panels are), a few degrees past flat and back. Leaving swings on the same way. */
 html.portal-in, html.portal-out { perspective: 1600px; background: #050908; overflow: hidden; }
 html.portal-in body { transform-origin: 50% 50vh; will-change: transform;
-  animation: swingIn 1080ms cubic-bezier(.15,.8,.3,1.06) both; }
-@supports (animation-timing-function: linear(0, 1)) { html.portal-in body { animation-timing-function: linear(0.0000 0.0%, 0.0572 2.2%, 0.1378 4.8%, 0.2274 7.4%, 0.3213 10.0%, 0.4020 12.2%, 0.4937 14.8%, 0.5806 17.4%, 0.6611 20.0%, 0.7240 22.2%, 0.7898 24.8%, 0.8473 27.4%, 0.8965 30.0%, 0.9377 32.6%, 0.9671 34.8%, 0.9950 37.4%, 1.0167 40.0%, 1.0328 42.6%, 1.0429 44.8%, 1.0508 47.4%, 1.0553 50.0%, 1.0570 52.6%, 1.0564 55.2%, 1.0546 57.4%, 1.0514 60.0%, 1.0472 62.6%, 1.0424 65.2%, 1.0382 67.4%, 1.0331 70.0%, 1.0282 72.6%, 1.0234 75.2%, 1.0190 77.8%, 1.0156 80.0%, 1.0120 82.6%, 1.0088 85.2%, 1.0061 87.8%, 1.0041 90.0%, 1.0021 92.6%, 1.0006 95.2%, 0.9993 97.8%, 1.0000 100.0%); } }
+  animation: swingIn 570ms cubic-bezier(.15,.8,.3,1.06) both; }
+@supports (animation-timing-function: linear(0, 1)) { html.portal-in body { animation-timing-function: linear(0.0000 0.0%, 0.0557 2.5%, 0.1235 4.9%, 0.1996 7.4%, 0.2808 9.8%, 0.3641 12.3%, 0.4473 14.7%, 0.5284 17.2%, 0.6058 19.6%, 0.6784 22.1%, 0.7454 24.6%, 0.8062 27.0%, 0.8605 29.5%, 0.9082 31.9%, 0.9494 34.4%, 0.9842 36.8%, 1.0131 39.3%, 1.0365 41.8%, 1.0547 44.2%, 1.0683 46.7%, 1.0778 49.1%, 1.0837 51.6%, 1.0866 54.0%, 1.0869 56.5%, 1.0851 58.9%, 1.0817 61.4%, 1.0769 63.9%, 1.0712 66.3%, 1.0648 68.8%, 1.0581 71.2%, 1.0512 73.7%, 1.0444 76.1%, 1.0378 78.6%, 1.0314 81.1%, 1.0255 83.5%, 1.0201 86.0%, 1.0152 88.4%, 1.0108 90.9%, 1.0070 93.3%, 1.0037 95.8%, 1.0009 98.2%, 1.0000 100.0%); } }
 html.portal-hold body, html.portal-hold::after { animation-play-state: paused; }
 @keyframes swingIn { from { transform: rotateY(-90deg); } to { transform: none; } }
 html.portal-in::after, html.portal-out::after { content: ''; position: fixed; inset: 0; z-index: 2147483647;
   pointer-events: none; background: #050908; }
-html.portal-in::after { animation: portalUnshade 1080ms cubic-bezier(.15,.8,.3,1) both; }
+html.portal-in::after { animation: portalUnshade 570ms cubic-bezier(.15,.8,.3,1) both; }
 @keyframes portalUnshade { 0% { opacity: .85; } 45%, 100% { opacity: 0; } }
-html.portal-out body { transform-origin: 50% 50vh; will-change: transform; animation: swingOut 1.3s both; }
+html.portal-out body { transform-origin: 50% 50vh; will-change: transform; animation: swingOut 740ms both; }
 @keyframes swingOut {
   0%   { transform: rotateY(0deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
-  26%  { transform: rotateY(-3deg); animation-timing-function: cubic-bezier(.333,0,.667,.333); }
+  20%  { transform: rotateY(-3deg); animation-timing-function: cubic-bezier(.333,0,.667,.333); }
   100% { transform: rotateY(90deg); } }
-html.portal-out::after { animation: portalShade 1.3s both; }
-@keyframes portalShade { 0%, 26% { opacity: 0; animation-timing-function: cubic-bezier(.333,0,.667,.333); } 100% { opacity: .85; } }
+html.portal-out::after { animation: portalShade 740ms both; }
+@keyframes portalShade { 0%, 20% { opacity: 0; animation-timing-function: cubic-bezier(.333,0,.667,.333); } 100% { opacity: .85; } }
 @media (prefers-reduced-motion: reduce) {
   html.portal-in body, html.portal-out body { animation: fade .4s both; }
   html.portal-in::after, html.portal-out::after { animation: none; opacity: 0; }
