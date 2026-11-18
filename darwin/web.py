@@ -14,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 
 import numpy as np
 import sqlalchemy as sa
-from flask import Blueprint, Response, abort, jsonify, make_response, render_template, request
+from flask import Blueprint, Response, abort, jsonify, make_response, redirect, render_template, request
 
 from . import bench, core, costs, life, memory, openlab, schedule, snapshot, store, suite, world_live
 
@@ -340,38 +340,46 @@ def algo_page():
     return render_template("darwin/algogenesis.html")
 
 
-@bp.route("/algogenesis/devotional")
-def algo_page_devotional():
-    """The Coast again, the same world at the same moment, drawn as a devotional print."""
+@bp.route("/algogenesis/folkpop")
+def algo_page_folkpop():
+    """The Coast again, the same world at the same moment, drawn as a folk-pop fable."""
     ensure_algo()
-    return render_template("darwin/algogenesis.html", style="devotional", panel_src="/darwin/algogenesis/devotional/panel",
-                           page_title="Algogenesis · Devotional")
+    return render_template("darwin/algogenesis.html", style="folkpop", panel_src="/darwin/algogenesis/folkpop/panel",
+                           page_title="Algogenesis · Folk Pop")
 
 
-@bp.route("/algogenesis/devotional/panel")
-def algo_panel_devotional():
-    """The Coast panel with the devotional-print skin: the same panel file, with the skin and its font put in."""
+@bp.route("/algogenesis/folkpop/panel")
+def algo_panel_folkpop():
+    """The Coast panel with the folk-pop skin: the same panel file, with the skin and its font put in."""
     ensure_algo()
     html = open(ALGO_PANEL, encoding="utf-8").read().replace("__ALGO_API__", "/darwin/api/algo")
-    html = html.replace("<title>Algogenesis</title>", "<title>Algogenesis · Devotional</title>")
-    html = html.replace("family=Righteous&", "family=Righteous&family=Yatra+One&")
-    html = html.replace("</style>", DEVOTIONAL_CSS + "\n</style>", 1)
+    html = html.replace("<title>Algogenesis</title>", "<title>Algogenesis · Folk Pop</title>")
+    html = html.replace("family=Righteous&", "family=Righteous&family=Shrikhand&")
+    html = html.replace("</style>", FOLKPOP_CSS + "\n</style>", 1)
     i = html.index('<script src="/static/darwin/algo/panel.js')
-    html = html[:i] + '<script src="/static/darwin/algo/skins/devotional.js?v=3"></script>\n' + html[i:]
+    html = html[:i] + '<script src="/static/darwin/algo/skins/folkpop.js?v=1"></script>\n' + html[i:]
     r = make_response(html)
     r.headers["Content-Type"] = "text/html; charset=utf-8"
     return r
 
 
-# the keys and cards in gold and vermilion, lettered like the nameplate
-DEVOTIONAL_CSS = """
-  :root { --orange: #c8402a; --rim: #6e221d; --cream: #f4ead2; --ink: #231a1c; --gold: #d4a537; }
-  html, body { background: #3a110e; }
-  .key { background: radial-gradient(circle at 35% 30%, #fff3c4 0, #f3d27a 20%, #b8862a 55%, #f1d58a 72%, #8a5f16 100%); }
-  #card { border-color: #c8402a; box-shadow: 0 0 0 .35vmin #d4a537, 0 2vmin 5vmin rgba(0,0,0,.55); }
-  #card h2 { font-family: "Yatra One", serif; color: #6e221d; letter-spacing: .03em; }
-  #card .x { background: #d4a537; }
-  .veil { font-family: "Yatra One", serif; text-shadow: 0 2px 0 #6e221d; }
+@bp.route("/algogenesis/devotional")
+@bp.route("/algogenesis/devotional/panel")
+def algo_devotional_moved():
+    """The devotional-print version became the folk-pop version (2026-11-18): old links land on it."""
+    q = request.query_string.decode()
+    return redirect(request.path.replace("/devotional", "/folkpop") + ("?" + q if q else ""), code=301)
+
+
+# the keys and cards in pop colours, lettered fat and round like the nameplate
+FOLKPOP_CSS = """
+  :root { --orange: #e8338b; --rim: #151215; --cream: #fffaf0; --ink: #151215; --gold: #ffd21f; }
+  html, body { background: #4b2380; }
+  .key { background: radial-gradient(circle at 35% 30%, #fff7b0 0, #ffd21f 35%, #f58a1f 75%, #e8322b 100%); }
+  #card { border-color: #e8338b; box-shadow: 0 0 0 .35vmin #ffd21f, 0 0 0 .7vmin #18b5b0, 0 2vmin 5vmin rgba(0,0,0,.55); }
+  #card h2 { font-family: "Shrikhand", "Righteous", sans-serif; color: #e8338b; letter-spacing: .02em; }
+  #card .x { background: #ffd21f; }
+  .veil { font-family: "Shrikhand", "Righteous", sans-serif; text-shadow: 0 3px 0 #151215; }
 """
 
 

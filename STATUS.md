@@ -26,6 +26,16 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## FOLK POP COAST — replaces the Devotional Coast (2026-11-18)
+skins/folkpop.js (devotional.js removed). Routes /darwin/algogenesis/folkpop (+/panel, Shrikhand font, FOLKPOP_CSS);
+/devotional and /devotional/panel 301 to them (query kept). Switcher entry 'folkpop' (v6); zoom key coast-folkpop.
+Style: Prymachenko-like folk beasts (segments filled with polka dots, rainbow bands or a rosette, traced in white dots;
+huge lashed eyes; striped legs with claws; tails curling to a bloom or a rainbow fin fan; rainbow fan-feather crests;
+toothy grin on hunters; rainbow starburst for glowers; fur strokes for coats) + late-60s psychedelic colour (flat pop
+palette snapped by hue, wavy op-art sea stripes, contour bands on the hills from real height — skins can set wantsHeight
+and panel.js passes the height to terrainPixel; polka-dot shore; violet cabinet with rainbow sunbursts and stars; rainbow
+bezel; lemon cloud nameplate). Same headless fps as the original Coast (7.3 vs 7.3).
+
 ## ANTHROPOGENESIS SOUND — In C, Mali (2026-11-17)
 sound.js: palette flag `inC` replaces the Eno loops on Anthropogenesis with an ensemble after Terry Riley's In C as played in
 Mali (Africa Express). A balafon pulse on high C every 0.27 s (half speed on the dark side; Pace knob scales it); a book of

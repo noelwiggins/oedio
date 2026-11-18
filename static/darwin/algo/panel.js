@@ -12,7 +12,7 @@
   let ctx = ctx0, turnCv = null;          // while the panel turns, each face is drawn here first, then projected
   const veil = document.getElementById('veil'), keys = document.getElementById('keys'), card = document.getElementById('card');
   const INK = '#2a1d14', CREAM = '#fbf3dc', ORANGE = '#ee7d22', RIM = '#b9560c';
-  // an optional art style (a "skin", e.g. skins/devotional.js) may redraw the cabinet, land, flowers and animals;
+  // an optional art style (a "skin", e.g. skins/folkpop.js) may redraw the cabinet, land, flowers and animals;
   // the world, its data and every behaviour stay the same. Without one, the panel is the pachinko cabinet.
   const SK = window.ALGO_SKIN || null;
   let W = 1200, H = 800, terrain = null, terrCanvas = null, terrDark = null, terrSea = null, terrSnow = null, pins = [];
@@ -140,10 +140,11 @@
   // a step-by-step painter: it yields every few rows, so a big repaint can be spread over frames
   function* terrainSteps(x0, y0, x1, y1, ts, sea, snow) {
     const tw = Math.max(1, Math.round((x1 - x0) * ts)), th = Math.max(1, Math.round((y1 - y0) * ts)), step = 1 / ts;
-    const zone = new Uint8Array(tw * th), snowy = new Uint8Array(tw * th);
+    const zone = new Uint8Array(tw * th), snowy = new Uint8Array(tw * th), hgt = SK && SK.wantsHeight ? new Float32Array(tw * th) : null;
     for (let py = 0; py < th; py++) {
       for (let px = 0; px < tw; px++) {
         const d = hAt(x0 + px * step, y0 + py * step) - sea; zone[py * tw + px] = zoneOf(d);
+        if (hgt) hgt[py * tw + px] = d;
         if (d > snow && d > 0.045) snowy[py * tw + px] = 1;
       }
       if ((py & 7) === 7) yield;
@@ -166,7 +167,7 @@
                         (px - k >= 0 && (zone[i - k] !== z || snowy[i - k] !== sn)) || (py - k >= 0 && (zone[i - k * tw] !== z || snowy[i - k * tw] !== sn));
             if (hit) lev = k <= ow * 0.6 ? 1 : 2;
           }
-          const col = SK.terrainPixel(z, lev, sn, x0 + px * step, y0 + py * step, ZONES[z][1]);
+          const col = SK.terrainPixel(z, lev, sn, x0 + px * step, y0 + py * step, ZONES[z][1], hgt ? hgt[i] : 0);
           const k4 = i * 4;
           D[k4] = col[0]; D[k4 + 1] = col[1]; D[k4 + 2] = col[2]; D[k4 + 3] = 255;
           let dc = DARKZ[z]; if (sn) dc = [70, 64, 84];

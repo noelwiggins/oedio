@@ -9,7 +9,7 @@
   'use strict';
   const PANELS = [
     ['coast', 'Algogenesis', 'Algolysis', 'Life evolving on a coast: plants, animals, fungi'],
-    ['devotional', 'Devotional Coast', 'Devotional Algolysis', 'The same coast, drawn as a devotional print'],
+    ['folkpop', 'Folk Pop Coast', 'Folk Pop Algolysis', 'The same coast, as a folk-pop fable'],
     ['cosmogenesis', 'Cosmogenesis', 'Cosmophthora', 'The coming into existence of the cosmos'],
     ['protogenesis', 'Protogenesis', 'Protophthora', 'First origin or initial formation'],
     ['biogenesis', 'Biogenesis', 'Biophthora', 'Life arising from preexisting life'],
@@ -23,9 +23,9 @@
     ['psychogenesis', 'Psychogenesis', 'Psycholysis', 'The origin and development of psychological processes'],
     ['anthropogenesis', 'Anthropogenesis', 'Anthropophthora', 'The origin and development of humanity'],
   ];
-  const href = slug => slug === 'coast' ? '/darwin/algogenesis/panel' : `/darwin/algogenesis/${slug}/panel`;   // devotional too
+  const href = slug => slug === 'coast' ? '/darwin/algogenesis/panel' : `/darwin/algogenesis/${slug}/panel`;   // folkpop too
   // the page each panel sits in (its title, description and stats around the panel's frame)
-  const pageHref = slug => slug === 'coast' ? '/darwin/algogenesis/coast' : `/darwin/algogenesis/${slug}`;   // and /devotional
+  const pageHref = slug => slug === 'coast' ? '/darwin/algogenesis/coast' : `/darwin/algogenesis/${slug}`;   // and /folkpop
   // shown inside one of those pages? then the whole page changes, not just the frame
   function hostPage() {
     try { if (window.top !== window && window.top.location.origin === location.origin) return window.top; } catch (e) {}
