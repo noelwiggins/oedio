@@ -340,24 +340,32 @@ def algo_page():
     return render_template("darwin/algogenesis.html")
 
 
-@bp.route("/algogenesis/folkpop")
-def algo_page_folkpop():
-    """The Coast again, the same world at the same moment, drawn as a folk-pop fable."""
-    ensure_algo()
-    return render_template("darwin/algogenesis.html", style="folkpop", panel_src="/darwin/algogenesis/folkpop/panel",
-                           page_title="Algogenesis · Folk Pop")
+# Other art styles for the Coast: the same world at the same moment, through a skin script that redraws it.
+# slug -> (title, Google font family to add, extra CSS, skin version)
+COAST_SKINS = {
+    "folkpop": ("Folk Pop", "family=Shrikhand&", "FOLKPOP_CSS", 1),
+    "dream": ("Dream", "family=Cormorant+Garamond:ital,wght@1,300;1,400&", "DREAM_CSS", 1),
+}
 
 
-@bp.route("/algogenesis/folkpop/panel")
-def algo_panel_folkpop():
-    """The Coast panel with the folk-pop skin: the same panel file, with the skin and its font put in."""
+@bp.route("/algogenesis/<any(folkpop, dream):skin>")
+def algo_page_skin(skin):
     ensure_algo()
+    return render_template("darwin/algogenesis.html", style=skin, panel_src=f"/darwin/algogenesis/{skin}/panel",
+                           page_title=f"Algogenesis · {COAST_SKINS[skin][0]}")
+
+
+@bp.route("/algogenesis/<any(folkpop, dream):skin>/panel")
+def algo_panel_skin(skin):
+    """The Coast panel with a skin: the same panel file, with the skin script, its font and its CSS put in."""
+    ensure_algo()
+    title, font, css_name, ver = COAST_SKINS[skin]
     html = open(ALGO_PANEL, encoding="utf-8").read().replace("__ALGO_API__", "/darwin/api/algo")
-    html = html.replace("<title>Algogenesis</title>", "<title>Algogenesis · Folk Pop</title>")
-    html = html.replace("family=Righteous&", "family=Righteous&family=Shrikhand&")
-    html = html.replace("</style>", FOLKPOP_CSS + "\n</style>", 1)
+    html = html.replace("<title>Algogenesis</title>", f"<title>Algogenesis · {title}</title>")
+    html = html.replace("family=Righteous&", "family=Righteous&" + font)
+    html = html.replace("</style>", globals()[css_name] + "\n</style>", 1)
     i = html.index('<script src="/static/darwin/algo/panel.js')
-    html = html[:i] + '<script src="/static/darwin/algo/skins/folkpop.js?v=1"></script>\n' + html[i:]
+    html = html[:i] + f'<script src="/static/darwin/algo/skins/{skin}.js?v={ver}"></script>\n' + html[i:]
     r = make_response(html)
     r.headers["Content-Type"] = "text/html; charset=utf-8"
     return r
@@ -370,6 +378,17 @@ def algo_devotional_moved():
     q = request.query_string.decode()
     return redirect(request.path.replace("/devotional", "/folkpop") + ("?" + q if q else ""), code=301)
 
+
+# the Dream Coast: night glass keys, lavender light, a thin italic serif
+DREAM_CSS = """
+  :root { --orange: #8b84c4; --rim: #2a2648; --cream: #e4dfff; --ink: #0b0a1c; --gold: #b9b2ff; }
+  html, body { background: #0b0a1c; }
+  .key { background: radial-gradient(circle at 35% 30%, #4a4380 0, #241f4a 45%, #120e26 100%); box-shadow: 0 0 1.2vmin rgba(150,140,255,.35); }
+  #card { border-color: #8b84c4; box-shadow: 0 0 0 .2vmin #4a4380, 0 0 4vmin rgba(150,140,255,.25), 0 2vmin 5vmin rgba(0,0,0,.6); }
+  #card h2 { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 400; color: #3a3560; letter-spacing: .04em; }
+  #card .x { background: #b9b2ff; }
+  .veil { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 300; letter-spacing: .08em; text-shadow: 0 0 12px rgba(160,150,255,.8); }
+"""
 
 # the keys and cards in pop colours, lettered fat and round like the nameplate
 FOLKPOP_CSS = """

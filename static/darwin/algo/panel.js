@@ -920,15 +920,19 @@
     } else {
       drawWorld(terrCanvas, 0, 0, W, H);
       drawRegion(false);
-      drawPins(night, t);
-      drawPlants(now, t, smoothLight);
-      drawMushrooms(now, t, false);
       const glowLayer = [];
-      for (const o of [...animals.values()]) drawAnimal(o, now, t, smoothLight, glowLayer);
-      drawFamilies(now);
+      if (SK && SK.life) {                      // a skin that draws life as a whole (the Dream Coast: species as clouds)
+        SK.life(ctx, { animals, plants, fungi, now, t, light: smoothLight, night, pos, L, W, H, inView });
+      } else {
+        drawPins(night, t);
+        drawPlants(now, t, smoothLight);
+        drawMushrooms(now, t, false);
+        for (const o of [...animals.values()]) drawAnimal(o, now, t, smoothLight, glowLayer);
+        drawFamilies(now);
+      }
       if (SK && SK.surface) SK.surface(ctx, pf, t);
       drawRailAndDecals(t, night);
-      if (night > 0.01) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
+      if (night > 0.01 && !(SK && SK.noNight)) { ctx.fillStyle = `rgba(14,10,40,${0.55 * night})`; ctx.fillRect(pf.x, pf.y, pf.w, pf.h); }
       drawGlow(glowLayer, smoothLight);
     }
     ctx.restore();

@@ -10,6 +10,7 @@
   const PANELS = [
     ['coast', 'Algogenesis', 'Algolysis', 'Life evolving on a coast: plants, animals, fungi'],
     ['folkpop', 'Folk Pop Coast', 'Folk Pop Algolysis', 'The same coast, as a folk-pop fable'],
+    ['dream', 'Dream Coast', 'Dream Algolysis', 'The same coast as a dream: species as drifting clouds of colour'],
     ['cosmogenesis', 'Cosmogenesis', 'Cosmophthora', 'The coming into existence of the cosmos'],
     ['protogenesis', 'Protogenesis', 'Protophthora', 'First origin or initial formation'],
     ['biogenesis', 'Biogenesis', 'Biophthora', 'Life arising from preexisting life'],

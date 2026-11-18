@@ -17,7 +17,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap">
 {% endblock %}
 {% block content %}
-{% if style == 'folkpop' %}
+{% if style == 'dream' %}
+<p class="eyebrow">Algogenesis · Panel I · Dream</p>
+<h1 style="margin:0 0 6px">The Coast, as a dream</h1>
+<p class="lede">The same living coast, at the same moment, seen the way the dark side is seen: dim, soft and luminous. No
+creature is drawn as a body. Each species has one colour, and every member breathes a soft cloud of it, so a herd becomes
+one glowing drift that shifts, parts and mingles as the animals graze, flee and breed. Where two species meet, their
+colours mix. Flowers are a faint haze of pollen, and each animal is a single firefly point inside its cloud.</p>
+{% elif style == 'folkpop' %}
 <p class="eyebrow">Algogenesis · Panel I · Folk pop</p>
 <h1 style="margin:0 0 6px">The Coast, as a folk-pop fable</h1>
 <p class="lede">The same living coast, at the same moment, with the same creatures, drawn in a mix of two manners: the fantastical
@@ -38,8 +45,9 @@ for now; the same program is built to run on a computer behind a 4' × 6' screen
   <button class="btn" type="button" id="fsbtn">Full screen</button>
   <a class="btn tonal" href="{{ panel_src or '/darwin/algogenesis/panel' }}" target="_blank" rel="noopener">Open the panel on its own</a>
   <a class="btn tonal" href="{{ panel_src or '/darwin/algogenesis/panel' }}?quiet=1" target="_blank" rel="noopener">Without the keys</a>
-  {% if style == 'folkpop' %}<a class="btn tonal" href="/darwin/algogenesis/coast">The cabinet version</a>
-  {% else %}<a class="btn tonal" href="/darwin/algogenesis/folkpop">As a folk-pop fable</a>{% endif %}
+  {% if style %}<a class="btn tonal" href="/darwin/algogenesis/coast">The cabinet version</a>{% endif %}
+  {% if style != 'folkpop' %}<a class="btn tonal" href="/darwin/algogenesis/folkpop">As a folk-pop fable</a>{% endif %}
+  {% if style != 'dream' %}<a class="btn tonal" href="/darwin/algogenesis/dream">As a dream</a>{% endif %}
 </div>
 
 <div class="ag-metrics">

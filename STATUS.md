@@ -26,6 +26,17 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## DREAM COAST (2026-11-18)
+skins/dream.js at /darwin/algogenesis/dream (+/panel). Routes are now generic: COAST_SKINS in web.py
+(slug → title, font, CSS name, skin version) with /algogenesis/<any(folkpop, dream):skin>[/panel]; add a skin there.
+New panel.js hooks: SK.life(ctx, {animals, plants, fungi, now, t, light, night, pos, L, W, H, inView}) replaces pins,
+plants, mushrooms, animals and families on the light side (the skin must delete faded dead items itself);
+SK.noNight skips the night overlay. Dream draws every animal as a soft puff of its species' colour (fixed by first
+member's hue) into a 1/5-resolution canvas with 'lighter', laid over the land with screen + lighter, so a species
+reads as one drifting cloud; flowers a faint pollen haze, fruiting fungi a violet breath, each animal a flickering
+firefly point. Land: night blues and violets by real height, faint luminous contours, two layers of drifting mist,
+vignette. Headless fps 14 (plain Coast 7).
+
 ## FOLK POP COAST — replaces the Devotional Coast (2026-11-18)
 skins/folkpop.js (devotional.js removed). Routes /darwin/algogenesis/folkpop (+/panel, Shrikhand font, FOLKPOP_CSS);
 /devotional and /devotional/panel 301 to them (query kept). Switcher entry 'folkpop' (v6); zoom key coast-folkpop.
