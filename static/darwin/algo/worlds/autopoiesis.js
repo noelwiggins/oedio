@@ -6,18 +6,22 @@ window.ALGO_WORLD = (function () {
   let W = 1200, H = 800, d = null;
   const kpos = new Map();
   const LAG = 900;
+  const MCLK = window.AlgoMotion ? AlgoMotion.clock() : null;   // smooth playback on the world's step counter
 
   function ingest(f, now) {
+    if (MCLK && f.tick != null) MCLK.feed(f.tick, now);
     W = f.w; H = f.h; d = f;
     for (const [id, x, y, hue, inside] of f.catalysts) {
       let o = kpos.get(id);
       if (!o) { o = { x0: x, y0: y, x1: x, y1: y, t0: now, t1: now }; kpos.set(id, o); }
       else { const p = kp(o, now); Object.assign(o, { x0: p.x, y0: p.y, x1: x, y1: y, t0: now, t1: now + LAG }); }
+      if (MCLK) AlgoMotion.push(o, f.tick, x, y);
       o.hue = hue; o.inside = inside; o.seen = now;
     }
     for (const [id, o] of kpos) if (now - o.seen > 5000) kpos.delete(id);
   }
   function kp(o, now) {
+    if (MCLK && o._s) { const r = AlgoMotion.at(o, MCLK.at(now), MCLK.rate); if (r) return { x: r.x, y: r.y, h: r.h, a: r.h, moving: r.moving }; }
     const f = o.t1 > o.t0 ? Math.min(1, Math.max(0, (now - o.t0) / (o.t1 - o.t0))) : 1;
     return { x: o.x0 + (o.x1 - o.x0) * f, y: o.y0 + (o.y1 - o.y0) * f };
   }

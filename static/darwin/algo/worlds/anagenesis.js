@@ -7,8 +7,10 @@ window.ALGO_WORLD = (function () {
   let d = null, W = 1200, H = 640;
   const herd = new Map();
   const LAG = 900;
+  const MCLK = window.AlgoMotion ? AlgoMotion.clock() : null;   // smooth playback on the world's step counter
 
   function ingest(f, now) {
+    if (MCLK && f.tick != null) MCLK.feed(f.tick, now);
     d = f; W = f.w; H = f.h;
     const seen = new Set();
     f.animals.forEach((a, k) => {
@@ -17,11 +19,13 @@ window.ALGO_WORLD = (function () {
       let o = herd.get(id);
       if (!o) { o = { x0: x, y0: y, x1: x, y1: y, t0: now, t1: now }; herd.set(id, o); }
       else { const p = pos(o, now); Object.assign(o, { x0: p.x, y0: p.y, x1: x, y1: y, t0: now, t1: now + LAG }); }
+      if (MCLK) AlgoMotion.push(o, f.tick, x, y, h);
       o.g = g; o.h = h; o.load = f.load ? f.load[k] : 0;
     });
     for (const [id] of herd) if (!seen.has(id)) herd.delete(id);
   }
   function pos(o, now) {
+    if (MCLK && o._s) { const r = AlgoMotion.at(o, MCLK.at(now), MCLK.rate); if (r) return { x: r.x, y: r.y, h: r.h, a: r.h, moving: r.moving }; }
     const f = o.t1 > o.t0 ? Math.min(1, Math.max(0, (now - o.t0) / (o.t1 - o.t0))) : 1;
     return { x: o.x0 + (o.x1 - o.x0) * f, y: o.y0 + (o.y1 - o.y0) * f };
   }

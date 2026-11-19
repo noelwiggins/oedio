@@ -22,6 +22,7 @@
   let live = null;
   const animals = new Map(), plants = new Map();
   const LAG = 1100;
+  const MCLK = window.AlgoMotion ? AlgoMotion.clock() : null;   // smooth playback against the world's step counter
 
   // ── layout: cabinet, chrome bezel, playfield, tray ───────────────────
   function resize() {
@@ -77,6 +78,7 @@
     const now = performance.now();
     if (live && d.tick === live.tick) return;
     live = d;
+    if (MCLK) MCLK.feed(d.tick, now);
     if (window.AlgoDials) AlgoDials.update(d.dials);
     feedSound(d);
     const seen = new Set();
@@ -84,11 +86,13 @@
       const [id, x, y, h, sp, grown, parent, ...look] = a;
       seen.add(id);
       let o = animals.get(id);
-      if (!o) { o = { id, x0: x, y0: y, h0: h, x1: x, y1: y, h1: h, t0: now, t1: now, born: now, phase: Math.random() * 6.28 }; animals.set(id, o); }
+      // played back AlgoMotion.LEAD behind the newest frame, so a birth shows (and a death fades) when the playback gets there
+      if (!o) { o = { id, x0: x, y0: y, h0: h, x1: x, y1: y, h1: h, t0: now, t1: now, born: now + (MCLK && live.tick > 0 && animals.size ? AlgoMotion.LEAD * 1000 : 0), phase: Math.random() * 6.28 }; animals.set(id, o); }
       else { const p = pos(o, now); o.x0 = p.x; o.y0 = p.y; o.h0 = p.h; o.x1 = x; o.y1 = y; o.h1 = h; o.t0 = now; o.t1 = now + LAG; o.dead = 0; }
+      if (MCLK) AlgoMotion.push(o, d.tick, x, y, h);
       o.look = look; o.sp = sp; o.grown = grown; o.parent = parent;
     }
-    for (const [id, o] of animals) if (!seen.has(id) && !o.dead) o.dead = now;
+    for (const [id, o] of animals) if (!seen.has(id) && !o.dead) o.dead = now + (MCLK ? AlgoMotion.LEAD * 1000 : 0);
     const pseen = new Set();
     for (const p of d.plants) {
       const [id, x, y, hue, petals, size, height, sat, hue2, nectar, sp] = p;
@@ -112,6 +116,7 @@
     if (openCard && openCard !== 'dial') renderCard(openCard, true);
   }
   function pos(o, now) {
+    if (MCLK && o._s) { const r = AlgoMotion.at(o, MCLK.at(now), MCLK.rate); if (r) return r; }
     const f = o.t1 > o.t0 ? Math.min(1, Math.max(0, (now - o.t0) / (o.t1 - o.t0))) : 1;
     let dh = o.h1 - o.h0; dh = ((dh + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
     return { x: o.x0 + (o.x1 - o.x0) * f, y: o.y0 + (o.y1 - o.y0) * f, h: o.h0 + dh * f, moving: Math.hypot(o.x1 - o.x0, o.y1 - o.y0) / Math.max(1, (o.t1 - o.t0) / 1000) };
@@ -367,7 +372,7 @@
     for (const p of plants.values()) { if (p.dead || !inView(p.x, p.y, 4)) continue; ctx.beginPath(); ctx.arc(L.ox + p.x * L.s, L.oy + p.y * L.s, Math.max(1, 2.2 * L.s * p.size), 0, Math.PI * 2); ctx.fill(); }
     ctx.lineWidth = Math.max(1, 1.2 * L.s);
     for (const o of animals.values()) {
-      const p = pos(o, now), fade = o.dead ? Math.max(0, 1 - (now - o.dead) / 4000) : 1;
+      const p = pos(o, now), fade = o.dead ? Math.max(0, Math.min(1, 1 - (now - o.dead) / 4000)) : 1;
       if (fade <= 0 || !inView(p.x, p.y, 30)) continue;
       const r = (3 + 2.2 * (o.look[7] || 1)) * L.s * (o.grown || 1);
       ctx.strokeStyle = o.dead ? `rgba(232,220,196,${0.9 * fade})` : 'rgba(232,220,196,0.22)';
@@ -479,8 +484,9 @@
     }
   }
   function drawAnimal(o, now, t, light, glowLayer) {
-    let alpha = Math.min(1, (now - o.born) / 900);
-    if (o.dead) { alpha = Math.max(0, 1 - (now - o.dead) / 1200); if (alpha <= 0) { animals.delete(o.id); return; } }
+    let alpha = Math.max(0, Math.min(1, (now - o.born) / 900));
+    if (o.dead) { alpha = Math.min(alpha, Math.max(0, 1 - (now - o.dead) / 1200)); if (now > o.dead && alpha <= 0) { animals.delete(o.id); return; } }
+    if (alpha <= 0) { o._head = null; return; }
     if (L.s > L.s0 * 1.2) {                                  // zoomed in: skip animals well outside the window
       const q = pos(o, now);
       if (!inView(q.x, q.y, 40)) { o._head = [L.ox + q.x * L.s, L.oy + q.y * L.s]; return; }

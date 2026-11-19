@@ -9,8 +9,10 @@ window.ALGO_WORLD = (function () {
   let d = null, W = 1200, H = 640;
   const cr = new Map();
   const LAG = 800;
+  const MCLK = window.AlgoMotion ? AlgoMotion.clock() : null;   // smooth playback on the world's step counter
 
   function ingest(f, now) {
+    if (MCLK && f.tick != null) MCLK.feed(f.tick, now);
     d = f; W = f.w; H = f.h;
     const seen = new Set();
     for (const c of f.creatures) {
@@ -19,11 +21,13 @@ window.ALGO_WORLD = (function () {
       let o = cr.get(id);
       if (!o) { o = { x0: x, y0: y, x1: x, y1: y, h0: h, h1: h, t0: now, t1: now, born: now }; cr.set(id, o); }
       else { const p = pos(o, now); Object.assign(o, { x0: p.x, y0: p.y, h0: p.h, x1: x, y1: y, h1: h, t0: now, t1: now + LAG }); }
+      if (MCLK) AlgoMotion.push(o, f.tick, x, y, h);
       Object.assign(o, { mood, hue, lr, learned });
     }
     for (const [id] of cr) if (!seen.has(id)) cr.delete(id);
   }
   function pos(o, now) {
+    if (MCLK && o._s) { const r = AlgoMotion.at(o, MCLK.at(now), MCLK.rate); if (r) return { x: r.x, y: r.y, h: r.h, a: r.h, moving: r.moving }; }
     const f = o.t1 > o.t0 ? Math.min(1, Math.max(0, (now - o.t0) / (o.t1 - o.t0))) : 1;
     let dh = o.h1 - o.h0; dh = ((dh + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
     return { x: o.x0 + (o.x1 - o.x0) * f, y: o.y0 + (o.y1 - o.y0) * f, h: o.h0 + dh * f };

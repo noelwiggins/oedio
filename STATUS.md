@@ -26,6 +26,19 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## SMOOTH MOTION + ROTHKO DREAM (2026-11-19)
+Jank cause: frames arrive every 0.8–1.5 s carrying 9–30 world steps; the old fixed 1100 ms (900 in worlds) glide made
+creatures surge, crawl and stop (offline test: 56% speed variation, stopped 12% of the time, 67 jolts/min).
+static/darwin/algo/motion.js (AlgoMotion): clock fitted by least squares over the last 20 frames (step vs arrival
+time), playback LEAD 2.6 s behind the newest frame at that rate, never backwards; per-object frame history (8) with
+cubic Hermite between frames. Test work/motiontest.js: 13% variation (the steps themselves), 0% stopped, 0 jolts.
+Used by panel.js (Coast + skins; births/deaths shifted by LEAD so fades match playback, alphas clamped) and the six
+worlds that move things: anagenesis, anthropogenesis, autopoiesis, noogenesis, protogenesis, psychogenesis
+(worlds ?v=6). The other six worlds don't interpolate positions.
+Dream Coast v3: land is Rothko-like colour fields by feathered height (plum sea → crimson shore → orange → ochre),
+uneven paint density from value noise, no lines or contours; animal species spread round the colour wheel by golden
+angle (+ a little gene hue), brighter and larger clouds, faint firefly points; warm haze and vignette.
+
 ## DREAM COAST (2026-11-18)
 skins/dream.js at /darwin/algogenesis/dream (+/panel). Routes are now generic: COAST_SKINS in web.py
 (slug → title, font, CSS name, skin version) with /algogenesis/<any(folkpop, dream):skin>[/panel]; add a skin there.

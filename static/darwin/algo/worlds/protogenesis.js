@@ -8,6 +8,7 @@ window.ALGO_WORLD = (function () {
   let W = 1200, H = 800, mon = [], monPrev = [], monAt = 0, vents = [], breaks = [];
   const chains = new Map();
   const LAG = 900;
+  const MCLK = window.AlgoMotion ? AlgoMotion.clock() : null;   // smooth playback on the world's step counter
   const sprites = {};
 
   function ball(color, r0) {
@@ -31,6 +32,7 @@ window.ALGO_WORLD = (function () {
   }
 
   function ingest(d, now) {
+    if (MCLK && d.tick != null) MCLK.feed(d.tick, now);
     W = d.w; H = d.h; vents = d.vents || [];
     monPrev = mon; mon = d.monomers; monAt = now; breaks = d.breaks || [];
     const seen = new Set();
@@ -40,11 +42,13 @@ window.ALGO_WORLD = (function () {
       let o = chains.get(id);
       if (!o) { o = { id, x0: x, y0: y, a0: a, x1: x, y1: y, a1: a, t0: now, t1: now, born: now }; chains.set(id, o); }
       else { const p = cpos(o, now); Object.assign(o, { x0: p.x, y0: p.y, a0: p.a, x1: x, y1: y, a1: a, t0: now, t1: now + LAG, dead: 0 }); }
+      if (MCLK) AlgoMotion.push(o, d.tick, x, y, a);
       Object.assign(o, { seq, fam, act, fold, gen });
     }
     for (const [id, o] of chains) if (!seen.has(id) && !o.dead) o.dead = now;
   }
   function cpos(o, now) {
+    if (MCLK && o._s) { const r = AlgoMotion.at(o, MCLK.at(now), MCLK.rate); if (r) return { x: r.x, y: r.y, h: r.h, a: r.h, moving: r.moving }; }
     const f = o.t1 > o.t0 ? Math.min(1, Math.max(0, (now - o.t0) / (o.t1 - o.t0))) : 1;
     return { x: o.x0 + (o.x1 - o.x0) * f, y: o.y0 + (o.y1 - o.y0) * f, a: o.a0 + (o.a1 - o.a0) * f };
   }
