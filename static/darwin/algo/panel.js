@@ -405,7 +405,8 @@
     const p = pos(o, now);
     const [hue, sat, hue2, pattern, glow, segs, limbs, size, tail, crest, fin, diet] = o.look;
     const s = L.s, X = L.ox + p.x * s, Y = L.oy + p.y * s;
-    const r0 = (1.6 + 1.6 * size) * s * 1.95 * (o.grown || 1), gap = r0 * 1.05;
+    const vs = size <= 2.6 ? size : 2.6 + (size - 2.6) * 0.55;          // giants drawn big, but not to the full scale
+    const r0 = (1.6 + 1.6 * vs) * s * 1.95 * (o.grown || 1), gap = r0 * 1.05;
     const ph = t * (2.5 + Math.min(4, p.moving * 0.25)) + o.phase;
     const pts = []; let ang = p.h + Math.PI, cx = X, cy = Y;
     for (let i = 0; i < segs; i++) {

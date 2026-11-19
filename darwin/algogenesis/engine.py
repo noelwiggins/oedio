@@ -36,7 +36,7 @@ import numpy as np
 from .dials import D, DialsMixin, mult
 from .fungi import FungiMixin, _mlook, fungus_name, M_HUE, M_CAP, M_TOX, M_GLOW, M_COLD, M_RATE, M_SIZE, MLOOK_KEYS
 
-VERSION = "algogenesis-1.4"
+VERSION = "algogenesis-1.5"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
 DAY = 2400                        # ticks per day (about two minutes at 20 ticks/s)
@@ -61,9 +61,15 @@ NG = 27
 #   SPEC  a body in regions (head, thorax, abdomen): jaws for the hunter, a better gut for the grazer;
 #         only works on bodies of three or more segments
 ORGANS = (EYES, SHELL, WING, SPEC)
+# Nov 19, giants: body size may now reach 10 (was 2.6) and mutates by a percentage rather than a fixed amount, so a big
+# body can keep growing. Size pays the way it paid the dinosaurs: a big body holds its warmth (cold-blooded giants stay
+# lively), reaches the leaves of tall plants that small grazers cannot, takes in food in proportion to its mouth,
+# strides rather than scurries, wades across shallows, lives longer, and can only be brought down by a big hunter.
+# Wings cost more the heavier the body and stop lifting it at all past a small size, so fliers stay small.
+SIZE_MUT = 0.07            # standard deviation of a size mutation, as a fraction of the body
 CIRC = {HUE, HUE2, PREF_FLOWER, PREF_MATE}
 LO = np.array([0, 0, 0, 0, 0, 1, 0, 0.6, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0.45, 0, 0, 0, 0, 0, 0, 0], np.float32)
-HI = np.array([1, 1, 1, 1, 1, 12, 6, 2.6, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1, 1, 1, 1, 1, 1, 1], np.float32)
+HI = np.array([1, 1, 1, 1, 1, 12, 6, 10.0, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 1, 0.9, 1, 1, 1, 1, 1, 1, 1], np.float32)
 STEP = np.array([.03, .04, .04, .06, .04, .35, .25, .08, .05, .05, .05, .04, .03, .03, .04, .15, .15, .15, .05, .02,
                  .04, .04, .05, .05, .05, .05, .05], np.float32)
 # plant genes
@@ -310,7 +316,10 @@ class World(DialsMixin, FungiMixin):
         g = g.copy()
         mm = mult(self.dial("flora" if step is PSTEP else "fauna"), 2.5)
         m = rng.random(len(g)) < min(0.6, 0.25 * mm)
+        s0 = g[SIZE] if step is STEP else None
         g[m] += rng.normal(0, 1, int(m.sum())).astype(np.float32) * step[m] * mm
+        if s0 is not None and m[SIZE]:          # body size changes by a percentage, so a giant can keep growing
+            g[SIZE] = s0 * math.exp(rng.normal(0, SIZE_MUT * mm))
         if rng.random() < 0.01:            # a rare big jump: a gene duplicated or lost
             k = int(rng.integers(len(g)))
             g[k] += rng.normal(0, 6) * step[k]
@@ -420,6 +429,8 @@ class World(DialsMixin, FungiMixin):
         Tamb = self.temp(depth, light)
         Eg, Ig = G[:, ENDO], G[:, INSUL]
         warm_e = np.clip((Tamb - 2.0) / 20.0, 0.08, 1.0)
+        big = np.clip((G[:, SIZE] - 0.8) / 5.0, 0.0, 1.0)            # 0 for a body of 0.8 or less, 1 for 5.8 or more
+        warm_e = warm_e + (1 - warm_e) * 0.75 * big                  # a big body holds its warmth through a cold night
         act = 1.2 * Eg + (1 - Eg) * warm_e        # warm blood also brings stamina: a little more speed in any weather
         vig = self.fvig[F]
         grown = np.clip(0.4 + 0.6 * self.fage[F] / MATURE, 0.4, 1.0)
@@ -436,7 +447,8 @@ class World(DialsMixin, FungiMixin):
         meat = np.clip((G[:, DIET] - 0.3) / 0.7, 0, 1)
         eyes, shell, wing = G[:, EYES], G[:, SHELL], G[:, WING]
         regions = G[:, SPEC] * np.clip((G[:, SEGS] - 2) / 3, 0, 1)       # regions need segments to divide
-        aloft = (~(self.height(x, y) - self.sea < 0)) * np.clip((wing - 0.35) / 0.4, 0, 1)   # gliding needs air under it
+        lift = np.clip(1.9 - 1.1 * G[:, SIZE], 0, 1)                  # wing loading: full lift up to 0.8, none past ~1.7
+        aloft = (~(self.height(x, y) - self.sea < 0)) * np.clip((wing - 0.35) / 0.4, 0, 1) * lift   # gliding needs air under it
         emax = 18.0 * G[:, SIZE] * np.sqrt(G[:, SEGS])
         efrac = self.fe[F] / emax
         display = consp * vig * np.clip(efrac, 0.2, 1)     # only an animal in good condition can put on a show
@@ -477,14 +489,18 @@ class World(DialsMixin, FungiMixin):
             like = np.exp(-(_hd(self.P[Pi][iP0, P_HUE], G[:, PREF_FLOWER][:, None]) / 0.12) ** 2)
             # the colour of a flower is seen by day; its nectar is smelt at any hour
             full = np.clip(self.pnec[Pi][iP0] / np.maximum(0.05, 2 * self.P[Pi][iP0, P_NECTAR]), 0, 1)
+            # a big grazer also looks for leaves: tall, leafy plants that small mouths cannot reach
+            leaf = big[:, None] * np.clip(self.pe[Pi][iP0] / 12.0, 0, 1) * np.clip((G[:, SIZE][:, None] - 0.3) / (1.5 * self.P[Pi][iP0, P_HEIGHT]), 0, 1)
             score = np.where(okP & (herb[:, None] > 0.1),
-                             (0.15 + like) * (0.4 + 0.6 * light) * (0.05 + full) / (dP * (1.3 - 0.6 * eyes[:, None]) + 4), -1)
+                             ((0.15 + like) * (0.4 + 0.6 * light) * (0.05 + full) + 2.5 * leaf) / (dP * (1.3 - 0.6 * eyes[:, None]) + 4), -1)
             j = score.argmax(1)
             hf = score[np.arange(n), j] > 0
             jf = iP0[np.arange(n), j]
             dfl = np.where(hf, dP[np.arange(n), j], np.inf)
 
-        mate_ready = (efrac > G[:, REPRO]) & (self.fage[F] > MATURE) & \
+        # giants lay eggs: a clutch costs a big body a smaller share of what it holds, so size does not slow breeding
+        lay = 1 - 0.45 * big
+        mate_ready = (efrac > G[:, REPRO] * lay) & (self.fage[F] > MATURE) & \
             (rng.random(n) < np.clip((act - 0.2) / 0.5, 0, 1))        # cold-blooded animals breed when it is warm
         mate = validF & mate_ready[:, None] & mate_ready[iF] & (self.fsp[F][iF] == self.fsp[F][:, None])
         jm, hm, _ = nearest(mate)
@@ -507,7 +523,8 @@ class World(DialsMixin, FungiMixin):
               + G[:, WANDER] * np.sin(hd) + 2.5 * pcare * fy_par)
         # swimmers keep to the water, walkers to the land
         h_ahead = self.height(x + 12 * np.cos(hd), y + 12 * np.sin(hd)) - self.sea
-        wrong = np.where(G[:, FIN] > 0.5, h_ahead > 0.02, (h_ahead < -0.02) & (wing < 0.6))   # gliders cross water
+        wade = h_ahead > -0.04 - 0.1 * big                            # giants wade across the shallows
+        wrong = np.where(G[:, FIN] > 0.5, h_ahead > 0.02, (h_ahead < -0.02) & (wing * lift < 0.6) & ~wade)   # gliders cross water
         vx -= 0.6 * wrong * np.cos(hd)
         vy -= 0.6 * wrong * np.sin(hd)
         want = np.arctan2(vy, vx)
@@ -515,8 +532,8 @@ class World(DialsMixin, FungiMixin):
         hd = (hd + np.clip(turn, -0.25, 0.25) + rng.normal(0, 0.06, n)) % (2 * math.pi)
         sp_water = (0.35 + 1.1 * G[:, FIN] * (0.5 + 0.5 * G[:, TAIL]))
         sp_land = (0.15 + 0.32 * G[:, LIMBS] * (1 - 0.7 * G[:, FIN]))
-        sp_land = sp_land + 0.65 * aloft                    # a glide outruns a walker
-        speed = np.where(water, sp_water, sp_land) / np.sqrt(G[:, SIZE]) * (0.6 + 0.4 * grown) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
+        sp_land = sp_land + 0.2 * aloft                     # a glide outpaces a walker
+        speed = np.where(water, sp_water, sp_land) / G[:, SIZE] ** np.where(water, 0.5, 0.25) * (0.6 + 0.4 * grown) * np.clip(0.4 + np.hypot(vx, vy) / 2, 0.4, 1.0)
         speed = speed * (0.3 + 0.7 * act) / (1 + 0.45 * shell)    # plates are heavy
         nx, ny = x + speed * np.cos(hd), y + speed * np.sin(hd)
         bounce_x = (nx < 2) | (nx > W - 2)
@@ -530,8 +547,8 @@ class World(DialsMixin, FungiMixin):
         jc = 1 + JC * np.maximum(0, cnt[inv] / n - JC_FREE)
         cost = (0.003 * G[:, SIZE] ** 0.75 * np.sqrt(G[:, SEGS]) + 0.009 * G[:, GLOW] * (1 - light)
                 + 0.0012 * G[:, SAT] + 0.0018 * G[:, CREST] + 0.0012 * G[:, LIMBS] + 0.0009 * G[:, CHOOSY]
-                + 0.0015 * speed * G[:, SIZE]
-                + 0.0005 * eyes + 0.0007 * shell * G[:, SIZE] + 0.0010 * wing * G[:, SIZE] + 0.0002 * regions * G[:, SEGS]) * grown
+                + 0.0015 * speed * G[:, SIZE] ** 0.75
+                + 0.0005 * eyes + 0.0007 * shell * G[:, SIZE] + 0.0014 * wing * G[:, SIZE] ** 1.5 + 0.0002 * regions * G[:, SEGS]) * grown
         # the price of warmth: a warm body burns far more, and loses heat to cold air (water steals it twice as fast,
         # small bodies faster than big ones) unless it is insulated; a coat overheats in summer
         bulk = np.cbrt(G[:, SIZE] * np.sqrt(G[:, SEGS]))
@@ -539,7 +556,8 @@ class World(DialsMixin, FungiMixin):
         heat = 0.003 * Eg * np.maximum(0, 30 - Tamb) / 30 * (1 - 0.85 * Ig) * (1 + water) / bulk
         hot = 0.002 * Ig * np.maximum(0, Tamb - 21) / 10 + 0.0004 * Ig
         cost = (cost * metab + (heat + hot) * grown) * jc / vig / mult(self.dial("fauna"), 1.5) * \
-            (1 + 0.8 * np.where(water, (1 - G[:, FIN]) * (1 - 0.45 * np.clip((wing - 0.35) / 0.4, 0, 1)),   # a glider skims the water
+            (1 + 0.8 * np.where(water, (1 - G[:, FIN]) * (1 - 0.45 * np.clip((wing - 0.35) / 0.4, 0, 1) * lift)   # a glider skims the water
+                                * (1 - 0.7 * big * (self.height(x, y) - self.sea > -0.14)),          # a giant wades
                                 G[:, FIN] * (G[:, LIMBS] < 1)))
         self.fe[F] -= cost
         # the young of cold-blooded animals develop with the warmth (degree-days); warm young grow at their own pace
@@ -562,13 +580,16 @@ class World(DialsMixin, FungiMixin):
                 i, pi = int(F[a]), int(Pi[jf[a]])
                 if not self.p_alive[pi]:
                     continue
-                take = min(float(self.pnec[pi]), 1.2 * float(herb[a]) * (1 + 0.6 * float(Eg[a])))   # warm bodies feed faster
+                mouth = float(G[a, SIZE]) ** 0.75
+                take = min(float(self.pnec[pi]), 1.2 * float(herb[a]) * (1 + 0.6 * float(Eg[a])) * mouth)   # warm bodies, big mouths feed faster
                 self.pnec[pi] -= take
                 self.fe[i] = min(self.fe[i] + 4.0 * take * (0.25 + 0.75 * act[a]) * (1 + 0.3 * regions[a]), emax[a])
-                if take < 0.05 and herb[a] > 0.5 and efrac[a] < 0.5:     # no nectar: graze the leaves
-                    bite = min(max(float(self.pe[pi]) - 1.5, 0.0), 0.08 * float(G[a, SIZE]))
+                # no nectar: graze the leaves. Tall plants are out of reach of small grazers; a giant browses them freely
+                reach = min(1.0, max(0.05, (float(G[a, SIZE]) - 0.3) / (1.5 * float(self.P[pi, P_HEIGHT]))))
+                if herb[a] > 0.5 and (take < 0.05 or big[a] > 0.05) and efrac[a] < 0.5 + 0.45 * min(1.0, 4 * float(big[a])):
+                    bite = min(max(float(self.pe[pi]) - 1.5, 0.0), 0.08 * float(G[a, SIZE]) * reach)
                     self.pe[pi] -= bite
-                    self.fe[i] = min(self.fe[i] + 0.8 * bite, emax[a])
+                    self.fe[i] = min(self.fe[i] + 0.8 * bite * (1 + 1.5 * float(big[a])), emax[a])
                 pol = self.fpollen[i]
                 if not np.isnan(pol[0]) and self.fpsp[i] != 0:
                     # pollen only takes on a flower of the same kind (a close colour match)
@@ -620,9 +641,11 @@ class World(DialsMixin, FungiMixin):
                 if b in taken or a in taken:
                     continue
                 att = size[a] * (1 + 0.25 * G[a, LIMBS]) * meat[a] * (0.4 + 0.6 * act[a]) * (1 + 0.6 * regions[a])   # jaws
-                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b]) * (1 + 1.3 * shell[b]) * (1 + 0.9 * aloft[b])
+                dfn = size[b] * (1 + 0.8 * G[b, CREST]) * (0.5 + 0.5 * act[b]) * (1 + 1.3 * shell[b]) * (1 + 0.4 * aloft[b])
                 if has_par[b] and pdist[b] < 25:      # a parent stands over its young
                     dfn += 2.0 * float(pcare[b]) * float(self.G[pidx[b], SIZE] * np.sqrt(self.G[pidx[b], SEGS]))
+                if size[b] > 2.5 * size[a]:          # nothing brings down an animal more than twice its size
+                    att = 0.0
                 if rng.random() < att / (att + dfn):
                     i, j = int(F[a]), int(F[b])
                     food = max(float(self.fe[j]), 0) + 6 * float(size[b])
@@ -648,7 +671,7 @@ class World(DialsMixin, FungiMixin):
         # courtship and birth: the choosy pick by colour and display; asexual budding is a slow fallback
         for a in np.flatnonzero(mate_ready & self.f_alive[F])[:30]:
             i = int(F[a])
-            if not self.f_alive[i] or self.fe[i] < G[a, REPRO] * emax[a]:
+            if not self.f_alive[i] or self.fe[i] < G[a, REPRO] * lay[a] * emax[a]:
                 continue
             partner = None
             if hm[a]:
@@ -672,7 +695,7 @@ class World(DialsMixin, FungiMixin):
                 cv = float(self.fvig[i]) * 0.97 + rng.normal(0, 0.04)
             else:
                 continue
-            build = 4.0 * float(size[a])
+            build = 4.0 * float(size[a]) * (1 - 0.6 * float(big[a]))
             if self.fe[i] <= build + 2:
                 continue
             gift = 0.45 * (float(self.fe[i]) - build)
@@ -937,6 +960,7 @@ class World(DialsMixin, FungiMixin):
                 (G[:, SAT] > 0.5) + (G[:, PATTERN] > 0.33) + 2 * (G[:, EYES] > 0.5) + (G[:, SHELL] > 0.4) + \
                 2 * (G[:, WING] > 0.5) + 2 * (reg > 0.5)
             self.cx_record = max(float(getattr(self, "cx_record", 0.0)), float(parts.max()))
+            self.size_record = max(float(getattr(self, "size_record", 0.0)), float(G[:, SIZE].max()))
             out.update({
                 "animal_species": int(len(sp)), "animal_species_eff": round(float(1 / (p * p).sum()), 2),
                 "complexity_mean": round(float(parts.mean()), 2), "complexity_max": round(float(parts.max()), 2),
@@ -955,6 +979,8 @@ class World(DialsMixin, FungiMixin):
                 "eyes": round(float((G[:, EYES] > 0.5).mean()), 3), "shelled": round(float((G[:, SHELL] > 0.4).mean()), 3),
                 "winged": round(float((G[:, WING] > 0.5).mean()), 3), "regioned": round(float((reg > 0.5).mean()), 3),
                 "complexity_record": round(self.cx_record, 2),
+                "size_mean": round(float(G[:, SIZE].mean()), 3), "size_max": round(float(G[:, SIZE].max()), 3),
+                "size_record": round(self.size_record, 3), "giants": int((G[:, SIZE] > 3.0).sum()),
                 "in_sea": int((self.height(self.fx[F], self.fy[F]) - self.sea < 0).sum()),
                 "scavengers": round(float(((G[:, DIET] > 0.32) & (G[:, DIET] <= 0.6)).mean()), 3),
             })
@@ -1082,8 +1108,25 @@ def to_bytes(w: World) -> bytes:
     return zlib.compress(pickle.dumps(w, protocol=4), 6)
 
 
+def ground_some(w, frac=0.4):
+    """Nov 19 migration: by then wings had spread to 99% of animals and held body size at the floor. Ground giants can only
+    start from walkers, so a share of animals get back the walking body plan their ancestors had (a wing gene between 0
+    and 0.4), as if grounded lineages had lived on in the interior."""
+    F = np.flatnonzero(w.f_alive)
+    if not len(F) or float((w.G[F, WING] > 0.5).mean()) < 0.8:
+        return 0
+    pick = F[w.rng.random(len(F)) < frac]
+    w.G[pick, WING] = w.rng.uniform(0.0, 0.4, len(pick)).astype(np.float32)
+    return len(pick)
+
+
 def from_bytes(b: bytes) -> World:
     w = pickle.loads(zlib.decompress(b))
+    if not hasattr(w, "size_record"):          # Nov 19: the giants update
+        w.size_record = 0.0
+        k = ground_some(w)
+        if k:
+            w._event("milestone", f"Grounded lineages: {k} animals keep their ancestors' walking bodies, and with them the chance to grow large")
     if w.G.shape[1] < NG:                     # older worlds: new genes start as a trace, so they can evolve
         pad = np.full((w.G.shape[0], NG - w.G.shape[1]), 0.05, np.float32)
         w.G = np.concatenate([w.G, pad], 1)

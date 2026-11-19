@@ -126,7 +126,7 @@
       let a = Math.max(0, Math.min(1, (now - o.born) / 900));
       if (o.dead) { a = Math.min(a, Math.max(0, 1 - (now - o.dead) / 1600)); if (now > o.dead && a <= 0) { animals.delete(o.id); continue; } }
       if (a <= 0) continue;
-      const q = pos(o, now), size = o.look[7] || 1, grown = o.grown == null ? 1 : o.grown;
+      const q = pos(o, now), size = Math.min(o.look[7] || 1, 2.6 + Math.max(0, (o.look[7] || 1) - 2.6) * 0.4), grown = o.grown == null ? 1 : o.grown;
       const breathe = 1 + 0.18 * Math.sin(t * 0.55 + o.phase), R = (50 + 22 * size) * (0.6 + 0.4 * grown) * breathe;
       if (!vis(q.x, q.y, R)) continue;
       const c = colourOf(o.sp, o.look[0], 'a'), r = R * zs, X = ox + q.x * zs, Y = oy + q.y * zs;

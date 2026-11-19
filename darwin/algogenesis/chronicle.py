@@ -63,7 +63,7 @@ def facts_for_epoch(world: E.World, prev_stats: dict | None, since_tick: int) ->
     ev = [e for e in world.events if e["tick"] > since_tick]
     keys = ["animals", "plants", "animal_species", "plant_species", "complexity_mean", "complexity_max", "glow_mean",
             "colour_mean", "choosy_mean", "predators", "pollinators", "on_land", "mean_generation", "care_mean",
-            "families", "young", "eyes", "shelled", "winged", "regioned", "complexity_record"]
+            "families", "young", "eyes", "shelled", "winged", "regioned", "complexity_record", "size_mean", "size_max", "size_record", "giants"]
     change = {}
     if prev_stats:
         for k in keys:

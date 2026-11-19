@@ -161,7 +161,7 @@
               ['Light', glow > 0.3 ? 'glows brightly at night' : glow > 0.12 ? 'a faint glow at night' : 'none'],
               ['Blood', L[12] == null ? 'cold (before the seasons)' : L[12] > 0.5 ? 'warm: active in any weather' : L[12] > 0.25 ? 'partly warm' : 'cold: slows down in the cold'],
               ['Coat', L[13] == null ? '—' : L[13] > 0.5 ? 'thick fur or feathers' : L[13] > 0.25 ? 'a light coat' : 'bare'],
-              ['Size', size < 0.4 ? 'small' : size < 0.8 ? 'middling' : 'large']];
+              ['Size', size < 0.9 ? 'small' : size < 1.6 ? 'middling' : size < 3 ? 'large' : size < 6 ? 'giant' : 'colossal']];
     }
     if (f.kind === 'fungus') {
       const [, cap, size, glow, rate, cold, spore, tox, spots] = L;

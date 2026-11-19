@@ -26,6 +26,21 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## COAST GIANTS (2026-11-19, algogenesis-1.5)
+Why bodies were shrinking: every animal at size 0.6 (the floor) with wings on 99% — nectar is scramble food, so small,
+fast, gliding foragers win; size only cost. Changes in engine.py:
+- SIZE max 2.6 → 10, mutates by percentage (SIZE_MUT 0.07, log-normal). `big` = (size − 0.8)/5 clipped 0..1.
+- Big bodies: hold warmth (cold-blooded activity lifted up to 75% toward full), mouth ∝ size^0.75, stride
+  (land speed ÷ size^0.25, water ÷ size^0.5), travel cost ∝ size^0.75, wade shallows, egg-laying (breeding threshold
+  × (1 − 0.45 big), clutch cost × (1 − 0.6 big)), browse leaves of tall plants (reach (size − 0.3)/(1.5 × height), leaf
+  energy × (1 + 1.5 big), big grazers seek leafy tall plants), immune to hunters under 40% of their size.
+- Wings: cost × size^1.5, lift falls from 1 at size 0.8 to 0 at ~1.7; glide speed +0.65 → +0.2, glide escape ×1.9 → ×1.4.
+- Migration (from_bytes, once): if ≥80% winged, 40% of animals get a walking wing gene (0–0.4) + event "Grounded lineages".
+- Stats size_mean/max/record, giants (>3). Panel draws size above 2.6 at 55% scale; dream at 40%; fossil size labels.
+Calibration (work/gianttest.py, 120k ticks ≈ 100 min of live time): fresh world size mean 0.9 → 1.5, max 2.4; live-like
+(winged, warm) with grounding: wings fall to 56%, size mean 0.65 → 1.29, max 2.5, record 3.0. Without the wing nerf
+or grounding the live-like world stays locked at 0.65. Colossi (6–10) untested: watch size_record.
+
 ## SMOOTH MOTION + ROTHKO DREAM (2026-11-19)
 Jank cause: frames arrive every 0.8–1.5 s carrying 9–30 world steps; the old fixed 1100 ms (900 in worlds) glide made
 creatures surge, crawl and stop (offline test: 56% speed variation, stopped 12% of the time, 67 jolts/min).

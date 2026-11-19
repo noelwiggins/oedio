@@ -344,7 +344,7 @@ def algo_page():
 # slug -> (title, Google font family to add, extra CSS, skin version)
 COAST_SKINS = {
     "folkpop": ("Folk Pop", "family=Shrikhand&", "FOLKPOP_CSS", 1),
-    "dream": ("Dream", "family=Cormorant+Garamond:ital,wght@1,300;1,400&", "DREAM_CSS", 3),
+    "dream": ("Dream", "family=Cormorant+Garamond:ital,wght@1,300;1,400&", "DREAM_CSS", 4),
 }
 
 
