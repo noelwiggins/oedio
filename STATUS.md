@@ -77,6 +77,17 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   sampleViolin (p/f crossfade by velocity, loops 1.6–4.6 s for long holds, bow attack/release). Body peaking EQs and the piano
   soundboard convolver are zeroed once samples load. KS worklet/synth remain fallbacks. Glass Ensemble preset unchanged.
   Credit line on the page. Test: work/samptest.js <base> <secs> <out.webm>.
+  Organ, bass, Mishima percussion (2026-11-22): samples/manifest.json lists organ (VSCO quiet 3rd manual C2–C7 at minor
+  thirds, midi = file# − 86; loud pedal below C2, midi = file# + 23), bass (VSCO solo contrabass SusNV p/f, file octave +2),
+  drums (snare SN hits ×5 dynamics ×2 rr, snare rolls, bass drum, timpani hits v3/v4 + rolls at measured pitches 41.5/46.8/
+  49.5/52.4/54.6 — the v1 hits were below the encode gate and are dropped, tam-tam p/mf/ff, cymbal swell peaking at 3.3 s,
+  crash). Tools: work/tools/prep.py (trim + encode), work/tools/pitch.py (YIN). Audio.loopOf finds seamless loop points by
+  correlation in the decoded buffer (organ, bass, violin, timpani rolls). Score.percussion (ctl.drums; Score default false so
+  old sessions replay unchanged; new pages set it true; checkbox "Mishima percussion"): level per movement (I none, II enters,
+  III timpani rolls only, IV full kit with ghosts/fills/rolls into changes, V thins), capped by complexity; tam-tam at each
+  movement, cymbal swell into it. PARTS gains 'drums' (mixer row, no octave dial); timpani notes are inst 'timpani' on the
+  drums bus. MIDI: drums ch 10 (GM keys 36/38/40/49/52/55), timpani ch 7 program 47. Polyphony cap 96.
+  Tests: work/drumscore.js (deterministic, other parts unchanged), work/mishtest.js <base> <secs> <out> [opera|nodrums].
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
