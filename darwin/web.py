@@ -326,6 +326,12 @@ def api_pool_archive():
 ALGO_PANEL = os.path.join(ROOT, "static", "darwin", "algo", "panel.html")
 
 
+@bp.route("/algo")
+def algo_music():
+    """Algo: a generative music and image engine after Philip Glass's structural ideas (all in the browser)."""
+    return render_template("darwin/algo.html")
+
+
 @bp.route("/algogenesis")
 def algo_gallery():
     from .algogenesis.worlds import CONCEPTS, LIVE

@@ -26,6 +26,27 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
+## ALGO TAB — generative music + image after Philip Glass (2026-11-21)
+/darwin/algo (darwin/web.py algo_music, templates/darwin/algo.html), nav tab after Algogenesis + phone sheet entry.
+All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (window.AlgoPlayer).
+- Numbers: mulberry32(seed 1976); 16 digits ×4, then 2 distinct positions mutate to different digits; full history.
+- Score (per eighth step, deterministic, no Math.random): each number → next chord of Fm, D♭, A, B7; length
+  8+4(N mod 3) beats (stretched in slow movements), Euclidean arpeggio density 3+(N mod 4) per bar, inversion N mod 3.
+  Additive phrase = first L notes of LINE [0,2,1,3,2,4,3] (chord-tone degrees); L moves 3→7→3 when numbers say,
+  ceiling set by movement and complexity. Cycles: piano 5, organ 7, violin 11, voice 3+(N mod 6). Five movements of 12
+  chords with 2-chord bridges; silences (instrument drop-outs, one pattern left, held chord, rests of 2–8 beats) from
+  numbers + movement + complexity. Duration → finish() jumps to movement V and ends after it.
+- Audio: synthesized piano (inharmonic partials + hammer), organ (drawbars + vibrato), violin (detuned saws, formant
+  peaks, delayed vibrato), voice (vowel formants, or the recording: harmonizer by playback rate from detected pitch,
+  vocoder = 16 band envelopes precomputed in JS driving a sawtooth chord through matching bandpasses). Lead line on the
+  dial's instrument with 250 ms crossfade; per-instrument buses + reverb; every note's nodes disconnected on end.
+- Picture: canvas from the same timeline — chord shapes (circle/triangle/square/hexagon, colours per spec), rings =
+  phrase length, rays = density, rotation = inversion, dashed = mutated digit, notes on lanes flaring as they sound,
+  cycle marks + dotted lines where cycles coincide, dimming in silences.
+- Control log [step, key, value, seconds] applied on step boundaries → sessions replay exactly (tested: 84/84 notes).
+  Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
+  with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
+
 ## COAST GIANTS (2026-11-19, algogenesis-1.5)
 Why bodies were shrinking: every animal at size 0.6 (the floor) with wings on 99% — nectar is scramble food, so small,
 fast, gliding foragers win; size only cost. Changes in engine.py:

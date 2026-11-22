@@ -1,0 +1,200 @@
+{% extends "darwin/base.html" %}
+{% block title %}Algo — DARWIN{% endblock %}
+{% block head %}
+<style>
+  .ag-stage { position: relative; background: #07090c; border-radius: var(--dw-radius); overflow: hidden; aspect-ratio: 16 / 9; width: 100%;
+    border: 1px solid var(--md-sys-color-outline-variant); }
+  .ag-stage:fullscreen { border-radius: 0; border: 0; aspect-ratio: auto; height: 100%; }
+  .ag-stage canvas { display: block; width: 100%; height: 100%; }
+  .ag-stage .ag-over { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; }
+  .ag-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); margin-top: 16px; }
+  .ag-card { background: var(--md-sys-color-surface-container); border-radius: var(--dw-radius); padding: 16px 18px; border: 1px solid var(--md-sys-color-outline-variant); }
+  .ag-card h3 { margin: 0 0 12px; font: 500 14px/1.3 "IBM Plex Sans", sans-serif; letter-spacing: .02em; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; }
+  .ag-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+  .ag-row label { font-size: 13px; color: var(--md-sys-color-on-surface-variant); display: flex; align-items: center; gap: 8px; }
+  .ag-row input[type=range] { width: 150px; accent-color: var(--md-sys-color-primary); }
+  .ag-mix { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
+  .ag-mix input { width: 100%; accent-color: var(--md-sys-color-primary); }
+  .ag-dials { display: flex; justify-content: space-around; gap: 12px; flex-wrap: wrap; }
+  .ag-dial { text-align: center; }
+  .ag-dial svg { width: 190px; height: 190px; touch-action: none; cursor: grab; outline: none; }
+  .ag-dial svg:focus-visible .face { stroke: var(--md-sys-color-primary); stroke-width: 2; }
+  .ag-dial .face { fill: var(--md-sys-color-surface-container-high); stroke: var(--md-sys-color-outline-variant); }
+  .ag-dial .track { fill: none; stroke: var(--md-sys-color-surface-container-highest); stroke-width: 6; stroke-linecap: round; }
+  .ag-dial .arc { fill: none; stroke: var(--md-sys-color-primary); stroke-width: 6; stroke-linecap: round; }
+  .ag-dial .mark line { stroke: var(--md-sys-color-primary); stroke-width: 4; stroke-linecap: round; }
+  .ag-dial .det circle { fill: var(--md-sys-color-surface-container-highest); stroke: var(--md-sys-color-outline); cursor: pointer; }
+  .ag-dial .det.on circle { fill: var(--md-sys-color-primary); stroke: var(--md-sys-color-primary); }
+  .ag-dial .det text { fill: var(--md-sys-color-on-surface-variant); font: 500 11px "IBM Plex Sans", sans-serif; pointer-events: none; }
+  .ag-dial .det.on text { fill: var(--md-sys-color-on-surface); }
+  .ag-dial output { display: block; font: 500 15px "IBM Plex Sans", sans-serif; color: var(--md-sys-color-on-surface); margin-top: -6px; }
+  .ag-dial .cap { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+  .ag-seq { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; margin: 6px 0 8px; }
+  .ag-seq span { font: 600 15px var(--dw-mono); text-align: center; padding: 6px 0; border-radius: 6px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); transition: background .15s; }
+  .ag-seq span.now { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+  .ag-seq span.mut { box-shadow: inset 0 0 0 2px var(--dw-amber); }
+  .ag-read { font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin: 4px 0; }
+  .ag-read b { color: var(--md-sys-color-on-surface); font-weight: 500; }
+  .ag-hist { font: 12px var(--dw-mono); color: var(--md-sys-color-outline); word-break: break-all; margin-top: 6px; }
+  .ag-wave { width: 100%; height: 64px; display: block; background: var(--md-sys-color-surface-container-low); border-radius: 8px; margin: 8px 0 2px; }
+  .ag-trim { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ag-trim input { width: 100%; accent-color: var(--md-sys-color-primary); }
+  .ag-seg { display: inline-flex; border: 1px solid var(--md-sys-color-outline); border-radius: 999px; overflow: hidden; }
+  .ag-seg label { padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--md-sys-color-on-surface); }
+  .ag-seg input { display: none; }
+  .ag-seg label:has(input:checked) { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+  .btn.on { background: var(--dw-amber); color: #2a1d00; }
+  .ag-banner { background: var(--md-sys-color-tertiary-container); color: #ffdea6; padding: 8px 14px; border-radius: 12px; font-size: 13px; margin: 10px 0 0; }
+  .ag-status { font-size: 13px; color: var(--dw-amber); min-height: 1.2em; margin-top: 8px; }
+  .ag-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--md-sys-color-on-surface-variant); margin-top: 8px; }
+  .ag-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+  select.ag-sel, input.ag-num { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; padding: 6px 8px; font: 13px "IBM Plex Sans", sans-serif; }
+  input.ag-num { width: 90px; }
+</style>
+{% endblock %}
+{% block content %}
+<p class="eyebrow">Algo · music and image from one number system</p>
+<h1 class="page">Algo</h1>
+<p class="lede">A playable composition after the structural ideas of Philip Glass: repetition, additive phrases that grow and shrink a
+  note at a time, rhythmic cycles of 5, 7 and 11 eighths drifting against one another, slow harmonic change and deliberate silence.
+  A seeded generator (1976) writes sixteen digits, plays them four times, then changes two of them. Each digit moves the harmony
+  one chord along F minor → D♭ → A → B7 and sets the chord's length, its arpeggio and its inversion. The music and the picture are
+  drawn from the same events, so what you see is what you hear.</p>
+
+<div class="ag-stage" id="ag-stage">
+  <canvas id="ag-canvas" aria-label="The composition drawn as it plays: chords as shapes, notes on their instruments' lanes"></canvas>
+  <div class="ag-over"><button class="btn tonal" id="ag-full" title="Full screen">Full screen</button></div>
+</div>
+<div class="ag-legend">
+  <span><i style="background:#5b8cff;border-radius:50%"></i>F minor · circles</span>
+  <span><i style="background:#f0b44c;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>D♭ major · triangles</span>
+  <span><i style="background:#e5534b"></i>A major · squares</span>
+  <span><i style="background:#a77bf3;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)"></i>B7 · hexagons</span>
+  <span>Lanes, top to bottom: piano (5), violin (11), voice, organ (7). Dotted lines: cycles meeting.</span>
+</div>
+<div class="ag-banner" id="ag-replay" hidden></div>
+
+<div class="ag-grid">
+  <section class="ag-card">
+    <h3>Performance</h3>
+    <div class="ag-row">
+      <button class="btn" id="ag-play">Play</button>
+      <button class="btn tonal" id="ag-restart">Restart</button>
+    </div>
+    <div class="ag-row"><label>Volume <input type="range" id="ag-master" min="0" max="1" step="0.01" value="0.8"></label></div>
+    <div class="ag-row"><label>Tempo <input type="range" id="ag-tempo" min="60" max="168" step="1" value="112"> <output id="ag-tempo-out">112</output> bpm</label></div>
+    <div class="ag-row">
+      <label>Length <select class="ag-sel" id="ag-duration">
+        <option value="0">indefinite</option><option value="5">5 minutes</option><option value="10">10 minutes</option>
+        <option value="20">20 minutes</option><option value="45">45 minutes</option></select></label>
+    </div>
+    <div class="ag-row">
+      <label>Seed <input class="ag-num" id="ag-seed" type="number" value="1976"></label>
+      <button class="btn tonal" id="ag-seed-go">Use seed</button>
+    </div>
+    <div class="ag-status" id="ag-status"></div>
+  </section>
+
+  <section class="ag-card">
+    <h3>Instrument and structure</h3>
+    <div class="ag-dials">
+      <div class="ag-dial">
+        <svg id="ag-inst" viewBox="0 0 200 200" role="slider" tabindex="0" aria-label="Lead instrument" aria-valuemin="0" aria-valuemax="3">
+          <circle class="face" cx="100" cy="100" r="62"/>
+          <g class="mark"><line x1="100" y1="100" x2="100" y2="50"/></g>
+          <g class="det"><circle cx="40.6" cy="159.4" r="8"/><text x="22" y="186">Piano</text></g>
+          <g class="det"><circle cx="40.6" cy="40.6" r="8"/><text x="18" y="22">Organ</text></g>
+          <g class="det"><circle cx="159.4" cy="40.6" r="8"/><text x="146" y="22">Violin</text></g>
+          <g class="det"><circle cx="159.4" cy="159.4" r="8"/><text x="150" y="186">Voice</text></g>
+        </svg>
+        <output id="ag-inst-out">Piano</output>
+        <div class="cap">Lead instrument</div>
+      </div>
+      <div class="ag-dial">
+        <svg id="ag-cx" viewBox="0 0 200 200" role="slider" tabindex="0" aria-label="Structural complexity" aria-valuemin="0" aria-valuemax="100">
+          <path class="track" d="M 40.6 159.4 A 84 84 0 1 1 159.4 159.4"/>
+          <path class="arc" d=""/>
+          <circle class="face" cx="100" cy="100" r="62"/>
+          <g class="mark"><line x1="100" y1="100" x2="100" y2="50"/></g>
+        </svg>
+        <output id="ag-cx-out">55</output>
+        <div class="cap">Structural complexity</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ag-card">
+    <h3>Mixer</h3>
+    <div class="ag-mix">
+      <span>Piano · 5</span><input type="range" id="ag-vol-piano" min="0" max="1" step="0.01" value="0.8">
+      <span>Organ · 7</span><input type="range" id="ag-vol-organ" min="0" max="1" step="0.01" value="0.7">
+      <span>Violin · 11</span><input type="range" id="ag-vol-violin" min="0" max="1" step="0.01" value="0.75">
+      <span>Voice · 3–8</span><input type="range" id="ag-vol-voice" min="0" max="1" step="0.01" value="0.8">
+    </div>
+    <p class="ag-read" style="margin-top:10px">Each instrument repeats on its own cycle of eighth notes against one clock; the lead line plays on whichever instrument the dial points to.</p>
+  </section>
+
+  <section class="ag-card">
+    <h3>The numbers</h3>
+    <div class="ag-seq" id="ag-seq"></div>
+    <div class="ag-read" id="ag-seqinfo">press Play</div>
+    <div class="ag-read"><b id="ag-mov">—</b></div>
+    <div class="ag-read" id="ag-chord"></div>
+    <div class="ag-read" id="ag-phrase"></div>
+    <div class="ag-hist" id="ag-hist"></div>
+  </section>
+
+  <section class="ag-card">
+    <h3>Voice sampler</h3>
+    <div class="ag-row">
+      <button class="btn" id="ag-rec">Record</button>
+      <button class="btn tonal" id="ag-vplay">Play</button>
+      <button class="btn tonal" id="ag-vclear">Clear</button>
+      <label><input type="checkbox" id="ag-loop"> loop</label>
+    </div>
+    <canvas class="ag-wave" id="ag-wave"></canvas>
+    <div class="ag-trim">
+      <label class="ag-read">Start <input type="range" id="ag-trim0" min="0" max="1" step="0.005" value="0"></label>
+      <label class="ag-read">End <input type="range" id="ag-trim1" min="0" max="1" step="0.005" value="1"></label>
+    </div>
+    <div class="ag-row">
+      <span class="ag-seg">
+        <label><input type="radio" name="ag-mode" value="harmonizer" checked>Harmonizer</label>
+        <label><input type="radio" name="ag-mode" value="vocoder">Vocoder</label>
+      </span>
+    </div>
+    <div class="ag-mix">
+      <span>Clarity</span><input type="range" id="ag-clarity" min="0" max="1" step="0.01" value="0.6">
+      <span>Wet / dry</span><input type="range" id="ag-wet" min="0" max="1" step="0.01" value="0.45">
+      <span>Reverb</span><input type="range" id="ag-reverb" min="0" max="1" step="0.01" value="0.35">
+      <span>Harmony layers</span><input type="range" id="ag-layers" min="1" max="4" step="1" value="2">
+      <span>Speed <output id="ag-speed-out">1.00×</output></span><input type="range" id="ag-speed" min="0.5" max="2" step="0.05" value="1">
+      <span>Repetitions</span><input type="range" id="ag-reps" min="1" max="4" step="1" value="1">
+    </div>
+    <div class="ag-read" id="ag-voice-status">No recording: the voice sampler sings a vowel.</div>
+  </section>
+
+  <section class="ag-card">
+    <h3>Record and export</h3>
+    <div class="ag-row">
+      <button class="btn tonal" id="ag-rec-audio">Record audio</button>
+      <button class="btn tonal" id="ag-rec-video">Record video</button>
+    </div>
+    <div class="ag-row">
+      <button class="btn tonal" id="ag-midi">Export MIDI</button>
+      <button class="btn tonal" id="ag-save">Save session</button>
+      <button class="btn tonal" id="ag-load">Load session</button>
+      <input type="file" id="ag-file" accept="application/json,.json" hidden>
+    </div>
+    <div class="ag-row">
+      <button class="btn tonal" id="ag-midi-connect">Connect MIDI out</button>
+      <select class="ag-sel" id="ag-midi-out" hidden></select>
+    </div>
+    <p class="ag-read">A session holds the seed, the starting settings, every change you make (timed to the eighth note it took effect on),
+      and your voice recording, so loading it replays the performance exactly. Video is 16:9 with the sound.</p>
+  </section>
+</div>
+
+<script src="/static/darwin/algo/glass/engine.js?v=1"></script>
+<script src="/static/darwin/algo/glass/ui.js?v=1"></script>
+{% endblock %}
