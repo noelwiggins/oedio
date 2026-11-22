@@ -56,6 +56,20 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   voice 160) and a +3.5 dB low shelf at 180 Hz. Energy below 150 Hz went 5% → 44% in a 40 s test recording.
   Octave dials (−2…+2) per instrument in the mixer: audio.oct, applied at play time (folded into 24–108, so the score
   and replay stay exact), logged as oct.<name>, saved in sessions, applied to MIDI export.
+  Glass features (2026-11-22, from his writings): score ctl period (0 1960s: unison F-minor line in parallel fifths,
+  additive rhythm, no harmony; 1 1970s: as before; 2 operas: ground-bass figure each bar on part 'bass'), rhythm
+  'additive' (phrase notes last rhy[i] eighths, one eighth added per odd-ish number, back to twos at N=0 or when full),
+  triplets (one instrument per chord plays 3-against-2 arpeggios; notes carry an offset fraction), knee plays (last 2
+  chords of each movement: organ holds, voice counts 1–8), text (voice sings the 16 digits / solfège / vowel / the
+  recording) via singSyl, a formant speech synth (PHON/WORDS tables), intermission minutes after each full cycle.
+  Note tuple now [inst, midi, len, vel, part, offset, syllable]; result has count (phrase repetitions).
+  Audio: preset 'ensemble' (combo organ ×2, soprano sax + flute, soprano voice, electric bass) vs 'chamber' (bass =
+  organ pedal); engineer = rideMix per chord (ride gain + pan targets from hashes). PARTS adds 'bass' (bus, mixer row,
+  octave dial, MIDI track 5). Pictures: Score / Stage (Wilson: field, tower of phrase storeys, rising light bar, figures,
+  train in movement IV) / Dance (Childs–LeWitt: dancers on diagonal paths timed by cycles, large faint overlay) /
+  Time-lapse (Reggio: traffic streams and clouds whose speed follows note density, city windows, chant bass on slow
+  chords). Counting numeral overlay. Concert button: 4 h, 2-min intermissions, full screen, no captions, hidden cursor.
+  Tests: work/glasstest2.js (score), glasspics.js (modes), singtest.js (words + ensemble), algotest.js (replay 117/117).
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
