@@ -1,0 +1,4 @@
+Piano: Salamander Grand Piano V3 (Yamaha C5) by Alexander Holm, licensed CC BY 3.0
+       (https://creativecommons.org/licenses/by/3.0/). The 30-note MP3 set as prepared for Tone.js (github.com/Tonejs/audio).
+Violin: VS Chamber Orchestra: Community Edition (VSCO 2 CE), Solo Violin, Arco Vibrato, p and f layers,
+        recorded by Sam Gossner & Simon Dalzell, Versilian Studios; CC0 1.0. Trimmed to 6 s with a fade and encoded as MP3.

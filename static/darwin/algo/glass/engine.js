@@ -369,15 +369,15 @@
       for (const n of PARTS) {
         const g = A.createGain(); g.gain.value = 0.8;
         const ride = A.createGain(); g.connect(ride); this.ride[n] = ride;        // the sound engineer's hand, separate from the fader
-        let last = ride;
-        for (const [type, f, q, gain] of BODY[n]) { const b = A.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = gain; last.connect(b); last = b; }
+        let last = ride; this.body = this.body || {}; this.body[n] = [];
+        for (const [type, f, q, gain] of BODY[n]) { const b = A.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = gain; last.connect(b); last = b; this.body[n].push(b); }
         const pan = A.createStereoPanner(); pan.pan.value = PAN[n]; last.connect(pan); pan.connect(this.out); this.pan[n] = pan;
         const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : n === 'violin' ? 0.4 : n === 'bass' ? 0.12 : 0.32; pan.connect(sd); sd.connect(this.verbIn);
         this.bus[n] = g; this.send[n] = sd;
       }
       // the piano's soundboard: a short, woody resonance added to the strings
       this.board = A.createConvolver(); this.board.buffer = this.impulse(0.35, 0.6);
-      const bg = A.createGain(); bg.gain.value = 0.35; this.bus.piano.connect(this.board); this.board.connect(bg); bg.connect(this.out);
+      const bg = this.boardGain = A.createGain(); bg.gain.value = 0.35; this.bus.piano.connect(this.board); this.board.connect(bg); bg.connect(this.out);
       // the lead line has its own fader per instrument, so the dial can crossfade between them
       this.lead = {}; this.leadOn = 0;
       for (let i = 0; i < 4; i++) { const g = A.createGain(); g.gain.value = i === 0 ? 1 : 0; g.connect(this.bus[INSTRUMENTS[i]]); this.lead[i] = g; }
@@ -390,6 +390,59 @@
       this.preset = 'chamber'; this.engineer = false; this.text = 'numbers';
       this.ks = false;                                                    // the physically modelled piano, once its worklet has loaded
       if (A.audioWorklet) A.audioWorklet.addModule('/static/darwin/algo/glass/strings-worklet.js?v=1').then(() => { this.ks = true; }).catch(() => {});
+      this.samples = { piano: null, violin: null }; this.loadSamples();
+    }
+    // ── recorded instruments: a Yamaha grand (Salamander, CC BY 3.0) and a solo violin (VSCO 2 CE, CC0) ──
+    // Until they have loaded, the modelled piano and synthesized violin play instead.
+    async loadSamples() {
+      const A = this.ctx, base = '/static/darwin/algo/glass/samples/';
+      const NOTE = { C: 0, Ds: 3, Fs: 6, E: 4, G: 7, A: 9 };
+      const midiOf = name => { const m = name.match(/^([A-G]s?)(\d)/); return 12 * (+m[2] + 1) + NOTE[m[1]]; };
+      const get = async (file) => A.decodeAudioData(await (await fetch(base + file)).arrayBuffer());
+      const pianoNames = ['A0']; for (let o = 1; o <= 7; o++) for (const n of ['C', 'Ds', 'Fs', 'A']) pianoNames.push(n + o); pianoNames.push('C8');
+      const violinNames = []; for (const n of ['G3', 'A3', 'C4', 'E4', 'G4', 'A4', 'C5', 'E5', 'G5', 'A5', 'C6', 'E6', 'G6', 'A6', 'C7']) violinNames.push(n);
+      try {
+        const piano = await Promise.all(pianoNames.map(async n => ({ m: midiOf(n), buf: await get(`piano/${n}.mp3`) })));
+        this.samples.piano = piano;
+        for (const b of this.body.piano) if (b.type === 'peaking') b.gain.value = 0;   // the recording has its own body
+        this.boardGain.gain.value = 0;
+      } catch (e) { /* stay with the model */ }
+      try {
+        const layer = async v => Promise.all(violinNames.map(async n => ({ m: midiOf(n), buf: await get(`violin/${n}_${v}.mp3`) })));
+        this.samples.violin = { p: await layer('p'), f: await layer('f') };
+        for (const b of this.body.violin) if (b.type === 'peaking') b.gain.value = 0;
+      } catch (e) { /* stay with the synthesis */ }
+    }
+    nearest(list, m) { let best = list[0]; for (const e of list) if (Math.abs(e.m - m) < Math.abs(best.m - m)) best = e; return best; }
+    samplePiano(m, dur, vel, t, dest) {
+      const A = this.ctx, e = this.nearest(this.samples.piano, m), nodes = [];
+      const src = A.createBufferSource(); src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12);
+      const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800 + 12000 * vel * vel; lp.Q.value = 0.3;   // softer keys, darker tone
+      const g = A.createGain(), amp = 0.55 * (0.12 + 0.88 * Math.pow(vel, 1.4));
+      const len = e.buf.duration / src.playbackRate.value, hold = Math.min(len, Math.max(1.8, dur * 3));
+      g.gain.setValueAtTime(amp, t); g.gain.setTargetAtTime(0, t + hold, 0.18);                       // the damper
+      const pan = A.createStereoPanner(); pan.pan.value = Math.max(-0.5, Math.min(0.5, (m - 64) / 44));
+      src.connect(lp); lp.connect(g); g.connect(pan); pan.connect(dest);
+      src.start(t); src.stop(t + Math.min(len, hold + 1)); nodes.push(src, lp, g, pan);
+      this._done(nodes, src);
+    }
+    sampleViolin(m, dur, vel, t, dest) {
+      const A = this.ctx, V = this.samples.violin, nodes = [];
+      const g = A.createGain(); g.connect(dest); nodes.push(g);
+      const L = Math.max(0.2, dur), amp = 0.42 * (0.3 + 0.7 * vel);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.03);
+      g.gain.setValueAtTime(amp, t + L); g.gain.setTargetAtTime(0, t + L, 0.12);                       // the bow lifts
+      // blend the soft and strong recordings by how hard the note is played
+      let last = null;
+      for (const [layer, w] of [['p', 1 - vel], ['f', vel]]) {
+        if (w < 0.08) continue;
+        const e = this.nearest(V[layer], m), src = A.createBufferSource(), sg = A.createGain();
+        src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12); sg.gain.value = w;
+        const len = e.buf.duration / src.playbackRate.value;
+        if (L + 0.5 > len) { src.loop = true; src.loopStart = 1.6; src.loopEnd = Math.min(4.6, e.buf.duration - 0.3); }   // long holds loop the steady middle
+        src.connect(sg); sg.connect(g); src.start(t); src.stop(t + L + 0.7); nodes.push(src, sg); last = src;
+      }
+      this._done(nodes, last);
     }
     tanhCurve(k) { const n = 2048, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(k * x) / Math.tanh(k); } return c; }
     impulse(sec, bright) {
@@ -467,6 +520,7 @@
     // piano: three slightly detuned strings per note, a felt hammer, a brightness that fades faster than the loudness,
     // a quick first decay and a long singing second one, and the soundboard on the bus
     piano(m, dur, vel, t, dest) {
+      if (this.samples && this.samples.piano) return this.samplePiano(m, dur, vel, t, dest);
       if (this.ks) return this.stringPiano(m, dur, vel, t, dest);
       const A = this.ctx, f = mtof(m), nodes = [];
       const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.4;
@@ -549,6 +603,7 @@
     // violin: two players a few cents apart, bow hair on the string (filtered noise riding the bow pressure), a bow that
     // bites and then opens up, a small scoop into pitch, and a vibrato that arrives late and never quite repeats
     violin(m, dur, vel, t, dest) {
+      if (this.samples && this.samples.violin) return this.sampleViolin(m, dur, vel, t, dest);
       const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.05;
       const env = A.createGain(), lp = A.createBiquadFilter();
       lp.type = 'lowpass'; lp.Q.value = 0.8;
