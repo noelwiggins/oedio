@@ -70,6 +70,13 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   Time-lapse (Reggio: traffic streams and clouds whose speed follows note density, city windows, chant bass on slow
   chords). Counting numeral overlay. Concert button: 4 h, 2-min intermissions, full screen, no captions, hidden cursor.
   Tests: work/glasstest2.js (score), glasspics.js (modes), singtest.js (words + ensemble), algotest.js (replay 117/117).
+  Recorded instruments (2026-11-22): Chamber preset piano and violin are real samples in static/darwin/algo/glass/samples/
+  (CREDITS.txt). Piano = Salamander Grand (Yamaha C5, Alexander Holm, CC BY 3.0), 30 mp3s A0–C8 at minor thirds (Tone.js set, 2 MB).
+  Violin = VSCO 2 CE solo violin arco vibrato, p+f layers G3–C7 (CC0), trimmed to 6 s, 112k mp3 (2.5 MB).
+  engine.js loadSamples() lazy-loads on Audio creation; samplePiano (nearest sample, playbackRate, velocity lowpass, damper fade) and
+  sampleViolin (p/f crossfade by velocity, loops 1.6–4.6 s for long holds, bow attack/release). Body peaking EQs and the piano
+  soundboard convolver are zeroed once samples load. KS worklet/synth remain fallbacks. Glass Ensemble preset unchanged.
+  Credit line on the page. Test: work/samptest.js <base> <secs> <out.webm>.
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
