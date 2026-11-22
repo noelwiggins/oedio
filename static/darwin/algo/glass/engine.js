@@ -10,7 +10,7 @@
      Score              chords, additive phrases, rhythmic cycles, movements and silences → note events per step
      Audio              synthesis (piano, organ, violin, voice), voice sampler (harmonizer, vocoder), mixer, reverb
      Exports            MIDI file, WAV encoding, session JSON
-   window.Glass = { Numbers, Score, Audio, midiFile, wavBytes, CHORDS, MOVEMENTS, INSTRUMENTS } */
+   window.Glass = { DRUM, MIDI_CH, Numbers, Score, Audio, midiFile, wavBytes, CHORDS, MOVEMENTS, INSTRUMENTS } */
 (function () {
   'use strict';
 
@@ -101,7 +101,10 @@
   const LINE = [0, 2, 1, 3, 2, 4, 3];
   const F_MINOR = [0, 2, 3, 5, 7, 8, 10];        // the 1960s line lives in F minor, without chords
   const SOLFEGE = ['do', 'di', 're', 'ri', 'mi', 'fa', 'fi', 'sol', 'si', 'la', 'li', 'ti'];
-  const PARTS = ['piano', 'organ', 'violin', 'voice', 'bass'];
+  const PARTS = ['piano', 'organ', 'violin', 'voice', 'bass', 'drums'];
+  // percussion as General MIDI keys (and the timpani as pitched notes on their own)
+  const DRUM = { kick: 36, snare: 38, roll: 40, crash: 49, gong: 52, swell: 55 };
+  const MIDI_CH = name => name === 'drums' ? 9 : name === 'timpani' ? 6 : PARTS.indexOf(name);
   // phonemes for the singing: [voiced, noise, noise Hz, F1, F2, F3, ms (0 = vowel)]
   const PHON = {
     ee: [1, 0, 0, 280, 2250, 2900, 0], ih: [1, 0, 0, 400, 1950, 2550, 0], eh: [1, 0, 0, 530, 1840, 2480, 0], ah: [1, 0, 0, 720, 1100, 2450, 0],
@@ -125,7 +128,7 @@
       this.step = 0; this.chordCount = -1; this.chordEnd = 0; this.mov = 0; this.inMov = -1;
       // period: 0 = the 1960s (unison lines in fifths, additive rhythm, no harmony), 1 = the 1970s (cycles over slow
       // harmony), 2 = the operas (a repeating ground bass under it all). text: what the voice sings.
-      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0 };
+      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false };
       this.L = 3; this.dir = 1; this.voiceCycle = 5;
       this.rhy = [2, 2, 2];                       // additive rhythm: how many eighths each note of the phrase lasts
       this.leadPos = 0; this.leadNext = 0; this.count = 0; this.voiceIdx = 0;
@@ -191,7 +194,7 @@
       const knee = this.ctl.knees && bridge > 0;
       if (knee) { layers = ['organ', 'voice']; sil.sustain = false; sil.restBeats = 0; sil.onlyOne = null; }
       this.chord = {
-        cc, ci, N, len, beats, density, inv, L: this.L, changed, mi, bridge, start: this.step, layers, sil, trip, knee,
+        cc, ci, N, len, beats, density, inv, L: this.L, changed, mi, inMov, bridge, start: this.step, layers, sil, trip, knee,
         v: voicing(ci, inv), num: d, voiceCycle: this.voiceCycle, complexity: this.ctl.complexity, rhy: this.rhy.slice(), period: this.ctl.period,
       };
       // an intermission after each full cycle of five movements, when one is asked for
@@ -236,6 +239,7 @@
       if (C.knee) {
         if (k === 0) for (const m of v) push('organ', m - 12, C.len, 0.42, 'hold');
         if (k % 2 === 0) push('voice', tone(v, (k / 2) % v.length) , 2, 0.55, 'count', 0, String((k / 2) % 8 + 1));
+        this.percussion(C, k, false, push, true);
         this.step++;
         return { step: s, notes, chord: C, newChord, resting: false, count: (k / 2) % 8 + 1, knee: true };
       }
@@ -305,6 +309,7 @@
           if (p === 0 || (c > 0.75 && p === Math.floor(vc / 2))) { const m = tone(v, cell[Math.floor(s / vc) % C.L]); push('voice', m, vc, 0.5, 'cycle', 0, sing(m)); }
         }
       }
+      this.percussion(C, k, resting, push, false);
       // the operas: a ground bass, the same figure every bar, under every chord (the chaconne idea)
       if (P === 2 && !resting) {
         const root = v[0] - 24 - (v[0] - 24 > 40 ? 12 : 0), fig = { 0: [0, 3], 3: [7, 2], 5: [12, 2], 7: [7, 1] }[k % 8];
@@ -314,6 +319,50 @@
       return { step: s, notes, chord: C, newChord, resting, count: this.count };
     }
   }
+
+  // ── percussion, after the Mishima score: military snare, bass drum, timpani, tam-tam and suspended cymbal ──
+  // Nothing random: every stroke follows from the chord, the bar, the movement and the complexity, so replay stays exact.
+  Score.prototype.percussion = function (C, k, resting, push, kneeOnly) {
+    if (!this.ctl.drums || C.period === 0) return;
+    const c = this.ctl.complexity / 100, mi = C.mi, im = C.inMov;
+    // the cymbal swells into each new movement, peaking on its downbeat (the recording peaks 3.3 s in)
+    if (im === CHORDS_PER_MOVEMENT - 1 && c > 0.15) {
+      const lead = Math.round(3.3 * this.ctl.tempo / 30);
+      if (k === Math.max(0, C.len - lead)) push('drums', DRUM.swell, C.len - k, 0.35 + 0.4 * c, 'swell');
+    }
+    if (kneeOnly) return;
+    // a movement begins with the tam-tam (and the crash, when the rhythmic movement arrives)
+    if (k === 0 && im === 0 && C.cc > 0) {
+      push('drums', DRUM.gong, 16, mi === 3 ? 0.9 : mi === 4 ? 0.35 : 0.6, 'gong');
+      if (mi === 3 || (mi === 1 && c > 0.6)) push('drums', DRUM.crash, 8, 0.7, 'crash');
+    }
+    if (resting) return;
+    // how much percussion: none to start, entering through the accumulation, held back in the slow movement, full in
+    // the rhythmic one, thinning away in the reduction; complexity caps it
+    let lvl = [c > 0.7 ? 1 : 0, im < 3 ? 0 : im < 7 ? 1 : 2, 1, 3, Math.max(0, 2 - Math.floor(im / 4))][mi];
+    lvl = Math.min(lvl, c < 0.25 ? 1 : c < 0.5 ? 2 : 3);
+    if (!lvl) return;
+    const rootPc = CHORDS[C.ci].notes[0] % 12;
+    let root = 36 + rootPc; while (root < 41) root += 12;
+    let fifth = root + 7; while (fifth > 55) fifth -= 12;
+    const hold = C.sil.sustain || mi === 2, start = C.sil.restBeats * 2;
+    if (k === start) {
+      if (hold) push('timpani', root, C.len - k, 0.3 + 0.3 * c, 'troll', 0, 'roll');      // a held chord: the timpani roll under it
+      else { push('timpani', root, 8, 0.75, 'timp'); push('drums', DRUM.kick, 4, 0.7, 'kick'); }
+    }
+    if (hold || lvl < 2) return;
+    const b = k % 8, acc = euclid(C.density, 8, C.inv);
+    // the snare doubles the arpeggio's accents; the timpani walk root and fifth on the half bar
+    if (acc[b]) push('drums', DRUM.snare, 1, 0.5 + 0.25 * (b === 0) + 0.1 * c, 'snare');
+    else if (lvl >= 3) push('drums', DRUM.snare, 1, 0.2 + 0.08 * (b % 2), 'ghost');
+    if (k > 0 && b % 4 === 0) push('timpani', (k / 4) % 2 ? fifth : root, 4, 0.5, 'timp');
+    if (k > 0 && b === 0) push('drums', DRUM.kick, 4, 0.5, 'kick');
+    if (lvl >= 3) {
+      if (b === 4) push('drums', DRUM.kick, 4, 0.38, 'kick');
+      if ((b === 6 || b === 7) && k < C.len - 4) push('drums', DRUM.snare, 0.5, 0.28, 'fill', 0.5);   // sixteenths before the bar
+      if (k === C.len - 4) push('drums', DRUM.roll, 4, 0.55 + 0.3 * c, 'roll');                         // a roll into the change
+    }
+  };
 
   // ── audio ─────────────────────────────────────────────────────────────
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
@@ -362,8 +411,9 @@
                  ['peaking', 4300, 2, -4], ['lowpass', 7200, 0.7, 0]],
         voice: [['highpass', 55, 0.7, 0], ['peaking', 160, 1.4, 4], ['peaking', 3000, 1.5, 2], ['lowpass', 8000, 0.6, 0]],
         bass: [['highpass', 28, 0.7, 0], ['peaking', 80, 1.1, 3], ['lowpass', 3200, 0.6, 0]],
+        drums: [['highpass', 30, 0.7, 0]],
       };
-      const PAN = { piano: -0.25, organ: 0, violin: 0.3, voice: 0.1, bass: 0 };
+      const PAN = { piano: -0.25, organ: 0, violin: 0.3, voice: 0.1, bass: 0, drums: -0.05 };
       this.panBase = PAN; this.pan = {}; this.ride = {};
       this.bus = {}; this.send = {};
       for (const n of PARTS) {
@@ -372,7 +422,7 @@
         let last = ride; this.body = this.body || {}; this.body[n] = [];
         for (const [type, f, q, gain] of BODY[n]) { const b = A.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = gain; last.connect(b); last = b; this.body[n].push(b); }
         const pan = A.createStereoPanner(); pan.pan.value = PAN[n]; last.connect(pan); pan.connect(this.out); this.pan[n] = pan;
-        const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : n === 'violin' ? 0.4 : n === 'bass' ? 0.12 : 0.32; pan.connect(sd); sd.connect(this.verbIn);
+        const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : n === 'violin' ? 0.4 : n === 'bass' ? 0.12 : n === 'drums' ? 0.3 : 0.32; pan.connect(sd); sd.connect(this.verbIn);
         this.bus[n] = g; this.send[n] = sd;
       }
       // the piano's soundboard: a short, woody resonance added to the strings
@@ -386,11 +436,11 @@
       this.tremulant = A.createOscillator(); this.tremulant.frequency.value = 0.7; this.tremulant.start();   // a slow organ swell
       this.voice = { buffer: null, mode: 'harmonizer', clarity: 0.6, wet: 0.45, layers: 2, speed: 1, reps: 1, trim: [0, 1], base: 57, bands: null };
       this.live = 0;                                                      // notes sounding, for a polyphony cap
-      this.oct = { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0 };     // each instrument's octave dial
+      this.oct = { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0 };     // each instrument's octave dial
       this.preset = 'chamber'; this.engineer = false; this.text = 'numbers';
       this.ks = false;                                                    // the physically modelled piano, once its worklet has loaded
       if (A.audioWorklet) A.audioWorklet.addModule('/static/darwin/algo/glass/strings-worklet.js?v=1').then(() => { this.ks = true; }).catch(() => {});
-      this.samples = { piano: null, violin: null }; this.loadSamples();
+      this.samples = { piano: null, violin: null, organ: null, bass: null, drums: null }; this.rr = 0; this.loadSamples();
     }
     // ── recorded instruments: a Yamaha grand (Salamander, CC BY 3.0) and a solo violin (VSCO 2 CE, CC0) ──
     // Until they have loaded, the modelled piano and synthesized violin play instead.
@@ -412,6 +462,91 @@
         this.samples.violin = { p: await layer('p'), f: await layer('f') };
         for (const b of this.body.violin) if (b.type === 'peaking') b.gain.value = 0;
       } catch (e) { /* stay with the synthesis */ }
+      // the pipe organ, the double bass and the percussion, listed in manifest.json (file, pitch, dynamic)
+      try {
+        const man = await (await fetch(base + 'manifest.json?v=2')).json();
+        const load = async list => (await Promise.all(list.map(async e => { try { return Object.assign({}, e, { buf: await get(e.f) }); } catch (er) { return null; } }))).filter(Boolean);   // one bad file never silences a whole instrument
+        this.samples.organ = await load(man.organ);
+        for (const b of this.body.organ) if (b.type === 'peaking') b.gain.value = 0;
+        this.samples.bass = { p: await load(man.bass.p), f: await load(man.bass.f) };
+        for (const b of this.body.bass) if (b.type === 'peaking') b.gain.value = 0;
+        const D = {}; for (const [k, list] of Object.entries(man.drums)) D[k] = await load(list);
+        this.samples.drums = D;
+      } catch (e) { /* the synthesized organ and pedal stay */ }
+    }
+    // a seamless loop for a sustained recording: from a point after the attack to the place near the end where the
+    // waveform best matches it, found by correlation in the decoded audio (so it holds whatever the decoder's padding)
+    loopOf(e, a0, b0) {
+      if (e.loop) return e.loop;
+      const buf = e.buf, x = buf.getChannelData(0), sr = buf.sampleRate, W = Math.floor(sr * 0.012), R = Math.floor(sr * 0.025);
+      const a = Math.floor(Math.min(a0, buf.duration * 0.3) * sr), bc = Math.floor(Math.min(b0, buf.duration - 0.2) * sr);
+      let ea = 0; for (let j = 0; j < W; j += 2) ea += x[a + j] * x[a + j];
+      let best = -2, bi = bc;
+      for (let b = bc - R; b < bc + R && b + W < x.length; b++) {
+        let s = 0, eb = 0; for (let j = 0; j < W; j += 2) { s += x[a + j] * x[b + j]; eb += x[b + j] * x[b + j]; }
+        const cr = s / Math.sqrt(ea * eb + 1e-12); if (cr > best) { best = cr; bi = b; }
+      }
+      return (e.loop = [a / sr, bi / sr]);
+    }
+    // the pipe organ: a quiet flue stop on the third manual, the pedal below C2; the pipes speak on their own
+    sampleOrgan(m, dur, vel, t, dest) {
+      const A = this.ctx, e = this.nearest(this.samples.organ, m), nodes = [];
+      const src = A.createBufferSource(); src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12);
+      const L = Math.max(0.15, dur), len = e.buf.duration / src.playbackRate.value;
+      if (L + 0.6 > len - 0.5) { const [a, b] = this.loopOf(e, 1.5, 6.8); src.loop = true; src.loopStart = a; src.loopEnd = b; }
+      const g = A.createGain(), amp = 0.5 * (0.25 + 0.75 * vel) * (e.pedal ? 0.7 : 1);
+      g.gain.setValueAtTime(amp, t); g.gain.setTargetAtTime(0, t + L, 0.1);
+      src.connect(g); g.connect(dest); src.start(t); src.stop(t + L + 0.7); nodes.push(src, g);
+      this._done(nodes, src);
+    }
+    // the double bass, bowed without vibrato; soft and strong recordings blended by velocity
+    sampleBass(m, dur, vel, t, dest) {
+      const A = this.ctx, B = this.samples.bass, nodes = [], L = Math.max(0.18, dur * 0.95);
+      const g = A.createGain(), amp = 0.75 * (0.4 + 0.6 * vel); g.connect(dest); nodes.push(g);
+      g.gain.setValueAtTime(amp, t); g.gain.setTargetAtTime(0, t + L, 0.07);
+      let last = null;
+      for (const [layer, w] of [['p', 1 - vel], ['f', vel]]) {
+        if (w < 0.08) continue;
+        const e = this.nearest(B[layer], m), src = A.createBufferSource(), sg = A.createGain();
+        src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12); sg.gain.value = w;
+        if (L + 0.4 > e.buf.duration / src.playbackRate.value - 0.4) { const [a, b] = this.loopOf(e, 1.2, 4.8); src.loop = true; src.loopStart = a; src.loopEnd = b; }
+        src.connect(sg); sg.connect(g); src.start(t); src.stop(t + L + 0.5); nodes.push(src, sg); last = src;
+      }
+      this._done(nodes, last);
+    }
+    // percussion from recordings; key is a General MIDI drum key, or a pitch for the timpani
+    drum(inst, key, dur, vel, t, dest, roll) {
+      const D = this.samples.drums; if (!D) return;
+      const A = this.ctx, nodes = [];
+      const pick = list => { let best = list[0]; for (const e of list) if (Math.abs(e.v - vel) < Math.abs(best.v - vel) || (e.v === best.v && e.rr === 1 + (this.rr % 2))) best = e; return best; };
+      this.rr++;
+      let e, rate = 1, amp, env = null;
+      if (inst === 'timpani') {
+        if (roll) {
+          e = this.nearest(D.troll, key); amp = 0.55 * vel;
+          env = g => { g.gain.setValueAtTime(amp * 0.35, t); g.gain.linearRampToValueAtTime(amp, t + Math.min(2.5, dur * 0.5)); g.gain.setValueAtTime(amp, t + dur); g.gain.setTargetAtTime(0, t + dur, 0.35); };
+        } else {
+          const near = this.nearest(D.timp, key), same = D.timp.filter(x => x.m === near.m);
+          e = same.reduce((b, x) => Math.abs(x.v - vel) < Math.abs(b.v - vel) ? x : b, same[0]); amp = 0.7 * Math.pow(vel / e.v, 0.6);
+        }
+        rate = Math.pow(2, (key - e.m) / 12);
+      } else if (key === DRUM.snare) { e = pick(D.snare); amp = 0.55 * Math.pow(vel / e.v, 0.5); }
+      else if (key === DRUM.kick) { e = pick(D.kick); amp = 0.8 * Math.pow(vel / e.v, 0.5); }
+      else if (key === DRUM.roll) {
+        e = pick(D.roll); amp = 0.5 * vel;
+        env = g => { g.gain.setValueAtTime(amp * 0.25, t); g.gain.linearRampToValueAtTime(amp, t + dur); g.gain.setTargetAtTime(0, t + dur, 0.02); };
+      }
+      else if (key === DRUM.gong) { e = pick(D.gong); amp = 0.6 * Math.pow(vel / e.v, 0.5); }
+      else if (key === DRUM.crash) { e = D.crash[0]; amp = 0.4 * vel; }
+      else if (key === DRUM.swell) { e = D.swell[0]; amp = 0.8 * vel; }
+      else return;
+      const src = A.createBufferSource(); src.buffer = e.buf; src.playbackRate.value = rate;
+      const g = A.createGain(); if (env) env(g); else g.gain.value = Math.min(1.2, amp);
+      let stopAt = t + e.buf.duration / rate;
+      if (roll) { if (dur + 0.5 > e.buf.duration / rate) { const [a, b] = this.loopOf(e, 1.5, 6.5); src.loop = true; src.loopStart = a; src.loopEnd = b; } stopAt = t + dur + 1.2; }
+      if (key === DRUM.roll && inst !== 'timpani') stopAt = t + dur + 0.1;
+      src.connect(g); g.connect(dest); src.start(t); src.stop(stopAt); nodes.push(src, g);
+      this._done(nodes, src);
     }
     nearest(list, m) { let best = list[0]; for (const e of list) if (Math.abs(e.m - m) < Math.abs(best.m - m)) best = e; return best; }
     samplePiano(m, dur, vel, t, dest) {
@@ -439,7 +574,7 @@
         const e = this.nearest(V[layer], m), src = A.createBufferSource(), sg = A.createGain();
         src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12); sg.gain.value = w;
         const len = e.buf.duration / src.playbackRate.value;
-        if (L + 0.5 > len) { src.loop = true; src.loopStart = 1.6; src.loopEnd = Math.min(4.6, e.buf.duration - 0.3); }   // long holds loop the steady middle
+        if (L + 0.5 > len) { const [a, b] = this.loopOf(e, 1.6, Math.min(4.6, e.buf.duration - 0.4)); src.loop = true; src.loopStart = a; src.loopEnd = b; }   // long holds loop the steady middle
         src.connect(sg); sg.connect(g); src.start(t); src.stop(t + L + 0.7); nodes.push(src, sg); last = src;
       }
       this._done(nodes, last);
@@ -475,8 +610,9 @@
     // play one score note; returns nothing. inst may be 'lead' (goes to the dial's instrument, and to the one fading out)
     play(inst, midi, dur, vel, t, syl) {
       this._syl = syl || null;
-      if (this.live > 56) return;
+      if (this.live > 96) return;
       const at = (name, m) => { m += 12 * (this.oct[name] || 0); while (m < 24) m += 12; while (m > 108) m -= 12; return m; };   // fold, never pile up
+      if (inst === 'drums' || inst === 'timpani') return this.drum(inst, midi, dur, vel, t, this.bus.drums, syl === 'roll');
       if (inst === 'lead') {
         for (let k = 0; k < 4; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(INSTRUMENTS[k], at(INSTRUMENTS[k], midi), dur, vel, t, this.lead[k]);
         return;
@@ -500,7 +636,7 @@
       if (inst === 'piano') return this.piano(midi, dur, vel, t, dest);
       if (inst === 'organ') return this.organ(midi, dur, vel, t, dest);
       if (inst === 'violin') return this.violin(midi, dur, vel, t, dest);
-      if (inst === 'bass') return this.organ(midi + 12, dur, vel * 1.1, t, dest);     // pedal pipes, with their 16' below
+      if (inst === 'bass') return this.samples.bass ? this.sampleBass(midi, dur, vel, t, dest) : this.organ(midi + 12, dur, vel * 1.1, t, dest);
       return this.voiceNote(midi, dur, vel, t, dest);
     }
     // the sound engineer (Kurt Munkacsi mixed the Glass Ensemble live, as one of its members): at each chord the
@@ -578,6 +714,7 @@
     }
     // organ: a principal rank and a gently beating celeste, a puff of air as the pipe speaks, a slow swell
     organ(m, dur, vel, t, dest) {
+      if (this.samples && this.samples.organ) return this.sampleOrgan(m, dur, vel, t, dest);
       const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.06;
       const g = A.createGain();
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.09);
@@ -857,8 +994,11 @@
     const tt = tempos.map(([step, bpm]) => { const us = Math.round(60000000 / bpm); return [step * E, [0xff, 0x51, 3, (us >>> 16) & 255, (us >>> 8) & 255, us & 255]]; });
     tt.push([0, [0xff, 0x03, 4, 0x41, 0x6c, 0x67, 0x6f]]);       // track name "Algo"
     tracks.push(track(tt));
-    const PROG = { piano: 0, organ: 19, violin: 40, voice: 52, bass: 32 };
-    PARTS.forEach((name, ch) => {
+    const PROG = { piano: 0, organ: 19, violin: 40, voice: 52, bass: 32, drums: 0, timpani: 47 };
+    [...PARTS, 'timpani'].forEach(name => {
+      const ch = MIDI_CH(name);
+      if (name === 'drums' && !events.some(e => e[1] === 'drums')) return;
+      if (name === 'timpani' && !events.some(e => e[1] === 'timpani')) return;
       const evs = [[0, [0xc0 | ch, PROG[name]]], [0, [0xff, 0x03, name.length, ...[...name].map(c => c.charCodeAt(0))]]];
       for (const [step, inst, midi, len, vel] of events) if (inst === name) {
         const v = Math.max(1, Math.min(127, Math.round(vel * 127))), n = Math.max(0, Math.min(127, midi));

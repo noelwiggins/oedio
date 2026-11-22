@@ -2,3 +2,7 @@ Piano: Salamander Grand Piano V3 (Yamaha C5) by Alexander Holm, licensed CC BY 3
        (https://creativecommons.org/licenses/by/3.0/). The 30-note MP3 set as prepared for Tone.js (github.com/Tonejs/audio).
 Violin: VS Chamber Orchestra: Community Edition (VSCO 2 CE), Solo Violin, Arco Vibrato, p and f layers,
         recorded by Sam Gossner & Simon Dalzell, Versilian Studios; CC0 1.0. Trimmed to 6 s with a fade and encoded as MP3.
+Pipe organ: VSCO 2 CE Keys/Organ (quiet third manual, loud pedal), sampled by Simon Dalzell of Ivy Audio; CC0.
+Double bass: VSCO 2 CE Solo Contrabass, sustain without vibrato, two dynamics; CC0.
+Percussion: VSCO 2 CE snare (snares on) hits and rolls, bass drum, five timpani hits and rolls (pitches measured: 41.5, 46.8, 49.5, 52.4, 54.6),
+            and VSCO 1 tam-tam and suspended/clash cymbals; CC0.
