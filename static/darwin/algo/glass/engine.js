@@ -219,37 +219,86 @@
   class Audio {
     constructor() {
       const A = this.ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+      // the master: a touch of tape-like saturation and a soft top, then gentle compression
       this.out = A.createGain(); this.out.gain.value = 0.8;
-      const comp = A.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.3;
-      const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 45;
-      this.out.connect(hp); hp.connect(comp); comp.connect(A.destination);
+      const drive = A.createGain(); drive.gain.value = 1.4;
+      const sat = A.createWaveShaper(); sat.curve = this.tanhCurve(1.6); sat.oversample = '2x';
+      const trim = A.createGain(); trim.gain.value = 0.62;
+      const air = A.createBiquadFilter(); air.type = 'lowpass'; air.frequency.value = 14500; air.Q.value = 0.5;
+      const warm = A.createBiquadFilter(); warm.type = 'lowshelf'; warm.frequency.value = 220; warm.gain.value = 1.5;
+      const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 38;
+      const comp = A.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 2.5; comp.knee.value = 12; comp.attack.value = 0.02; comp.release.value = 0.35;
+      this.out.connect(drive); drive.connect(sat); sat.connect(trim); trim.connect(warm); warm.connect(air); air.connect(hp); hp.connect(comp); comp.connect(A.destination);
       this.rec = A.createMediaStreamDestination(); comp.connect(this.rec);
-      // reverb: a decaying noise impulse, darker as it fades
-      this.verb = A.createConvolver(); this.verb.buffer = this.impulse(3.4);
+      // the room: early reflections and a diffuse, darkening tail, different in each ear
+      this.verb = A.createConvolver(); this.verb.buffer = this.impulse(3.6);
       this.verbIn = A.createGain(); this.verbIn.gain.value = 0.35;
-      this.verbIn.connect(this.verb); this.verb.connect(this.out);
+      const pre = A.createDelay(0.1); pre.delayTime.value = 0.022;
+      this.verbIn.connect(pre); pre.connect(this.verb); this.verb.connect(this.out);
+      // shared material: one long noise buffer, and the harmonic spectra of each instrument
+      const nb = A.createBuffer(1, A.sampleRate * 2, A.sampleRate), nd = nb.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      this.noise = nb;
+      const wave = amps => { const re = new Float32Array(amps.length + 1), im = new Float32Array(amps.length + 1); amps.forEach((a, k) => { im[k + 1] = a; }); return A.createPeriodicWave(re, im, { disableNormalization: false }); };
+      // piano strings struck at about 1/8 of their length: every 8th partial nearly missing, the rest falling away
+      this.waves = {
+        piano: wave(Array.from({ length: 28 }, (_, k) => ((k + 1) % 8 === 0 ? 0.08 : 1) / Math.pow(k + 1, 1.45))),
+        // a principal pipe: strong fundamental and octave, quieter fifth and higher ranks
+        organ: wave([1, 0.55, 0.32, 0.22, 0.1, 0.13, 0.05, 0.07, 0.03, 0.04, 0.02, 0.02]),
+        // a bowed string: a sawtooth's rich series, slightly softened at the top
+        violin: wave(Array.from({ length: 40 }, (_, k) => 1 / (k + 1) * Math.exp(-k / 26))),
+        // a voice: the glottal pulse falls off at about 12 dB an octave
+        voice: wave(Array.from({ length: 30 }, (_, k) => 1 / Math.pow(k + 1, 1.9))),
+      };
+      // each instrument's body: the resonances that make a string a violin and a frame a piano
+      const BODY = {
+        piano: [['peaking', 110, 1.2, 2.5], ['peaking', 380, 1.4, 2], ['peaking', 1600, 1.6, -2], ['peaking', 3200, 2, 1.5], ['lowpass', 9000, 0.6, 0]],
+        organ: [['peaking', 250, 1, 1.5], ['peaking', 2400, 1.5, -2.5], ['lowpass', 6500, 0.6, 0]],
+        violin: [['highpass', 180, 0.7, 0], ['peaking', 290, 3, 5], ['peaking', 480, 2.5, 3], ['peaking', 1150, 2, 2], ['peaking', 2800, 2.5, 4.5],
+                 ['peaking', 4300, 2, -4], ['lowpass', 7200, 0.7, 0]],
+        voice: [['highpass', 90, 0.7, 0], ['peaking', 3000, 1.5, 2], ['lowpass', 8000, 0.6, 0]],
+      };
+      const PAN = { piano: -0.25, organ: 0, violin: 0.3, voice: 0.1 };
       this.bus = {}; this.send = {};
       for (const n of INSTRUMENTS) {
-        const g = A.createGain(); g.gain.value = 0.8; g.connect(this.out);
-        const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : 0.3; g.connect(sd); sd.connect(this.verbIn);
+        const g = A.createGain(); g.gain.value = 0.8;
+        let last = g;
+        for (const [type, f, q, gain] of BODY[n]) { const b = A.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = gain; last.connect(b); last = b; }
+        const pan = A.createStereoPanner(); pan.pan.value = PAN[n]; last.connect(pan); pan.connect(this.out);
+        const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : n === 'violin' ? 0.4 : 0.32; pan.connect(sd); sd.connect(this.verbIn);
         this.bus[n] = g; this.send[n] = sd;
       }
+      // the piano's soundboard: a short, woody resonance added to the strings
+      this.board = A.createConvolver(); this.board.buffer = this.impulse(0.35, 0.6);
+      const bg = A.createGain(); bg.gain.value = 0.35; this.bus.piano.connect(this.board); this.board.connect(bg); bg.connect(this.out);
       // the lead line has its own fader per instrument, so the dial can crossfade between them
       this.lead = {}; this.leadOn = 0;
       for (let i = 0; i < 4; i++) { const g = A.createGain(); g.gain.value = i === 0 ? 1 : 0; g.connect(this.bus[INSTRUMENTS[i]]); this.lead[i] = g; }
       this.leadRecent = [0, -1, -1, -1];                                  // when each was last faded out
       this.vibrato = A.createOscillator(); this.vibrato.frequency.value = 5.4; this.vibrato.start();
+      this.tremulant = A.createOscillator(); this.tremulant.frequency.value = 0.7; this.tremulant.start();   // a slow organ swell
       this.voice = { buffer: null, mode: 'harmonizer', clarity: 0.6, wet: 0.45, layers: 2, speed: 1, reps: 1, trim: [0, 1], base: 57, bands: null };
       this.live = 0;                                                      // notes sounding, for a polyphony cap
     }
-    impulse(sec) {
-      const A = this.ctx, n = Math.floor(A.sampleRate * sec), b = A.createBuffer(2, n, A.sampleRate);
+    tanhCurve(k) { const n = 2048, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(k * x) / Math.tanh(k); } return c; }
+    impulse(sec, bright) {
+      // a stereo room: a few early reflections, then decorrelated noise that darkens and thins as it decays
+      const A = this.ctx, sr = A.sampleRate, n = Math.floor(sr * sec), b = A.createBuffer(2, n, sr), br = bright || 0;
       for (let ch = 0; ch < 2; ch++) {
         const d = b.getChannelData(ch); let lp = 0;
-        for (let i = 0; i < n; i++) { const t = i / n, k = 0.25 + 0.7 * t; lp = lp * k + (Math.random() * 2 - 1) * (1 - k); d[i] = lp * Math.pow(1 - t, 2.2) * 1.8; }
+        for (let i = 0; i < n; i++) {
+          const t = i / n, k = 0.12 + 0.8 * t * (1 - br);
+          lp = lp * k + (Math.random() * 2 - 1) * (1 - k);
+          d[i] = lp * Math.pow(1 - t, 2.6) * 1.6 * Math.min(1, i / (sr * 0.008));
+        }
+        if (sec > 1) for (let r = 0; r < 9; r++) {                    // early reflections off walls at different distances
+          const at = Math.floor(sr * (0.007 + r * 0.011 + (ch ? 0.003 : 0) + Math.random() * 0.006));
+          if (at < n) d[at] += (Math.random() < 0.5 ? -1 : 1) * 0.5 * Math.pow(0.82, r);
+        }
       }
       return b;
     }
+    noiseSrc(t) { const s = this.ctx.createBufferSource(); s.buffer = this.noise; s.loop = true; s.start(t, Math.random() * 1.5); return s; }
     setLead(i, at) {                                                      // the dial: a 250 ms crossfade
       const A = this.ctx, t = at || A.currentTime;
       for (let k = 0; k < 4; k++) {
@@ -278,58 +327,92 @@
       this.live++;
       last.onended = () => { this.live--; for (const n of nodes) { try { n.disconnect(); } catch (e) {} } };
     }
+    // piano: three slightly detuned strings per note, a felt hammer, a brightness that fades faster than the loudness,
+    // a quick first decay and a long singing second one, and the soundboard on the bus
     piano(m, dur, vel, t, dest) {
-      const A = this.ctx, f = mtof(m), nodes = [], out = A.createGain(), lp = A.createBiquadFilter();
-      lp.type = 'lowpass'; lp.frequency.value = Math.min(12000, 1800 + 5000 * vel); out.connect(lp); lp.connect(dest); nodes.push(out, lp);
-      const T = Math.max(0.6, 3.2 - (m - 48) * 0.035), end = t + T;
+      const A = this.ctx, f = mtof(m), nodes = [];
+      const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.4;
+      const bright = Math.min(14000, f * (3 + 14 * vel * vel) + 900);
+      const T2 = Math.max(1.2, 9 - (m - 40) * 0.12), T1 = Math.max(0.25, 1.1 - (m - 40) * 0.012);
+      lp.frequency.setValueAtTime(bright, t); lp.frequency.setTargetAtTime(Math.max(f * 2.2, 500), t + 0.01, T1 * 1.6);
+      const g = A.createGain(), amp = 0.07 * (0.35 + 0.65 * vel);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.003);
+      g.gain.setTargetAtTime(amp * 0.32, t + 0.003, T1 / 2.2);                    // the prompt sound
+      g.gain.setTargetAtTime(0, t + T1, T2 / 3);                                   // the long aftersound
+      const ring = Math.min(T2, Math.max(1.4, dur * 2.5)), end = t + ring + 0.5;
+      g.gain.setTargetAtTime(0, t + ring, 0.12);                                   // the damper comes down
+      const pan = A.createStereoPanner(); pan.pan.value = Math.max(-0.6, Math.min(0.6, (m - 64) / 40));
+      lp.connect(g); g.connect(pan); pan.connect(dest); nodes.push(lp, g, pan);
       let last = null;
-      for (let k = 1; k <= 6; k++) {
-        const o = A.createOscillator(), g = A.createGain();
-        o.frequency.value = f * k * Math.sqrt(1 + 0.0004 * k * k);
-        const a = vel * 0.16 / Math.pow(k, 1.25);
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.004);
-        g.gain.setTargetAtTime(0, t + 0.004, T / (2.5 + k * 0.9));
-        o.connect(g); g.connect(out); o.start(t); o.stop(end); nodes.push(o, g); last = o;
+      for (const det of [-1.6, 0.2, 1.9]) {
+        const o = A.createOscillator(); o.setPeriodicWave(this.waves.piano);
+        o.frequency.value = f; o.detune.value = det + (Math.random() - 0.5) * 0.8;
+        const og = A.createGain(); og.gain.value = 0.36; o.connect(og); og.connect(lp);
+        o.start(t); o.stop(end); nodes.push(o, og); last = o;
       }
-      // the hammer: a very short knock of filtered noise
-      const nb = A.createBufferSource(), nbuf = A.createBuffer(1, 1024, A.sampleRate), d = nbuf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
-      nb.buffer = nbuf; const bp = A.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f * 3; bp.Q.value = 1.2;
-      const ng = A.createGain(); ng.gain.value = 0.05 * vel;
-      nb.connect(bp); bp.connect(ng); ng.connect(out); nb.start(t); nb.stop(t + 0.03); nodes.push(nb, bp, ng);
+      // the stretched upper partials of a real string, a little sharp of the harmonic series
+      for (const [h, a] of [[2, 0.12], [3, 0.06]]) {
+        const o = A.createOscillator(), og = A.createGain(); o.frequency.value = f * h * (1 + 0.00035 * h * h);
+        og.gain.setValueAtTime(a * amp * 3, t); og.gain.setTargetAtTime(0, t, T1 * 0.8);
+        o.connect(og); og.connect(pan); o.start(t); o.stop(t + T1 * 4); nodes.push(o, og);
+      }
+      // the hammer: a soft thud of felt, lower and shorter for quiet notes
+      const nz = this.noiseSrc(t), hb = A.createBiquadFilter(), hg = A.createGain();
+      hb.type = 'bandpass'; hb.frequency.value = Math.min(4000, f * 2.5 + 300); hb.Q.value = 0.9;
+      hg.gain.setValueAtTime(0.03 * vel, t); hg.gain.setTargetAtTime(0, t, 0.006 + 0.01 * (1 - vel));
+      nz.connect(hb); hb.connect(hg); hg.connect(pan); nz.stop(t + 0.08); nodes.push(nz, hb, hg);
       this._done(nodes, last);
     }
+    // organ: a principal rank and a gently beating celeste, a puff of air as the pipe speaks, a slow swell
     organ(m, dur, vel, t, dest) {
-      const A = this.ctx, f = mtof(m), nodes = [], g = A.createGain(), L = dur;
-      const amp = vel * 0.075;
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.06);
-      g.gain.setValueAtTime(amp, t + Math.max(0.07, L - 0.05)); g.gain.linearRampToValueAtTime(0, t + L + 0.25);
-      g.connect(dest); nodes.push(g);
-      const dep = A.createGain(); dep.gain.value = 4; this.vibrato.connect(dep); nodes.push(dep);
+      const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.06;
+      const g = A.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.09);
+      g.gain.setValueAtTime(amp, t + Math.max(0.1, L - 0.05)); g.gain.setTargetAtTime(0, t + Math.max(0.1, L - 0.05), 0.09);
+      const tg = A.createGain(), swell = A.createGain(); swell.gain.value = 0.07; this.tremulant.connect(swell); swell.connect(tg.gain);   // a swell that multiplies, never leaks
+      g.connect(tg); tg.connect(dest); nodes.push(g, tg, swell);
       let last = null;
-      [[1, 1], [2, 0.6], [3, 0.35], [4, 0.28], [6, 0.12], [8, 0.08]].forEach(([h, a]) => {
-        const o = A.createOscillator(), og = A.createGain(); o.frequency.value = f * h; og.gain.value = a;
-        dep.connect(o.detune); o.connect(og); og.connect(g); o.start(t); o.stop(t + L + 0.3); nodes.unshift(o, og); last = o;
-      });
+      for (const [det, a] of [[0, 0.62], [4.5, 0.38], [-3, 0.2]]) {
+        const o = A.createOscillator(); o.setPeriodicWave(this.waves.organ); o.frequency.value = det === -3 ? f * 2 : f;
+        o.detune.setValueAtTime(det - 14, t); o.detune.linearRampToValueAtTime(det, t + 0.07);   // the pipe settles onto its pitch
+        const og = A.createGain(); og.gain.value = a; o.connect(og); og.connect(g);
+        o.start(t); o.stop(t + L + 0.6); nodes.push(o, og); last = o;
+      }
+      // chiff: the breath at the pipe's mouth before the tone takes over
+      const nz = this.noiseSrc(t), cb = A.createBiquadFilter(), cg = A.createGain();
+      cb.type = 'bandpass'; cb.frequency.value = Math.min(6000, f * 4); cb.Q.value = 3;
+      cg.gain.setValueAtTime(0, t); cg.gain.linearRampToValueAtTime(0.025 * vel, t + 0.015); cg.gain.setTargetAtTime(0.002 * vel, t + 0.02, 0.04);
+      cg.gain.setTargetAtTime(0, t + Math.max(0.1, L - 0.05), 0.08);
+      nz.connect(cb); cb.connect(cg); cg.connect(dest); nz.stop(t + L + 0.5); nodes.push(nz, cb, cg);
       this._done(nodes, last);
     }
+    // violin: two players a few cents apart, bow hair on the string (filtered noise riding the bow pressure), a bow that
+    // bites and then opens up, a small scoop into pitch, and a vibrato that arrives late and never quite repeats
     violin(m, dur, vel, t, dest) {
-      const A = this.ctx, f = mtof(m), nodes = [], L = dur;
-      const g = A.createGain(), lp = A.createBiquadFilter(), pk1 = A.createBiquadFilter(), pk2 = A.createBiquadFilter();
-      lp.type = 'lowpass'; lp.frequency.value = 4200; lp.Q.value = 0.5;
-      pk1.type = 'peaking'; pk1.frequency.value = 1100; pk1.Q.value = 1.4; pk1.gain.value = 6;
-      pk2.type = 'peaking'; pk2.frequency.value = 2700; pk2.Q.value = 2; pk2.gain.value = 5;
-      const amp = vel * 0.06;
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp * 0.7, t + 0.09); g.gain.linearRampToValueAtTime(amp, t + Math.min(L * 0.6, 0.6));
-      g.gain.setValueAtTime(amp, t + Math.max(0.12, L - 0.08)); g.gain.linearRampToValueAtTime(0, t + L + 0.35);
-      g.connect(lp); lp.connect(pk1); pk1.connect(pk2); pk2.connect(dest); nodes.push(g, lp, pk1, pk2);
-      // vibrato that arrives after the bow has settled
-      const dep = A.createGain(); dep.gain.setValueAtTime(0, t); dep.gain.linearRampToValueAtTime(9, t + Math.min(0.5, L * 0.5)); this.vibrato.connect(dep); nodes.push(dep);
+      const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.05;
+      const env = A.createGain(), lp = A.createBiquadFilter();
+      lp.type = 'lowpass'; lp.Q.value = 0.8;
+      lp.frequency.setValueAtTime(900 + f, t); lp.frequency.linearRampToValueAtTime(2600 + 3 * f + 2500 * vel, t + 0.18);
+      env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(amp * 0.85, t + 0.07); env.gain.linearRampToValueAtTime(amp, t + Math.min(0.5, L * 0.5));
+      env.gain.setValueAtTime(amp, t + Math.max(0.1, L - 0.08)); env.gain.setTargetAtTime(0, t + Math.max(0.1, L - 0.08), 0.12);
+      lp.connect(env); env.connect(dest); nodes.push(lp, env);
+      const vib = A.createOscillator(), vd = A.createGain(); vib.frequency.value = 5.2 + Math.random() * 0.8;
+      vd.gain.setValueAtTime(0, t); vd.gain.setValueAtTime(0, t + Math.min(0.25, L * 0.3)); vd.gain.linearRampToValueAtTime(11 + 5 * Math.random(), t + Math.min(0.8, L * 0.7));
+      const drift = A.createOscillator(), dd = A.createGain(); drift.frequency.value = 0.4 + Math.random() * 0.5; dd.gain.value = 3;
+      vib.connect(vd); drift.connect(dd); vib.start(t); drift.start(t); vib.stop(t + L + 0.6); drift.stop(t + L + 0.6); nodes.push(vib, vd, drift, dd);
       let last = null;
-      for (const det of [-6, 5]) {
-        const o = A.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det;
-        dep.connect(o.detune); o.connect(g); o.start(t); o.stop(t + L + 0.4); nodes.unshift(o); last = o;
+      for (const [det, a, p] of [[-5, 0.55, -0.35], [4, 0.5, 0.35]]) {
+        const o = A.createOscillator(); o.setPeriodicWave(this.waves.violin); o.frequency.value = f;
+        o.detune.setValueAtTime(det - 22, t); o.detune.setTargetAtTime(det, t, 0.04);
+        vd.connect(o.detune); dd.connect(o.detune);
+        const og = A.createGain(); og.gain.value = a; const pn = A.createStereoPanner(); pn.pan.value = p;
+        o.connect(og); og.connect(pn); pn.connect(lp); o.start(t); o.stop(t + L + 0.6); nodes.push(o, og, pn); last = o;
       }
+      const nz = this.noiseSrc(t), nb = A.createBiquadFilter(), ng = A.createGain();
+      nb.type = 'bandpass'; nb.frequency.value = 2600 + f; nb.Q.value = 1.2;
+      ng.gain.setValueAtTime(0, t); ng.gain.linearRampToValueAtTime(0.012 * vel, t + 0.05); ng.gain.setTargetAtTime(0.004 * vel, t + 0.06, 0.15);
+      ng.gain.setTargetAtTime(0, t + Math.max(0.1, L - 0.08), 0.1);
+      nz.connect(nb); nb.connect(ng); ng.connect(env); nz.stop(t + L + 0.5); nodes.push(nz, nb, ng);
       this._done(nodes, last);
     }
     // the voice: a recorded word or phrase, reharmonised; with nothing recorded, a sung vowel
@@ -346,18 +429,27 @@
         }
       }
     }
+    // the voice with nothing recorded: three singers on an 'ah' that drifts toward 'oh', breath in the sound
     vowel(m, dur, vel, t, dest) {
-      const A = this.ctx, f = mtof(m), nodes = [], g = A.createGain(), L = Math.max(0.3, dur);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel * 0.05, t + 0.12); g.gain.setValueAtTime(vel * 0.05, t + L * 0.8); g.gain.linearRampToValueAtTime(0, t + L + 0.2);
+      const A = this.ctx, f = mtof(m), nodes = [], L = Math.max(0.35, dur), amp = vel * 0.05;
+      const g = A.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.16); g.gain.setValueAtTime(amp, t + L * 0.85); g.gain.setTargetAtTime(0, t + L * 0.85, 0.15);
       g.connect(dest); nodes.push(g);
-      const o = A.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
-      const dep = A.createGain(); dep.gain.value = 7; this.vibrato.connect(dep); dep.connect(o.detune); nodes.push(dep);
-      for (const [fr, q, a] of [[700, 8, 1], [1150, 10, 0.6], [2800, 12, 0.25]]) {
-        const bp = A.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = fr; bp.Q.value = q;
-        const bg = A.createGain(); bg.gain.value = a * 3; o.connect(bp); bp.connect(bg); bg.connect(g); nodes.push(bp, bg);
+      const src = A.createGain(); src.gain.value = 0.5; nodes.push(src);
+      let last = null;
+      for (const [det, p] of [[-9, -0.4], [0, 0], [8, 0.4]]) {
+        const o = A.createOscillator(); o.setPeriodicWave(this.waves.voice); o.frequency.value = f; o.detune.value = det;
+        const vib = A.createGain(); vib.gain.setValueAtTime(0, t); vib.gain.linearRampToValueAtTime(8, t + 0.5); this.vibrato.connect(vib); vib.connect(o.detune);
+        const pn = A.createStereoPanner(); pn.pan.value = p; o.connect(pn); pn.connect(src);
+        o.start(t); o.stop(t + L + 0.6); nodes.push(o, vib, pn); last = o;
       }
-      o.start(t); o.stop(t + L + 0.25); nodes.unshift(o);
-      this._done(nodes, o);
+      const nz = this.noiseSrc(t), ng = A.createGain(); ng.gain.value = 0.05; nz.connect(ng); ng.connect(src); nz.stop(t + L + 0.6); nodes.push(nz, ng);
+      for (const [f0, f1, q, a] of [[730, 570, 9, 1], [1090, 840, 11, 0.55], [2440, 2410, 14, 0.3], [3300, 3200, 16, 0.12]]) {
+        const bp = A.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = q;
+        bp.frequency.setValueAtTime(f0, t); bp.frequency.linearRampToValueAtTime(f1, t + L);
+        const bg = A.createGain(); bg.gain.value = a * 3.2; src.connect(bp); bp.connect(bg); bg.connect(g); nodes.push(bp, bg);
+      }
+      this._done(nodes, last);
     }
     trimmed() {
       const V = this.voice, b = V.buffer, s0 = Math.floor(V.trim[0] * b.length), s1 = Math.max(s0 + 64, Math.floor(V.trim[1] * b.length));

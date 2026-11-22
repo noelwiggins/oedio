@@ -44,6 +44,11 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   phrase length, rays = density, rotation = inversion, dashed = mutated digit, notes on lanes flaring as they sound,
   cycle marks + dotted lines where cycles coincide, dimming in silences.
 - Control log [step, key, value, seconds] applied on step boundaries → sessions replay exactly (tested: 84/84 notes).
+  Sound v2 (2026-11-22): master tanh saturation + low shelf + 14.5 kHz roll-off; stereo room IR with early reflections and
+  22 ms pre-delay; per-instrument body filters + panning; piano = 3 detuned strings on a PeriodicWave (struck at 1/8),
+  falling brightness, two-stage decay, stretched partials, felt hammer, soundboard convolver; organ = principal +
+  celeste + octave, pitch settling, chiff, slow multiplicative swell; violin = two players, scoop, late irregular
+  vibrato, bow-noise, opening bow filter; vowel = three singers, drifting formants, breath.
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
