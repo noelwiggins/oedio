@@ -1,4 +1,4 @@
-/* Algo — the player: one scheduler feeding the audio engine and the picture from the same events, the controls, the
+/* AlgoGlass — the player: one scheduler feeding the audio engine and the picture from the same events, the controls, the
    voice recorder, and the exports. The score is in engine.js (window.Glass). */
 (function () {
   'use strict';
@@ -12,7 +12,7 @@
   const noteLog = [];                             // [step, instrument, midi, length, velocity] for MIDI export
   const tempoLog = [[0, 112]];
   const settings = { seed: 1976, complexity: 55, tempo: 112, lead: 0, master: 0.8, duration: 0,
-    vol: { piano: 0.8, organ: 0.7, violin: 0.75, voice: 0.8 },
+    vol: { piano: 0.8, organ: 0.7, violin: 0.75, voice: 0.8 }, oct: { piano: 0, organ: 0, violin: 0, voice: 0 },
     voice: { mode: 'harmonizer', clarity: 0.6, wet: 0.45, reverb: 0.35, layers: 2, speed: 1, reps: 1, loop: false, trim: [0, 1] } };
   let midiOut = null;
   const stepDur = () => 60 / score.ctl.tempo / 2;
@@ -29,6 +29,7 @@
     else if (k[0] === 'tempo') { score.ctl.tempo = value; settings.tempo = value; }
     else if (k[0] === 'lead') { settings.lead = value; score.ctl.lead = value; if (audio) audio.setLead(value, at); }
     else if (k[0] === 'master') { settings.master = value; if (audio) audio.out.gain.setTargetAtTime(value, at || audio.ctx.currentTime, 0.03); }
+    else if (k[0] === 'oct') { settings.oct[k[1]] = value; if (audio) audio.oct[k[1]] = value; }
     else if (k[0] === 'vol') { settings.vol[k[1]] = value; if (audio) audio.bus[k[1]].gain.setTargetAtTime(value, at || audio.ctx.currentTime, 0.03); }
     else if (k[0] === 'voice') {
       settings.voice[k[1]] = value;
@@ -59,8 +60,9 @@
       for (const [inst, midi, len, vel] of r.notes) {
         audio.play(inst, midi, len * d, vel, nextT);
         const name = inst === 'lead' ? INST[settings.lead] : inst;
-        noteLog.push([step, name, midi, len, vel]); if (noteLog.length > 200000) noteLog.splice(0, 50000);
-        if (midiOut) sendMidi(name, midi, len * d, vel, nextT);
+        let om = midi + 12 * (settings.oct[name] || 0); while (om < 24) om += 12; while (om > 108) om -= 12;
+        noteLog.push([step, name, om, len, vel]); if (noteLog.length > 200000) noteLog.splice(0, 50000);
+        if (midiOut) sendMidi(name, om, len * d, vel, nextT);
       }
       timeline.push([nextT, step, r]); if (timeline.length > 3000) timeline.splice(0, 1000);
       nextT += d;
@@ -74,7 +76,7 @@
     if (audio) return;
     audio = new G.Audio();
     for (const [k, v] of Object.entries(settings.vol)) audio.bus[k].gain.value = v;
-    audio.out.gain.value = settings.master; audio.setLead(settings.lead);
+    audio.out.gain.value = settings.master; audio.setLead(settings.lead); Object.assign(audio.oct, settings.oct);
     Object.assign(audio.voice, { mode: settings.voice.mode, clarity: settings.voice.clarity, layers: settings.voice.layers, speed: settings.voice.speed, reps: settings.voice.reps, trim: settings.voice.trim });
     audio.verbIn.gain.value = settings.voice.reverb; audio.send.voice.gain.value = settings.voice.wet;
     if (pendingVoice) { pendingVoice(audio.ctx); pendingVoice = null; }
@@ -102,7 +104,7 @@
     if (was || keepReplay) play();
   }
   let start0 = null;
-  const snapshot = () => ({ complexity: settings.complexity, tempo: settings.tempo, lead: settings.lead, master: settings.master, vol: { ...settings.vol }, voice: { ...settings.voice, trim: settings.voice.trim.slice() } });
+  const snapshot = () => ({ complexity: settings.complexity, tempo: settings.tempo, lead: settings.lead, master: settings.master, vol: { ...settings.vol }, oct: { ...settings.oct }, voice: { ...settings.voice, trim: settings.voice.trim.slice() } });
 
   // ── the picture: the same events, drawn as they sound ──────────────────
   const cv = $('ag-canvas'), cx = cv.getContext('2d');
@@ -278,6 +280,8 @@
     return { set: v => set(v, false), get: () => value };
   }
   const instDial = dial($('ag-inst'), { min: 0, max: 3, value: 0, steps: INST.map(n => LABEL[n]), out: $('ag-inst-out'), onChange: v => change('lead', v) });
+  const octDials = {};
+  for (const n of INST) octDials[n] = dial($('ag-oct-' + n), { min: 0, max: 4, value: 2, steps: ['−2', '−1', '0', '+1', '+2'], onChange: v => change('oct.' + n, v - 2) });
   const cxDial = dial($('ag-cx'), { min: 0, max: 100, value: 55, out: $('ag-cx-out'), onChange: v => change('complexity', Math.round(v)) });
 
   // ── sliders and buttons ───────────────────────────────────────────────
@@ -364,7 +368,7 @@
     const type = pickType(['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus']), parts = [];
     audioRec = new MediaRecorder(audio.rec.stream, type ? { mimeType: type, audioBitsPerSecond: 256000 } : undefined);
     audioRec.ondataavailable = e => parts.push(e.data);
-    audioRec.onstop = () => { download(new Blob(parts, { type: audioRec.mimeType }), `algo-${settings.seed}-${stamp()}.${audioRec.mimeType.includes('mp4') ? 'm4a' : 'webm'}`); audioRec = null; $('ag-rec-audio').textContent = 'Record audio'; $('ag-rec-audio').classList.remove('on'); };
+    audioRec.onstop = () => { download(new Blob(parts, { type: audioRec.mimeType }), `algoglass-${settings.seed}-${stamp()}.${audioRec.mimeType.includes('mp4') ? 'm4a' : 'webm'}`); audioRec = null; $('ag-rec-audio').textContent = 'Record audio'; $('ag-rec-audio').classList.remove('on'); };
     audioRec.start(1000); $('ag-rec-audio').textContent = 'Stop and save audio'; $('ag-rec-audio').classList.add('on');
     if (!playing) play();
   };
@@ -382,14 +386,14 @@
     const type = pickType(['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4']), parts = [];
     const rec = new MediaRecorder(stream, type ? { mimeType: type, videoBitsPerSecond: 6e6 } : undefined);
     rec.ondataavailable = e => parts.push(e.data);
-    rec.onstop = () => { download(new Blob(parts, { type: rec.mimeType }), `algo-${settings.seed}-${stamp()}.${rec.mimeType.includes('mp4') ? 'mp4' : 'webm'}`); videoRec = null; $('ag-rec-video').textContent = 'Record video'; $('ag-rec-video').classList.remove('on'); };
+    rec.onstop = () => { download(new Blob(parts, { type: rec.mimeType }), `algoglass-${settings.seed}-${stamp()}.${rec.mimeType.includes('mp4') ? 'mp4' : 'webm'}`); videoRec = null; $('ag-rec-video').textContent = 'Record video'; $('ag-rec-video').classList.remove('on'); };
     composite(); rec.start(1000); videoRec = rec; $('ag-rec-video').textContent = 'Stop and save video'; $('ag-rec-video').classList.add('on');
     if (!playing) play();
   };
   $('ag-midi').onclick = () => {
     if (!noteLog.length) { $('ag-status').textContent = 'Nothing has played yet.'; return; }
     const base = noteLog[0][0];
-    download(new Blob([G.midiFile(noteLog.map(e => [e[0] - base, ...e.slice(1)]), tempoLog.map(([s, b]) => [Math.max(0, s - base), b]))], { type: 'audio/midi' }), `algo-${settings.seed}-${stamp()}.mid`);
+    download(new Blob([G.midiFile(noteLog.map(e => [e[0] - base, ...e.slice(1)]), tempoLog.map(([s, b]) => [Math.max(0, s - base), b]))], { type: 'audio/midi' }), `algoglass-${settings.seed}-${stamp()}.mid`);
   };
   // a session: the seed, the controls at the start, every change by step, the voice sample, and the numbers so far
   $('ag-save').onclick = () => {
@@ -400,7 +404,7 @@
       const bytes = G.wavBytes(audio.voice.buffer); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
       sess.voice = { wav: btoa(bin), base: audio.voice.base };
     }
-    download(new Blob([JSON.stringify(sess)], { type: 'application/json' }), `algo-session-${settings.seed}-${stamp()}.json`);
+    download(new Blob([JSON.stringify(sess)], { type: 'application/json' }), `algoglass-session-${settings.seed}-${stamp()}.json`);
   };
   $('ag-load').onclick = () => $('ag-file').click();
   $('ag-file').onchange = async () => {
@@ -413,7 +417,8 @@
     settings.seed = sess.seed; $('ag-seed').value = sess.seed;
     const st = sess.start || {};
     Object.assign(settings, { complexity: st.complexity ?? 55, tempo: st.tempo ?? 112, lead: st.lead ?? 0, master: st.master ?? 0.8 });
-    Object.assign(settings.vol, st.vol || {}); Object.assign(settings.voice, st.voice || {});
+    Object.assign(settings.vol, st.vol || {}); Object.assign(settings.voice, st.voice || {}); Object.assign(settings.oct, st.oct || {});
+    for (const n of INST) octDials[n].set((settings.oct[n] || 0) + 2);
     settings.duration = sess.duration || 0; $('ag-duration').value = String(settings.duration);
     cxDial.set(settings.complexity); instDial.set(settings.lead); $('ag-tempo').value = settings.tempo; $('ag-tempo-out').textContent = settings.tempo;
     $('ag-master').value = settings.master; for (const n of INST) $('ag-vol-' + n).value = settings.vol[n];
@@ -426,7 +431,7 @@
     for (const [s, k, v] of sess.log || []) { if (!replay.has(s)) replay.set(s, []); replay.get(s).push([s, k, v]); }
     $('ag-replay').hidden = false; $('ag-replay').textContent = `Replaying a session: seed ${sess.seed}, ${sess.log.length} control changes`;
     restart(true);
-    if (audio) { audio.setLead(settings.lead); for (const n of INST) audio.bus[n].gain.value = settings.vol[n]; }
+    if (audio) { audio.setLead(settings.lead); for (const n of INST) audio.bus[n].gain.value = settings.vol[n]; Object.assign(audio.oct, settings.oct); }
   }
   // Web MIDI: send the score to a synthesizer or a DAW
   $('ag-midi-connect').onclick = async () => {

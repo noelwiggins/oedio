@@ -326,10 +326,15 @@ def api_pool_archive():
 ALGO_PANEL = os.path.join(ROOT, "static", "darwin", "algo", "panel.html")
 
 
-@bp.route("/algo")
+@bp.route("/algoglass")
 def algo_music():
-    """Algo: a generative music and image engine after Philip Glass's structural ideas (all in the browser)."""
+    """AlgoGlass: a generative music and image engine after Philip Glass's structural ideas (all in the browser)."""
     return render_template("darwin/algo.html")
+
+
+@bp.route("/algo")
+def algo_music_moved():
+    return redirect("/darwin/algoglass", code=301)
 
 
 @bp.route("/algogenesis")

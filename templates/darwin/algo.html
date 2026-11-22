@@ -1,5 +1,5 @@
 {% extends "darwin/base.html" %}
-{% block title %}Algo — DARWIN{% endblock %}
+{% block title %}AlgoGlass — DARWIN{% endblock %}
 {% block head %}
 <style>
   .ag-stage { position: relative; background: #07090c; border-radius: var(--dw-radius); overflow: hidden; aspect-ratio: 16 / 9; width: 100%;
@@ -15,6 +15,10 @@
   .ag-row input[type=range] { width: 150px; accent-color: var(--md-sys-color-primary); }
   .ag-mix { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
   .ag-mix input { width: 100%; accent-color: var(--md-sys-color-primary); }
+  .ag-mix3 { grid-template-columns: 90px 1fr 92px; }
+  .ag-colh { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--md-sys-color-outline); text-align: center; }
+  .ag-dial svg.ag-oct { width: 92px; height: 92px; }
+  .ag-dial svg.ag-oct .det text { font-size: 30px; font-weight: 600; }
   .ag-dials { display: flex; justify-content: space-around; gap: 12px; flex-wrap: wrap; }
   .ag-dial { text-align: center; }
   .ag-dial svg { width: 190px; height: 190px; touch-action: none; cursor: grab; outline: none; }
@@ -53,8 +57,8 @@
 </style>
 {% endblock %}
 {% block content %}
-<p class="eyebrow">Algo · music and image from one number system</p>
-<h1 class="page">Algo</h1>
+<p class="eyebrow">AlgoGlass · music and image from one number system</p>
+<h1 class="page">AlgoGlass</h1>
 <p class="lede">A playable composition after the structural ideas of Philip Glass: repetition, additive phrases that grow and shrink a
   note at a time, rhythmic cycles of 5, 7 and 11 eighths drifting against one another, slow harmonic change and deliberate silence.
   A seeded generator (1976) writes sixteen digits, plays them four times, then changes two of them. Each digit moves the harmony
@@ -125,13 +129,14 @@
 
   <section class="ag-card">
     <h3>Mixer</h3>
-    <div class="ag-mix">
-      <span>Piano · 5</span><input type="range" id="ag-vol-piano" min="0" max="1" step="0.01" value="0.8">
-      <span>Organ · 7</span><input type="range" id="ag-vol-organ" min="0" max="1" step="0.01" value="0.7">
-      <span>Violin · 11</span><input type="range" id="ag-vol-violin" min="0" max="1" step="0.01" value="0.75">
-      <span>Voice · 3–8</span><input type="range" id="ag-vol-voice" min="0" max="1" step="0.01" value="0.8">
+    <div class="ag-mix ag-mix3">
+      <span></span><span class="ag-colh">Volume</span><span class="ag-colh">Octave</span>
+      <span>Piano · 5</span><input type="range" id="ag-vol-piano" min="0" max="1" step="0.01" value="0.8"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-piano" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="piano octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
+      <span>Organ · 7</span><input type="range" id="ag-vol-organ" min="0" max="1" step="0.01" value="0.7"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-organ" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="organ octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
+      <span>Violin · 11</span><input type="range" id="ag-vol-violin" min="0" max="1" step="0.01" value="0.75"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-violin" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="violin octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
+      <span>Voice · 3–8</span><input type="range" id="ag-vol-voice" min="0" max="1" step="0.01" value="0.8"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-voice" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="voice octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
     </div>
-    <p class="ag-read" style="margin-top:10px">Each instrument repeats on its own cycle of eighth notes against one clock; the lead line plays on whichever instrument the dial points to.</p>
+    <p class="ag-read" style="margin-top:10px">Each instrument repeats on its own cycle of eighth notes against one clock; the lead line plays on whichever instrument the dial points to. The octave dials move an instrument up or down as much as two octaves, lead line included.</p>
   </section>
 
   <section class="ag-card">
@@ -195,6 +200,6 @@
   </section>
 </div>
 
-<script src="/static/darwin/algo/glass/engine.js?v=2"></script>
-<script src="/static/darwin/algo/glass/ui.js?v=2"></script>
+<script src="/static/darwin/algo/glass/engine.js?v=4"></script>
+<script src="/static/darwin/algo/glass/ui.js?v=3"></script>
 {% endblock %}

@@ -26,8 +26,8 @@ versioned assets and three.js in every browser; /darwin/?via=portal and /?from=d
 Headless can't prerender; in software rendering the remaining edge-on pause is the Darwin page's own first render
 (plain navigation measures the same).
 
-## ALGO TAB — generative music + image after Philip Glass (2026-11-21)
-/darwin/algo (darwin/web.py algo_music, templates/darwin/algo.html), nav tab after Algogenesis + phone sheet entry.
+## ALGOGLASS TAB — generative music + image after Philip Glass (2026-11-21; renamed 2026-11-22)
+/darwin/algoglass (darwin/web.py algo_music, templates/darwin/algo.html; /darwin/algo 301s there), nav tab after Algogenesis + phone sheet entry.
 All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (window.AlgoPlayer).
 - Numbers: mulberry32(seed 1976); 16 digits ×4, then 2 distinct positions mutate to different digits; full history.
 - Score (per eighth step, deterministic, no Math.random): each number → next chord of Fm, D♭, A, B7; length
@@ -49,6 +49,13 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   falling brightness, two-stage decay, stretched partials, felt hammer, soundboard convolver; organ = principal +
   celeste + octave, pitch settling, chiff, slow multiplicative swell; violin = two players, scoop, late irregular
   vibrato, bow-noise, opening bow filter; vowel = three singers, drifting formants, breath.
+  Sound v3 (2026-11-22): piano is a physical model — strings-worklet.js (AudioWorklet 'struck-string': 3 detuned
+  Karplus–Strong strings, tuning + 2 dispersion allpasses, loss filter, felt-hammer burst by velocity, damper), old
+  additive piano is the fallback; organ gains a 16' bourdon and unsteady wind; violin darker spectrum, wandering bow
+  pressure/brightness; choir gains a bass an octave down; body low resonances (piano 95 Hz, organ 70, violin 120,
+  voice 160) and a +3.5 dB low shelf at 180 Hz. Energy below 150 Hz went 5% → 44% in a 40 s test recording.
+  Octave dials (−2…+2) per instrument in the mixer: audio.oct, applied at play time (folded into 24–108, so the score
+  and replay stay exact), logged as oct.<name>, saved in sessions, applied to MIDI export.
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 

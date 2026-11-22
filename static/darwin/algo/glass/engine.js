@@ -223,9 +223,9 @@
       this.out = A.createGain(); this.out.gain.value = 0.8;
       const drive = A.createGain(); drive.gain.value = 1.4;
       const sat = A.createWaveShaper(); sat.curve = this.tanhCurve(1.6); sat.oversample = '2x';
-      const trim = A.createGain(); trim.gain.value = 0.62;
+      const trim = A.createGain(); trim.gain.value = 0.78;
       const air = A.createBiquadFilter(); air.type = 'lowpass'; air.frequency.value = 14500; air.Q.value = 0.5;
-      const warm = A.createBiquadFilter(); warm.type = 'lowshelf'; warm.frequency.value = 220; warm.gain.value = 1.5;
+      const warm = A.createBiquadFilter(); warm.type = 'lowshelf'; warm.frequency.value = 180; warm.gain.value = 3.5;
       const hp = A.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 38;
       const comp = A.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 2.5; comp.knee.value = 12; comp.attack.value = 0.02; comp.release.value = 0.35;
       this.out.connect(drive); drive.connect(sat); sat.connect(trim); trim.connect(warm); warm.connect(air); air.connect(hp); hp.connect(comp); comp.connect(A.destination);
@@ -246,17 +246,17 @@
         // a principal pipe: strong fundamental and octave, quieter fifth and higher ranks
         organ: wave([1, 0.55, 0.32, 0.22, 0.1, 0.13, 0.05, 0.07, 0.03, 0.04, 0.02, 0.02]),
         // a bowed string: a sawtooth's rich series, slightly softened at the top
-        violin: wave(Array.from({ length: 40 }, (_, k) => 1 / (k + 1) * Math.exp(-k / 26))),
+        violin: wave(Array.from({ length: 40 }, (_, k) => 1 / Math.pow(k + 1, 1.15) * Math.exp(-k / 16))),
         // a voice: the glottal pulse falls off at about 12 dB an octave
         voice: wave(Array.from({ length: 30 }, (_, k) => 1 / Math.pow(k + 1, 1.9))),
       };
       // each instrument's body: the resonances that make a string a violin and a frame a piano
       const BODY = {
-        piano: [['peaking', 110, 1.2, 2.5], ['peaking', 380, 1.4, 2], ['peaking', 1600, 1.6, -2], ['peaking', 3200, 2, 1.5], ['lowpass', 9000, 0.6, 0]],
-        organ: [['peaking', 250, 1, 1.5], ['peaking', 2400, 1.5, -2.5], ['lowpass', 6500, 0.6, 0]],
-        violin: [['highpass', 180, 0.7, 0], ['peaking', 290, 3, 5], ['peaking', 480, 2.5, 3], ['peaking', 1150, 2, 2], ['peaking', 2800, 2.5, 4.5],
+        piano: [['peaking', 95, 1.0, 3.5], ['peaking', 220, 1.2, 2], ['peaking', 380, 1.4, 1.5], ['peaking', 1600, 1.6, -2], ['peaking', 3200, 2, 1.5], ['lowpass', 9000, 0.6, 0]],
+        organ: [['peaking', 70, 0.9, 3], ['peaking', 250, 1, 1.5], ['peaking', 2400, 1.5, -2.5], ['lowpass', 6500, 0.6, 0]],
+        violin: [['highpass', 60, 0.7, 0], ['peaking', 120, 1.6, 3], ['peaking', 290, 3, 5], ['peaking', 480, 2.5, 3], ['peaking', 1150, 2, 2], ['peaking', 2800, 2.5, 4.5],
                  ['peaking', 4300, 2, -4], ['lowpass', 7200, 0.7, 0]],
-        voice: [['highpass', 90, 0.7, 0], ['peaking', 3000, 1.5, 2], ['lowpass', 8000, 0.6, 0]],
+        voice: [['highpass', 55, 0.7, 0], ['peaking', 160, 1.4, 4], ['peaking', 3000, 1.5, 2], ['lowpass', 8000, 0.6, 0]],
       };
       const PAN = { piano: -0.25, organ: 0, violin: 0.3, voice: 0.1 };
       this.bus = {}; this.send = {};
@@ -279,6 +279,9 @@
       this.tremulant = A.createOscillator(); this.tremulant.frequency.value = 0.7; this.tremulant.start();   // a slow organ swell
       this.voice = { buffer: null, mode: 'harmonizer', clarity: 0.6, wet: 0.45, layers: 2, speed: 1, reps: 1, trim: [0, 1], base: 57, bands: null };
       this.live = 0;                                                      // notes sounding, for a polyphony cap
+      this.oct = { piano: 0, organ: 0, violin: 0, voice: 0 };              // each instrument's octave dial
+      this.ks = false;                                                    // the physically modelled piano, once its worklet has loaded
+      if (A.audioWorklet) A.audioWorklet.addModule('/static/darwin/algo/glass/strings-worklet.js?v=1').then(() => { this.ks = true; }).catch(() => {});
     }
     tanhCurve(k) { const n = 2048, c = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.tanh(k * x) / Math.tanh(k); } return c; }
     impulse(sec, bright) {
@@ -310,12 +313,19 @@
     }
     // play one score note; returns nothing. inst may be 'lead' (goes to the dial's instrument, and to the one fading out)
     play(inst, midi, dur, vel, t) {
-      if (this.live > 48) return;
+      if (this.live > 56) return;
+      const at = (name, m) => { m += 12 * (this.oct[name] || 0); while (m < 24) m += 12; while (m > 108) m -= 12; return m; };   // fold, never pile up
       if (inst === 'lead') {
-        for (let k = 0; k < 4; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(INSTRUMENTS[k], midi, dur, vel, t, this.lead[k]);
+        for (let k = 0; k < 4; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(INSTRUMENTS[k], at(INSTRUMENTS[k], midi), dur, vel, t, this.lead[k]);
         return;
       }
-      this.voiceFor(inst, midi, dur, vel, t, this.bus[inst]);
+      this.voiceFor(inst, at(inst, midi), dur, vel, t, this.bus[inst]);
+    }
+    // slow, irregular movement on a parameter: what keeps a held note from sounding like a fixed waveform
+    wobble(param, depth, t, end, nodes) {
+      const A = this.ctx, o = A.createOscillator(), g = A.createGain();
+      o.frequency.value = 0.15 + Math.random() * 0.55; g.gain.value = depth;
+      o.connect(g); g.connect(param); o.start(t, Math.random() * 3); o.stop(end); nodes.push(o, g);
     }
     voiceFor(inst, midi, dur, vel, t, dest) {
       if (inst === 'piano') return this.piano(midi, dur, vel, t, dest);
@@ -330,6 +340,7 @@
     // piano: three slightly detuned strings per note, a felt hammer, a brightness that fades faster than the loudness,
     // a quick first decay and a long singing second one, and the soundboard on the bus
     piano(m, dur, vel, t, dest) {
+      if (this.ks) return this.stringPiano(m, dur, vel, t, dest);
       const A = this.ctx, f = mtof(m), nodes = [];
       const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.4;
       const bright = Math.min(14000, f * (3 + 14 * vel * vel) + 900);
@@ -363,6 +374,27 @@
       nz.connect(hb); hb.connect(hg); hg.connect(pan); nz.stop(t + 0.08); nodes.push(nz, hb, hg);
       this._done(nodes, last);
     }
+    // the physically modelled piano (strings-worklet.js): three strings, hammer, stiffness, damper
+    stringPiano(m, dur, vel, t, dest) {
+      const A = this.ctx, f = mtof(m), sr = A.sampleRate;
+      const t60 = Math.max(1.4, Math.min(16, 16 - (m - 28) * 0.2)), ring = Math.min(t60, Math.max(1.8, dur * 3));
+      let node;
+      try {
+        node = new AudioWorkletNode(A, 'struck-string', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1],
+          processorOptions: { f, vel, start: Math.round(t * sr), ring, t60, seed: (m * 7919 + Math.floor(t * 1000)) | 0 } });
+      } catch (e) { this.ks = false; return this.piano(m, dur, vel, t, dest); }
+      const g = A.createGain(); g.gain.value = 0.55 * (0.3 + 0.7 * vel);
+      const pan = A.createStereoPanner(); pan.pan.value = Math.max(-0.6, Math.min(0.6, (m - 64) / 40));
+      node.connect(g); g.connect(pan); pan.connect(dest);
+      // the felt hammer's thud, below the string's tone
+      const nz = this.noiseSrc(t), hb = A.createBiquadFilter(), hg = A.createGain();
+      hb.type = 'lowpass'; hb.frequency.value = Math.min(2500, f * 2 + 200);
+      hg.gain.setValueAtTime(0.025 * vel, t); hg.gain.setTargetAtTime(0, t, 0.008);
+      nz.connect(hb); hb.connect(hg); hg.connect(pan); nz.stop(t + 0.06);
+      this.live++;
+      const nodes = [node, g, pan, nz, hb, hg];
+      setTimeout(() => { this.live--; for (const n of nodes) { try { n.disconnect(); } catch (e) {} } }, (t - A.currentTime + ring + 1) * 1000);
+    }
     // organ: a principal rank and a gently beating celeste, a puff of air as the pipe speaks, a slow swell
     organ(m, dur, vel, t, dest) {
       const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.06;
@@ -372,8 +404,9 @@
       const tg = A.createGain(), swell = A.createGain(); swell.gain.value = 0.07; this.tremulant.connect(swell); swell.connect(tg.gain);   // a swell that multiplies, never leaks
       g.connect(tg); tg.connect(dest); nodes.push(g, tg, swell);
       let last = null;
-      for (const [det, a] of [[0, 0.62], [4.5, 0.38], [-3, 0.2]]) {
-        const o = A.createOscillator(); o.setPeriodicWave(this.waves.organ); o.frequency.value = det === -3 ? f * 2 : f;
+      this.wobble(tg.gain, 0.04, t, t + L + 0.6, nodes);                  // the wind is never perfectly steady
+      for (const [det, a, mul] of [[0, 0.62, 1], [4.5, 0.38, 1], [-3, 0.2, 2], [1.5, m > 48 ? 0.42 : 0.2, 0.5]]) {   // 8', celeste, 4', and a 16' bourdon below
+        const o = A.createOscillator(); o.setPeriodicWave(mul === 0.5 ? this.waves.voice : this.waves.organ); o.frequency.value = f * mul;
         o.detune.setValueAtTime(det - 14, t); o.detune.linearRampToValueAtTime(det, t + 0.07);   // the pipe settles onto its pitch
         const og = A.createGain(); og.gain.value = a; o.connect(og); og.connect(g);
         o.start(t); o.stop(t + L + 0.6); nodes.push(o, og); last = o;
@@ -396,6 +429,8 @@
       env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(amp * 0.85, t + 0.07); env.gain.linearRampToValueAtTime(amp, t + Math.min(0.5, L * 0.5));
       env.gain.setValueAtTime(amp, t + Math.max(0.1, L - 0.08)); env.gain.setTargetAtTime(0, t + Math.max(0.1, L - 0.08), 0.12);
       lp.connect(env); env.connect(dest); nodes.push(lp, env);
+      const bow = A.createGain(); env.disconnect(); env.connect(bow); bow.connect(dest); nodes.push(bow);
+      this.wobble(bow.gain, 0.08, t, t + L + 0.6, nodes); this.wobble(lp.frequency, 380, t, t + L + 0.6, nodes);   // bow pressure and speed never hold still
       const vib = A.createOscillator(), vd = A.createGain(); vib.frequency.value = 5.2 + Math.random() * 0.8;
       vd.gain.setValueAtTime(0, t); vd.gain.setValueAtTime(0, t + Math.min(0.25, L * 0.3)); vd.gain.linearRampToValueAtTime(11 + 5 * Math.random(), t + Math.min(0.8, L * 0.7));
       const drift = A.createOscillator(), dd = A.createGain(); drift.frequency.value = 0.4 + Math.random() * 0.5; dd.gain.value = 3;
@@ -437,8 +472,9 @@
       g.connect(dest); nodes.push(g);
       const src = A.createGain(); src.gain.value = 0.5; nodes.push(src);
       let last = null;
-      for (const [det, p] of [[-9, -0.4], [0, 0], [8, 0.4]]) {
-        const o = A.createOscillator(); o.setPeriodicWave(this.waves.voice); o.frequency.value = f; o.detune.value = det;
+      this.wobble(g.gain, amp * 0.12, t, t + L + 0.6, nodes);
+      for (const [det, p, mul] of [[-9, -0.4, 1], [0, 0, 1], [8, 0.4, 1], [-4, 0.15, 0.5]]) {   // three singers and a bass an octave below
+        const o = A.createOscillator(); o.setPeriodicWave(this.waves.voice); o.frequency.value = f * mul; o.detune.value = det;
         const vib = A.createGain(); vib.gain.setValueAtTime(0, t); vib.gain.linearRampToValueAtTime(8, t + 0.5); this.vibrato.connect(vib); vib.connect(o.detune);
         const pn = A.createStereoPanner(); pn.pan.value = p; o.connect(pn); pn.connect(src);
         o.start(t); o.stop(t + L + 0.6); nodes.push(o, vib, pn); last = o;
