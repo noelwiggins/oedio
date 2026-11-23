@@ -130,6 +130,16 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   sessions replay the same). INSTRUMENTS stays the score's four layers (the silences iterate it — changing it would change
   the score). Cello takes the line an octave down, bass two (LEAD_SHIFT). In the Glass Ensemble the same positions map to
   its recordings. Dial face is a wider SVG (viewBox -62 -35 324 270, centred on 100,100). Test: work/leadtest.js <base>.
+  Instrument choice (2026-11-23): chips at the top of Instrument and structure (Piano, Organ, Violin, Choir, Cello, Bass,
+  Percussion). ctl.ens = null for the full ensemble (the original score, byte-identical; cello stays its own ctl.cello
+  extra) or the list of chosen instruments. Score.advance wraps _advance and runs arrange(notes, ens): each switched-off
+  part's notes go to the first chosen instrument in its ROLE list, folded into RANGE; on piano a held block (≥2 notes,
+  ≥3 steps) becomes a broken-chord figure via note offsets; violin/cello keep a double stop, bass one note, organ/choir
+  four. With bass chosen in the 1970s period a root is struck each bar. UI: setInstrument keeps ≥1 instrument, moves the
+  lead dial off a switched-off instrument, and choosing a switched-off one on the dial switches it on; dial detents of
+  switched-off instruments are dimmed; a sentence under the chips names the piece ("A piece for piano and violin…").
+  Sessions store ens (absent → null). Tests: work/enstest.js (null = git HEAD score; selections deterministic),
+  work/ensui.js <base> <png>, work/ensrec.js <base> <out> <list> <secs>.
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
