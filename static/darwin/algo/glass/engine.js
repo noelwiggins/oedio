@@ -68,7 +68,24 @@
     { name: 'D♭ major', short: 'D♭', notes: [49, 53, 56], colour: '#f0b44c', shape: 'triangle' },
     { name: 'A major', short: 'A', notes: [57, 61, 64], colour: '#e5534b', shape: 'square' },
     { name: 'B7', short: 'B7', notes: [59, 63, 66, 69], colour: '#a77bf3', shape: 'hexagon' },
+    // after Metamorphosis One (E minor) and Two (A minor), 1988; indices 4–11
+    { name: 'E minor', short: 'Em', notes: [52, 55, 59], colour: '#4fa3a0', shape: 'circle' },
+    { name: 'G major', short: 'G', notes: [55, 59, 62], colour: '#e8c45a', shape: 'triangle' },
+    { name: 'C major', short: 'C', notes: [48, 52, 55], colour: '#d9785f', shape: 'square' },
+    { name: 'C7', short: 'C7', notes: [48, 52, 55, 58], colour: '#b07fd8', shape: 'hexagon' },
+    { name: 'E♭ major', short: 'E♭', notes: [51, 55, 58], colour: '#c2456a', shape: 'hexagon' },
+    { name: 'A minor', short: 'Am', notes: [57, 60, 64], colour: '#6f8fe0', shape: 'circle' },
+    { name: 'F major', short: 'F', notes: [53, 57, 60], colour: '#e09a4f', shape: 'triangle' },
   ];
+  // Progressions, one chord per number. 'glass' is the original cycle. Metamorphosis One turns Em–G–C–C7 twice, then
+  // twice with E♭ as the surprising last chord; Two circles Am–F–G and now and then opens out to Am–C–F–G.
+  // 'suite' gives each movement one of the two pieces in turn. Each progression keeps the scale its line uses in the 1960s period.
+  const HARMONY = {
+    glass: { seq: [0, 1, 2, 3], tonic: 65, name: 'Fm–D♭–A–B7' },
+    meta1: { seq: [4, 5, 6, 7, 4, 5, 6, 7, 4, 5, 6, 8, 4, 5, 6, 8], tonic: 64, name: 'Metamorphosis One' },
+    meta2: { seq: [9, 10, 5, 9, 10, 5, 9, 10, 5, 9, 6, 10, 5], tonic: 69, name: 'Metamorphosis Two' },
+  };
+  const harmonyOf = (h, mi) => HARMONY[h === 'suite' ? (mi % 2 ? 'meta2' : 'meta1') : h] || HARMONY.glass;
   function voicing(ci, inv) {                     // root, first or second inversion
     const v = CHORDS[ci].notes.slice();
     for (let k = 0; k < inv; k++) v.push(v.shift() + 12);
@@ -128,7 +145,7 @@
       this.step = 0; this.chordCount = -1; this.chordEnd = 0; this.mov = 0; this.inMov = -1;
       // period: 0 = the 1960s (unison lines in fifths, additive rhythm, no harmony), 1 = the 1970s (cycles over slow
       // harmony), 2 = the operas (a repeating ground bass under it all). text: what the voice sings.
-      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false };
+      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false, harmony: 'glass' };
       this.L = 3; this.dir = 1; this.voiceCycle = 5;
       this.rhy = [2, 2, 2];                       // additive rhythm: how many eighths each note of the phrase lasts
       this.leadPos = 0; this.leadNext = 0; this.count = 0; this.voiceIdx = 0;
@@ -143,7 +160,9 @@
       const mi = this.mov, M = MOVEMENTS[mi], inMov = this.inMov;
       const bridge = inMov >= CHORDS_PER_MOVEMENT - BRIDGE ? (inMov - (CHORDS_PER_MOVEMENT - BRIDGE) + 1) / (BRIDGE + 1) : 0;
       const c = this.ctl.complexity / 100;
-      const ci = cc % 4;
+      // a progression starts from its first chord when it is chosen; the suite starts each piece afresh every movement
+      const hn = this.ctl.harmony; if (hn !== this.hName) { this.hName = hn; this.hBase = cc; }
+      const H = harmonyOf(hn, mi), hi = hn === 'glass' ? cc : hn === 'suite' ? inMov : cc - this.hBase, ci = H.seq[hi % H.seq.length];
       let beats = 8 + 4 * (N % 3);
       if (M.slow) beats = Math.round(beats * (1 + (M.slow - 1) * (0.5 + 0.5 * (1 - c))));   // slow movements stretch chords
       const len = beats * 2;                                              // in eighth notes
@@ -247,7 +266,7 @@
       if (P === 0) {
         if (!resting && s >= this.leadNext) {
           const i = this.leadPos % C.L, deg = cell[i], len = C.rhy[i];
-          const m = 65 + F_MINOR[deg % 7] + 12 * Math.floor(deg / 7);
+          const m = harmonyOf(this.ctl.harmony, C.mi).tonic + F_MINOR[deg % 7] + 12 * Math.floor(deg / 7);
           push('lead', m, len, 0.6 + 0.1 * (i === 0), 'lead');
           if (on('piano')) push('piano', m - 12, len, 0.5, 'line');
           if (on('organ')) push('organ', m - 19, len, 0.4, 'fifths');                // a fifth below, an octave down
@@ -1021,5 +1040,5 @@
     return new Uint8Array(bytes.buffer);
   }
 
-  window.Glass = { Numbers, Score, Audio, midiFile, wavBytes, CHORDS, MOVEMENTS, INSTRUMENTS, PARTS, SOLFEGE, CYCLE, LINE, hash, mulberry32, voicing, euclid };
+  window.Glass = { DRUM, MIDI_CH, HARMONY, Numbers, Score, Audio, midiFile, wavBytes, CHORDS, MOVEMENTS, INSTRUMENTS, PARTS, SOLFEGE, CYCLE, LINE, hash, mulberry32, voicing, euclid };
 })();

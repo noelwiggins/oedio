@@ -13,7 +13,7 @@
   const tempoLog = [[0, 112]];
   const settings = { seed: 1976, complexity: 55, tempo: 112, lead: 0, master: 0.8, duration: 0,
     vol: { piano: 0.8, organ: 0.7, violin: 0.75, voice: 0.8, bass: 0.75, drums: 0.7 }, oct: { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0 },
-    period: 1, rhythm: 'euclid', triplets: true, knees: true, drums: true, text: 'numbers', preset: 'chamber', engineer: false, picture: 'score', counting: true, intermission: 0, concert: false,
+    period: 1, rhythm: 'euclid', triplets: true, knees: true, drums: true, harmony: 'glass', text: 'numbers', preset: 'chamber', engineer: false, picture: 'score', counting: true, intermission: 0, concert: false,
     voice: { mode: 'harmonizer', clarity: 0.6, wet: 0.45, reverb: 0.35, layers: 2, speed: 1, reps: 1, loop: false, trim: [0, 1] } };
   score.ctl.drums = settings.drums;              // a new page plays the percussion; the Score's own default stays off for old sessions
   let midiOut = null;
@@ -31,7 +31,7 @@
     else if (k[0] === 'tempo') { score.ctl.tempo = value; settings.tempo = value; }
     else if (k[0] === 'lead') { settings.lead = value; score.ctl.lead = value; if (audio) audio.setLead(value, at); }
     else if (k[0] === 'master') { settings.master = value; if (audio) audio.out.gain.setTargetAtTime(value, at || audio.ctx.currentTime, 0.03); }
-    else if (['period', 'rhythm', 'triplets', 'knees', 'drums', 'text', 'intermission'].includes(k[0])) {
+    else if (['period', 'rhythm', 'triplets', 'knees', 'drums', 'harmony', 'text', 'intermission'].includes(k[0])) {
       settings[k[0]] = value; score.ctl[k[0]] = value;
       if (k[0] === 'text' && audio) audio.text = value;
     }
@@ -114,7 +114,7 @@
     const was = playing; pause();
     score = new G.Score(settings.seed);
     score.ctl.complexity = settings.complexity; score.ctl.tempo = settings.tempo; score.ctl.lead = settings.lead;
-    for (const k of ['period', 'rhythm', 'triplets', 'knees', 'drums', 'text', 'intermission']) score.ctl[k] = settings[k];
+    for (const k of ['period', 'rhythm', 'triplets', 'knees', 'drums', 'harmony', 'text', 'intermission']) score.ctl[k] = settings[k];
     log = []; pending = []; timeline.length = 0; noteLog.length = 0; tempoLog.length = 0; tempoLog.push([0, settings.tempo]);
     if (!keepReplay) { replay = null; $('ag-replay').hidden = true; }
     start0 = snapshot();
@@ -123,7 +123,7 @@
   }
   let start0 = null;
   const snapshot = () => ({ complexity: settings.complexity, tempo: settings.tempo, lead: settings.lead, master: settings.master, vol: { ...settings.vol }, oct: { ...settings.oct },
-    period: settings.period, rhythm: settings.rhythm, triplets: settings.triplets, knees: settings.knees, drums: settings.drums, text: settings.text, preset: settings.preset,
+    period: settings.period, rhythm: settings.rhythm, triplets: settings.triplets, knees: settings.knees, drums: settings.drums, harmony: settings.harmony, text: settings.text, preset: settings.preset,
     engineer: settings.engineer, picture: settings.picture, counting: settings.counting, intermission: settings.intermission, voice: { ...settings.voice, trim: settings.voice.trim.slice() } });
 
   // ── the picture: the same events, drawn as they sound ──────────────────
@@ -469,11 +469,12 @@
   for (const [id, key] of [['ag-triplets', 'triplets'], ['ag-knees', 'knees'], ['ag-drums', 'drums'], ['ag-engineer', 'engineer'], ['ag-counting', 'counting']]) $(id).addEventListener('change', () => change(key, $(id).checked));
   $('ag-additive').addEventListener('change', () => change('rhythm', $('ag-additive').checked ? 'additive' : 'euclid'));
   $('ag-text').addEventListener('change', () => change('text', $('ag-text').value));
+  $('ag-harmony').addEventListener('change', () => change('harmony', $('ag-harmony').value));
   function syncStyleControls() {
     const set = (name, v) => document.querySelectorAll(`input[name=${name}]`).forEach(r => { r.checked = String(r.value) === String(v); });
     set('ag-period', settings.period); set('ag-preset', settings.preset); set('ag-picture', settings.picture);
     $('ag-triplets').checked = settings.triplets; $('ag-drums').checked = settings.drums; $('ag-knees').checked = settings.knees; $('ag-engineer').checked = settings.engineer;
-    $('ag-counting').checked = settings.counting; $('ag-additive').checked = settings.rhythm === 'additive'; $('ag-text').value = settings.text;
+    $('ag-counting').checked = settings.counting; $('ag-additive').checked = settings.rhythm === 'additive'; $('ag-text').value = settings.text; $('ag-harmony').value = settings.harmony;
   }
   // concert: four hours, an intermission after each full cycle, full screen, nothing on screen but the picture
   $('ag-concert').onclick = () => {
@@ -604,7 +605,7 @@
     Object.assign(settings, { complexity: st.complexity ?? 55, tempo: st.tempo ?? 112, lead: st.lead ?? 0, master: st.master ?? 0.8 });
     Object.assign(settings.vol, st.vol || {}); Object.assign(settings.voice, st.voice || {}); Object.assign(settings.oct, st.oct || {});
     for (const k of ['period', 'rhythm', 'triplets', 'knees', 'text', 'preset', 'engineer', 'picture', 'counting', 'intermission']) if (st[k] !== undefined) settings[k] = st[k];
-    settings.drums = st.drums ?? false;          // sessions saved before the percussion existed replay without it
+    settings.drums = st.drums ?? false; settings.harmony = st.harmony ?? 'glass';          // sessions saved before the percussion existed replay without it
     syncStyleControls();
     for (const n of G.PARTS) if (octDials[n]) octDials[n].set((settings.oct[n] || 0) + 2);
     settings.duration = sess.duration || 0; $('ag-duration').value = String(settings.duration);

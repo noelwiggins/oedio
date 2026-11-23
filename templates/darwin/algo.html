@@ -154,6 +154,13 @@
         <label title="Piano, organ, violin, choir"><input type="radio" name="ag-preset" value="chamber" checked>Chamber</label>
         <label title="Amplified combo organs, soprano saxophone and flute, soprano voice, electric bass"><input type="radio" name="ag-preset" value="ensemble">Glass Ensemble</label>
       </span></div>
+    <div class="ag-row"><span class="ag-read" style="width:64px">Harmony</span>
+      <select class="ag-sel" id="ag-harmony" title="Which chord progression the numbers walk through; a change takes effect at the next chord">
+        <option value="glass">Fm – D♭ – A – B7</option>
+        <option value="meta1">Metamorphosis One · Em – G – C – C7 / E♭</option>
+        <option value="meta2">Metamorphosis Two · Am – F – G</option>
+        <option value="suite">Metamorphosis suite · One and Two by turns</option>
+      </select></div>
     <div class="ag-row"><span class="ag-read" style="width:64px">Voice sings</span>
       <select class="ag-sel" id="ag-text">
         <option value="numbers">the numbers</option><option value="solfege">solfège</option><option value="vowel">a vowel</option><option value="recording">your recording</option>
@@ -246,6 +253,6 @@
   </section>
 </div>
 
-<script src="/static/darwin/algo/glass/engine.js?v=8b"></script>
-<script src="/static/darwin/algo/glass/ui.js?v=6b"></script>
+<script src="/static/darwin/algo/glass/engine.js?v=9"></script>
+<script src="/static/darwin/algo/glass/ui.js?v=7"></script>
 {% endblock %}
