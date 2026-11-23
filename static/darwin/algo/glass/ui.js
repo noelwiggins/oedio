@@ -12,10 +12,10 @@
   const noteLog = [];                             // [step, instrument, midi, length, velocity] for MIDI export
   const tempoLog = [[0, 112]];
   const settings = { seed: 1976, complexity: 55, tempo: 112, lead: 0, master: 0.8, duration: 0,
-    vol: { piano: 0.8, organ: 0.7, violin: 0.75, voice: 0.8, bass: 0.75, drums: 0.7 }, oct: { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0 },
-    period: 1, rhythm: 'euclid', triplets: true, knees: true, drums: true, harmony: 'glass', text: 'choir', preset: 'chamber', engineer: false, picture: 'score', counting: true, intermission: 0, concert: false,
+    vol: { piano: 0.8, organ: 0.7, violin: 0.75, voice: 0.8, bass: 0.75, drums: 0.7, cello: 0.75 }, oct: { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0, cello: 0 },
+    period: 1, rhythm: 'euclid', triplets: true, knees: true, drums: true, cello: true, harmony: 'glass', text: 'choir', preset: 'chamber', engineer: false, picture: 'score', counting: true, intermission: 0, concert: false,
     voice: { mode: 'harmonizer', clarity: 0.6, wet: 0.45, reverb: 0.35, layers: 2, speed: 1, reps: 1, loop: false, trim: [0, 1] } };
-  score.ctl.drums = settings.drums; score.ctl.text = settings.text;              // a new page plays the percussion; the Score's own default stays off for old sessions
+  score.ctl.drums = settings.drums; score.ctl.text = settings.text; score.ctl.cello = settings.cello;              // a new page plays the percussion; the Score's own default stays off for old sessions
   let midiOut = null;
   const stepDur = () => 60 / score.ctl.tempo / 2;
 
@@ -31,11 +31,11 @@
     else if (k[0] === 'tempo') { score.ctl.tempo = value; settings.tempo = value; }
     else if (k[0] === 'lead') { settings.lead = value; score.ctl.lead = value; if (audio) audio.setLead(value, at); }
     else if (k[0] === 'master') { settings.master = value; if (audio) audio.out.gain.setTargetAtTime(value, at || audio.ctx.currentTime, 0.03); }
-    else if (['period', 'rhythm', 'triplets', 'knees', 'drums', 'harmony', 'text', 'intermission'].includes(k[0])) {
+    else if (['period', 'rhythm', 'triplets', 'knees', 'drums', 'cello', 'harmony', 'text', 'intermission'].includes(k[0])) {
       settings[k[0]] = value; score.ctl[k[0]] = value;
       if (k[0] === 'text' && audio) audio.text = value;
     }
-    else if (k[0] === 'preset') { settings.preset = value; if (audio) audio.preset = value; }
+    else if (k[0] === 'preset') { settings.preset = value; if (audio) { audio.preset = value; if (value === 'ensemble') audio.loadEnsemble(); } }
     else if (k[0] === 'engineer') { settings.engineer = value; if (audio) { audio.engineer = value; if (score.chord) audio.rideMix(score.chord, at || audio.ctx.currentTime); } }
     else if (k[0] === 'picture' || k[0] === 'counting') { settings[k[0]] = value; }
     else if (k[0] === 'oct') { settings.oct[k[1]] = value; if (audio) audio.oct[k[1]] = value; }
@@ -95,6 +95,15 @@
     for (const [k, v] of Object.entries(settings.vol)) if (audio.bus[k]) audio.bus[k].gain.value = v;
     audio.out.gain.value = settings.master; audio.setLead(settings.lead); Object.assign(audio.oct, settings.oct);
     audio.preset = settings.preset; audio.engineer = settings.engineer; audio.text = settings.text;
+    // say which recordings are still on their way; every instrument waits silently for its own
+    audio.onload = L => {
+      const names = { piano: 'piano', organ: 'organ', violin2: 'violin', cello: 'cello', bass: 'double bass', drums: 'percussion' };
+      const wait = L.want.filter(k => !L.done.includes(k)).map(k => names[k]);
+      if (!audio.samples.choir) wait.push('choir');
+      if (settings.preset === 'ensemble' && !audio.samples.ens) wait.push('ensemble');
+      const el = $('ag-loadstat'); if (el) el.textContent = wait.length ? 'Loading recordings: ' + wait.join(', ') + '…' : '';
+    };
+    audio.onload({ want: ['piano', 'organ', 'violin2', 'cello', 'bass', 'drums'], done: [] });
     if (settings.text === 'choir') audio.loadChoir();
     Object.assign(audio.voice, { mode: settings.voice.mode, clarity: settings.voice.clarity, layers: settings.voice.layers, speed: settings.voice.speed, reps: settings.voice.reps, trim: settings.voice.trim });
     audio.verbIn.gain.value = settings.voice.reverb; audio.send.voice.gain.value = settings.voice.wet;
@@ -116,7 +125,7 @@
     const was = playing; pause();
     score = new G.Score(settings.seed);
     score.ctl.complexity = settings.complexity; score.ctl.tempo = settings.tempo; score.ctl.lead = settings.lead;
-    for (const k of ['period', 'rhythm', 'triplets', 'knees', 'drums', 'harmony', 'text', 'intermission']) score.ctl[k] = settings[k];
+    for (const k of ['period', 'rhythm', 'triplets', 'knees', 'drums', 'cello', 'harmony', 'text', 'intermission']) score.ctl[k] = settings[k];
     log = []; pending = []; timeline.length = 0; noteLog.length = 0; tempoLog.length = 0; tempoLog.push([0, settings.tempo]);
     if (!keepReplay) { replay = null; $('ag-replay').hidden = true; }
     start0 = snapshot();
@@ -125,7 +134,7 @@
   }
   let start0 = null;
   const snapshot = () => ({ complexity: settings.complexity, tempo: settings.tempo, lead: settings.lead, master: settings.master, vol: { ...settings.vol }, oct: { ...settings.oct },
-    period: settings.period, rhythm: settings.rhythm, triplets: settings.triplets, knees: settings.knees, drums: settings.drums, harmony: settings.harmony, text: settings.text, preset: settings.preset,
+    period: settings.period, rhythm: settings.rhythm, triplets: settings.triplets, knees: settings.knees, drums: settings.drums, cello: settings.cello, harmony: settings.harmony, text: settings.text, preset: settings.preset,
     engineer: settings.engineer, picture: settings.picture, counting: settings.counting, intermission: settings.intermission, voice: { ...settings.voice, trim: settings.voice.trim.slice() } });
 
   // ── the picture: the same events, drawn as they sound ──────────────────
@@ -137,7 +146,7 @@
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   }
   new ResizeObserver(fit).observe(cv); fit();
-  const LANE = { piano: 0.2, violin: 0.32, voice: 0.68, organ: 0.8, bass: 0.88, drums: 0.92, timpani: 0.9 };
+  const LANE = { piano: 0.2, violin: 0.32, voice: 0.68, organ: 0.8, bass: 0.88, drums: 0.92, timpani: 0.9, cello: 0.84 };
   function poly(c, x, y, r, n, rot) {
     c.beginPath();
     if (n === 0) { c.arc(x, y, r, 0, TAU); return; }
@@ -285,7 +294,7 @@
       c.fillStyle = on ? rgba(col, 0.85) : 'rgba(200,210,230,0.06)'; c.fillRect(bx + 6 + w * (bwid - 12) / 4, hz - (f + 1) * sh + 8, (bwid - 12) / 4 - 4, sh - 16);
     }
     // figures crossing the field: one per sound, walking left to right from where they sounded, each instrument on its own plane
-    const PLANE = { piano: 0.12, violin: 0.28, voice: 0.45, organ: 0.65, bass: 0.85, timpani: 0.92, drums: 0.97 };
+    const PLANE = { piano: 0.12, violin: 0.28, voice: 0.45, organ: 0.65, bass: 0.85, timpani: 0.92, drums: 0.97, cello: 0.76 };
     for (const [tt, name, midi, vel, ccol, part] of recent(t, 14)) {
       const age = t - tt, x = W * 0.06 + age * W * 0.06 + (midi % 12) * 4, depth = PLANE[name] ?? 0.5, y = hz + (H - hz) * depth, sc = 0.5 + depth;
       const a = Math.max(0, 1 - age / 14) * (1 - 0.6 * still);
@@ -295,6 +304,7 @@
       else if (name === 'organ') c.fillRect(x, y - 4 * sc, 40 * sc, 4 * sc);
       else if (name === 'bass') c.fillRect(x, y - 6 * sc, 26 * sc, 6 * sc);
       else if (name === 'drums') c.fillRect(x, y - 3 * sc, 3 * sc, 3 * sc);
+      else if (name === 'cello') { c.beginPath(); c.ellipse(x, y - 8 * sc, 5 * sc, 9 * sc, 0, 0, TAU); c.fill(); }
       else if (name === 'timpani') { c.beginPath(); c.ellipse(x, y - 3 * sc, 9 * sc, 3 * sc, 0, 0, TAU); c.fill(); }
       else { c.beginPath(); c.arc(x, y - 12 * sc, 5 * sc, 0, TAU); c.fill(); c.fillRect(x - 1, y - 8 * sc, 2, 8 * sc); }
     }
@@ -468,14 +478,14 @@
   // style: segmented buttons and switches, all logged like every other control
   function seg(name, key, conv) { document.querySelectorAll(`input[name=${name}]`).forEach(r => r.addEventListener('change', () => { if (r.checked) change(key, conv ? conv(r.value) : r.value); })); }
   seg('ag-period', 'period', Number); seg('ag-preset', 'preset'); seg('ag-picture', 'picture');
-  for (const [id, key] of [['ag-triplets', 'triplets'], ['ag-knees', 'knees'], ['ag-drums', 'drums'], ['ag-engineer', 'engineer'], ['ag-counting', 'counting']]) $(id).addEventListener('change', () => change(key, $(id).checked));
+  for (const [id, key] of [['ag-triplets', 'triplets'], ['ag-knees', 'knees'], ['ag-drums', 'drums'], ['ag-cello', 'cello'], ['ag-engineer', 'engineer'], ['ag-counting', 'counting']]) $(id).addEventListener('change', () => change(key, $(id).checked));
   $('ag-additive').addEventListener('change', () => change('rhythm', $('ag-additive').checked ? 'additive' : 'euclid'));
   $('ag-text').addEventListener('change', () => { if ($('ag-text').value === 'choir' && audio) audio.loadChoir(); change('text', $('ag-text').value); });
   $('ag-harmony').addEventListener('change', () => change('harmony', $('ag-harmony').value));
   function syncStyleControls() {
     const set = (name, v) => document.querySelectorAll(`input[name=${name}]`).forEach(r => { r.checked = String(r.value) === String(v); });
     set('ag-period', settings.period); set('ag-preset', settings.preset); set('ag-picture', settings.picture);
-    $('ag-triplets').checked = settings.triplets; $('ag-drums').checked = settings.drums; $('ag-knees').checked = settings.knees; $('ag-engineer').checked = settings.engineer;
+    $('ag-triplets').checked = settings.triplets; $('ag-drums').checked = settings.drums; $('ag-cello').checked = settings.cello; $('ag-knees').checked = settings.knees; $('ag-engineer').checked = settings.engineer;
     $('ag-counting').checked = settings.counting; $('ag-additive').checked = settings.rhythm === 'additive'; $('ag-text').value = ['choir', 'recording'].includes(settings.text) ? settings.text : 'numbers';   // older sessions' solfège and vowel are the line too $('ag-harmony').value = settings.harmony;
   }
   // concert: four hours, an intermission after each full cycle, full screen, nothing on screen but the picture
@@ -607,7 +617,7 @@
     Object.assign(settings, { complexity: st.complexity ?? 55, tempo: st.tempo ?? 112, lead: st.lead ?? 0, master: st.master ?? 0.8 });
     Object.assign(settings.vol, st.vol || {}); Object.assign(settings.voice, st.voice || {}); Object.assign(settings.oct, st.oct || {});
     for (const k of ['period', 'rhythm', 'triplets', 'knees', 'text', 'preset', 'engineer', 'picture', 'counting', 'intermission']) if (st[k] !== undefined) settings[k] = st[k];
-    settings.drums = st.drums ?? false; settings.harmony = st.harmony ?? 'glass';          // sessions saved before the percussion existed replay without it
+    settings.drums = st.drums ?? false; settings.harmony = st.harmony ?? 'glass'; settings.cello = st.cello ?? false;          // sessions saved before the percussion existed replay without it
     syncStyleControls();
     for (const n of G.PARTS) if (octDials[n]) octDials[n].set((settings.oct[n] || 0) + 2);
     settings.duration = sess.duration || 0; $('ag-duration').value = String(settings.duration);

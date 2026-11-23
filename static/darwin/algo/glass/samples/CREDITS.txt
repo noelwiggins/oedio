@@ -9,3 +9,8 @@ Percussion: VSCO 2 CE snare (snares on) hits and rolls, bass drum, five timpani 
 Choir: epic-choir by thepok (github.com/thepok/epic-choir), derived from VocalSet (Wilkins, Seetharaman, Wahl, Pardo 2018),
        CC BY 4.0, https://doi.org/10.5281/zenodo.1442513. Used: S/A/T/B sections, vowels ah/oh/oo, mf layer, every whole tone;
        trimmed (0.08 s onset offset, 6 s, fade) and encoded mono 80 kbps MP3. Further modified here: re-pitched by playback rate.
+Violin and cello (violin2/, cello2/): University of Iowa Electronic Music Studios, Musical Instrument Samples (theremin.music.uiowa.edu),
+       "may be downloaded and used for any projects, without restrictions". Arco pp/mf/ff, cut from the chromatic runs, one note
+       per whole tone, root pitches measured (autocorrelation) and stored in manifest.json so playback is tuned exactly.
+Glass Ensemble (ens/): Renaissance organ (Full and 8') and Saxello, VCSL by Versilian Studios, CC0; Flute sustain vibrato,
+       VSCO 2 CE, CC0; Finger Bass YR (Yamaha RBX) by Andrea Biasior via FreePats, CC0.

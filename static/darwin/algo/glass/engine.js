@@ -118,10 +118,10 @@
   const LINE = [0, 2, 1, 3, 2, 4, 3];
   const F_MINOR = [0, 2, 3, 5, 7, 8, 10];        // the 1960s line lives in F minor, without chords
   const SOLFEGE = ['do', 'di', 're', 'ri', 'mi', 'fa', 'fi', 'sol', 'si', 'la', 'li', 'ti'];
-  const PARTS = ['piano', 'organ', 'violin', 'voice', 'bass', 'drums'];
+  const PARTS = ['piano', 'organ', 'violin', 'voice', 'bass', 'drums', 'cello'];
   // percussion as General MIDI keys (and the timpani as pitched notes on their own)
   const DRUM = { kick: 36, snare: 38, roll: 40, crash: 49, gong: 52, swell: 55 };
-  const MIDI_CH = name => name === 'drums' ? 9 : name === 'timpani' ? 6 : PARTS.indexOf(name);
+  const MIDI_CH = name => name === 'drums' ? 9 : name === 'timpani' ? 10 : PARTS.indexOf(name);
   // phonemes for the singing: [voiced, noise, noise Hz, F1, F2, F3, ms (0 = vowel)]
   const PHON = {
     ee: [1, 0, 0, 280, 2250, 2900, 0], ih: [1, 0, 0, 400, 1950, 2550, 0], eh: [1, 0, 0, 530, 1840, 2480, 0], ah: [1, 0, 0, 720, 1100, 2450, 0],
@@ -145,7 +145,7 @@
       this.step = 0; this.chordCount = -1; this.chordEnd = 0; this.mov = 0; this.inMov = -1;
       // period: 0 = the 1960s (unison lines in fifths, additive rhythm, no harmony), 1 = the 1970s (cycles over slow
       // harmony), 2 = the operas (a repeating ground bass under it all). text: what the voice sings.
-      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false, harmony: 'glass' };
+      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false, harmony: 'glass', cello: false };
       this.L = 3; this.dir = 1; this.voiceCycle = 5;
       this.rhy = [2, 2, 2];                       // additive rhythm: how many eighths each note of the phrase lasts
       this.leadPos = 0; this.leadNext = 0; this.count = 0; this.voiceIdx = 0;
@@ -331,6 +331,7 @@
         }
       }
       this.percussion(C, k, resting, push, false);
+      this.celloPart(C, k, resting, push);
       // the operas: a ground bass, the same figure every bar, under every chord (the chaconne idea)
       if (P === 2 && !resting) {
         const root = v[0] - 24 - (v[0] - 24 > 40 ? 12 : 0), fig = { 0: [0, 3], 3: [7, 2], 5: [12, 2], 7: [7, 1] }[k % 8];
@@ -340,6 +341,29 @@
       return { step: s, notes, chord: C, newChord, resting, count: this.count };
     }
   }
+
+  // ── the cello: the chord's floor, as in Glass's string quartets; held in the slow music, walking in the accumulation,
+  // and in the rhythmic movement an arpeggio of six against the bar's eight, so it drifts in phase with everything else
+  Score.prototype.celloPart = function (C, k, resting, push) {
+    if (!this.ctl.cello || C.period === 0 || resting) return;
+    const start = C.sil.restBeats * 2; if (k < start) return;
+    const c = this.ctl.complexity / 100, mi = C.mi, im = C.inMov, n = CHORDS[C.ci].notes;
+    let root = 36 + n[0] % 12; if (root > 47) root -= 12;
+    const third = root + ((n[1] - n[0]) % 12 + 12) % 12, fifth = root + ((n[2] - n[0]) % 12 + 12) % 12;
+    const rel = k - start, span = C.len - start;
+    const hold = C.sil.sustain || mi === 0 || mi === 2 || mi === 4 || c < 0.3 || (mi === 1 && im < 4);
+    if (hold) {
+      if (mi === 2 && span >= 8) {                                     // the slow movement: root, then the fifth halfway
+        const half = Math.floor(span / 2) - Math.floor(span / 2) % 2;
+        if (rel === 0) push('cello', root, half, 0.45 + 0.15 * c, 'hold');
+        else if (rel === half) push('cello', fifth, span - half, 0.42 + 0.15 * c, 'hold');
+      } else if (rel === 0) push('cello', root, span, (mi === 0 || mi === 4 ? 0.38 : 0.45) + 0.15 * c, 'hold');
+      return;
+    }
+    if (mi === 1) { if (rel % 4 === 0) push('cello', (rel / 4) % 2 ? fifth : root, 4, 0.48 + 0.12 * c, 'walk'); return; }
+    const fig = [root, fifth, root + 12, third + 12, root + 12, fifth], acc = euclid(C.density, 8, C.inv);
+    push('cello', fig[rel % 6], 1, acc[k % 8] ? 0.6 : 0.42, 'arp');
+  };
 
   // ── the recorded choir: the chord in four parts, voice-led from the last one, a new breath every bar ──
   const CHOIR_RANGE = { S: [62, 77], A: [55, 70], T: [48, 64], B: [43, 57] };
@@ -468,8 +492,9 @@
         voice: [['highpass', 55, 0.7, 0], ['peaking', 160, 1.4, 4], ['peaking', 3000, 1.5, 2], ['lowpass', 8000, 0.6, 0]],
         bass: [['highpass', 28, 0.7, 0], ['peaking', 80, 1.1, 3], ['lowpass', 3200, 0.6, 0]],
         drums: [['highpass', 30, 0.7, 0]],
+        cello: [['highpass', 50, 0.7, 0], ['lowpass', 9000, 0.6, 0]],
       };
-      const PAN = { piano: -0.25, organ: 0, violin: 0.3, voice: 0.1, bass: 0, drums: -0.05 };
+      const PAN = { piano: -0.25, organ: 0, violin: 0.3, voice: 0.1, bass: 0, drums: -0.05, cello: 0.15 };
       this.panBase = PAN; this.pan = {}; this.ride = {};
       this.bus = {}; this.send = {};
       for (const n of PARTS) {
@@ -478,7 +503,7 @@
         let last = ride; this.body = this.body || {}; this.body[n] = [];
         for (const [type, f, q, gain] of BODY[n]) { const b = A.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.gain.value = gain; last.connect(b); last = b; this.body[n].push(b); }
         const pan = A.createStereoPanner(); pan.pan.value = PAN[n]; last.connect(pan); pan.connect(this.out); this.pan[n] = pan;
-        const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : n === 'violin' ? 0.4 : n === 'bass' ? 0.12 : n === 'drums' ? 0.3 : 0.32; pan.connect(sd); sd.connect(this.verbIn);
+        const sd = A.createGain(); sd.gain.value = n === 'voice' ? 0.45 : n === 'violin' ? 0.4 : n === 'bass' ? 0.12 : n === 'drums' ? 0.3 : n === 'cello' ? 0.36 : 0.32; pan.connect(sd); sd.connect(this.verbIn);
         this.bus[n] = g; this.send[n] = sd;
       }
       // the piano's soundboard: a short, woody resonance added to the strings
@@ -492,44 +517,64 @@
       this.tremulant = A.createOscillator(); this.tremulant.frequency.value = 0.7; this.tremulant.start();   // a slow organ swell
       this.voice = { buffer: null, mode: 'harmonizer', clarity: 0.6, wet: 0.45, layers: 2, speed: 1, reps: 1, trim: [0, 1], base: 57, bands: null };
       this.live = 0;                                                      // notes sounding, for a polyphony cap
-      this.oct = { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0 };     // each instrument's octave dial
+      this.oct = { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0, cello: 0 };     // each instrument's octave dial
       this.preset = 'chamber'; this.engineer = false; this.text = 'choir';
       this.ks = false;                                                    // the physically modelled piano, once its worklet has loaded
       if (A.audioWorklet) A.audioWorklet.addModule('/static/darwin/algo/glass/strings-worklet.js?v=1').then(() => { this.ks = true; }).catch(() => {});
       this.samples = { piano: null, violin: null, organ: null, bass: null, drums: null }; this.rr = 0;
-      this.loadSamples().then(() => this.loadChoir());     // the choir is the voice now; it follows the other recordings
+      this.loadSamples(); this.loadChoir();     // the choir is the voice now; it follows the other recordings
     }
     // ── recorded instruments: a Yamaha grand (Salamander, CC BY 3.0) and a solo violin (VSCO 2 CE, CC0) ──
     // Until they have loaded, the modelled piano and synthesized violin play instead.
+    // every instrument is a recording; nothing plays until its recordings have arrived. The groups load side by side
+    // and report progress, so the page can say what is still coming.
     async loadSamples() {
       const A = this.ctx, base = '/static/darwin/algo/glass/samples/';
       const NOTE = { C: 0, Ds: 3, Fs: 6, E: 4, G: 7, A: 9 };
       const midiOf = name => { const m = name.match(/^([A-G]s?)(\d)/); return 12 * (+m[2] + 1) + NOTE[m[1]]; };
       const get = async (file) => A.decodeAudioData(await (await fetch(base + file)).arrayBuffer());
+      const load = async list => (await Promise.all(list.map(async e => { try { return Object.assign({}, e, { buf: await get(e.f) }); } catch (er) { return null; } }))).filter(Boolean);   // one bad file never silences a whole instrument
+      this.base = base; this._load = load;
+      this.loading = { want: ['piano', 'organ', 'violin2', 'cello', 'bass', 'drums'], done: [] };
+      const done = k => { this.loading.done.push(k); if (this.onload) this.onload(this.loading); };
       const pianoNames = ['A0']; for (let o = 1; o <= 7; o++) for (const n of ['C', 'Ds', 'Fs', 'A']) pianoNames.push(n + o); pianoNames.push('C8');
-      const violinNames = []; for (const n of ['G3', 'A3', 'C4', 'E4', 'G4', 'A4', 'C5', 'E5', 'G5', 'A5', 'C6', 'E6', 'G6', 'A6', 'C7']) violinNames.push(n);
-      try {
-        const piano = await Promise.all(pianoNames.map(async n => ({ m: midiOf(n), buf: await get(`piano/${n}.mp3`) })));
-        this.samples.piano = piano;
-        for (const b of this.body.piano) if (b.type === 'peaking') b.gain.value = 0;   // the recording has its own body
-        this.boardGain.gain.value = 0;
-      } catch (e) { /* stay with the model */ }
-      try {
-        const layer = async v => Promise.all(violinNames.map(async n => ({ m: midiOf(n), buf: await get(`violin/${n}_${v}.mp3`) })));
-        this.samples.violin = { p: await layer('p'), f: await layer('f') };
-        for (const b of this.body.violin) if (b.type === 'peaking') b.gain.value = 0;
-      } catch (e) { /* stay with the synthesis */ }
-      // the pipe organ, the double bass and the percussion, listed in manifest.json (file, pitch, dynamic)
-      try {
-        const man = await (await fetch(base + 'manifest.json?v=3')).json();
-        const load = async list => (await Promise.all(list.map(async e => { try { return Object.assign({}, e, { buf: await get(e.f) }); } catch (er) { return null; } }))).filter(Boolean);   // one bad file never silences a whole instrument
-        this.samples.organ = await load(man.organ);
-        for (const b of this.body.organ) if (b.type === 'peaking') b.gain.value = 0;
-        this.samples.bass = { p: await load(man.bass.p), f: await load(man.bass.f) };
-        for (const b of this.body.bass) if (b.type === 'peaking') b.gain.value = 0;
-        const D = {}; for (const [k, list] of Object.entries(man.drums)) D[k] = await load(list);
-        this.samples.drums = D;
-      } catch (e) { /* the synthesized organ and pedal stay */ }
+      const man = this.manifest = await (await fetch(base + 'manifest.json?v=5')).json();
+      await Promise.all([
+        (async () => {
+          this.samples.piano = await load(pianoNames.map(n => ({ m: midiOf(n), f: `piano/${n}.mp3` })));
+          for (const b of this.body.piano) if (b.type === 'peaking') b.gain.value = 0;   // the recording has its own body
+          this.boardGain.gain.value = 0; done('piano');
+        })(),
+        (async () => { this.samples.organ = await load(man.organ); for (const b of this.body.organ) if (b.type === 'peaking') b.gain.value = 0; done('organ'); })(),
+        // the University of Iowa solo violin and cello (anechoic, pp/mf/ff), each note tuned to its measured pitch
+        ...['violin2', 'cello'].map(async inst => {
+          const L = {}; for (const dyn of ['pp', 'mf', 'ff']) L[dyn] = await load(man[inst][dyn]);
+          this.samples[inst] = L; if (inst === 'violin2') for (const b of this.body.violin) if (b.type === 'peaking') b.gain.value = 0;
+          done(inst);
+        }),
+        (async () => { this.samples.bass = { p: await load(man.bass.p), f: await load(man.bass.f) }; for (const b of this.body.bass) if (b.type === 'peaking') b.gain.value = 0; done('bass'); })(),
+        (async () => { const D = {}; for (const [k, list] of Object.entries(man.drums)) D[k] = await load(list); this.samples.drums = D; done('drums'); })(),
+      ]);
+      if (this.preset === 'ensemble') this.loadEnsemble();
+    }
+    // the Glass Ensemble, recorded: a Renaissance positive organ for the amplified organs, a saxello (a curved soprano
+    // saxophone) with a flute above it, and a fingered electric bass; loaded only when the ensemble is chosen
+    async loadEnsemble() {
+      if (this.ensLoading || !this.manifest) return; this.ensLoading = true;
+      const E = {}; for (const [k, list] of Object.entries(this.manifest.ens)) E[k] = await this._load(list);
+      this.samples.ens = E; if (this.onload) this.onload(this.loading);
+    }
+    // a held recording: nearest note, velocity sets loudness and brightness, long notes loop their steady middle
+    sampleSimple(list, m, dur, vel, t, dest, gainK, rel, bright) {
+      const A = this.ctx, e = this.nearest(list, m), nodes = [], src = A.createBufferSource();
+      src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12);
+      const L = Math.max(0.12, dur), len = e.buf.duration / src.playbackRate.value;
+      if (L + 0.4 > len - 0.4) { const [a, b] = this.loopOf(e, 1.0, Math.min(4.2, e.buf.duration - 0.5)); src.loop = true; src.loopStart = a; src.loopEnd = b; }
+      const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = (bright || 3000) + 9000 * vel; lp.Q.value = 0.4;
+      const g = A.createGain(), amp = gainK * (0.35 + 0.65 * vel);
+      g.gain.setValueAtTime(amp, t); g.gain.setValueAtTime(amp, t + L); g.gain.setTargetAtTime(0, t + L, rel);
+      src.connect(lp); lp.connect(g); g.connect(dest); src.start(t); src.stop(t + L + rel * 6 + 0.1); nodes.push(src, lp, g);
+      this._done(nodes, src);
     }
     // a seamless loop for a sustained recording: from a point after the attack to the place near the end where the
     // waveform best matches it, found by correlation in the decoded audio (so it holds whatever the decoder's padding)
@@ -571,19 +616,45 @@
       }
       this._done(nodes, last);
     }
+    // a bowed string from the Iowa recordings: the two nearest dynamics blended by velocity; held notes get a player's
+    // vibrato that starts a moment after the bow, grows, and never quite repeats; short notes are bowed détaché
+    sampleBowed(S, m, dur, vel, t, dest, gainK, rel) {
+      const A = this.ctx, nodes = [], L = Math.max(0.12, dur), short = L < 0.36;
+      const [lo, hi, w] = vel < 0.5 ? ['pp', 'mf', vel / 0.5] : ['mf', 'ff', (vel - 0.5) / 0.5];
+      const g = A.createGain(), amp = gainK * (0.45 + 0.55 * vel); g.connect(dest); nodes.push(g);
+      g.gain.setValueAtTime(amp, t); g.gain.setValueAtTime(amp, t + L); g.gain.setTargetAtTime(0, t + L, short ? 0.05 : rel);
+      let vib = null;
+      if (!short) {
+        const o = A.createOscillator(); o.frequency.value = 5.1 + Math.random() * 0.9;
+        const d = A.createGain(); d.gain.setValueAtTime(0, t); d.gain.setValueAtTime(0, t + 0.22); d.gain.linearRampToValueAtTime(11 + 7 * vel, t + 0.9);
+        o.connect(d); o.start(t); o.stop(t + L + 1);
+        const drift = A.createOscillator(), dg = A.createGain(); drift.frequency.value = 0.3 + Math.random() * 0.4; dg.gain.value = 3;   // the hand is never still
+        drift.connect(dg); drift.start(t); drift.stop(t + L + 1); nodes.push(o, d, drift, dg); vib = [d, dg];
+      }
+      let last = null;
+      for (const [layer, wt] of [[lo, 1 - w], [hi, w]]) {
+        if (wt < 0.06 || !S[layer] || !S[layer].length) continue;
+        const e = this.nearest(S[layer], m), src = A.createBufferSource(), sg = A.createGain();
+        src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12); sg.gain.value = Math.sqrt(wt);
+        if (vib) for (const v of vib) v.connect(src.detune);
+        if (L + 0.4 > e.buf.duration / src.playbackRate.value - 0.3) { const [a, b] = this.loopOf(e, 1.0, Math.min(4.5, e.buf.duration - 0.6)); src.loop = true; src.loopStart = a; src.loopEnd = b; }
+        src.connect(sg); sg.connect(g); src.start(t); src.stop(t + L + 0.8); nodes.push(src, sg); last = src;
+      }
+      this._done(nodes, last);
+    }
     // the choir: sections of real singers (epic-choir from VocalSet, CC BY 4.0), loaded only when someone asks for it
     async loadChoir() {
       if (this.choirLoading) return; this.choirLoading = true;
       const A = this.ctx, base = '/static/darwin/algo/glass/samples/';
       try {
-        const man = await (await fetch(base + 'manifest.json?v=3')).json(), C = {};
+        const man = await (await fetch(base + 'manifest.json?v=5')).json(), C = {};
         for (const [sec, vowels] of Object.entries(man.choir)) {
           C[sec] = {};
           for (const [vw, list] of Object.entries(vowels)) C[sec][vw] = (await Promise.all(list.map(async e => {
             try { return Object.assign({}, e, { buf: await A.decodeAudioData(await (await fetch(base + e.f)).arrayBuffer()) }); } catch (er) { return null; }
           }))).filter(Boolean);
         }
-        this.samples.choir = C;
+        this.samples.choir = C; if (this.onload) this.onload(this.loading);
       } catch (e) { this.choirLoading = false; }
     }
     choirNote(m, dur, vel, t, syl) {
@@ -724,17 +795,22 @@
       o.connect(g); g.connect(param); o.start(t, Math.random() * 3); o.stop(end); nodes.push(o, g);
     }
     voiceFor(inst, midi, dur, vel, t, dest) {
-      if (this.preset === 'ensemble') {          // the Philip Glass Ensemble: amplified organs, reeds, soprano, bass
-        if (inst === 'piano') return this.comboOrgan(midi, dur, vel, t, dest);
-        if (inst === 'organ') return this.comboOrgan(midi, dur, vel * 0.85, t, dest, true);
-        if (inst === 'violin') { this.sax(midi, dur, vel, t, dest); return this.flute(midi + 12, dur, vel * 0.45, t, dest); }
-        if (inst === 'bass') return this.ebass(midi, dur, vel, t, dest);
+      if (this.preset === 'ensemble') {          // the Philip Glass Ensemble: organs, reeds, soprano, bass, all recorded
+        const E = this.samples.ens;
+        if (inst === 'voice') return this.choirLine(midi + 12, dur, vel, t, this._syl, 'S');
+        if (inst === 'cello') return this.samples.cello && this.sampleBowed(this.samples.cello, midi, dur, vel, t, dest, 0.5, 0.14);
+        if (!E) { this.loadEnsemble(); return; }
+        if (inst === 'piano') return this.sampleSimple(E.renfull, midi, dur, vel, t, dest, 0.34, 0.06);
+        if (inst === 'organ') return this.sampleSimple(E.ren8, midi, dur, vel, t, dest, 0.34, 0.1, 2000);
+        if (inst === 'violin') { this.sampleSimple(E.saxello, midi, dur, vel, t, dest, 0.42, 0.1); return this.sampleSimple(E.flute, midi + 12, dur, vel * 0.5, t, dest, 0.3, 0.1); }
+        if (inst === 'bass') return this.sampleSimple(E.ebass, midi, dur, vel, t, dest, 0.8, 0.07, 1500);
         return this.choirLine(midi + 12, dur, vel, t, this._syl, 'S');
       }
+      if (inst === 'cello') return this.samples.cello && this.sampleBowed(this.samples.cello, midi, dur, vel, t, dest, 0.5, 0.14);
       if (inst === 'piano') return this.piano(midi, dur, vel, t, dest);
       if (inst === 'organ') return this.organ(midi, dur, vel, t, dest);
       if (inst === 'violin') return this.violin(midi, dur, vel, t, dest);
-      if (inst === 'bass') return this.samples.bass ? this.sampleBass(midi, dur, vel, t, dest) : this.organ(midi + 12, dur, vel * 1.1, t, dest);
+      if (inst === 'bass') return this.samples.bass && this.sampleBass(midi, dur, vel, t, dest);
       if (this.text === 'recording' && this.voice.buffer) return this.voiceNote(midi, dur, vel, t, dest);
       return this.choirLine(midi, dur, vel, t, this._syl);
     }
@@ -756,7 +832,7 @@
     // a quick first decay and a long singing second one, and the soundboard on the bus
     piano(m, dur, vel, t, dest) {
       if (this.samples && this.samples.piano) return this.samplePiano(m, dur, vel, t, dest);
-      if (this.ks) return this.stringPiano(m, dur, vel, t, dest);
+      return;                                                       // recordings only
       const A = this.ctx, f = mtof(m), nodes = [];
       const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.4;
       const bright = Math.min(14000, f * (3 + 14 * vel * vel) + 900);
@@ -814,6 +890,7 @@
     // organ: a principal rank and a gently beating celeste, a puff of air as the pipe speaks, a slow swell
     organ(m, dur, vel, t, dest) {
       if (this.samples && this.samples.organ) return this.sampleOrgan(m, dur, vel, t, dest);
+      return;                                                       // recordings only
       const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.06;
       const g = A.createGain();
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(amp, t + 0.09);
@@ -839,7 +916,8 @@
     // violin: two players a few cents apart, bow hair on the string (filtered noise riding the bow pressure), a bow that
     // bites and then opens up, a small scoop into pitch, and a vibrato that arrives late and never quite repeats
     violin(m, dur, vel, t, dest) {
-      if (this.samples && this.samples.violin) return this.sampleViolin(m, dur, vel, t, dest);
+      if (this.samples && this.samples.violin2) return this.sampleBowed(this.samples.violin2, m, dur, vel, t, dest, 0.42, 0.12);
+      return;                                                       // recordings only
       const A = this.ctx, f = mtof(m), nodes = [], L = dur, amp = vel * 0.05;
       const env = A.createGain(), lp = A.createBiquadFilter();
       lp.type = 'lowpass'; lp.Q.value = 0.8;
@@ -1094,11 +1172,12 @@
     const tt = tempos.map(([step, bpm]) => { const us = Math.round(60000000 / bpm); return [step * E, [0xff, 0x51, 3, (us >>> 16) & 255, (us >>> 8) & 255, us & 255]]; });
     tt.push([0, [0xff, 0x03, 4, 0x41, 0x6c, 0x67, 0x6f]]);       // track name "Algo"
     tracks.push(track(tt));
-    const PROG = { piano: 0, organ: 19, violin: 40, voice: 52, bass: 32, drums: 0, timpani: 47 };
+    const PROG = { piano: 0, organ: 19, violin: 40, voice: 52, bass: 32, drums: 0, timpani: 47, cello: 42 };
     [...PARTS, 'timpani'].forEach(name => {
       const ch = MIDI_CH(name);
       if (name === 'drums' && !events.some(e => e[1] === 'drums')) return;
       if (name === 'timpani' && !events.some(e => e[1] === 'timpani')) return;
+      if (name === 'cello' && !events.some(e => e[1] === 'cello')) return;
       const evs = [[0, [0xc0 | ch, PROG[name]]], [0, [0xff, 0x03, name.length, ...[...name].map(c => c.charCodeAt(0))]]];
       for (const [step, inst, midi, len, vel] of events) if (inst === name) {
         const v = Math.max(1, Math.min(127, Math.round(vel * 127))), n = Math.max(0, Math.min(127, midi));
