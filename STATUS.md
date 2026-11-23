@@ -95,6 +95,15 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   movements, Two in odd. 1960s line uses the progression's tonic (F/E/A natural minor). Select #ag-harmony in the Glass card.
   Tests: work/harmtest.js (original unchanged vs git HEAD, prints progressions), work/metatest.js <base> <secs> <out> <harmony>.
   Fixed: window.Glass export now includes DRUM, MIDI_CH (Web MIDI out of drums/timpani was broken).
+  Choir (2026-11-23): "Voice sings" → "a choir, in chords (recorded)" (ctl.text 'choir'). Samples: github.com/thepok/epic-choir
+  release zips (CC BY 4.0, derived from VocalSet), S/A/T/B × ah/oh/oo × mf, whole tones; 119 mono 80k mp3s in samples/choir
+  (7 MB), manifest.json 'choir', lazy-loaded (Audio.loadChoir) only when chosen. Tool: work/tools/prepchoir.py.
+  Score.choir: satb() voice-leads each chord (ranges S 62–77, A 55–70, T 48–64, B 43–57; bass on the root; all chord tones;
+  min movement), a new breath each bar; movement IV at complexity > 0.6 pulses on the Euclid accents; vowel by the number.
+  Notes are inst 'voice', part 'choir', syl 'S:ah' etc.; Audio.choirNote routes to the voice bus (fader/ride/reverb), pans the
+  sections, zeroes the synthetic voice's 160 Hz boost (restored by voiceNote). 1960s period: a unison A/T section on 'ah'.
+  Knee plays still count with the synthesized voice. Octave dial does not apply to the choir. Credit line on the page.
+  Tests: work/choirscore.js (voicings, determinism), work/choirtest.js <base> <secs> <out> <harmony>.
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
