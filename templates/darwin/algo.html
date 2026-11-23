@@ -21,6 +21,14 @@
   .ag-dial svg.ag-oct .det text { font-size: 30px; font-weight: 600; }
   .ag-dials { display: flex; justify-content: space-around; gap: 12px; flex-wrap: wrap; }
   .ag-dial { text-align: center; }
+  .ag-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 4px 0 6px; }
+  .ag-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border: 1px solid var(--md-sys-color-outline); border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; color: var(--md-sys-color-on-surface-variant); }
+  .ag-chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .ag-chip:has(input:checked) { background: var(--md-sys-color-secondary-container); border-color: transparent; color: var(--md-sys-color-on-secondary-container); }
+  .ag-chip:has(input:checked)::before { content: '✓'; font-size: 13px; }
+  .ag-chip:has(input:focus-visible) { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+  .ag-ens-note { text-align: center; font-size: 12px; opacity: .75; margin: 0 0 8px; }
+  #ag-inst .det.off { opacity: .3; }
   .ag-dial svg { width: 190px; height: 190px; touch-action: none; cursor: grab; outline: none; }
   .ag-dial svg#ag-inst { width: 270px; height: 225px; }
   #ag-inst .det text { font-size: 17px; }
@@ -117,6 +125,16 @@
 
   <section class="ag-card">
     <h3>Instrument and structure</h3>
+    <div class="ag-chips" id="ag-ens" role="group" aria-label="Instruments in the piece">
+      <label class="ag-chip"><input type="checkbox" data-inst="piano" checked>Piano</label>
+      <label class="ag-chip"><input type="checkbox" data-inst="organ" checked>Organ</label>
+      <label class="ag-chip"><input type="checkbox" data-inst="violin" checked>Violin</label>
+      <label class="ag-chip"><input type="checkbox" data-inst="voice" checked>Choir</label>
+      <label class="ag-chip"><input type="checkbox" data-inst="cello" id="ag-cello" checked>Cello</label>
+      <label class="ag-chip"><input type="checkbox" data-inst="bass" checked>Bass</label>
+      <label class="ag-chip" title="Military snare, bass drum, timpani, tam-tam and suspended cymbal, as in the score for Mishima"><input type="checkbox" id="ag-drums" checked>Percussion</label>
+    </div>
+    <p class="ag-read ag-ens-note" id="ag-ens-note">All instruments. Switch any off and the piece is rearranged for the rest: their parts pass to the instruments still playing, written for them.</p>
     <div class="ag-dials">
       <div class="ag-dial">
         <svg id="ag-inst" viewBox="-62 -35 324 270" role="slider" tabindex="0" aria-label="Lead instrument" aria-valuemin="0" aria-valuemax="5">
@@ -173,12 +191,10 @@
       <label><input type="checkbox" id="ag-triplets" checked> Three against two</label>
       <label><input type="checkbox" id="ag-additive"> Additive rhythm</label>
       <label><input type="checkbox" id="ag-knees" checked> Knee plays</label>
-      <label title="Military snare, bass drum, timpani, tam-tam and suspended cymbal, as in the score for Mishima"><input type="checkbox" id="ag-drums" checked> Mishima percussion</label>
-      <label title="A solo cello under the chords: held, walking, then an arpeggio of six against eight"><input type="checkbox" id="ag-cello" checked> Cello</label>
       <label><input type="checkbox" id="ag-engineer"> Sound engineer</label>
     </div>
     <p class="ag-read">The choir is a recording of real singers: by default its four sections hold each chord, voice-led from the last, a new breath each bar; or one section sings the voice's line.
-      Knee plays turn the end of each movement into a spare interlude of organ and a softly pulsing choir. Mishima percussion follows the score's accents: timpani on the roots, a military snare doubling the arpeggios, a tam-tam at each new movement. The sound engineer rides the mix, as Kurt Munkacsi did live with the Glass Ensemble.</p>
+      Knee plays turn the end of each movement into a spare interlude of organ and a softly pulsing choir. The percussion (switched in the instrument chips) follows the score's accents: timpani on the roots, a military snare doubling the arpeggios, a tam-tam at each new movement. The sound engineer rides the mix, as Kurt Munkacsi did live with the Glass Ensemble.</p>
   </section>
 
   <section class="ag-card">
@@ -262,6 +278,6 @@
   </section>
 </div>
 
-<script src="/static/darwin/algo/glass/engine.js?v=14"></script>
-<script src="/static/darwin/algo/glass/ui.js?v=12"></script>
+<script src="/static/darwin/algo/glass/engine.js?v=15"></script>
+<script src="/static/darwin/algo/glass/ui.js?v=13"></script>
 {% endblock %}

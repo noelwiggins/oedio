@@ -147,7 +147,7 @@
       this.step = 0; this.chordCount = -1; this.chordEnd = 0; this.mov = 0; this.inMov = -1;
       // period: 0 = the 1960s (unison lines in fifths, additive rhythm, no harmony), 1 = the 1970s (cycles over slow
       // harmony), 2 = the operas (a repeating ground bass under it all). text: what the voice sings.
-      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false, harmony: 'glass', cello: false };
+      this.ctl = { complexity: 55, lead: 0, tempo: 112, period: 1, rhythm: 'euclid', triplets: true, knees: true, text: 'numbers', intermission: 0, drums: false, harmony: 'glass', cello: false, ens: null };
       this.L = 3; this.dir = 1; this.voiceCycle = 5;
       this.rhy = [2, 2, 2];                       // additive rhythm: how many eighths each note of the phrase lasts
       this.leadPos = 0; this.leadNext = 0; this.count = 0; this.voiceIdx = 0;
@@ -237,7 +237,14 @@
     }
     // every note that starts on this step: [instrument, midi, length in steps, velocity, part, offset (fraction of a step),
     // syllable]. Offsets carry the triplets; syllables are what the voice sings.
+    // the instruments the listener has chosen (ctl.ens: null = all). Parts for instruments that are switched off are
+    // rewritten for the ones that remain, so the piece is rebuilt around them rather than merely muted.
     advance() {
+      const r = this._advance();
+      if (this.ctl.ens && r.notes.length) r.notes = arrange(r.notes, this.ctl.ens);
+      return r;
+    }
+    _advance() {
       const s = this.step;
       if (s >= this.stopAt) { this.finished = true; return { step: s, notes: [], chord: this.chord, newChord: false }; }
       let newChord = false;
@@ -339,9 +346,56 @@
         const root = v[0] - 24 - (v[0] - 24 > 40 ? 12 : 0), fig = { 0: [0, 3], 3: [7, 2], 5: [12, 2], 7: [7, 1] }[k % 8];
         if (fig) push('bass', root + fig[0], fig[1], 0.6, 'ground');
       }
+      // a chosen bass outside the operas: the root, a new stroke each bar
+      if (P === 1 && !resting && this.ctl.ens && this.ctl.ens.includes('bass')) {
+        const st = C.sil.restBeats * 2;
+        if (k >= st && (k - st) % 8 === 0) { let root = v[0] - 24; while (root > 40) root -= 12; while (root < 28) root += 12; push('bass', root, Math.min(8, C.len - k), 0.55, 'ground'); }
+      }
       this.step++;
       return { step: s, notes, chord: C, newChord, resting, count: this.count };
     }
+  }
+
+  // ── arranging for the chosen instruments ──
+  // Each part's role goes to the first chosen instrument in its list, folded into that instrument's range and written
+  // for it: on the piano a held chord becomes a broken-chord figure (as in the left hand of Metamorphosis), the violin
+  // and cello keep at most a double stop, the bass a single line. Pure function of the notes, so replay stays exact.
+  const RANGE = { piano: [33, 96], organ: [36, 91], violin: [55, 96], voice: [45, 79], cello: [36, 72], bass: [28, 55] };
+  const ROLE = {
+    piano: ['piano', 'organ', 'violin', 'cello', 'voice', 'bass'],
+    organ: ['organ', 'voice', 'piano', 'cello', 'violin', 'bass'],
+    violin: ['violin', 'cello', 'voice', 'organ', 'piano', 'bass'],
+    voice: ['voice', 'organ', 'violin', 'cello', 'piano', 'bass'],
+    cello: ['cello', 'bass', 'piano', 'organ', 'violin', 'voice'],
+    bass: ['bass', 'cello', 'piano', 'organ', 'voice', 'violin'],
+  };
+  const fold = (m, inst) => { const [lo, hi] = RANGE[inst]; while (m < lo) m += 12; while (m > hi) m -= 12; return m; };
+  function arrange(notes, ens) {
+    const out = [], moved = {};
+    for (const n of notes) {
+      const inst = n[0];
+      if (!ROLE[inst] || ens.includes(inst)) { out.push(n); continue; }          // lead, percussion and chosen parts stay
+      const to = ROLE[inst].find(x => ens.includes(x)); if (!to) continue;
+      const key = to + '@' + (n[5] || 0);
+      (moved[key] = moved[key] || []).push([fold(n[1], to), n[2], n[3], n[4], n[5] || 0]);
+    }
+    const taken = new Set(out.map(n => n[0] + '@' + (n[5] || 0) + '@' + n[1]));
+    for (const [key, group] of Object.entries(moved)) {
+      const to = key.split('@')[0], off = group[0][4];
+      let pitches = [...new Set(group.map(g => g[0]))].filter(m => !taken.has(to + '@' + off + '@' + m)).sort((a, b) => a - b);
+      if (!pitches.length) continue;
+      const len = Math.max(...group.map(g => g[1])), vel = Math.max(...group.map(g => g[2])) * 0.85, part = group[0][3];
+      if (to === 'piano' && pitches.length >= 2 && len >= 3) {                  // a broken chord across the held length
+        const ch = pitches.slice(0, 4), seq = ch.length > 2 ? [...ch, ...ch.slice(1, -1).reverse()] : ch;
+        for (let i = 0; i < len; i++) out.push(['piano', seq[i % seq.length], 1, vel * (i % seq.length === 0 ? 0.95 : 0.75), part, off + i, null]);
+        continue;
+      }
+      if (to === 'violin' || to === 'cello') pitches = pitches.length > 2 ? [pitches[0], pitches[pitches.length - 1]] : pitches;
+      else if (to === 'bass') pitches = [pitches[0]];
+      else pitches = pitches.slice(-4);
+      for (const m of pitches) out.push([to, m, len, vel, part, off, null]);
+    }
+    return out;
   }
 
   // ── the cello: the chord's floor, as in Glass's string quartets; held in the slow music, walking in the accumulation,
