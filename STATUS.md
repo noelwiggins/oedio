@@ -126,6 +126,10 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   organ part → Renaissance organ 8', violin part → VCSL saxello + VSCO flute an octave up, bass → FreePats Finger Bass YR,
   voice → choir sopranos, cello → Iowa cello. Tools: work/tools/prepens.py. Test: work/nodigital.js <base> <outprefix>
   (wraps every synth and sample function, plays both presets and switches back; synth calls must be {}).
+  Lead dial (2026-11-23): six detents — Piano, Organ, Violin, Choir, Cello, Bass (Glass.LEAD; indices 0–3 unchanged, so old
+  sessions replay the same). INSTRUMENTS stays the score's four layers (the silences iterate it — changing it would change
+  the score). Cello takes the line an octave down, bass two (LEAD_SHIFT). In the Glass Ensemble the same positions map to
+  its recordings. Dial face is a wider SVG (viewBox -62 -35 324 270, centred on 100,100). Test: work/leadtest.js <base>.
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
