@@ -104,6 +104,13 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   sections, zeroes the synthetic voice's 160 Hz boost (restored by voiceNote). 1960s period: a unison A/T section on 'ah'.
   Knee plays still count with the synthesized voice. Octave dial does not apply to the choir. Credit line on the page.
   Tests: work/choirscore.js (voicings, determinism), work/choirtest.js <base> <secs> <out> <harmony>.
+  Synth voice removed (2026-11-23, Noel: robotic): every voice note is sung by the recorded choir. Audio.choirLine picks the
+  section by pitch (S ≥64, A ≥57, T ≥48, else B); knee-play counting (part 'count', passed as play()'s 7th arg) is a soft 'oo';
+  solfège do/so → 'oh', else 'ah'; Glass Ensemble voice → S section an octave up; time-lapse chant → B section. The choir
+  loads after the other samples on every page (silent until loaded). The formant synth (voiceNote/singSyl/vowel) is used only
+  to shape a microphone recording ("your recording, shaped"). UI: picker renamed "Choir" (sings the chords · four parts /
+  sings the line · one section / your recording, shaped), placed under Players; default 'choir'. Old sessions' solfège/vowel
+  show as "the line". Test: work/novoice.js <base> (counts synth vs choir calls across modes; synth must be 0).
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
