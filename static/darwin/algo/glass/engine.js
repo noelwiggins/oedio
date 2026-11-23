@@ -150,7 +150,7 @@
       this.rhy = [2, 2, 2];                       // additive rhythm: how many eighths each note of the phrase lasts
       this.leadPos = 0; this.leadNext = 0; this.count = 0; this.voiceIdx = 0;
       this.pauseUntil = 0; this.intermissions = 0;
-      this.chord = null; this.chords = []; this.silences = [];
+      this.chord = null; this.chords = []; this.silences = []; this.choirPrev = null;
       this.finishing = false; this.finished = false; this.stopAt = Infinity;
     }
     // a new number: the next chord, its length, its arpeggio density, its inversion, and what happens to the phrase
@@ -251,6 +251,7 @@
         const t = this.ctl.text;
         if (t === 'numbers') return String(this.nums.seq[this.voiceIdx++ % 16]);
         if (t === 'solfege') return SOLFEGE[((m % 12) + 12) % 12];
+        if (t === 'choir') return (m - 12 >= 60 ? 'A' : 'T') + ':ah';      // the 1960s line: one section in unison
         return null;
       };
       const push = (inst, m, len, vel, part, off, syl) => notes.push([inst, m, len, vel, part, off || 0, syl || null]);
@@ -323,7 +324,8 @@
           if (hits[p]) { const i = Math.floor(s / CYCLE.violin) * 3 + p; push('violin', tone(v, cell[(i + 1) % C.L]) + 12, 4 + Math.round(3 * (1 - c)), 0.45, 'cycle'); }
         }
         // voice: its cycle is chosen afresh by each number (3–8 eighths); it sings the numbers, or solfège
-        if (on('voice') && c > 0.35) {
+        if (this.ctl.text === 'choir') this.choir(C, k, resting, push);
+        else if (on('voice') && c > 0.35) {
           const vc = C.voiceCycle, p = s % vc;
           if (p === 0 || (c > 0.75 && p === Math.floor(vc / 2))) { const m = tone(v, cell[Math.floor(s / vc) % C.L]); push('voice', m, vc, 0.5, 'cycle', 0, sing(m)); }
         }
@@ -338,6 +340,41 @@
       return { step: s, notes, chord: C, newChord, resting, count: this.count };
     }
   }
+
+  // ── the recorded choir: the chord in four parts, voice-led from the last one, a new breath every bar ──
+  const CHOIR_RANGE = { S: [62, 77], A: [55, 70], T: [48, 64], B: [43, 57] };
+  const CHOIR_VOWEL = ['ah', 'oh', 'ah', 'oo', 'ah', 'oh', 'ah', 'oo', 'ah', 'oh'];      // the number picks the vowel
+  function satb(notes, prev) {
+    const pcs = [...new Set(notes.map(n => n % 12))], root = notes[0] % 12;
+    const cand = sec => { const [lo, hi] = CHOIR_RANGE[sec], out = []; for (let m = lo; m <= hi; m++) if (pcs.includes(m % 12)) out.push(m); return out; };
+    const basses = cand('B').filter(m => m % 12 === root);
+    let best = null, bs = Infinity;
+    for (const b of basses) for (const t of cand('T')) for (const a of cand('A')) for (const s of cand('S')) {
+      if (!(s > a && a > t && t > b) || s - a > 12 || a - t > 12) continue;
+      const have = new Set([s, a, t, b].map(x => x % 12));
+      let cost = 20 * pcs.filter(p => !have.has(p)).length;                    // every chord tone sung
+      cost += prev ? Math.abs(s - prev[0]) + Math.abs(a - prev[1]) + Math.abs(t - prev[2]) + 0.5 * Math.abs(b - prev[3])
+                   : Math.abs(s - 69) + Math.abs(a - 62) + Math.abs(t - 55) + Math.abs(b - 48);
+      if (cost < bs) { bs = cost; best = [s, a, t, b]; }
+    }
+    return best;
+  }
+  Score.prototype.choir = function (C, k, resting, push) {
+    const start = C.sil.restBeats * 2;
+    if (resting || k < start) return;
+    if (!C.satb) { C.satb = satb(CHORDS[C.ci].notes, this.choirPrev); this.choirPrev = C.satb; C.vowel = CHOIR_VOWEL[C.N]; }
+    if (!C.satb) return;
+    const c = this.ctl.complexity / 100, mi = C.mi;
+    let len = 0;
+    if (mi === 3 && c > 0.6 && !C.sil.sustain) {                                // the rhythmic movement: the choir pulses on the accents
+      const acc = euclid(C.density, 8, C.inv);
+      if (acc[k % 8]) { len = 1; while (len < 8 && !acc[(k + len) % 8]) len++; }
+    } else if ((k - start) % 8 === 0) len = 8;
+    len = Math.min(len, C.len - k);
+    if (len <= 0) return;
+    const vel = (0.35 + 0.35 * c) * (mi === 0 || mi === 4 ? 0.75 : 1);
+    ['S', 'A', 'T', 'B'].forEach((sec, i) => push('voice', C.satb[i], len, i === 0 ? vel : vel * 0.9, 'choir', 0, sec + ':' + C.vowel));
+  };
 
   // ── percussion, after the Mishima score: military snare, bass drum, timpani, tam-tam and suspended cymbal ──
   // Nothing random: every stroke follows from the chord, the bar, the movement and the complexity, so replay stays exact.
@@ -483,7 +520,7 @@
       } catch (e) { /* stay with the synthesis */ }
       // the pipe organ, the double bass and the percussion, listed in manifest.json (file, pitch, dynamic)
       try {
-        const man = await (await fetch(base + 'manifest.json?v=2')).json();
+        const man = await (await fetch(base + 'manifest.json?v=3')).json();
         const load = async list => (await Promise.all(list.map(async e => { try { return Object.assign({}, e, { buf: await get(e.f) }); } catch (er) { return null; } }))).filter(Boolean);   // one bad file never silences a whole instrument
         this.samples.organ = await load(man.organ);
         for (const b of this.body.organ) if (b.type === 'peaking') b.gain.value = 0;
@@ -532,6 +569,38 @@
         src.connect(sg); sg.connect(g); src.start(t); src.stop(t + L + 0.5); nodes.push(src, sg); last = src;
       }
       this._done(nodes, last);
+    }
+    // the choir: sections of real singers (epic-choir from VocalSet, CC BY 4.0), loaded only when someone asks for it
+    async loadChoir() {
+      if (this.choirLoading) return; this.choirLoading = true;
+      const A = this.ctx, base = '/static/darwin/algo/glass/samples/';
+      try {
+        const man = await (await fetch(base + 'manifest.json?v=3')).json(), C = {};
+        for (const [sec, vowels] of Object.entries(man.choir)) {
+          C[sec] = {};
+          for (const [vw, list] of Object.entries(vowels)) C[sec][vw] = (await Promise.all(list.map(async e => {
+            try { return Object.assign({}, e, { buf: await A.decodeAudioData(await (await fetch(base + e.f)).arrayBuffer()) }); } catch (er) { return null; }
+          }))).filter(Boolean);
+        }
+        this.samples.choir = C;
+      } catch (e) { this.choirLoading = false; }
+    }
+    choirNote(m, dur, vel, t, syl) {
+      const [sec, vw] = syl.split(':');
+      if (!this.samples.choir) { this.loadChoir(); if (sec === 'S' || sec === 'T') { this._syl = null; this.voiceNote(m, dur, vel * 0.7, t, this.bus.voice); } return; }
+      const A = this.ctx, list = this.samples.choir[sec][vw] && this.samples.choir[sec][vw].length ? this.samples.choir[sec][vw] : this.samples.choir[sec].ah;
+      const e = this.nearest(list, m), nodes = [], src = A.createBufferSource();
+      src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12);
+      const L = Math.max(0.2, dur), len = e.buf.duration / src.playbackRate.value;
+      if (L + 0.4 > len - 0.8) { const [a, b] = this.loopOf(e, 1.4, Math.min(4.6, e.buf.duration - 1)); src.loop = true; src.loopStart = a; src.loopEnd = b; }
+      const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2500 + 7000 * vel; lp.Q.value = 0.4;   // softer singing, darker vowels
+      const g = A.createGain(), amp = 0.5 * (0.35 + 0.65 * vel) * (sec === 'B' ? 1.1 : 1);
+      g.gain.setValueAtTime(amp, t); g.gain.setTargetAtTime(0, t + L, 0.28);                 // the singers' own onset; a breath release
+      const pan = A.createStereoPanner(); pan.pan.value = { S: -0.35, A: 0.35, T: -0.15, B: 0.15 }[sec];   // the sections across the stage
+      src.connect(lp); lp.connect(g); g.connect(pan); pan.connect(this.bus.voice);
+      if (this.body.voice[1].gain.value !== 1) this.body.voice[1].gain.value = 1;            // no chest boost on real voices
+      src.start(t); src.stop(t + L + 1.6); nodes.push(src, lp, g, pan);
+      this._done(nodes, src);
     }
     // percussion from recordings; key is a General MIDI drum key, or a pitch for the timpani
     drum(inst, key, dur, vel, t, dest, roll) {
@@ -631,6 +700,7 @@
       this._syl = syl || null;
       if (this.live > 96) return;
       const at = (name, m) => { m += 12 * (this.oct[name] || 0); while (m < 24) m += 12; while (m > 108) m -= 12; return m; };   // fold, never pile up
+      if (inst === 'voice' && syl && /^[SATB]:/.test(syl)) return this.choirNote(midi, dur, vel, t, syl);
       if (inst === 'drums' || inst === 'timpani') return this.drum(inst, midi, dur, vel, t, this.bus.drums, syl === 'roll');
       if (inst === 'lead') {
         for (let k = 0; k < 4; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(INSTRUMENTS[k], at(INSTRUMENTS[k], midi), dur, vel, t, this.lead[k]);
@@ -790,6 +860,7 @@
     }
     // the voice: a recorded word or phrase, reharmonised; with nothing recorded, a sung vowel
     voiceNote(m, dur, vel, t, dest, soprano) {
+      if (this.body.voice[1].gain.value !== 4) this.body.voice[1].gain.value = 4;             // the synthesized voice keeps its chest
       const V = this.voice, chord = this.currentChord || [m], syl = this._syl;
       const tones = [m]; for (const x of chord) if (tones.length < V.layers && (x % 12) !== (m % 12)) tones.push(x + 12 * Math.round((m - x) / 12));
       for (let r = 0; r < V.reps; r++) {

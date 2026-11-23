@@ -94,6 +94,7 @@
     for (const [k, v] of Object.entries(settings.vol)) if (audio.bus[k]) audio.bus[k].gain.value = v;
     audio.out.gain.value = settings.master; audio.setLead(settings.lead); Object.assign(audio.oct, settings.oct);
     audio.preset = settings.preset; audio.engineer = settings.engineer; audio.text = settings.text;
+    if (settings.text === 'choir') audio.loadChoir();
     Object.assign(audio.voice, { mode: settings.voice.mode, clarity: settings.voice.clarity, layers: settings.voice.layers, speed: settings.voice.speed, reps: settings.voice.reps, trim: settings.voice.trim });
     audio.verbIn.gain.value = settings.voice.reverb; audio.send.voice.gain.value = settings.voice.wet;
     if (pendingVoice) { pendingVoice(audio.ctx); pendingVoice = null; }
@@ -468,7 +469,7 @@
   seg('ag-period', 'period', Number); seg('ag-preset', 'preset'); seg('ag-picture', 'picture');
   for (const [id, key] of [['ag-triplets', 'triplets'], ['ag-knees', 'knees'], ['ag-drums', 'drums'], ['ag-engineer', 'engineer'], ['ag-counting', 'counting']]) $(id).addEventListener('change', () => change(key, $(id).checked));
   $('ag-additive').addEventListener('change', () => change('rhythm', $('ag-additive').checked ? 'additive' : 'euclid'));
-  $('ag-text').addEventListener('change', () => change('text', $('ag-text').value));
+  $('ag-text').addEventListener('change', () => { if ($('ag-text').value === 'choir' && audio) audio.loadChoir(); change('text', $('ag-text').value); });
   $('ag-harmony').addEventListener('change', () => change('harmony', $('ag-harmony').value));
   function syncStyleControls() {
     const set = (name, v) => document.querySelectorAll(`input[name=${name}]`).forEach(r => { r.checked = String(r.value) === String(v); });
@@ -620,7 +621,7 @@
     for (const [s, k, v] of sess.log || []) { if (!replay.has(s)) replay.set(s, []); replay.get(s).push([s, k, v]); }
     $('ag-replay').hidden = false; $('ag-replay').textContent = `Replaying a session: seed ${sess.seed}, ${sess.log.length} control changes`;
     restart(true);
-    if (audio) { audio.setLead(settings.lead); for (const n of G.PARTS) audio.bus[n].gain.value = settings.vol[n]; Object.assign(audio.oct, settings.oct); audio.preset = settings.preset; audio.engineer = settings.engineer; audio.text = settings.text; }
+    if (audio) { audio.setLead(settings.lead); for (const n of G.PARTS) audio.bus[n].gain.value = settings.vol[n]; Object.assign(audio.oct, settings.oct); audio.preset = settings.preset; audio.engineer = settings.engineer; audio.text = settings.text; if (settings.text === 'choir') audio.loadChoir(); }
   }
   // Web MIDI: send the score to a synthesizer or a DAW
   $('ag-midi-connect').onclick = async () => {

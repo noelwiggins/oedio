@@ -6,3 +6,6 @@ Pipe organ: VSCO 2 CE Keys/Organ (quiet third manual, loud pedal), sampled by Si
 Double bass: VSCO 2 CE Solo Contrabass, sustain without vibrato, two dynamics; CC0.
 Percussion: VSCO 2 CE snare (snares on) hits and rolls, bass drum, five timpani hits and rolls (pitches measured: 41.5, 46.8, 49.5, 52.4, 54.6),
             and VSCO 1 tam-tam and suspended/clash cymbals; CC0.
+Choir: epic-choir by thepok (github.com/thepok/epic-choir), derived from VocalSet (Wilkins, Seetharaman, Wahl, Pardo 2018),
+       CC BY 4.0, https://doi.org/10.5281/zenodo.1442513. Used: S/A/T/B sections, vowels ah/oh/oo, mf layer, every whole tone;
+       trimmed (0.08 s onset offset, 6 s, fade) and encoded mono 80 kbps MP3. Further modified here: re-pitched by playback rate.
