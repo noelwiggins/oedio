@@ -140,6 +140,11 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   switched-off instruments are dimmed; a sentence under the chips names the piece ("A piece for piano and violin…").
   Sessions store ens (absent → null). Tests: work/enstest.js (null = git HEAD score; selections deterministic),
   work/ensui.js <base> <png>, work/ensrec.js <base> <out> <list> <secs>.
+  Ensemble winds (2026-11-23, Noel couldn't hear the saxello/flute — they only replaced the sparse violin part): the piano
+  part now sounds Renaissance organ + saxello doubling (folded 58–82); when the lead dial is on the first two positions a
+  flute plays the line an octave up (69–93); the violin part stays saxello + flute. relabel() renames chips, dial and mixer
+  rows per preset (ensemble: Organ & sax, Organ, Sax & flute, Sopranos, Cello, Electric bass). Dial viewBox -95 -35 390 270.
+  Test: work/enscheck2.js <base> <outprefix> (counts per ensemble sample set, labels in both presets).
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
