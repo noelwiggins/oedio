@@ -111,7 +111,9 @@
     { name: 'V · Reduction and stillness', layers: ['organ', 'piano', 'violin'], grow: -1, maxLen: 3, sustain: 0.6, rest: 0.25, slow: 2 },
   ];
   const CHORDS_PER_MOVEMENT = 12, BRIDGE = 2;     // the last two chords of a movement lean into the next
-  const INSTRUMENTS = ['piano', 'organ', 'violin', 'voice'];
+  const INSTRUMENTS = ['piano', 'organ', 'violin', 'voice'];      // the score's four layers (fixed: the silences count them)
+  // the lead dial: every instrument that can carry the line; the cello takes it an octave down, the bass two
+  const LEAD = ['piano', 'organ', 'violin', 'voice', 'cello', 'bass'], LEAD_SHIFT = { cello: -12, bass: -24 };
   const CYCLE = { piano: 5, organ: 7, violin: 11 };
   // the material every phrase is cut from: chord-tone degrees; a phrase of length L is its first L notes, so adding a
   // note keeps everything that was there and the newcomer grows out of the same line
@@ -511,8 +513,8 @@
       const bg = this.boardGain = A.createGain(); bg.gain.value = 0.35; this.bus.piano.connect(this.board); this.board.connect(bg); bg.connect(this.out);
       // the lead line has its own fader per instrument, so the dial can crossfade between them
       this.lead = {}; this.leadOn = 0;
-      for (let i = 0; i < 4; i++) { const g = A.createGain(); g.gain.value = i === 0 ? 1 : 0; g.connect(this.bus[INSTRUMENTS[i]]); this.lead[i] = g; }
-      this.leadRecent = [0, -1, -1, -1];                                  // when each was last faded out
+      for (let i = 0; i < LEAD.length; i++) { const g = A.createGain(); g.gain.value = i === 0 ? 1 : 0; g.connect(this.bus[LEAD[i]]); this.lead[i] = g; }
+      this.leadRecent = LEAD.map((_, i) => i ? -1 : 0);                                  // when each was last faded out
       this.vibrato = A.createOscillator(); this.vibrato.frequency.value = 5.4; this.vibrato.start();
       this.tremulant = A.createOscillator(); this.tremulant.frequency.value = 0.7; this.tremulant.start();   // a slow organ swell
       this.voice = { buffer: null, mode: 'harmonizer', clarity: 0.6, wet: 0.45, layers: 2, speed: 1, reps: 1, trim: [0, 1], base: 57, bands: null };
@@ -768,7 +770,7 @@
     noiseSrc(t) { const s = this.ctx.createBufferSource(); s.buffer = this.noise; s.loop = true; s.start(t, Math.random() * 1.5); return s; }
     setLead(i, at) {                                                      // the dial: a 250 ms crossfade
       const A = this.ctx, t = at || A.currentTime;
-      for (let k = 0; k < 4; k++) {
+      for (let k = 0; k < LEAD.length; k++) {
         const g = this.lead[k].gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
         g.linearRampToValueAtTime(k === i ? 1 : 0, t + 0.25);
         if (k !== i && this.leadOn === k) this.leadRecent[k] = t + 0.3;
@@ -783,7 +785,7 @@
       if (inst === 'voice' && syl && /^[SATB]:/.test(syl)) return this.choirNote(midi, dur, vel, t, syl);
       if (inst === 'drums' || inst === 'timpani') return this.drum(inst, midi, dur, vel, t, this.bus.drums, syl === 'roll');
       if (inst === 'lead') {
-        for (let k = 0; k < 4; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(INSTRUMENTS[k], at(INSTRUMENTS[k], midi), dur, vel, t, this.lead[k]);
+        for (let k = 0; k < LEAD.length; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(LEAD[k], at(LEAD[k], midi + (LEAD_SHIFT[LEAD[k]] || 0)), dur, vel, t, this.lead[k]);
         return;
       }
       this.voiceFor(inst, at(inst, midi), dur, vel, t, this.bus[inst]);
@@ -1200,5 +1202,5 @@
     return new Uint8Array(bytes.buffer);
   }
 
-  window.Glass = { DRUM, MIDI_CH, HARMONY, Numbers, Score, Audio, midiFile, wavBytes, CHORDS, MOVEMENTS, INSTRUMENTS, PARTS, SOLFEGE, CYCLE, LINE, hash, mulberry32, voicing, euclid };
+  window.Glass = { DRUM, MIDI_CH, HARMONY, Numbers, Score, Audio, midiFile, wavBytes, CHORDS, MOVEMENTS, INSTRUMENTS, LEAD, PARTS, SOLFEGE, CYCLE, LINE, hash, mulberry32, voicing, euclid };
 })();

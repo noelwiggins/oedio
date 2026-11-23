@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   const G = window.Glass, $ = id => document.getElementById(id), TAU = Math.PI * 2;
-  const INST = G.INSTRUMENTS, LABEL = { piano: 'Piano', organ: 'Organ', violin: 'Violin', voice: 'Voice sampler' };
+  const INST = G.LEAD, LABEL = { piano: 'Piano', organ: 'Organ', violin: 'Violin', voice: 'Choir', cello: 'Cello', bass: 'Bass' };
 
   // ── state ─────────────────────────────────────────────────────────────
   let audio = null, score = new G.Score(1976), playing = false, timer = null, nextT = 0, startT = 0;
@@ -325,7 +325,7 @@
     if (!C) return;
     const col = G.CHORDS[C.ci].colour, sounding = recent(t, 0.3);
     const parts = [...new Set([...C.layers, INST[settings.lead]])];
-    const CYC = { piano: 5, organ: 7, violin: 11, voice: C.voiceCycle, bass: 8 };
+    const CYC = { piano: 5, organ: 7, violin: 11, voice: C.voiceCycle, bass: 8, cello: 13 };
     const pos = (p, u) => {                              // a zigzag of diagonals across the floor, different for each dancer
       const k = G.PARTS.indexOf(p) + 1, pts = [[0, (k * 0.17) % 1], [1, ((k * 0.17) + 0.5) % 1], [0, ((k * 0.17) + 0.25) % 1], [1, ((k * 0.17) + 0.75) % 1]];
       const seg = u * pts.length, i = Math.floor(seg) % pts.length, f = seg - Math.floor(seg), a = pts[i], b = pts[(i + 1) % pts.length];
@@ -456,7 +456,7 @@
     render();
     return { set: v => set(v, false), get: () => value };
   }
-  const instDial = dial($('ag-inst'), { min: 0, max: 3, value: 0, steps: INST.map(n => LABEL[n]), out: $('ag-inst-out'), onChange: v => change('lead', v) });
+  const instDial = dial($('ag-inst'), { min: 0, max: INST.length - 1, value: 0, steps: INST.map(n => LABEL[n]), out: $('ag-inst-out'), onChange: v => change('lead', v) });
   const octDials = {};
   for (const n of G.PARTS) if ($('ag-oct-' + n)) octDials[n] = dial($('ag-oct-' + n), { min: 0, max: 4, value: 2, steps: ['−2', '−1', '0', '+1', '+2'], onChange: v => change('oct.' + n, v - 2) });
   const cxDial = dial($('ag-cx'), { min: 0, max: 100, value: 55, out: $('ag-cx-out'), onChange: v => change('complexity', Math.round(v)) });
