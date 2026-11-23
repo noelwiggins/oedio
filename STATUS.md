@@ -88,6 +88,13 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   movement, cymbal swell into it. PARTS gains 'drums' (mixer row, no octave dial); timpani notes are inst 'timpani' on the
   drums bus. MIDI: drums ch 10 (GM keys 36/38/40/49/52/55), timpani ch 7 program 47. Polyphony cap 96.
   Tests: work/drumscore.js (deterministic, other parts unchanged), work/mishtest.js <base> <secs> <out> [opera|nodrums].
+  Harmony (2026-11-23): ctl.harmony 'glass' (default; indexes cc so old sessions replay identically) | 'meta1' | 'meta2' |
+  'suite'. CHORDS 4–10 = Em G C C7 E♭ Am F. HARMONY.meta1 seq Em–G–C–C7 ×2 then Em–G–C–E♭ ×2; meta2 Am–F–G ×3 then
+  Am–C–F–G (sources: Chordify/ChordU charts; B and the order of Metamorphosis Five's chords unverified, so Five is not
+  included). A newly chosen progression starts at its first chord (hBase); the suite restarts per movement, One in even
+  movements, Two in odd. 1960s line uses the progression's tonic (F/E/A natural minor). Select #ag-harmony in the Glass card.
+  Tests: work/harmtest.js (original unchanged vs git HEAD, prints progressions), work/metatest.js <base> <secs> <out> <harmony>.
+  Fixed: window.Glass export now includes DRUM, MIDI_CH (Web MIDI out of drums/timpani was broken).
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
