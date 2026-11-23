@@ -111,6 +111,21 @@ All client-side: static/darwin/algo/glass/engine.js (window.Glass) + ui.js (wind
   to shape a microphone recording ("your recording, shaped"). UI: picker renamed "Choir" (sings the chords · four parts /
   sings the line · one section / your recording, shaped), placed under Players; default 'choir'. Old sessions' solfège/vowel
   show as "the line". Test: work/novoice.js <base> (counts synth vs choir calls across modes; synth must be 0).
+  No synthesized instruments at all (2026-11-23, Noel): every part is a recording; until a recording arrives that part is
+  silent, and #ag-loadstat under Play lists what is still loading (Audio.onload). Loading is parallel (manifest v5).
+  Violin = University of Iowa MIS arco pp/mf/ff (samples/violin2, manifest 'violin2'), cello = Iowa arco (samples/cello2,
+  manifest 'cello'): cut from the chromatic runs by work/tools/iowaseg.py (silence split + YIN; Iowa file names are often
+  wrong, so pitch is measured), prepstrings.py picks one note per whole tone on the instrument's home string and stores
+  the autocorrelation-refined root pitch (some notes sit up to 0.4 semitone off). The Iowa notes have no vibrato, so
+  Audio.sampleBowed adds a delayed, growing vibrato (LFO 5.1–6 Hz → detune, 11–18 cents, plus slow drift); short notes
+  (< 0.36 s) are détaché without vibrato; pp↔mf↔ff crossfaded by velocity. The VSCO violin files remain but are unused.
+  Cello part (ctl.cello; Score default false for old sessions, UI default true; checkbox "Cello"; mixer row with octave
+  dial; MIDI program 42 on channel 7; timpani moved to channel 11): held roots in I/III/V (III: root then fifth), walking
+  root/fifth half-bars in II, six-note arpeggio against the bar of eight in IV. Not in the 1960s period or knee plays.
+  Glass Ensemble (samples/ens, manifest 'ens', lazy-loaded via loadEnsemble): piano part → VCSL Renaissance organ Full,
+  organ part → Renaissance organ 8', violin part → VCSL saxello + VSCO flute an octave up, bass → FreePats Finger Bass YR,
+  voice → choir sopranos, cello → Iowa cello. Tools: work/tools/prepens.py. Test: work/nodigital.js <base> <outprefix>
+  (wraps every synth and sample function, plays both presets and switches back; synth calls must be {}).
   Exports: audio (MediaRecorder webm/opus or m4a), video 1280×720 + audio, MIDI (format 1, tempo map), session JSON
   with WAV voice (base64). Web MIDI out. Tests: work/glasstest.js (score), work/algotest.js (browser, fake mic).
 
