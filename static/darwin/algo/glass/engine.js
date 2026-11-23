@@ -493,10 +493,11 @@
       this.voice = { buffer: null, mode: 'harmonizer', clarity: 0.6, wet: 0.45, layers: 2, speed: 1, reps: 1, trim: [0, 1], base: 57, bands: null };
       this.live = 0;                                                      // notes sounding, for a polyphony cap
       this.oct = { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0 };     // each instrument's octave dial
-      this.preset = 'chamber'; this.engineer = false; this.text = 'numbers';
+      this.preset = 'chamber'; this.engineer = false; this.text = 'choir';
       this.ks = false;                                                    // the physically modelled piano, once its worklet has loaded
       if (A.audioWorklet) A.audioWorklet.addModule('/static/darwin/algo/glass/strings-worklet.js?v=1').then(() => { this.ks = true; }).catch(() => {});
-      this.samples = { piano: null, violin: null, organ: null, bass: null, drums: null }; this.rr = 0; this.loadSamples();
+      this.samples = { piano: null, violin: null, organ: null, bass: null, drums: null }; this.rr = 0;
+      this.loadSamples().then(() => this.loadChoir());     // the choir is the voice now; it follows the other recordings
     }
     // ── recorded instruments: a Yamaha grand (Salamander, CC BY 3.0) and a solo violin (VSCO 2 CE, CC0) ──
     // Until they have loaded, the modelled piano and synthesized violin play instead.
@@ -587,7 +588,7 @@
     }
     choirNote(m, dur, vel, t, syl) {
       const [sec, vw] = syl.split(':');
-      if (!this.samples.choir) { this.loadChoir(); if (sec === 'S' || sec === 'T') { this._syl = null; this.voiceNote(m, dur, vel * 0.7, t, this.bus.voice); } return; }
+      if (!this.samples.choir) { this.loadChoir(); return; }                       // silent for the few seconds until the singers arrive
       const A = this.ctx, list = this.samples.choir[sec][vw] && this.samples.choir[sec][vw].length ? this.samples.choir[sec][vw] : this.samples.choir[sec].ah;
       const e = this.nearest(list, m), nodes = [], src = A.createBufferSource();
       src.buffer = e.buf; src.playbackRate.value = Math.pow(2, (m - e.m) / 12);
@@ -601,6 +602,14 @@
       if (this.body.voice[1].gain.value !== 1) this.body.voice[1].gain.value = 1;            // no chest boost on real voices
       src.start(t); src.stop(t + L + 1.6); nodes.push(src, lp, g, pan);
       this._done(nodes, src);
+    }
+    // any single voice line (the numbers, solfège, the knee plays' counting, the ensemble soprano) is sung by one
+    // section of the recorded choir; the synthesized voice remains only to shape a recording made at the microphone
+    choirLine(m, dur, vel, t, syl, sec) {
+      sec = sec || (m >= 64 ? 'S' : m >= 57 ? 'A' : m >= 48 ? 'T' : 'B');
+      const counting = this._part === 'count';                     // the knee plays' count: a soft pulse on 'oo'
+      const vw = counting ? 'oo' : syl && /^(do|so|sol)$/i.test(syl) ? 'oh' : 'ah';
+      return this.choirNote(m, dur, counting ? vel * 0.6 : vel * 0.8, t, sec + ':' + vw);
     }
     // percussion from recordings; key is a General MIDI drum key, or a pitch for the timpani
     drum(inst, key, dur, vel, t, dest, roll) {
@@ -696,8 +705,8 @@
       this.leadOn = i;
     }
     // play one score note; returns nothing. inst may be 'lead' (goes to the dial's instrument, and to the one fading out)
-    play(inst, midi, dur, vel, t, syl) {
-      this._syl = syl || null;
+    play(inst, midi, dur, vel, t, syl, part) {
+      this._syl = syl || null; this._part = part || null;
       if (this.live > 96) return;
       const at = (name, m) => { m += 12 * (this.oct[name] || 0); while (m < 24) m += 12; while (m > 108) m -= 12; return m; };   // fold, never pile up
       if (inst === 'voice' && syl && /^[SATB]:/.test(syl)) return this.choirNote(midi, dur, vel, t, syl);
@@ -720,13 +729,14 @@
         if (inst === 'organ') return this.comboOrgan(midi, dur, vel * 0.85, t, dest, true);
         if (inst === 'violin') { this.sax(midi, dur, vel, t, dest); return this.flute(midi + 12, dur, vel * 0.45, t, dest); }
         if (inst === 'bass') return this.ebass(midi, dur, vel, t, dest);
-        return this.voiceNote(midi + 12, dur, vel, t, dest, true);
+        return this.choirLine(midi + 12, dur, vel, t, this._syl, 'S');
       }
       if (inst === 'piano') return this.piano(midi, dur, vel, t, dest);
       if (inst === 'organ') return this.organ(midi, dur, vel, t, dest);
       if (inst === 'violin') return this.violin(midi, dur, vel, t, dest);
       if (inst === 'bass') return this.samples.bass ? this.sampleBass(midi, dur, vel, t, dest) : this.organ(midi + 12, dur, vel * 1.1, t, dest);
-      return this.voiceNote(midi, dur, vel, t, dest);
+      if (this.text === 'recording' && this.voice.buffer) return this.voiceNote(midi, dur, vel, t, dest);
+      return this.choirLine(midi, dur, vel, t, this._syl);
     }
     // the sound engineer (Kurt Munkacsi mixed the Glass Ensemble live, as one of its members): at each chord the
     // numbers ease each part's level and place somewhere new, slowly

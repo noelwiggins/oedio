@@ -13,9 +13,9 @@
   const tempoLog = [[0, 112]];
   const settings = { seed: 1976, complexity: 55, tempo: 112, lead: 0, master: 0.8, duration: 0,
     vol: { piano: 0.8, organ: 0.7, violin: 0.75, voice: 0.8, bass: 0.75, drums: 0.7 }, oct: { piano: 0, organ: 0, violin: 0, voice: 0, bass: 0, drums: 0 },
-    period: 1, rhythm: 'euclid', triplets: true, knees: true, drums: true, harmony: 'glass', text: 'numbers', preset: 'chamber', engineer: false, picture: 'score', counting: true, intermission: 0, concert: false,
+    period: 1, rhythm: 'euclid', triplets: true, knees: true, drums: true, harmony: 'glass', text: 'choir', preset: 'chamber', engineer: false, picture: 'score', counting: true, intermission: 0, concert: false,
     voice: { mode: 'harmonizer', clarity: 0.6, wet: 0.45, reverb: 0.35, layers: 2, speed: 1, reps: 1, loop: false, trim: [0, 1] } };
-  score.ctl.drums = settings.drums;              // a new page plays the percussion; the Score's own default stays off for old sessions
+  score.ctl.drums = settings.drums; score.ctl.text = settings.text;              // a new page plays the percussion; the Score's own default stays off for old sessions
   let midiOut = null;
   const stepDur = () => 60 / score.ctl.tempo / 2;
 
@@ -70,11 +70,12 @@
         // in the time-lapse picture, a low chanted voice enters on the slow chords
         const C = r.chord;
         if (settings.picture === 'timelapse' && !C.knee && (C.mi === 2 || C.mi === 4 || C.sil.sustain)) {
-          audio._syl = null; audio.singSyl(C.v[0] - 24, C.len * d * 0.9, 0.55, nextT, audio.bus.voice, C.mi === 4 ? 'oh' : 'ah', false);
+          let m = C.v[0] - 24; while (m < 43) m += 12;                       // the choir's basses, low
+          audio.choirNote(m, C.len * d * 0.9, 0.5, nextT, 'B:' + (C.mi === 4 ? 'oh' : 'ah'));
         }
       }
       for (const [inst, midi, len, vel, part, off, syl] of r.notes) {
-        audio.play(inst, midi, len * d, vel, nextT + (off || 0) * d, syl);
+        audio.play(inst, midi, len * d, vel, nextT + (off || 0) * d, syl, part);
         const name = inst === 'lead' ? INST[settings.lead] : inst;
         let om = midi + 12 * (settings.oct[name] || 0); while (om < 24) om += 12; while (om > 108) om -= 12;
         noteLog.push([step + (off || 0), name, om, len, vel]); if (noteLog.length > 200000) noteLog.splice(0, 50000);
@@ -475,7 +476,7 @@
     const set = (name, v) => document.querySelectorAll(`input[name=${name}]`).forEach(r => { r.checked = String(r.value) === String(v); });
     set('ag-period', settings.period); set('ag-preset', settings.preset); set('ag-picture', settings.picture);
     $('ag-triplets').checked = settings.triplets; $('ag-drums').checked = settings.drums; $('ag-knees').checked = settings.knees; $('ag-engineer').checked = settings.engineer;
-    $('ag-counting').checked = settings.counting; $('ag-additive').checked = settings.rhythm === 'additive'; $('ag-text').value = settings.text; $('ag-harmony').value = settings.harmony;
+    $('ag-counting').checked = settings.counting; $('ag-additive').checked = settings.rhythm === 'additive'; $('ag-text').value = ['choir', 'recording'].includes(settings.text) ? settings.text : 'numbers';   // older sessions' solfège and vowel are the line too $('ag-harmony').value = settings.harmony;
   }
   // concert: four hours, an intermission after each full cycle, full screen, nothing on screen but the picture
   $('ag-concert').onclick = () => {
@@ -521,7 +522,7 @@
     src.onended = () => { preview = null; $('ag-vplay').textContent = 'Play'; src.disconnect(); };
     preview = src; $('ag-vplay').textContent = 'Stop';
   };
-  $('ag-vclear').onclick = () => { if (audio) audio.setVoice(null); log.push([score.step, 'voice.cleared', 1]); drawWave(); $('ag-voice-status').textContent = 'No recording: the voice sampler sings a vowel.'; };
+  $('ag-vclear').onclick = () => { if (audio) audio.setVoice(null); log.push([score.step, 'voice.cleared', 1]); drawWave(); $('ag-voice-status').textContent = 'No recording: the choir sings.'; };
   $('ag-loop').onchange = () => change('voice.loop', $('ag-loop').checked);
   for (const [id, k] of [['ag-trim0', 0], ['ag-trim1', 1]]) $(id).addEventListener('input', () => {
     const t = [+$('ag-trim0').value, +$('ag-trim1').value]; if (t[1] - t[0] < 0.02) return;

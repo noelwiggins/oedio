@@ -154,16 +154,16 @@
         <label title="Piano, organ, violin, choir"><input type="radio" name="ag-preset" value="chamber" checked>Chamber</label>
         <label title="Amplified combo organs, soprano saxophone and flute, soprano voice, electric bass"><input type="radio" name="ag-preset" value="ensemble">Glass Ensemble</label>
       </span></div>
+    <div class="ag-row"><span class="ag-read" style="width:64px">Choir</span>
+      <select class="ag-sel" id="ag-text" title="The recorded choir (real singers) sings the chords in four parts, or one section sings the voice's line">
+        <option value="choir">sings the chords · four parts</option><option value="numbers">sings the line · one section</option><option value="recording">your recording, shaped</option>
+      </select></div>
     <div class="ag-row"><span class="ag-read" style="width:64px">Harmony</span>
       <select class="ag-sel" id="ag-harmony" title="Which chord progression the numbers walk through; a change takes effect at the next chord">
         <option value="glass">Fm – D♭ – A – B7</option>
         <option value="meta1">Metamorphosis One · Em – G – C – C7 / E♭</option>
         <option value="meta2">Metamorphosis Two · Am – F – G</option>
         <option value="suite">Metamorphosis suite · One and Two by turns</option>
-      </select></div>
-    <div class="ag-row"><span class="ag-read" style="width:64px">Voice sings</span>
-      <select class="ag-sel" id="ag-text">
-        <option value="numbers">the numbers</option><option value="solfege">solfège</option><option value="choir">a choir, in chords (recorded)</option><option value="vowel">a vowel</option><option value="recording">your recording</option>
       </select></div>
     <div class="ag-checks">
       <label><input type="checkbox" id="ag-triplets" checked> Three against two</label>
@@ -172,8 +172,8 @@
       <label title="Military snare, bass drum, timpani, tam-tam and suspended cymbal, as in the score for Mishima"><input type="checkbox" id="ag-drums" checked> Mishima percussion</label>
       <label><input type="checkbox" id="ag-engineer"> Sound engineer</label>
     </div>
-    <p class="ag-read">The voice sings the sixteen digits as they come round, as the chorus counts and sings solfège in <i>Einstein on the Beach</i>.
-      Knee plays turn the end of each movement into a spare interlude of organ and counting voice. Mishima percussion follows the score's accents: timpani on the roots, a military snare doubling the arpeggios, a tam-tam at each new movement. The sound engineer rides the mix, as Kurt Munkacsi did live with the Glass Ensemble.</p>
+    <p class="ag-read">The choir is a recording of real singers: by default its four sections hold each chord, voice-led from the last, a new breath each bar; or one section sings the voice's line.
+      Knee plays turn the end of each movement into a spare interlude of organ and a softly pulsing choir. Mishima percussion follows the score's accents: timpani on the roots, a military snare doubling the arpeggios, a tam-tam at each new movement. The sound engineer rides the mix, as Kurt Munkacsi did live with the Glass Ensemble.</p>
   </section>
 
   <section class="ag-card">
@@ -185,7 +185,7 @@
       <span>Violin · 11</span><input type="range" id="ag-vol-violin" min="0" max="1" step="0.01" value="0.75"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-violin" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="violin octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
       <span>Bass · ground</span><input type="range" id="ag-vol-bass" min="0" max="1" step="0.01" value="0.75"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-bass" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="bass octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
       <span>Drums · Mishima</span><input type="range" id="ag-vol-drums" min="0" max="1" step="0.01" value="0.7"><span class="ag-dial"></span>
-      <span>Voice · 3–8</span><input type="range" id="ag-vol-voice" min="0" max="1" step="0.01" value="0.8"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-voice" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="voice octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
+      <span>Choir</span><input type="range" id="ag-vol-voice" min="0" max="1" step="0.01" value="0.8"><span class="ag-dial"><svg class="ag-oct" id="ag-oct-voice" viewBox="-12 -12 224 224" role="slider" tabindex="0" aria-label="voice octave" aria-valuemin="0" aria-valuemax="4"><circle class="face" cx="100" cy="100" r="46"/><g class="mark"><line x1="100" y1="100" x2="100" y2="62"/></g><g class="det"><circle cx="50.5" cy="149.5" r="11"/><text x="33.5" y="172.5" text-anchor="middle">−2</text></g><g class="det"><circle cx="35.3" cy="73.2" r="11"/><text x="13.2" y="70.0" text-anchor="middle">−1</text></g><g class="det"><circle cx="100.0" cy="30.0" r="11"/><text x="100.0" y="12.0" text-anchor="middle">0</text></g><g class="det"><circle cx="164.7" cy="73.2" r="11"/><text x="186.8" y="70.0" text-anchor="middle">+1</text></g><g class="det"><circle cx="149.5" cy="149.5" r="11"/><text x="166.5" y="172.5" text-anchor="middle">+2</text></g></svg></span>
     </div>
     <p class="ag-read" style="margin-top:10px">Each instrument repeats on its own cycle of eighth notes against one clock; the lead line plays on whichever instrument the dial points to. The octave dials move an instrument up or down as much as two octaves, lead line included.</p>
   </section>
@@ -227,7 +227,7 @@
       <span>Speed <output id="ag-speed-out">1.00×</output></span><input type="range" id="ag-speed" min="0.5" max="2" step="0.05" value="1">
       <span>Repetitions</span><input type="range" id="ag-reps" min="1" max="4" step="1" value="1">
     </div>
-    <div class="ag-read" id="ag-voice-status">No recording: the voice sampler sings a vowel.</div>
+    <div class="ag-read" id="ag-voice-status">No recording: the choir sings.</div>
   </section>
 
   <section class="ag-card">
@@ -254,6 +254,6 @@
   </section>
 </div>
 
-<script src="/static/darwin/algo/glass/engine.js?v=10"></script>
-<script src="/static/darwin/algo/glass/ui.js?v=8"></script>
+<script src="/static/darwin/algo/glass/engine.js?v=11"></script>
+<script src="/static/darwin/algo/glass/ui.js?v=9"></script>
 {% endblock %}
