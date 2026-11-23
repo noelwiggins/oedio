@@ -840,6 +840,11 @@
       if (inst === 'drums' || inst === 'timpani') return this.drum(inst, midi, dur, vel, t, this.bus.drums, syl === 'roll');
       if (inst === 'lead') {
         for (let k = 0; k < LEAD.length; k++) if (k === this.leadOn || this.leadRecent[k] > t) this.voiceFor(LEAD[k], at(LEAD[k], midi + (LEAD_SHIFT[LEAD[k]] || 0)), dur, vel, t, this.lead[k]);
+        // in the ensemble a flute floats the line an octave above the organs
+        if (this.preset === 'ensemble' && this.samples.ens && (this.leadOn === 0 || this.leadOn === 1)) {
+          let f = at(LEAD[this.leadOn], midi) + 12; while (f > 93) f -= 12; while (f < 69) f += 12;
+          this.sampleSimple(this.samples.ens.flute, f, dur, vel * 0.45, t, this.lead[this.leadOn], 0.3, 0.08);
+        }
         return;
       }
       this.voiceFor(inst, at(inst, midi), dur, vel, t, this.bus[inst]);
@@ -856,7 +861,11 @@
         if (inst === 'voice') return this.choirLine(midi + 12, dur, vel, t, this._syl, 'S');
         if (inst === 'cello') return this.samples.cello && this.sampleBowed(this.samples.cello, midi, dur, vel, t, dest, 0.5, 0.14);
         if (!E) { this.loadEnsemble(); return; }
-        if (inst === 'piano') return this.sampleSimple(E.renfull, midi, dur, vel, t, dest, 0.34, 0.06);
+        if (inst === 'piano') {                     // the ensemble's signature: soprano sax doubling the organ's arpeggios
+          let s = midi; while (s < 58) s += 12; while (s > 82) s -= 12;
+          this.sampleSimple(E.saxello, s, dur, vel * 0.7, t, dest, 0.34, 0.07);
+          return this.sampleSimple(E.renfull, midi, dur, vel, t, dest, 0.3, 0.06);
+        }
         if (inst === 'organ') return this.sampleSimple(E.ren8, midi, dur, vel, t, dest, 0.34, 0.1, 2000);
         if (inst === 'violin') { this.sampleSimple(E.saxello, midi, dur, vel, t, dest, 0.42, 0.1); return this.sampleSimple(E.flute, midi + 12, dur, vel * 0.5, t, dest, 0.3, 0.1); }
         if (inst === 'bass') return this.sampleSimple(E.ebass, midi, dur, vel, t, dest, 0.8, 0.07, 1500);

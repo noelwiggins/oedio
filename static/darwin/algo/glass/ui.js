@@ -36,7 +36,7 @@
       if (k[0] === 'ens' || k[0] === 'cello') showEns();
       if (k[0] === 'text' && audio) audio.text = value;
     }
-    else if (k[0] === 'preset') { settings.preset = value; if (audio) { audio.preset = value; if (value === 'ensemble') audio.loadEnsemble(); } }
+    else if (k[0] === 'preset') { settings.preset = value; relabel(); if (audio) { audio.preset = value; if (value === 'ensemble') audio.loadEnsemble(); } }
     else if (k[0] === 'engineer') { settings.engineer = value; if (audio) { audio.engineer = value; if (score.chord) audio.rideMix(score.chord, at || audio.ctx.currentTime); } }
     else if (k[0] === 'picture' || k[0] === 'counting') { settings[k[0]] = value; }
     else if (k[0] === 'oct') { settings.oct[k[1]] = value; if (audio) audio.oct[k[1]] = value; }
@@ -457,12 +457,28 @@
     render();
     return { set: v => set(v, false), get: () => value };
   }
-  const instDial = dial($('ag-inst'), { min: 0, max: INST.length - 1, value: 0, steps: INST.map(n => LABEL[n]), out: $('ag-inst-out'),
+  const instSteps = INST.map(n => LABEL[n]);
+  const instDial = dial($('ag-inst'), { min: 0, max: INST.length - 1, value: 0, steps: instSteps, out: $('ag-inst-out'),
     onChange: v => { if (!chosen().includes(INST[v])) setInstrument(INST[v], true); change('lead', v); } });
   // ── which instruments play. null = the full ensemble (the original piece); otherwise the list the piece is arranged for.
   // The cello stays an optional extra of the full ensemble, as before, so switching it alone does not rearrange anything.
   const CORE = ['piano', 'organ', 'violin', 'voice', 'bass'];
   const chosen = () => settings.ens ? settings.ens.slice() : [...CORE, ...(settings.cello ? ['cello'] : [])];
+  // the names follow the players: in the Glass Ensemble each part is played by the ensemble's own instruments
+  const NAMES = {
+    chamber: { piano: 'Piano', organ: 'Organ', violin: 'Violin', voice: 'Choir', cello: 'Cello', bass: 'Bass' },
+    ensemble: { piano: 'Organ & sax', organ: 'Organ', violin: 'Sax & flute', voice: 'Sopranos', cello: 'Cello', bass: 'Electric bass' },
+  };
+  const MIXTAG = { piano: ' · 5', organ: ' · 7', violin: ' · 11', voice: '', cello: '', bass: '' };
+  function relabel() {
+    const N = NAMES[settings.preset] || NAMES.chamber;
+    Object.assign(LABEL, N); INST.forEach((n, i) => { instSteps[i] = N[n]; });
+    $('ag-inst').querySelectorAll('.det text').forEach((tx, i) => { tx.textContent = N[INST[i]]; });
+    $('ag-inst-out').textContent = N[INST[settings.lead]];
+    document.querySelectorAll('#ag-ens input[data-inst]').forEach(i => { i.nextSibling.textContent = N[i.dataset.inst]; });
+    for (const n of Object.keys(N)) { const r = $('ag-vol-' + n); if (r && r.previousElementSibling) r.previousElementSibling.textContent = N[n] + (n === 'bass' && settings.preset !== 'ensemble' ? ' · ground' : MIXTAG[n]); }
+    showEns();
+  }
   function showEns() {
     const on = chosen();
     document.querySelectorAll('#ag-ens input[data-inst]').forEach(i => { i.checked = on.includes(i.dataset.inst); });
@@ -509,7 +525,7 @@
   function syncStyleControls() {
     const set = (name, v) => document.querySelectorAll(`input[name=${name}]`).forEach(r => { r.checked = String(r.value) === String(v); });
     set('ag-period', settings.period); set('ag-preset', settings.preset); set('ag-picture', settings.picture);
-    $('ag-triplets').checked = settings.triplets; $('ag-drums').checked = settings.drums; showEns(); $('ag-knees').checked = settings.knees; $('ag-engineer').checked = settings.engineer;
+    $('ag-triplets').checked = settings.triplets; $('ag-drums').checked = settings.drums; relabel(); $('ag-knees').checked = settings.knees; $('ag-engineer').checked = settings.engineer;
     $('ag-counting').checked = settings.counting; $('ag-additive').checked = settings.rhythm === 'additive'; $('ag-text').value = ['choir', 'recording'].includes(settings.text) ? settings.text : 'numbers';   // older sessions' solfège and vowel are the line too $('ag-harmony').value = settings.harmony;
   }
   // concert: four hours, an intermission after each full cycle, full screen, nothing on screen but the picture

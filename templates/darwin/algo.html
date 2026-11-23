@@ -30,7 +30,7 @@
   .ag-ens-note { text-align: center; font-size: 12px; opacity: .75; margin: 0 0 8px; }
   #ag-inst .det.off { opacity: .3; }
   .ag-dial svg { width: 190px; height: 190px; touch-action: none; cursor: grab; outline: none; }
-  .ag-dial svg#ag-inst { width: 270px; height: 225px; }
+  .ag-dial svg#ag-inst { width: 320px; height: 222px; max-width: 100%; }
   #ag-inst .det text { font-size: 17px; }
   .ag-dial svg:focus-visible .face { stroke: var(--md-sys-color-primary); stroke-width: 2; }
   .ag-dial .face { fill: var(--md-sys-color-surface-container-high); stroke: var(--md-sys-color-outline-variant); }
@@ -137,7 +137,7 @@
     <p class="ag-read ag-ens-note" id="ag-ens-note">All instruments. Switch any off and the piece is rearranged for the rest: their parts pass to the instruments still playing, written for them.</p>
     <div class="ag-dials">
       <div class="ag-dial">
-        <svg id="ag-inst" viewBox="-62 -35 324 270" role="slider" tabindex="0" aria-label="Lead instrument" aria-valuemin="0" aria-valuemax="5">
+        <svg id="ag-inst" viewBox="-95 -35 390 270" role="slider" tabindex="0" aria-label="Lead instrument" aria-valuemin="0" aria-valuemax="5">
           <circle class="face" cx="100" cy="100" r="62"/>
           <g class="mark"><line x1="100" y1="100" x2="100" y2="50"/></g>
           <g class="det"><circle cx="40.6" cy="159.4" r="8"/><text x="20.8" y="184.2" text-anchor="end">Piano</text></g>
@@ -174,7 +174,7 @@
     <div class="ag-row"><span class="ag-read" style="width:64px">Players</span>
       <span class="ag-seg">
         <label title="Piano, organ, violin, choir"><input type="radio" name="ag-preset" value="chamber" checked>Chamber</label>
-        <label title="Amplified combo organs, soprano saxophone and flute, soprano voice, electric bass"><input type="radio" name="ag-preset" value="ensemble">Glass Ensemble</label>
+        <label title="Organs doubled by a soprano saxophone (saxello), a flute above the line, sopranos, electric bass"><input type="radio" name="ag-preset" value="ensemble">Glass Ensemble</label>
       </span></div>
     <div class="ag-row"><span class="ag-read" style="width:64px">Choir</span>
       <select class="ag-sel" id="ag-text" title="The recorded choir (real singers) sings the chords in four parts, or one section sings the voice's line">
@@ -278,6 +278,6 @@
   </section>
 </div>
 
-<script src="/static/darwin/algo/glass/engine.js?v=15"></script>
-<script src="/static/darwin/algo/glass/ui.js?v=13"></script>
+<script src="/static/darwin/algo/glass/engine.js?v=16"></script>
+<script src="/static/darwin/algo/glass/ui.js?v=14"></script>
 {% endblock %}
