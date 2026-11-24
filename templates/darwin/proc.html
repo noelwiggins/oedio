@@ -1,0 +1,83 @@
+{% extends "darwin/base.html" %}
+{% block title %}{{ page.title }} — DARWIN{% endblock %}
+{% block head %}
+<style>
+  .ag-stage { position: relative; background: #07090c; border-radius: var(--dw-radius); overflow: hidden; aspect-ratio: 16 / 9; width: 100%; border: 1px solid var(--md-sys-color-outline-variant); }
+  .ag-stage:fullscreen { border-radius: 0; border: 0; aspect-ratio: auto; height: 100%; }
+  .ag-stage canvas { display: block; width: 100%; height: 100%; }
+  .ag-stage .ag-over { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; }
+  .ag-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); margin-top: 16px; }
+  .ag-card { background: var(--md-sys-color-surface-container); border-radius: var(--dw-radius); padding: 16px 18px; border: 1px solid var(--md-sys-color-outline-variant); }
+  .ag-card h3 { margin: 0 0 12px; font: 500 14px/1.3 "IBM Plex Sans", sans-serif; letter-spacing: .02em; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; }
+  .ag-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+  .ag-row label { font-size: 13px; color: var(--md-sys-color-on-surface-variant); display: flex; align-items: center; gap: 8px; }
+  .ag-row input[type=range] { width: 150px; accent-color: var(--md-sys-color-primary); }
+  .ag-mix { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
+  .ag-mix input { width: 100%; accent-color: var(--md-sys-color-primary); }
+  .ag-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 4px 0 6px; }
+  .ag-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border: 1px solid var(--md-sys-color-outline); border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; user-select: none; color: var(--md-sys-color-on-surface-variant); }
+  .ag-chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .ag-chip:has(input:checked) { background: var(--md-sys-color-secondary-container); border-color: transparent; color: var(--md-sys-color-on-secondary-container); }
+  .ag-chip:has(input:checked)::before { content: '✓'; font-size: 13px; }
+  .ag-chip:has(input:focus-visible) { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+  .ag-read { font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin: 4px 0; }
+  .ag-read b { color: var(--md-sys-color-on-surface); font-weight: 500; }
+  .ag-seg { display: inline-flex; border: 1px solid var(--md-sys-color-outline); border-radius: 999px; overflow: hidden; }
+  .ag-seg label { padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--md-sys-color-on-surface); }
+  .ag-seg input { display: none; }
+  .ag-seg label:has(input:checked) { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+  .btn.on { background: var(--dw-amber); color: #2a1d00; }
+  .ag-stage.hide-cursor:fullscreen { cursor: none; }
+  .ag-mix { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; align-items: center; font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
+  .pr-note { text-align: center; font-size: 12px; opacity: .75; margin: 2px 0 8px; }
+  .pr-credits { font-size: 12px; opacity: .7; margin-top: 18px; }
+</style>
+{% endblock %}
+{% block content %}
+<p class="eyebrow">{{ page.eyebrow }}</p>
+<h1 class="page">{{ page.title }}</h1>
+<p class="lede">{{ page.lede }}</p>
+
+<div class="ag-stage" id="pr-stage">
+  <canvas id="pr-canvas" aria-label="{{ page.canvas }}"></canvas>
+  <div class="ag-over"><button class="btn tonal" id="pr-full" title="Full screen">Full screen</button></div>
+</div>
+<div class="ag-row" style="margin-top:12px">
+  <button class="btn" id="pr-play">Play</button>
+  <button class="btn tonal" id="pr-restart" title="A new seed: new patterns, a new performance">New performance</button>
+  <span class="ag-read">Seed <b id="pr-seed"></b></span>
+  <span class="ag-read" id="pr-loadstat" style="font-size:12px;opacity:.75"></span>
+</div>
+<p class="ag-read" id="pr-replay" hidden></p>
+
+<div class="ag-grid">
+  <section class="ag-card">
+    <h3>Process</h3>
+    <div id="pr-controls"></div>
+  </section>
+  <section class="ag-card">
+    <h3>Instruments</h3>
+    <div class="ag-chips" id="pr-chips" role="group" aria-label="Instruments in the piece"></div>
+    <p class="ag-read pr-note" id="pr-note"></p>
+    <div class="ag-mix" id="pr-mixer"></div>
+  </section>
+  <section class="ag-card">
+    <h3>Record and export</h3>
+    <div class="ag-row">
+      <button class="btn tonal" id="pr-rec">Record audio</button>
+      <button class="btn tonal" id="pr-midi">MIDI file</button>
+    </div>
+    <div class="ag-row">
+      <button class="btn tonal" id="pr-save">Save session</button>
+      <label class="btn tonal" style="cursor:pointer">Load session<input type="file" id="pr-load" accept="application/json" hidden></label>
+    </div>
+    <p class="ag-read">Every control change is applied on a beat and logged by beat, so a saved session plays back exactly as you heard it.</p>
+    <p class="ag-read">{{ page.about }}</p>
+  </section>
+</div>
+<p class="ag-read pr-credits">{{ page.credits }}</p>
+{% endblock %}
+{% block scripts %}
+<script src="/static/darwin/algo/proc/core.js?v=3"></script>
+<script src="/static/darwin/algo/proc/{{ page.script }}.js?v=3"></script>
+{% endblock %}

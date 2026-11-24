@@ -332,6 +332,41 @@ def algo_music():
     return render_template("darwin/algo.html")
 
 
+PROC_PAGES = {
+    "algoriley": dict(
+        title="AlgoRiley", script="riley", eyebrow="AlgoRiley · music by process, after Terry Riley",
+        lede="Three of Terry Riley's processes, played on recorded instruments. In C: a steady pulse and a book of short "
+             "patterns; every player repeats each pattern for as long as they like and moves on in their own time, never "
+             "straying far from the others, until everyone reaches the end. The time-lag accumulator: a modal organ "
+             "ostinato and drone while a soprano sax improvises into two tape loops that stack its phrases into canons. "
+             "New Albion: a piano retuned in just intonation, ringing under the pedal. The patterns are written here by "
+             "rule, not taken from Riley's scores; the processes are his.",
+        canvas="The pattern book with each player standing over the pattern they are playing; the tape loops; the retuned strings",
+        about="Choose the instruments and the players are dealt among them; a player's instrument changes at their next pattern.",
+        credits="Recordings: Salamander Grand Piano (Alexander Holm, CC BY 3.0); Versilian Studios VCSL and VSCO 2 CE "
+                "(marimba, vibraphone, glockenspiel, Renaissance and pipe organs, saxello, tenor saxophone, clarinet, flute; CC0); "
+                "University of Iowa Musical Instrument Samples (violin, cello); epic-choir from VocalSet (CC BY 4.0)."),
+    "algoreich": dict(
+        title="AlgoReich", script="reich", eyebrow="AlgoReich · music as a gradual process, after Steve Reich",
+        lede="Four of Steve Reich's processes, played on recorded instruments. Phase: two players repeat one pattern and one "
+             "slowly pulls ahead until they meet again. Clapping: one rhythm, and after each section the second player moves "
+             "one beat on. Build-up: a pattern assembled a beat at a time out of silence, a second player building it a few "
+             "beats away, voices picking out the melodies that result. Pulses: a cycle of eleven chords that pulse and "
+             "breathe. The processes are Reich's; every pattern and chord here is written by rule.",
+        canvas="The process drawn as it runs: rings turning out of phase, the clapping grid, the pattern building, the chord cycle breathing",
+        about="Choose the instruments and each process takes its players from them: pianos or marimbas phase, claps clap, voices and clarinets breathe.",
+        credits="Recordings: Salamander Grand Piano (Alexander Holm, CC BY 3.0); Versilian Studios VCSL and VSCO 2 CE "
+                "(marimba, vibraphone, glockenspiel, claps, clarinet, flute, organ; CC0); University of Iowa Musical "
+                "Instrument Samples (violin, cello); epic-choir from VocalSet (CC BY 4.0)."),
+}
+
+
+@bp.route("/<any(algoriley, algoreich):name>")
+def proc_music(name):
+    """AlgoRiley and AlgoReich: process music engines on recorded instruments (all in the browser)."""
+    return render_template("darwin/proc.html", page=PROC_PAGES[name])
+
+
 @bp.route("/algo")
 def algo_music_moved():
     return redirect("/darwin/algoglass", code=301)
