@@ -80,6 +80,8 @@
   }
 
   D.Barricelli = function (el) {
+    // the hooks a listener uses: read each generation, hear each event, and (while listening) drive the clock
+    const api = { external: false, onGeneration: null, onEvent: null };
     const canvas = el.querySelector('#bx-canvas'), ctx = canvas.getContext('2d');
     const lens = el.querySelector('#bx-lens'), list = el.querySelector('#bx-orgs'), log = el.querySelector('#bx-log');
     const stat = el.querySelector('#bx-stat');
@@ -100,7 +102,7 @@
       renderList(); renderLog();
     }
     function normLabel(n) { return { '0': 'annihilate (norm 0)', sum: 'fuse into the sum', random: 'random mutation', mixed: 'mixed norms by region' }[n]; }
-    function note(text, kind) { events.unshift({ gen, text, kind }); events = events.slice(0, 60); renderLog(); }
+    function note(text, kind, data) { events.unshift({ gen, text, kind }); events = events.slice(0, 60); renderLog(); if (api.onEvent) api.onEvent(kind, data || {}); }
 
     function tick() {
       const edges = new Map();
@@ -110,10 +112,12 @@
         const N = U[0].N, s = Math.floor(U[0].rng() * N), L = N >> 3;
         for (let j = s; j < s + L; j++) { const a = U[0].A[j % N]; U[0].A[j % N] = U[1].A[j % N]; U[1].A[j % N] = a; }
         if (gen % 250 === 0) note(`Exchanged ${L} cells with the parallel universe (Barricelli's remedy against takeover).`, 'info');
+        if (api.onEvent) api.onEvent('exchange', { start: s, len: L, N });
       }
       edgeWin.push(edges); if (edgeWin.length > 12) edgeWin.shift();
       rows.push({ A: U[0].A.slice(), m: U[0].marks.slice() }); if (rows.length > ROWS) rows.shift();
       if (gen % 4 === 0) census();
+      if (api.onGeneration) api.onGeneration();
     }
 
     // ── who is alive: organisms from the "uses" graph ───────────────────
@@ -158,14 +162,14 @@
         if (!o.confirmed && gen - o.born >= 20 && copies >= 6) {
           o.confirmed = true;     // named only once it has proved it can persist
           o.id = LETTERS[nextLetter % 26] + (nextLetter >= 26 ? Math.floor(nextLetter / 26) : ''); o.color = PALETTE[nextLetter % PALETTE.length]; nextLetter++;
-          if (o.parents.length >= 2) note(`Crossing: organism ${o.id} (${fmt(o.genes)}) formed from parts of ${o.parents.slice(0, 2).join(' and ')}.`, 'cross');
-          else note(`New symbioorganism ${o.id}: genes ${fmt(o.genes)} that can only multiply by landing on each other.`, 'born');
+          if (o.parents.length >= 2) note(`Crossing: organism ${o.id} (${fmt(o.genes)}) formed from parts of ${o.parents.slice(0, 2).join(' and ')}.`, 'cross', { o, parents: o.parents.map(id => [...orgs.values()].find(p => p.id === id)).filter(Boolean) });
+          else note(`New symbioorganism ${o.id}: genes ${fmt(o.genes)} that can only multiply by landing on each other.`, 'born', { o });
         }
         // self-repair: lost more than half its copies, then grew back
         if (o.confirmed && o.hist.length > 20) {
           const recent = o.hist.slice(-20), lo = Math.min(...recent), hi0 = recent[0];
           if (!o.dips && lo < hi0 * 0.45 && hi0 > 12) o.dips = { at: gen, lo, from: hi0 };
-          if (o.dips && copies >= o.dips.from * 0.85 && gen - o.dips.at < 120) { note(`Self-repair: ${o.id} fell from ${o.dips.from} to ${o.dips.lo} copies and grew back.`, 'repair'); o.dips = null; }
+          if (o.dips && copies >= o.dips.from * 0.85 && gen - o.dips.at < 120) { note(`Self-repair: ${o.id} fell from ${o.dips.from} to ${o.dips.lo} copies and grew back.`, 'repair', { o }); o.dips = null; }
           if (o.dips && gen - o.dips.at >= 120) o.dips = null;
         }
         genes.forEach(g => geneOrg.set(g, o));
@@ -173,7 +177,7 @@
       orgs.forEach(o => {
         if (o.alive && !seenIds.has(o.key) && gen - o.last > 16) {
           o.alive = false;
-          if (o.confirmed) note(`Organism ${o.id} (${fmt(o.genes)}) went extinct after ${gen - o.born} generations.`, 'dead');
+          if (o.confirmed) note(`Organism ${o.id} (${fmt(o.genes)}) went extinct after ${gen - o.born} generations.`, 'dead', { o });
         }
       });
       // parasites: genes that use an organism's genes but are not used back
@@ -187,11 +191,11 @@
       if (parasites[0] && !noted.has('p' + parasites[0].gene + parasites[0].host) && parasites[0].copies >= 6 && gen - lastParasiteNote > 60) {
         lastParasiteNote = gen;
         noted.add('p' + parasites[0].gene + parasites[0].host);
-        note(`Parasite: gene ${sign(parasites[0].gene)} multiplies by riding on organism ${parasites[0].host}, which gains nothing from it.`, 'parasite');
+        note(`Parasite: gene ${sign(parasites[0].gene)} multiplies by riding on organism ${parasites[0].host}, which gains nothing from it.`, 'parasite', { p: parasites[0] });
       }
       const top = [...orgs.values()].filter(o => o.alive && o.confirmed).sort((a, b) => b.copies - a.copies)[0];
       if (top && top.share > 0.9) {
-        if (announcedTakeover !== top.key) { announcedTakeover = top.key; note(`Takeover: organism ${top.id} now fills ${Math.round(top.share * 100)}% of the universe. Barricelli called this "organized homogeneity" and fought it with mixed norms and exchanges.`, 'takeover'); }
+        if (announcedTakeover !== top.key) { announcedTakeover = top.key; note(`Takeover: organism ${top.id} now fills ${Math.round(top.share * 100)}% of the universe. Barricelli called this "organized homogeneity" and fought it with mixed norms and exchanges.`, 'takeover', { o: top }); }
       } else if (!top || top.share < 0.7) announcedTakeover = null;
       renderList();
       stat.textContent = `generation ${gen.toLocaleString()} · ${occupied} genes alive · ${[...orgs.values()].filter(o => o.alive && o.confirmed).length} symbioorganisms · ${parasites.length} parasites`;
@@ -282,11 +286,14 @@
     ctl('bx-step').onclick = () => { playing = false; ctl('bx-play').textContent = 'Play'; tick(); };
     ctl('bx-reset').onclick = reset;
     ['bx-n', 'bx-k', 'bx-norm', 'bx-ex'].forEach(id => ctl(id).addEventListener('change', reset));
+    Object.assign(api, { tick: () => tick(), reset: () => reset(), get playing() { return playing; }, get gen() { return gen; },
+      state: () => ({ U, gen, rows, orgs, geneOrg, parasites, norm: ctl('bx-norm').value, gps: +ctl('bx-speed').value }) });
     function loop(ts) {
       const gps = +ctl('bx-speed').value, dt = Math.min(0.25, (ts - (lastDraw || ts)) / 1000); lastDraw = ts;
-      if (playing && !document.hidden) { acc += dt * gps; let n = 0; while (acc >= 1 && n < 40) { tick(); acc -= 1; n++; } }
+      if (playing && !document.hidden && !api.external) { acc += dt * gps; let n = 0; while (acc >= 1 && n < 40) { tick(); acc -= 1; n++; } }
       draw(); requestAnimationFrame(loop);
     }
     reset(); requestAnimationFrame(loop);
+    return api;
   };
 })();

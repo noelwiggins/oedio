@@ -13,6 +13,7 @@
       <button class="btn" id="bx-play">Pause</button>
       <button class="btn tonal" id="bx-step">Step</button>
       <button class="btn tonal" id="bx-reset">New universe</button>
+      <button class="btn tonal" id="bx-listen" title="Hear the universe: copying, cooperation, parasites and collisions as music">Listen</button>
     </div>
     <div class="row small" style="gap:12px;flex-wrap:wrap">
       <label>Speed <input type="range" id="bx-speed" min="2" max="60" value="16"></label>
@@ -24,11 +25,26 @@
       <label><input type="checkbox" id="bx-ex"> parallel universe exchange</label>
     </div>
   </div>
+  <div class="small" id="bx-listen-status" style="margin:8px 0 0;color:var(--md-sys-color-primary)"></div>
   <div class="small muted" id="bx-stat" style="margin:10px 0 6px">—</div>
   <div style="position:relative"><canvas id="bx-canvas" class="bx-canvas" aria-label="Barricelli's numerical universe, one generation per row"></canvas></div>
   <div class="bx-lens mono" id="bx-lens"></div>
   <p class="small muted" style="margin:6px 0 0">Each row is one generation (newest at the bottom), each column one cell. Coloured genes belong to a
     symbioorganism, matched to the call-outs; grey genes are loose. White specks mark collisions. Hover to read the numbers, as on his printouts.</p>
+</section>
+
+<section class="section card" id="bx-hear">
+  <h2 style="margin-top:0">What you are hearing</h2>
+  <p class="small muted" style="margin-top:0">Press <b>Listen</b> and the universe plays itself. Nothing is composed: every sound is something that just happened on the printout, on recorded instruments.</p>
+  <div class="bx-legend">
+    <div><b>Copying is a canon.</b> Each symbioorganism has its own instrument. Whenever its genes are copied into new cells it plays the gene copied most, and a gene's number is its interval: +3 moves three cells right and sounds three steps up, −2 two steps down. So each organism keeps repeating its own small motif, wherever it multiplies, louder as it grows.</div>
+    <div><b>Cooperation is harmony.</b> Genes that can only multiply by landing on each other sound together, all in one mode, so a thriving symbiosis is a chord that keeps returning.</div>
+    <div><b>Parasites follow.</b> A parasite sounds only when its host does, a moment late and slightly flat. It cannot play on its own.</div>
+    <div><b>Collisions.</b> Annihilation (norm 0) is a dry tick; fusion is a struck marimba note at the sum; a random mutation is a glockenspiel note between the keys.</div>
+    <div><b>Loose genes</b> are a faint scatter of high piano notes. They thin out as organisms take over the universe.</div>
+    <div><b>Events.</b> A new organism announces its motif; a crossing interleaves its parents' motifs, then its own; self-repair rises; extinction is a low organ note, and that instrument falls silent; a takeover ("organized homogeneity") is an organ drone; an exchange with the parallel universe sweeps across the speakers. With the parallel universe on, the visible universe sounds on the left, its twin on the right.</div>
+  </div>
+  <p class="small muted" style="margin-bottom:0">While listening, generations run on the sound's clock (at most ten a second), so each note lands with its row. Recordings: VCSL and VSCO 2 CE (Versilian Studios, CC0), University of Iowa (violin, cello), Salamander Grand Piano (CC BY 3.0).</p>
 </section>
 
 <section class="section grid g2">
@@ -281,7 +297,9 @@
 </section>
 {% endblock %}
 {% block scripts %}
-<script src="/static/darwin/barricelli.js?v=2"></script>
+<script src="/static/darwin/algo/proc/core.js?v=3"></script>
+<script src="/static/darwin/barricelli.js?v=3"></script>
+<script src="/static/darwin/barricelli-sound.js?v=3"></script>
 <script src="/static/darwin/barricelli-explain.js?v=2"></script>
 <script>
 (function () {
@@ -301,7 +319,8 @@
   h += `<path d="M${c(5)} 52 L${c(3)} 92" stroke="#9ab8ff" fill="none" marker-end="url(#ar)"/>`;
   svg.insertAdjacentHTML('afterbegin', '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>');
   g.innerHTML = h;
-  Darwin.Barricelli(document.querySelector('main'));
+  const bx = Darwin.Barricelli(document.querySelector('main'));
+  Darwin.BarricelliSound(bx, document.querySelector('main'));
   Darwin.BarricelliExplain(document.querySelector('main'));
 })();
 </script>
