@@ -894,3 +894,16 @@ PROC_PAGES in darwin/web.py) and a shared core, static/darwin/algo/proc/core.js 
 - Tests: work/proctest.js (both scores: determinism, ranges, progress, phase accounting), work/procpage.js <base> <page>
   <pieces> <secs> <tag> (plays each process, records, screenshots, exact replay from a saved session, MIDI).
 - Not done: video export and microphone tape-phase (It's Gonna Rain) for these tabs; Riley/Reich patterns are original.
+
+## Barricelli — Listen (2026-11-24)
+"Listen" button on /darwin/barricelli sonifies the live universe (static/darwin/barricelli-sound.js, uses Proc.Kit from
+static/darwin/algo/proc/core.js). barricelli.js now returns hooks {external, onGeneration, onEvent, tick, state()}; note()
+passes event data (born/cross/dead/repair/parasite/takeover) and exchanges emit 'exchange'. While listening, api.external
+stops the rAF clock and generations tick on the audio clock (lookahead 0.12 s, ≤ 10 gens/s).
+Mapping (D Dorian, gene value = scale steps from the instrument's centre): each confirmed organism gets a voice in order
+(clarinet, vibes, violin, cello, flute, saxello, organ) and plays its most-copied gene whenever its genes land in new
+cells (velocity ∝ log copies, pan = position); parasites echo the host 0.4 gen late, ±2 steps, 30 cents flat; collisions
+(thinned): norm 0 = soft claps, sum = marimba at the sum, random = glockenspiel a quarter-tone off; loose genes = faint
+high piano; events: born = motif, repair = rising motif, cross = parents then child, dead = low pipe note + voice freed,
+takeover = pipe drone swell, exchange = glockenspiel sweep L→R. Parallel universe: visible universe left, twin right.
+Legend card "What you are hearing" on the page. Test: work/bxlisten.js <base> <tag> <secs>.
