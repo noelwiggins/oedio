@@ -907,3 +907,17 @@ cells (velocity ∝ log copies, pan = position); parasites echo the host 0.4 gen
 high piano; events: born = motif, repair = rising motif, cross = parents then child, dead = low pipe note + voice freed,
 takeover = pipe drone swell, exchange = glockenspiel sweep L→R. Parallel universe: visible universe left, twin right.
 Legend card "What you are hearing" on the page. Test: work/bxlisten.js <base> <tag> <secs>.
+
+## Sound on iPhone (2026-11-24)
+Noel: sound worked on Android, not iPhone. Fix in static/darwin/algo/ios-audio.js (window.OedioAudio), loaded before every
+audio engine (algo.html, proc.html, barricelli.html, algo/panel.html, algo/cabinet.html):
+- unlock(ctx), called where each AudioContext is created (Glass Audio, Proc.Kit, algo/sound.js build): sets
+  navigator.audioSession.type = 'playback' (iOS 17+) or starts a silent looping <audio> (older iOS) so the ring/silent switch
+  does not mute web audio; resumes after 'interrupted'/background on visibilitychange and the next touch/key.
+- Light mode on iOS (or ?light=1 anywhere): AudioContext at 32 kHz; shrink() folds each decoded recording to mono and keeps
+  only the seconds used (piano 5, choir 3.5, strings 3.5, organ 4, bass 3, drums 3/gong 5, ensemble 3.5, proc 3); choir
+  'ah' only; bowed strings mf+ff (pp aliased to mf); Proc.Kit preloads only the chosen instruments and fetches others on
+  first use. Decoded memory: AlgoGlass 488 → 125 MB, AlgoRiley 511 → 124, Barricelli 411 → 138. Desktop/Android unchanged.
+- Safari records MP4: Proc recordings save as .m4a there.
+Tests: work/wk.js (pages load in WebKit), work/wkplay.js / wkplay-light.js / wkiphone.js (play + decoded MB in WebKit,
+light mode, iPhone 13 emulation). Not testable here: a physical iPhone's silent switch.
