@@ -30,8 +30,9 @@
   };
 
   class Kit {
-    constructor(insts) {
-      const A = this.ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+    constructor(insts, preload) {
+      const A = this.ctx = new (window.AudioContext || window.webkitAudioContext)((window.OedioAudio ? OedioAudio.options() : { latencyHint: 'playback' }));
+      if (window.OedioAudio) OedioAudio.unlock(A);              // iPhone: play through the silent switch
       this.insts = insts;
       this.out = A.createGain(); this.out.gain.value = 0.8;
       const drive = A.createGain(); drive.gain.value = 1.3;
@@ -53,25 +54,29 @@
         this.bus[n] = g; this.send[n] = sd;
       }
       this.samples = {}; this.live = 0; this.rr = 0; this.tuning = null; this.loops = {};
-      this.loading = { want: insts.slice(), done: [] };
-      this.load();
+      this.loading = { want: (preload || insts).slice(), done: [] }; this.asked = new Set();
+      this.load(preload || insts);
     }
-    async load() {
-      const A = this.ctx, man = this.man = await (await fetch(BASE + 'manifest.json?v=6')).json();
-      const get = async f => A.decodeAudioData(await (await fetch(BASE + f)).arrayBuffer());
+    // load these instruments; any other is fetched the first time it is asked to play (light mode keeps memory low)
+    async load(which) {
+      which.forEach(n => this.asked.add(n));
+      const A = this.ctx, man = this.man = this.man || await (this.manP = this.manP || fetch(BASE + 'manifest.json?v=6').then(r => r.json()));
+      const OA = window.OedioAudio, light = !!(OA && OA.light), get = async f => { const b = await A.decodeAudioData(await (await fetch(BASE + f)).arrayBuffer()); return OA ? OA.shrink(A, b, f) : b; };
       const list = async l => (await Promise.all((l || []).map(async e => { try { return Object.assign({}, e, { buf: await get(e.f) }); } catch (er) { return null; } }))).filter(Boolean);
       const layers = async o => { const r = {}; for (const [k, l] of Object.entries(o || {})) r[k] = await list(l); return r; };
       const done = n => { this.loading.done.push(n); if (this.onload) this.onload(this.loading); };
-      await Promise.all(this.insts.map(async n => {
+      await Promise.all(which.map(async n => {
         const I = INSTRUMENTS[n];
         if (I.type === 'piano') {
           const NOTE = { C: 0, Ds: 3, Fs: 6, A: 9 }, names = ['A0']; for (let o = 1; o <= 7; o++) for (const x of ['C', 'Ds', 'Fs', 'A']) names.push(x + o); names.push('C8');
           this.samples.piano = { p: await list(names.map(x => { const m = x.match(/^([A-G]s?)(\d)/); return { f: `piano/${x}.mp3`, m: 12 * (+m[2] + 1) + NOTE[m[1]] }; })) };
         } else if (I.type === 'choir') {
-          const C = {}; for (const [sec, vowels] of Object.entries(man.choir)) { C[sec] = {}; for (const vw of ['ah', 'oo']) C[sec][vw] = await list(vowels[vw]); }
+          const C = {}; for (const [sec, vowels] of Object.entries(man.choir)) { C[sec] = {}; for (const vw of (light ? ['ah'] : ['ah', 'oo'])) C[sec][vw] = await list(vowels[vw]); if (!C[sec].oo) C[sec].oo = C[sec].ah; }
           this.samples.choir = C;
         } else {
-          this.samples[n] = await layers(I.set(man));
+          const L = I.type === 'bowed' && light ? { mf: await list(I.set(man).mf), ff: await list(I.set(man).ff) } : await layers(I.set(man));
+          if (I.type === 'bowed' && !L.pp) L.pp = L.mf;
+          this.samples[n] = L;
           if (I.short) this.samples[n + ':short'] = await layers(I.short(man));
         }
         done(n);
@@ -114,7 +119,9 @@
     }
     play(inst, m, dur, vel, t, pan, shape) {
       const swell = (g, amp, t0, L) => { g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(amp, t0 + L * 0.5); g.gain.linearRampToValueAtTime(0.0001, t0 + L); };
-      const I = INSTRUMENTS[inst], S = this.samples[inst]; if (!I || !S || this.live > 140) return;
+      const I = INSTRUMENTS[inst], S = this.samples[inst];
+      if (I && !S && !this.asked.has(inst) && this.bus[inst]) { this.loading.want.push(inst); this.load([inst]); }
+      if (!I || !S || this.live > 140) return;
       const A = this.ctx, dest = this.bus[inst], nodes = [];
       let out = dest;
       if (pan !== undefined && pan !== null) { const p = A.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); p.connect(dest); out = p; nodes.push(p); }
@@ -259,7 +266,7 @@
     }
     function play() {
       if (!kit) {
-        kit = new Kit(INST); kit.onload = showLoading; showLoading(kit.loading);
+        kit = new Kit(INST, window.OedioAudio && OedioAudio.light ? INST.filter(n => settings.ens.includes(n)) : null); kit.onload = showLoading; showLoading(kit.loading);
         for (const n of INST) kit.bus[n].gain.value = settings.vol[n];
         if (cfg.onControl) for (const k of Object.keys(cfg.defaults)) cfg.onControl(k, settings[k], kit, settings);
       }
@@ -345,7 +352,7 @@
       if (!kit) play();
       if (rec) { rec.stop(); return; }
       parts = []; rec = new MediaRecorder(kit.rec.stream); rec.ondataavailable = e => parts.push(e.data);
-      rec.onstop = () => { save(new Blob(parts, { type: rec.mimeType }), `${cfg.name}-${settings.seed}.webm`); rec = null; $('pr-rec').textContent = 'Record audio'; $('pr-rec').classList.remove('on'); };
+      rec.onstop = () => { save(new Blob(parts, { type: rec.mimeType }), `${cfg.name}-${settings.seed}.${/mp4|aac/.test(rec.mimeType) ? 'm4a' : 'webm'}`); rec = null; $('pr-rec').textContent = 'Record audio'; $('pr-rec').classList.remove('on'); };
       rec.start(); $('pr-rec').textContent = 'Stop and save'; $('pr-rec').classList.add('on');
     });
     $('pr-midi').addEventListener('click', () => save(new Blob([midiFile(noteLog)], { type: 'audio/midi' }), `${cfg.name}-${settings.seed}.mid`));

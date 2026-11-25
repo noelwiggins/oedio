@@ -504,7 +504,8 @@
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
   class Audio {
     constructor() {
-      const A = this.ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' });
+      const A = this.ctx = new (window.AudioContext || window.webkitAudioContext)((window.OedioAudio ? OedioAudio.options() : { latencyHint: 'playback' }));
+      if (window.OedioAudio) OedioAudio.unlock(A);              // iPhone: play through the silent switch
       // the master: a touch of tape-like saturation and a soft top, then gentle compression
       this.out = A.createGain(); this.out.gain.value = 0.8;
       const drive = A.createGain(); drive.gain.value = 1.4;
@@ -588,7 +589,7 @@
       const A = this.ctx, base = '/static/darwin/algo/glass/samples/';
       const NOTE = { C: 0, Ds: 3, Fs: 6, E: 4, G: 7, A: 9 };
       const midiOf = name => { const m = name.match(/^([A-G]s?)(\d)/); return 12 * (+m[2] + 1) + NOTE[m[1]]; };
-      const get = async (file) => A.decodeAudioData(await (await fetch(base + file)).arrayBuffer());
+      const OA = window.OedioAudio, get = async (file) => { const b = await A.decodeAudioData(await (await fetch(base + file)).arrayBuffer()); return OA ? OA.shrink(A, b, file) : b; };
       const load = async list => (await Promise.all(list.map(async e => { try { return Object.assign({}, e, { buf: await get(e.f) }); } catch (er) { return null; } }))).filter(Boolean);   // one bad file never silences a whole instrument
       this.base = base; this._load = load;
       this.loading = { want: ['piano', 'organ', 'violin2', 'cello', 'bass', 'drums'], done: [] };
@@ -604,7 +605,8 @@
         (async () => { this.samples.organ = await load(man.organ); for (const b of this.body.organ) if (b.type === 'peaking') b.gain.value = 0; done('organ'); })(),
         // the University of Iowa solo violin and cello (anechoic, pp/mf/ff), each note tuned to its measured pitch
         ...['violin2', 'cello'].map(async inst => {
-          const L = {}; for (const dyn of ['pp', 'mf', 'ff']) L[dyn] = await load(man[inst][dyn]);
+          const L = {}; for (const dyn of (window.OedioAudio && OedioAudio.light ? ['mf', 'ff'] : ['pp', 'mf', 'ff'])) L[dyn] = await load(man[inst][dyn]);
+          if (!L.pp) L.pp = L.mf;                                // light mode: the soft layer is the medium one, played softly
           this.samples[inst] = L; if (inst === 'violin2') for (const b of this.body.violin) if (b.type === 'peaking') b.gain.value = 0;
           done(inst);
         }),
@@ -706,8 +708,8 @@
         const man = await (await fetch(base + 'manifest.json?v=5')).json(), C = {};
         for (const [sec, vowels] of Object.entries(man.choir)) {
           C[sec] = {};
-          for (const [vw, list] of Object.entries(vowels)) C[sec][vw] = (await Promise.all(list.map(async e => {
-            try { return Object.assign({}, e, { buf: await A.decodeAudioData(await (await fetch(base + e.f)).arrayBuffer()) }); } catch (er) { return null; }
+          for (const [vw, list] of Object.entries(vowels)) if (!(window.OedioAudio && OedioAudio.light && vw !== 'ah')) C[sec][vw] = (await Promise.all(list.map(async e => {
+            try { const b = await A.decodeAudioData(await (await fetch(base + e.f)).arrayBuffer()); return Object.assign({}, e, { buf: window.OedioAudio ? OedioAudio.shrink(A, b, e.f) : b }); } catch (er) { return null; }
           }))).filter(Boolean);
         }
         this.samples.choir = C; if (this.onload) this.onload(this.loading);

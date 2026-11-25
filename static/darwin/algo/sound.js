@@ -184,6 +184,7 @@
   function build() {
     const AC = window.AudioContext || window.webkitAudioContext;
     try { A = new AC({ latencyHint: 'playback' }); } catch (e) { A = new AC(); }   // big buffers: no underrun crackle
+    if (window.OedioAudio) OedioAudio.unlock(A);                // iPhone: play through the silent switch
     out = A.createGain(); out.gain.value = 0;
     const comp = A.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 12; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.5;
     // small speakers cannot move deep bass cleanly and rattle like static: keep the sound above ~90 Hz
