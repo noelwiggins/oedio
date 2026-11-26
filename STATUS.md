@@ -1,6 +1,6 @@
 # Oedio STATUS — Library of Alexandria
 
-Last updated: 2026-11-17
+Last updated: 2026-11-26
 
 ## Mobile app (2026-10-29)
 Phones get static/m/ (index.html, m.css, m.js) at "/" (UA check in app.py); "Full site" sets cookie oedio_view=full
@@ -206,6 +206,44 @@ within 3 of the slowest and below the frontier = civ progress (fire, language, f
 pulls players back; when all reach the end they restart at the city pages (26). Milestones move everyone on a page
 instead of changing key; off-grid chimes and lysis notes are off for this panel; dark side plays phrases reversed.
 Test: work/inctest.js (all onsets on the pulse grid, 8 players), work/rec.js recording (anthropogenesis_in_c.mp3).
+
+## EVOLUTION UNSTUCK — Pool, Coast, concept worlds (2026-11-26)
+Noel: "Evolution seems to be stuck". Live data: Pool genomes pinned at the 48-gene cap since ~Nov 1 and complexity
+cycling 10–132 with no trend (cyst rescue firing at < 90 alive, hatched 13k → 55k in 5 days, restarting simple forms);
+Coast at its animal cap (420) and plant cap (900), 100% nectar-drinkers, predators and warm blood extinct.
+Tidal Pool (pool.py, life-3.1):
+- GENOME_MAX 48 → 96 (mutate dup/insert, crossover), GENE_COST 0.0003 upkeep per gene (in _spawn metab).
+- Recovery: HATCH_POP 90 → 24 (survivors recover a slump alone); _hatch orders candidate cysts by
+  (cells × cell types)^1.5 × U(0.5,1.5), so the eggs of complex bodies hatch first.
+- Prey refuges (type III response): strike success × n_prey/(n_prey + 1.5), n_prey = edible neighbours in sense.
+- Tests: work/poolstress.py (warm 150k, kill 99.5%, N×0.25, cold): 0 restarts, recovered from 4 survivors with 19
+  hatched (old: 80 hatched); work/poolcmp.py fresh seed 11 runs clean (complexity 28 at 144k, genomes ~4 genes).
+Coast (engine.py, algogenesis-1.6):
+- Shared table: herbivore food (nectar, leaves, plankton) × 1/(1 + 0.8·crowd·max(0, herb share − 0.4)), meat the
+  same with the meat share; crowd = animals/CAP_F, so lean winters are not made worse.
+- Division of labour: every food gain × (1 + 0.02·clip(parts − 6, −3, 10)), parts = _parts(G) (the stats measure).
+- Vault + travellers: _keep_vault every half day keeps ≤ 8 genomes per way of life (hunter DIET>0.6, scavenger,
+  warm ENDO>0.5, complex parts≥12); a world from before is seeded once from species portraits. Every 2 epochs, a way
+  of life under 3% (complex 5%) gets 2–3 pairs from the vault (85%) or synthesized "from a neighbouring coast"
+  (a local body given that way of life and new colours, so locals are not kin). _make_room frees slots on a full
+  coast from the weakest of the commonest species. Event kind "migrants"; stat "travellers".
+- Test (work/coastcmp.py, live-like start: all nectar, no warm blood, ≤1 limb; seed 5): new reaches complexity
+  ~7 with warm blood at 40–54% through winters; old 4.9 with none. Hunters arrive and hunt but still die out in
+  the deep winter crashes (animals fall to ~50–100 in midwinter in fresh worlds); travellers bring them back.
+Concept worlds:
+- Noogenesis "memory" was the mean size of recurrent weights, which only drifts up: it sat at 1.000. Now the share
+  of hidden-unit drive from recurrence (running average per forager, self.recur). Fresh runs: 0.17–0.31.
+- Palingenesis had closed into a fire-proof canopy (cover 99%, bark 0.68, fires that never spread). Drought cycle:
+  DRY_PERIOD 48k ticks, last 40% of each period dry, strength 0.45–1 by golden-ratio sequence; in drought rain ×
+  (1 − 0.4d), p_catch uses bark × (1 − 0.6d) and × (1 + 0.8d). Test (work/palcmp.py, seed 2, 200k): old cover 99%
+  from 56k on, 3 kinds of tree; new burns to 21–57% each drought and returns, 24–176 kinds, fire cones 0.53 → 0.82.
+  Stat "drought" + label + about line.
+- sound.js progress accepts a 4th element 'log': Biogenesis depth (0–1e6 log), Anthropogenesis tools_mean (0–1e5
+  log), Palingenesis now species (1–200 log). sound.js?v=11.
+- Psychogenesis (learning 0.33–0.70) and Cosmogenesis (metals 2.6–12) are fluctuating in their 1500-row windows,
+  not declining; left unchanged.
+Migration: Coast, Pool and all 12 worlds load pickles made by HEAD code (work/crash_all.py MAKE in a HEAD worktree,
+then MIGRATE).
 
 ## EVOLUTION ENGINES — complexity that keeps (2026-11-17)
 Tidal Pool (darwin/pool.py): restarts had climbed to ~50/day; after each crash the 24 banked refugia lineages kept dying

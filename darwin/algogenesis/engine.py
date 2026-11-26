@@ -36,7 +36,7 @@ import numpy as np
 from .dials import D, DialsMixin, mult
 from .fungi import FungiMixin, _mlook, fungus_name, M_HUE, M_CAP, M_TOX, M_GLOW, M_COLD, M_RATE, M_SIZE, MLOOK_KEYS
 
-VERSION = "algogenesis-1.5"
+VERSION = "algogenesis-1.6"
 W, H = 1200.0, 800.0              # world units; a 4' x 6' panel is 3:2
 GX, GY = 90, 60                   # terrain grid
 DAY = 2400                        # ticks per day (about two minutes at 20 ticks/s)
@@ -80,12 +80,32 @@ PHI = np.array([1, 9, 2.0, 1.0, 1.6, 1.0, 1, 1], np.float32)
 PSTEP = np.array([.025, .3, .05, .05, .05, .04, .04, .04], np.float32)
 
 JC, JC_FREE = 1.2, 0.18           # specialist enemies of the commonest species
+# Nov 26, a coast that keeps climbing. By then the coast had settled into one cheap way of life: nectar-drinkers
+# filled every place, predators and warm blood had died out and bodies were getting simpler. Three changes:
+#   a shared table: the more of the coast drinks nectar and grazes, the less each drinker gets (GUILD), so a rare way of
+#     life (scavenging, hunting) pays while it is rare;
+#   division of labour: a body with more parts (segments, limbs, organs) feeds a little more efficiently in any niche
+#     (WORK per part above SIMPLE, within a band), so complexity is not only a cost;
+#   travellers: when hunters or warm blood are gone, a few pairs arrive from the vault (the best genomes of each way of
+#     life the coast has known), the way Barricelli let organisms cross between his parallel universes.
+GUILD, GUILD_FREE = 0.8, 0.4
+WORK, SIMPLE = 0.02, 6.0
+VAULT_MAX = 8                     # genomes kept per way of life
+TRAVEL_EVERY = 2 * EPOCH
 
 
 def _hd(a, b):
     """Distance between two hues (the colour wheel wraps)."""
     d = np.abs(a - b) % 1.0
     return np.minimum(d, 1.0 - d)
+
+
+def _parts(G):
+    """Body complexity: a rough count of distinct parts (the stats' complexity measure)."""
+    reg = G[:, SPEC] * np.clip((G[:, SEGS] - 2) / 3, 0, 1)
+    return (G[:, SEGS] + 2 * G[:, LIMBS] + (G[:, TAIL] > 0.5) + (G[:, CREST] > 0.4) + (G[:, GLOW] > 0.3)
+            + (G[:, SAT] > 0.5) + (G[:, PATTERN] > 0.33) + 2 * (G[:, EYES] > 0.5) + (G[:, SHELL] > 0.4)
+            + 2 * (G[:, WING] > 0.5) + 2 * (reg > 0.5))
 
 
 def _clip(g, lo, hi, circ=()):
@@ -445,6 +465,12 @@ class World(DialsMixin, FungiMixin):
         act = np.where(has_par & (pdist < 20), np.maximum(act, self.G[pidx, ENDO] * (0.4 + 0.6 * pcare)), act)
         herb = np.clip(1 - G[:, DIET] * 1.4, 0, 1)
         meat = np.clip((G[:, DIET] - 0.3) / 0.7, 0, 1)
+        # a shared table: plant food is split among all who eat it; meat among all who hunt and scavenge
+        # (a crowded table: in a lean winter, with few mouths, there is no crowding to share out)
+        hshare, mshare, crowd = float(herb.mean()), float(meat.mean()), n / CAP_F
+        h_table = 1.0 / (1.0 + GUILD * crowd * max(0.0, hshare - GUILD_FREE))
+        m_table = 1.0 / (1.0 + GUILD * crowd * max(0.0, mshare - GUILD_FREE))
+        work = 1.0 + WORK * np.clip(_parts(G) - SIMPLE, -3, 10)           # division of labour
         eyes, shell, wing = G[:, EYES], G[:, SHELL], G[:, WING]
         regions = G[:, SPEC] * np.clip((G[:, SEGS] - 2) / 3, 0, 1)       # regions need segments to divide
         lift = np.clip(1.9 - 1.1 * G[:, SIZE], 0, 1)                  # wing loading: full lift up to 0.8, none past ~1.7
@@ -583,13 +609,13 @@ class World(DialsMixin, FungiMixin):
                 mouth = float(G[a, SIZE]) ** 0.75
                 take = min(float(self.pnec[pi]), 1.2 * float(herb[a]) * (1 + 0.6 * float(Eg[a])) * mouth)   # warm bodies, big mouths feed faster
                 self.pnec[pi] -= take
-                self.fe[i] = min(self.fe[i] + 4.0 * take * (0.25 + 0.75 * act[a]) * (1 + 0.3 * regions[a]), emax[a])
+                self.fe[i] = min(self.fe[i] + 4.0 * take * (0.25 + 0.75 * act[a]) * (1 + 0.3 * regions[a]) * h_table * work[a], emax[a])
                 # no nectar: graze the leaves. Tall plants are out of reach of small grazers; a giant browses them freely
                 reach = min(1.0, max(0.05, (float(G[a, SIZE]) - 0.3) / (1.5 * float(self.P[pi, P_HEIGHT]))))
                 if herb[a] > 0.5 and (take < 0.05 or big[a] > 0.05) and efrac[a] < 0.5 + 0.45 * min(1.0, 4 * float(big[a])):
                     bite = min(max(float(self.pe[pi]) - 1.5, 0.0), 0.08 * float(G[a, SIZE]) * reach)
                     self.pe[pi] -= bite
-                    self.fe[i] = min(self.fe[i] + 0.8 * bite * (1 + 1.5 * float(big[a])), emax[a])
+                    self.fe[i] = min(self.fe[i] + 0.8 * bite * (1 + 1.5 * float(big[a])) * h_table * work[a], emax[a])
                 pol = self.fpollen[i]
                 if not np.isnan(pol[0]) and self.fpsp[i] != 0:
                     # pollen only takes on a flower of the same kind (a close colour match)
@@ -611,7 +637,7 @@ class World(DialsMixin, FungiMixin):
                         continue
                     self.plank[cy[k], cx[k]] -= bite
                     i = int(F[a])
-                    self.fe[i] = min(self.fe[i] + 3.0 * bite * (0.25 + 0.75 * float(act[a])) * (1 + 0.3 * float(regions[a])), emax[a])
+                    self.fe[i] = min(self.fe[i] + 3.0 * bite * (0.25 + 0.75 * float(act[a])) * (1 + 0.3 * float(regions[a])) * h_table * work[a], emax[a])
 
         # scavengers: anything with a taste for meat eats the dead where it finds them
         if t % 4 == 0:
@@ -629,7 +655,7 @@ class World(DialsMixin, FungiMixin):
                         continue
                     self.carrion[cy[k], cx[k]] -= bite
                     i = int(F[a])
-                    self.fe[i] = min(self.fe[i] + 2.5 * bite * (0.25 + 0.75 * float(act[a])), emax[a])
+                    self.fe[i] = min(self.fe[i] + 2.5 * bite * (0.25 + 0.75 * float(act[a])) * m_table * work[a], emax[a])
 
         # predation
         hunt = np.flatnonzero(hp & (meat > 0.2) & (dpp < 3 + 2 * size) & (efrac < 0.9))
@@ -649,7 +675,7 @@ class World(DialsMixin, FungiMixin):
                 if rng.random() < att / (att + dfn):
                     i, j = int(F[a]), int(F[b])
                     food = max(float(self.fe[j]), 0) + 6 * float(size[b])
-                    self.fe[i] = min(self.fe[i] + 0.7 * food * meat[a], emax[a])
+                    self.fe[i] = min(self.fe[i] + 0.7 * food * meat[a] * m_table * work[a], emax[a])
                     self.f_alive[j] = False
                     taken.add(b)
                     self.kills += 1
@@ -720,6 +746,10 @@ class World(DialsMixin, FungiMixin):
         if t % EPOCH == 0:
             self._lay_stratum()
             self._bank_lineages()
+        if t % (DAY // 2) == 0:
+            self._keep_vault()
+        if t % TRAVEL_EVERY == 0:
+            self._travellers()
 
     def _grow_plankton(self, light):
         if not hasattr(self, "_pk_depth"):
@@ -787,6 +817,117 @@ class World(DialsMixin, FungiMixin):
             by[int(sp[k])] = {"sid": int(sp[k]), "g": self.G[i].copy(), "tick": int(self.tick), "score": float(score.max())}
         allv = sorted(by.values(), key=lambda e: -e["tick"])
         self.bank = allv[:BANK_MAX]
+
+    # ── the vault and the travellers ─────────────────────────────────────
+    WAYS = {"hunter": lambda G: G[:, DIET] > 0.6, "scavenger": lambda G: (G[:, DIET] > 0.32) & (G[:, DIET] <= 0.6),
+            "warm": lambda G: G[:, ENDO] > 0.5, "complex": lambda G: _parts(G) >= 12}
+
+    def _keep_vault(self):
+        """Keep the best genomes of each way of life: the healthiest member of each species that lives it."""
+        F = np.flatnonzero(self.f_alive)
+        if not len(F):
+            return
+        vault = self.__dict__.setdefault("vault", {})
+        G = self.G[F]
+        score = _parts(G) + 8 * np.clip(self.fe[F] / (18.0 * G[:, SIZE] * np.sqrt(G[:, SEGS])), 0, 1)
+        for way, test in self.WAYS.items():
+            m = np.flatnonzero(test(G))
+            if not len(m):
+                continue
+            box = {e["sid"]: e for e in vault.get(way, [])}
+            for sid in np.unique(self.fsp[F[m]]).tolist():
+                mm = m[self.fsp[F[m]] == sid]
+                if len(mm) < 2:
+                    continue
+                j = mm[int(np.argmax(score[mm]))]
+                old = box.get(sid)
+                if old is None or score[j] >= old["score"] or self.tick - old["tick"] > 6 * EPOCH:
+                    box[sid] = {"sid": int(sid), "g": G[j].copy(), "score": float(score[j]), "tick": int(self.tick)}
+            vault[way] = sorted(box.values(), key=lambda e: -e["score"])[:VAULT_MAX]
+
+    def _seed_vault(self):
+        """Fill the vault from the species records (their founders and portraits), for a world that ran before it."""
+        vault = self.__dict__.setdefault("vault", {})
+        rows = [(sid, s.get("pg", s.get("g"))) for sid, s in self.species.items() if s["kind"] == "animal"]
+        rows = [(sid, np.asarray(g, np.float32)) for sid, g in rows if g is not None and len(g) == NG]
+        if not rows:
+            return
+        G = np.stack([g for _, g in rows])
+        for way, test in self.WAYS.items():
+            if vault.get(way):
+                continue
+            m = np.flatnonzero(test(G))
+            sc = _parts(G[m]) + np.array([self.species[rows[k][0]].get("peak", 0) for k in m]) / 10
+            vault[way] = [{"sid": int(rows[k][0]), "g": G[k].copy(), "score": float(s_), "tick": int(self.tick)}
+                          for s_, k in sorted(zip(sc.tolist(), m.tolist()), reverse=True)[:VAULT_MAX]]
+
+    def _make_room(self, k):
+        """Free k places on a full coast: the weakest members of the commonest species give way."""
+        F = np.flatnonzero(self.f_alive)
+        free = CAP_F - len(F)
+        if free >= k or not len(F):
+            return
+        sp, inv, cnt = np.unique(self.fsp[F], return_inverse=True, return_counts=True)
+        common = F[cnt[inv] >= np.sort(cnt)[-1] * 0.5]
+        out = common[np.argsort(self.fe[common])[:k - free]]
+        self.f_alive[out] = False
+        self.deaths += len(out)
+
+    def _travellers(self):
+        """When a way of life has vanished from the coast, a few pairs of it arrive from the vault (or, if the vault has
+        none, travellers from a neighbouring coast: a living body that has taken up that way of life)."""
+        F = np.flatnonzero(self.f_alive)
+        if len(F) < 20:
+            return
+        if not getattr(self, "vault_seeded", False):
+            self._seed_vault()
+            self.vault_seeded = True
+        G, rng = self.G[F], self.rng
+        vault = self.__dict__.setdefault("vault", {})
+        for way, floor, pairs in (("hunter", 0.03, 3), ("warm", 0.03, 2), ("scavenger", 0.03, 2), ("complex", 0.05, 2)):
+            if float(self.WAYS[way](G).mean()) >= floor:
+                continue
+            box = vault.get(way) or []
+            if box and rng.random() < 0.85:
+                src = [box[int(k)] for k in rng.choice(len(box), min(pairs, len(box)), replace=False)]
+                genomes = [(e["g"], e["sid"]) for e in src]
+                whence = "the vault"
+            else:                                   # from a neighbouring coast: a local body living the missing way
+                base = G[rng.choice(len(F), pairs)]
+                genomes = []
+                for g in base:
+                    g = g.copy()
+                    # from another coast: their own colours, so the locals are strangers to them, not kin
+                    g[HUE] = rng.random(); g[PREF_MATE] = (g[HUE] + rng.normal(0, 0.03)) % 1.0; g[HUE2] = rng.random()
+                    if way == "hunter":
+                        g[DIET], g[W_FOOD], g[SIZE] = rng.uniform(0.7, 0.9), max(g[W_FOOD], 1.6), g[SIZE] * 1.4
+                        g[EYES] = max(g[EYES], 0.55)
+                    elif way == "scavenger":
+                        g[DIET] = rng.uniform(0.4, 0.55)
+                    elif way == "warm":
+                        g[ENDO], g[INSUL] = rng.uniform(0.6, 0.8), rng.uniform(0.5, 0.7)
+                    else:
+                        g[SEGS], g[LIMBS], g[SPEC] = max(g[SEGS], 5), max(g[LIMBS], 3), 0.7
+                    genomes.append((_clip(g, LO, HI, CIRC), None))
+                whence = "a neighbouring coast"
+            self._make_room(2 * len(genomes))
+            names = []
+            for g, sid in genomes:
+                g = self._mutate(np.asarray(g, np.float32), LO, HI, STEP, CIRC)
+                x, y = self._water_spot()
+                first = None
+                for _ in range(2):
+                    par = int(self.fsp[first]) if first is not None else (sid if sid in self.species else None)
+                    i = self._spawn_animal(g, x + rng.normal(0, 4), y + rng.normal(0, 4), 0, par, 0.8 * self._emax(g))
+                    if i is not None and first is None:
+                        first = i
+                if first is not None:
+                    names.append(self.species[int(self.fsp[first])]["name"])
+            if names:
+                label = {"hunter": "hunters", "warm": "warm-blooded animals", "scavenger": "scavengers",
+                         "complex": "many-parted animals"}[way]
+                self._event("migrants", f"{label.capitalize()} arrive from {whence}: {', '.join(sorted(set(names)))}")
+            self.travellers = getattr(self, "travellers", 0) + len(names)
 
     def _recolonise(self, animals, plants):
         rng = self.rng
@@ -983,6 +1124,7 @@ class World(DialsMixin, FungiMixin):
                 "size_record": round(self.size_record, 3), "giants": int((G[:, SIZE] > 3.0).sum()),
                 "in_sea": int((self.height(self.fx[F], self.fy[F]) - self.sea < 0).sum()),
                 "scavengers": round(float(((G[:, DIET] > 0.32) & (G[:, DIET] <= 0.6)).mean()), 3),
+                "travellers": int(getattr(self, "travellers", 0)),
             })
         if len(Pi):
             sp, cnt = np.unique(self.psp[Pi], return_counts=True)

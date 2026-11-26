@@ -143,6 +143,9 @@ class Noogenesis(World):
         self.age[i] = 0
         self.hid[i] = 0
         self.glow[i] = 0
+        if not hasattr(self, "recur"):
+            self.recur = np.zeros(CAP, np.float32)
+        self.recur[i] = self.recur[parent] if parent is not None else 0.0
         return i
 
     def _blooms(self):
@@ -189,7 +192,16 @@ class Noogenesis(World):
         m = self.mask[A].astype(np.float32)
         self._lysis_init()
         fade = self._fade(A)[:, None]
-        hid = np.tanh(np.einsum("nhi,ni->nh", self.Win[A], inp) + np.einsum("nhk,nk->nh", self.Wh[A], self.hid[A] * m * fade)) * m
+        ff = np.einsum("nhi,ni->nh", self.Win[A], inp)
+        rec = np.einsum("nhk,nk->nh", self.Wh[A], self.hid[A] * m * fade)
+        hid = np.tanh(ff + rec) * m
+        # use of memory, measured by what the brain does rather than by the size of its weights: the share of its
+        # neurons' drive that comes from their own past rather than from what the forager sees now (a running average)
+        if not hasattr(self, "recur"):
+            self.recur = np.zeros(CAP, np.float32)
+        ar, af = (np.abs(rec) * m).sum(1), (np.abs(ff) * m).sum(1)
+        share = np.where(m.sum(1) > 0, ar / np.maximum(ar + af, 1e-6), 0.0)
+        self.recur[A] = 0.98 * self.recur[A] + 0.02 * share
         self.hid[A] = hid
         out = np.tanh(np.einsum("noh,nh->no", self.Wout[A], hid) + self.bout[A])
         # with no neurons, a forager still drifts toward what it sees (a reflex)
@@ -271,8 +283,8 @@ class Noogenesis(World):
                "returned": int(getattr(self, "l_back", 0))}
         if len(A):
             m = self.mask[A]
-            wh = np.abs(self.Wh[A]) * m[:, :, None] * m[:, None, :]
-            mem = float(np.clip(wh.sum((1, 2)) / np.maximum(1, m.sum(1) ** 2) / 1.0, 0, 1).mean())
+            # (until Nov 26 this was the mean size of the recurrent weights, which only drifted up to 1 and stayed)
+            mem = float(getattr(self, "recur", np.zeros(CAP, np.float32))[A].mean())
             out.update({"neurons": round(float(m.sum(1).mean()), 2), "memory": round(mem, 3), "memory_x10": round(10 * mem, 2),
                         "dark_meals": int(round(100 * sum(self.recent) / max(1, len(self.recent)))),
                         "signalling": int(round(100 * float(self.glow[A].mean()))), "generations": int(self.gen[A].max()),

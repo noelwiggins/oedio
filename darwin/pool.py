@@ -53,7 +53,7 @@ import sqlalchemy as sa
 from . import costs, store
 
 S = store
-VERSION = "life-3.0"
+VERSION = "life-3.1"
 YEARS_PER_GEN = 1000
 
 # ── world constants ──────────────────────────────────────────────────────
@@ -115,9 +115,17 @@ NW = IN * H + H + H * OUT + OUT
 CYST_MAX = 400
 CYST_P = 0.04              # chance a dying creature leaves a cyst
 CYST_LIFE = 400_000        # ticks a cyst stays viable
-HATCH_POP = 90             # cysts hatch while fewer than this many creatures are alive
+HATCH_POP = 24             # cysts hatch only in a real crash: below this the survivors get help, above it they recover alone
+HATCH_WEIGHT = 1.5         # hatching favours the eggs of complex bodies (weight = (cells x cell types) ** this)
 HATCH_N = 1.5              # ...and only where the water has at least this much dissolved nutrient
 DISEASE_HOSTS = 260        # epidemics need hosts: below this population, transmission falls off
+# Genome size: room for 96 genes (it was 48, and genomes had sat at the ceiling for weeks, so duplication, the source
+# of new structure, was switched off). Each gene now costs a little upkeep, so only genes that pay their way spread.
+GENOME_MAX = 96
+GENE_COST = 0.0003
+# Prey refuges (a type III functional response): when prey get scarce around a hunter, the last of them are the
+# ones hiding in crevices and shade, so strikes miss more often. Hunters go hungry before they eat the prey out.
+REFUGE_K = 1.5
 
 
 # ── genomes and development ──────────────────────────────────────────────
@@ -180,14 +188,14 @@ def mutate(g, rng):
         i = rng.integers(len(body)); body[i][2] = int(rng.integers(4))
     if r(0.05):
         i = rng.integers(len(body)); body[i][3] = int(rng.integers(1, 4))
-    if r(0.05) and len(body) < 48:                         # duplication: the raw material of new structure
+    if r(0.05) and len(body) < GENOME_MAX:                         # duplication: the raw material of new structure
         i = int(rng.integers(len(body))); k = int(rng.integers(1, 4))
         seg = [list(x) for x in body[i:i + k]]
         j = int(rng.integers(1, len(body) + 1))
         body[j:j] = seg
     if r(0.04) and len(body) > 1:                          # deletion
         del body[int(rng.integers(1, len(body)))]
-    if r(0.03) and len(body) < 48:                         # insertion of a new random gene
+    if r(0.03) and len(body) < GENOME_MAX:                         # insertion of a new random gene
         body.insert(int(rng.integers(1, len(body) + 1)),
                     [int(rng.integers(NT)), int(rng.integers(64)), int(rng.integers(4)), 1])
     brain = g["brain"].copy()
@@ -218,7 +226,7 @@ def crossover(a, b, rng):
     ia = int(rng.integers(1, len(a["body"]) + 1))
     ib = min(len(b["body"]), max(0, round(ia * len(b["body"]) / max(1, len(a["body"])))))
     body = [list(x) for x in a["body"][:ia]] + [list(x) for x in b["body"][ib:]]
-    body = body[:48] or [list(a["body"][0])]
+    body = body[:GENOME_MAX] or [list(a["body"][0])]
     pick = rng.random(NW) < 0.5
     return {"body": body, "brain": np.where(pick, a["brain"], b["brain"]).astype(np.float32),
             "repro": (a["repro"] + b["repro"]) / 2, "temp": (a["temp"] + b["temp"]) / 2,
@@ -360,7 +368,7 @@ class Pool:
         self.emax[i] = 12.0 * n + 45.0 * c[STORE]
         self.energy[i] = min(energy, self.emax[i])
         self.metab[i] = (0.018 * n ** 0.75 + 0.012 * c[FLAG] + 0.012 * c[NEURON] + 0.010 * c[EYE] + 0.012 * c[ARMOR]
-                         + 0.004 * c[STORE] + 0.006 * c[GONAD])
+                         + 0.004 * c[STORE] + 0.006 * c[GONAD] + GENE_COST * len(g["body"]))
         self.vmax[i] = min(1.6, 0.55 * c[FLAG] / math.sqrt(n)) / (1.0 + 0.08 * c[ARMOR])   # plates are heavy
         self.sense[i] = 1.5 + (min(SENSE_MAX - 1.5, 7.0 * c[EYE] ** 0.7) if c[EYE] else 0.0)
         self.att[i] = (c[MOUTH] * 1.0 + 1.0 * math.sqrt(n)) if c[MOUTH] else 0.0   # size helps, with diminishing returns
@@ -456,6 +464,12 @@ class Pool:
         if len(order) > 3 * k:                       # a random sample, weighted to the recent end
             w = np.linspace(0.3, 1.0, len(cy))[::-1]
             order = [int(j) for j in self.rng.choice(len(cy), size=3 * k, replace=False, p=w / w.sum())]
+        # the eggs of complex bodies first: a crash should not hand the pool back to single cells
+        def _cx(j):
+            nn, cc, _ = phenotype(develop(cy[j][0]["body"]))
+            return (nn * int((cc > 0).sum())) ** HATCH_WEIGHT
+        wt = np.array([_cx(j) for j in order], np.float64)
+        order = [order[int(j)] for j in np.argsort(-(wt * self.rng.uniform(0.5, 1.5, len(wt))))]
         done, used = 0, []
         for j in order:
             if done >= k:
@@ -685,6 +699,7 @@ class Pool:
             return idx[np.arange(n), j], has, dd[np.arange(n), j]
 
         jp, hp, dp = nearest(can_eat)
+        n_prey = can_eat.sum(1)
         jt, ht, dt_ = nearest(threat)
         jm, hm, dm = nearest(mate)
         c, s_ = np.cos(hd), np.sin(hd)
@@ -782,7 +797,8 @@ class Pool:
                 ih, ip = a[h], a[pr]
                 self.energy[ih] -= 0.05
                 ah, dp_ = att[h] * (1 + 0.12 * nh[h]), dfn[pr] * (1 + 0.12 * nh[pr])   # coordination: strike and dodge
-                if rng.random() < ah / (ah + dp_):
+                hide = n_prey[h] / (n_prey[h] + REFUGE_K)      # scarce prey are hard to find and catch
+                if rng.random() < hide * ah / (ah + dp_):
                     taken.add(pr)
                     food = max(0.0, float(self.energy[ip])) + 2.0 * float(self.n[ip])
                     gain = min(0.6 * food, float(self.emax[ih] - self.energy[ih]))

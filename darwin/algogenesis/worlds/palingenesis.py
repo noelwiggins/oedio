@@ -20,6 +20,11 @@ GW, GH = 180, 96
 SOIL, ASH, TREE, FIRE = 0, 1, 2, 3
 CAP_SP = 6000
 NBR = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+# Nov 26: dry years. By then the forest had covered 99% of the land with thick-barked trees that fire could not run
+# through, so there was nothing left to be reborn. Now the climate swings slowly between wet and dry spells (a
+# drought every DRY_PERIOD ticks, of varying strength): in a drought the canopy dries, fire climbs into the crowns
+# where thick bark is no shield, and the seedlings struggle, so the old fire-proof forest can burn again and the race between bark and growth reopens.
+DRY_PERIOD = 48000
 
 
 class Palingenesis(World):
@@ -35,8 +40,9 @@ class Palingenesis(World):
         "Ash is the richest ground there is, and life returns to it: from seeds waiting in the soil, from trees at the edge reaching in, and from cones that open only in fire.",
         "Trees carry heritable traits, each with a price. Thick bark resists fire but slows growth; cones that open in fire fill the ash with their seed but cost every year; far-flung seed reaches new ground but thins at home.",
         "Big fires favour different trees than small ones, so the forest's character follows its history of fire. Each rebirth is from whatever survived and whatever was waiting.",
+        "The climate swings between wet years and dry spells. In a drought the canopy dries and fire climbs into the crowns, where even thick bark is no shield, so no forest is fire-proof for ever.",
     ]
-    STAT_LABELS = [("cover", "Forest cover (%)"), ("ash", "Ash (%)"), ("burning", "Trees burning now"), ("fires", "Fires so far"),
+    STAT_LABELS = [("cover", "Forest cover (%)"), ("drought", "Drought (0-1)"), ("ash", "Ash (%)"), ("burning", "Trees burning now"), ("fires", "Fires so far"),
                    ("largest", "Largest fire (trees)"), ("species", "Kinds of tree"), ("bark", "Bark thickness, average"),
                    ("cones", "Fire-opened cones, average"), ("seed_bank", "Seeds waiting in the soil")]
     SERIES = [[("cover", "Forest cover %", "#6b8f2a"), ("ash", "Ash %", "#9aa3aa")],
@@ -95,6 +101,19 @@ class Palingenesis(World):
         self._lysis_init()
         return (int(self.l_born), int(self.l_died), int(self.l_ret), int((self.state == TREE).sum()) + 50)
 
+    def _drought(self):
+        """0 in wet years, rising to 1 at the height of a severe drought. Each dry spell has its own strength."""
+        t = self.tick
+        k = t // DRY_PERIOD
+        ph = (t % DRY_PERIOD) / DRY_PERIOD
+        strength = 0.45 + 0.55 * ((k * 0.618034 + self.seed * 0.1) % 1.0)
+        d = strength * max(0.0, np.sin(np.pi * (ph - 0.6) / 0.4)) if ph > 0.6 else 0.0
+        if ph > 0.6 and not getattr(self, "dry_told", -1) == k:
+            self.dry_told = k
+            self.event("climate", "A dry spell begins: the canopy dries and fire will run further." if strength > 0.7
+                       else "A dry year: the forest is thirsty.")
+        return float(d)
+
     def _new_sp(self, parent):
         rng = self.rng
         if self.next_sp >= CAP_SP:
@@ -131,6 +150,8 @@ class Palingenesis(World):
         rng = self.rng
         st, sp = self.state, self.sp
         rain = mult(self.dial("rain"), 1.8)
+        dry = self._drought()
+        rain = rain * (1 - 0.4 * dry)
         tree = st == TREE
         # lightning
         if rng.random() < 0.012 * mult(self.dial("lightning"), 3.0):
@@ -149,7 +170,9 @@ class Palingenesis(World):
             near = np.zeros((GH, GW), bool)
             for dy, dx in NBR:
                 near |= np.roll(np.roll(burning, dy, 0), dx, 1)
-            p_catch = np.minimum(1.0, (1 - self.bark[sp]) * 0.55 / rain + 0.35 * np.minimum(self.dead, 2.0))   # dead wood is tinder
+            # in a drought fire climbs into the dry crowns, where thick bark is no shield
+            p_catch = np.minimum(1.0, (1 - self.bark[sp] * (1 - 0.6 * dry)) * 0.55 * (1 + 0.8 * dry) / rain
+                                 + 0.35 * np.minimum(self.dead, 2.0))   # dead wood is tinder; a drought dries the canopy
             catch = tree & near & (rng.random((GH, GW)) < p_catch)
             self.dead[near & (rng.random((GH, GW)) < 0.5)] *= 0.3                                            # and burns away
             st[catch] = FIRE
@@ -251,7 +274,7 @@ class Palingenesis(World):
     def stats(self):
         st = self.state
         t = st == TREE
-        out = {"cover": int(round(100 * float(t.mean()))), "ash": int(round(100 * float((st == ASH).mean()))),
+        out = {"drought": round(self._drought(), 2), "cover": int(round(100 * float(t.mean()))), "ash": int(round(100 * float((st == ASH).mean()))),
                "burning": int((st == FIRE).sum()), "fires": int(self.fires), "largest": int(self.largest),
                "seed_bank": int(self.seeds.sum()),
                "deadwood": int(getattr(self, "dead", np.zeros(1)).sum()), "humus": int(getattr(self, "humus", np.zeros(1)).sum()),

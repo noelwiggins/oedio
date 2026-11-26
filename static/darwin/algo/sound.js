@@ -50,7 +50,7 @@
                       sound: 'vibraphone over a running brook',
                       words: 'each lineage of foragers is a vibraphone note; meals are droplets, meals found in the dark ring as glass' },
     biogenesis:     { gain: 1.9, scale: [0, 2, 4, 7, 9], root: 43, voice: 'handpan', chime: 'kalimba', bed: 'bubbles', drone: [0, 7, 14],
-                      room: [4, 2.3, 1.4, 0.35], progress: ['depth', 0, 2500],
+                      room: [4, 2.3, 1.4, 0.35], progress: ['depth', 0, 1e6, 'log'],
                       rain: [['divisions', 'bubble', 'divisions', 0.05]],
                       sound: 'handpan in a warm pool, with bubbles',
                       words: 'each lineage of cells is a handpan note; every division is a bubble' },
@@ -65,7 +65,7 @@
                       sound: 'singing bowls in a vast dark hall, with distant booms',
                       words: 'clusters of stars are singing bowls; supernovae are distant booms, new planets are glass' },
     anthropogenesis:{ gain: 1.6, scale: [0, 2, 4, 5, 7, 9, 11], root: 48, voice: 'kora', voice2: 'flute', chime: 'kora', bed: 'hearth', drone: [0, 7, 12],
-                      room: [2.6, 2.6, 0.81, 0.22], progress: ['tools_mean', 0, 300], inC: true,
+                      room: [2.6, 2.6, 0.81, 0.22], progress: ['tools_mean', 0, 1e5, 'log'], inC: true,
                       rain: [],
                       sound: 'an ensemble in the manner of In C, played on kora, balafon and ngoni over a steady pulse',
                       words: 'a balafon keeps a steady pulse on C. The people play the kora; every trade that appears joins the ensemble on its own instrument: toolmakers balafon, builders ngoni, potters calabash, traders a high kora, priests voices, smiths an iron bell, scribes a flute. Each player repeats a short phrase as long as it likes, then moves on to the next, so the phrases drift against one another. The further the civilisation gets, the further into the piece the players may go; a collapse sends them back. On the dark side the piece walks backwards at half speed' },
@@ -75,7 +75,7 @@
                       sound: 'a soft electric piano in a small warm room',
                       words: 'each lineage of minds is an electric-piano note; a mind changed is a thumb-piano note' },
     palingenesis:   { gain: 0.72, scale: [0, 2, 5, 7, 10], root: 43, voice: 'cello', chime: 'flute', bed: 'forest', drone: [0, 7, 10],
-                      room: [6, 2.1, 1.9, 0.32], progress: ['cover', 0, 100],
+                      room: [6, 2.1, 1.9, 0.32], progress: ['species', 1, 200, 'log'],
                       rain: [['fires', 'crackle', 'fires']],
                       sound: 'bowed strings in a forest, with birds and the crackle of fire',
                       words: 'each kind of tree is a bowed string; fires crackle, and the birds come back with the trees' },
@@ -467,7 +467,12 @@
     const s = d.stats || {};
     light = d.light != null ? d.light : 1;
     const pr = pal.progress;
-    if (pr && s[pr[0]] != null) rich = clamp((s[pr[0]] - pr[1]) / (pr[2] - pr[1]), 0, 1);
+    if (pr && s[pr[0]] != null) {
+      // a measure that keeps growing (lineage depth, tools) is heard on a log scale, so it never pins at the top
+      const v = s[pr[0]];
+      rich = pr[3] === 'log' ? clamp(Math.log10(1 + Math.max(0, v - pr[1])) / Math.log10(1 + pr[2] - pr[1]), 0, 1)
+                             : clamp((v - pr[1]) / (pr[2] - pr[1]), 0, 1);
+    }
     const kinds = kindsOf(d);
     if (pal.inC) ensembleFeed(s);
     if (!A || !on) { prime(d, kinds); return; }
